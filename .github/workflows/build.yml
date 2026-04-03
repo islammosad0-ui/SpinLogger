@@ -1,0 +1,45 @@
+# .github/workflows/build.yml
+name: Build SpinLogger.dylib
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app || sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Build dylib
+        run: |
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          echo "Using SDK: $SDK"
+          clang \
+            -target arm64-apple-ios14.0 \
+            -isysroot "$SDK" \
+            -fPIC -shared \
+            -fobjc-arc \
+            -framework Foundation \
+            -framework UIKit \
+            -framework CoreGraphics \
+            -framework QuartzCore \
+            -framework WebKit \
+            -O2 \
+            -o SpinLogger.dylib \
+            src/*.m
+          file SpinLogger.dylib
+          ls -lh SpinLogger.dylib
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SpinLogger.dylib
+          path: SpinLogger.dylib
