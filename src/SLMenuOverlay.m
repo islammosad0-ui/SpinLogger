@@ -6,6 +6,8 @@
 #import "SLTrisController.h"
 #import "SLPresetManager.h"
 #import "SLCounterOverlay.h"
+#import "SLNetworkMonitor.h"
+#import "SLNetworkStore.h"
 #import <UIKit/UIKit.h>
 
 // ---------------------------------------------------------------------------
@@ -14,14 +16,11 @@
 static UIViewController *SLTopVC(void);
 static void SLShowSettingsMenu(void);
 
-// ---------------------------------------------------------------------------
-//  Static state
-// ---------------------------------------------------------------------------
 static UIWindow *sMenuWindow = nil;
 static BOOL sCountersVisible = YES;
 
 // ---------------------------------------------------------------------------
-//  SLMenuButtonTarget — lightweight class so the button has a target
+//  Menu button target
 // ---------------------------------------------------------------------------
 @interface SLMenuButtonTarget : NSObject
 + (void)tapped;
@@ -35,29 +34,26 @@ static BOOL sCountersVisible = YES;
 }
 
 + (void)handlePan:(UIPanGestureRecognizer *)recognizer {
-    UIView *piece = recognizer.view;
     UIWindow *window = sMenuWindow;
     if (!window) return;
-
     if (recognizer.state == UIGestureRecognizerStateBegan ||
         recognizer.state == UIGestureRecognizerStateChanged) {
-        CGPoint translation = [recognizer translationInView:piece.superview];
+        CGPoint translation = [recognizer translationInView:recognizer.view.superview];
         CGRect frame = window.frame;
         frame.origin.x += translation.x;
         frame.origin.y += translation.y;
         window.frame = frame;
-        [recognizer setTranslation:CGPointZero inView:piece.superview];
+        [recognizer setTranslation:CGPointZero inView:recognizer.view.superview];
     }
 }
 
 @end
 
 // ---------------------------------------------------------------------------
-//  SLTopVC — walk the VC hierarchy to find the topmost presented VC
+//  SLTopVC
 // ---------------------------------------------------------------------------
 static UIViewController *SLTopVC(void) {
     UIWindowScene *activeScene = nil;
-
     for (UIScene *scene in UIApplication.sharedApplication.connectedScenes) {
         if ([scene isKindOfClass:[UIWindowScene class]] &&
             scene.activationState == UISceneActivationStateForegroundActive) {
@@ -69,48 +65,43 @@ static UIViewController *SLTopVC(void) {
 
     UIWindow *keyWindow = nil;
     for (UIWindow *w in activeScene.windows) {
-        if (w.isKeyWindow) {
-            keyWindow = w;
-            break;
-        }
+        if (w.isKeyWindow) { keyWindow = w; break; }
     }
     if (!keyWindow) return nil;
 
     UIViewController *vc = keyWindow.rootViewController;
-    while (vc.presentedViewController) {
-        vc = vc.presentedViewController;
-    }
+    while (vc.presentedViewController) vc = vc.presentedViewController;
     return vc;
 }
 
 // ---------------------------------------------------------------------------
-//  SLShowSettingsMenu — the main action sheet
+//  Settings menu — enhanced with Network Monitor + cURL export
 // ---------------------------------------------------------------------------
 static void SLShowSettingsMenu(void) {
     UIViewController *top = SLTopVC();
     if (!top) return;
 
-    NSString *message = [NSString stringWithFormat:@"Spins logged: %ld  |  Speed: %.1fx",
-                         (long)SLSpinStoreCount(),
-                         SLSpeedControllerGetMultiplier()];
+    NSString *message = [NSString stringWithFormat:
+        @"Spins: %ld  |  Speed: %.1fx  |  Net Requests: %lu",
+        (long)SLSpinStoreCount(),
+        SLSpeedControllerGetMultiplier(),
+        (unsigned long)[[SLNetworkStore shared] allRequests].count];
 
     UIAlertController *sheet =
-        [UIAlertController alertControllerWithTitle:@"\U0001F3B0 SpinLogger"
+        [UIAlertController alertControllerWithTitle:@"SPEEDER"
                                             message:message
                                      preferredStyle:UIAlertControllerStyleActionSheet];
 
     // ---- Share CSV ----
-    [sheet addAction:[UIAlertAction actionWithTitle:@"\U0001F4E5 Share CSV"
+    [sheet addAction:[UIAlertAction actionWithTitle:@"Share CSV"
                                               style:UIAlertActionStyleDefault
                                             handler:^(UIAlertAction *_) {
-        NSString *path = SLSpinStoreCSVPath();
-        NSURL *fileURL = [NSURL fileURLWithPath:path];
+        NSURL *fileURL = [NSURL fileURLWithPath:SLSpinStoreCSVPath()];
         UIActivityViewController *avc =
             [[UIActivityViewController alloc] initWithActivityItems:@[fileURL]
                                              applicationActivities:nil];
         UIViewController *presenter = SLTopVC();
         if (presenter) {
-            // iPad popover anchor
             avc.popoverPresentationController.sourceView = presenter.view;
             avc.popoverPresentationController.sourceRect =
                 CGRectMake(CGRectGetMidX(presenter.view.bounds),
@@ -120,12 +111,12 @@ static void SLShowSettingsMenu(void) {
     }]];
 
     // ---- Set Speed ----
-    [sheet addAction:[UIAlertAction actionWithTitle:@"\u26A1 Set Speed"
+    [sheet addAction:[UIAlertAction actionWithTitle:@"Set Speed"
                                               style:UIAlertActionStyleDefault
                                             handler:^(UIAlertAction *_) {
         UIAlertController *alert =
-            [UIAlertController alertControllerWithTitle:@"Set Speed Multiplier"
-                                               message:nil
+            [UIAlertController alertControllerWithTitle:@"Speed Multiplier"
+                                               message:@"Enter value (1.0 - 50.0)"
                                         preferredStyle:UIAlertControllerStyleAlert];
         [alert addTextFieldWithConfigurationHandler:^(UITextField *tf) {
             tf.keyboardType = UIKeyboardTypeDecimalPad;
@@ -134,25 +125,21 @@ static void SLShowSettingsMenu(void) {
         [alert addAction:[UIAlertAction actionWithTitle:@"Set"
                                                   style:UIAlertActionStyleDefault
                                                 handler:^(UIAlertAction *_) {
-            NSString *val = alert.textFields.firstObject.text;
-            double mult = val.doubleValue;
-            if (mult > 0) {
-                SLSpeedControllerSetMultiplier(mult);
-            }
+            double mult = alert.textFields.firstObject.text.doubleValue;
+            if (mult > 0) SLSpeedControllerSetMultiplier(mult);
         }]];
         [alert addAction:[UIAlertAction actionWithTitle:@"Cancel"
-                                                  style:UIAlertActionStyleCancel
-                                                handler:nil]];
-        UIViewController *presenter = SLTopVC();
-        if (presenter) [presenter presentViewController:alert animated:YES completion:nil];
+                                                  style:UIAlertActionStyleCancel handler:nil]];
+        UIViewController *p = SLTopVC();
+        if (p) [p presentViewController:alert animated:YES completion:nil];
     }]];
 
     // ---- Set Spin Target ----
-    [sheet addAction:[UIAlertAction actionWithTitle:@"\U0001F3AF Set Spin Target"
+    [sheet addAction:[UIAlertAction actionWithTitle:@"Set Spin Target"
                                               style:UIAlertActionStyleDefault
                                             handler:^(UIAlertAction *_) {
         UIAlertController *alert =
-            [UIAlertController alertControllerWithTitle:@"Set Spin Target"
+            [UIAlertController alertControllerWithTitle:@"Spin Target"
                                                message:nil
                                         preferredStyle:UIAlertControllerStyleAlert];
         [alert addTextFieldWithConfigurationHandler:^(UITextField *tf) {
@@ -163,97 +150,98 @@ static void SLShowSettingsMenu(void) {
         [alert addAction:[UIAlertAction actionWithTitle:@"Set"
                                                   style:UIAlertActionStyleDefault
                                                 handler:^(UIAlertAction *_) {
-            NSString *val = alert.textFields.firstObject.text;
-            NSInteger target = val.integerValue;
-            [SLSpinTarget shared].targetSpinCount = target;
+            [SLSpinTarget shared].targetSpinCount = alert.textFields.firstObject.text.integerValue;
         }]];
         [alert addAction:[UIAlertAction actionWithTitle:@"Cancel"
-                                                  style:UIAlertActionStyleCancel
-                                                handler:nil]];
-        UIViewController *presenter = SLTopVC();
-        if (presenter) [presenter presentViewController:alert animated:YES completion:nil];
+                                                  style:UIAlertActionStyleCancel handler:nil]];
+        UIViewController *p = SLTopVC();
+        if (p) [p presentViewController:alert animated:YES completion:nil];
     }]];
 
     // ---- Auto-Reset Mode ----
-    [sheet addAction:[UIAlertAction actionWithTitle:@"\U0001F504 Auto-Reset Mode"
+    {
+        NSString *current = [SLSpinTarget shared].autoResetMode ?: @"none";
+        NSString *title = [NSString stringWithFormat:@"Auto-Reset: %@", current];
+        [sheet addAction:[UIAlertAction actionWithTitle:title
+                                                  style:UIAlertActionStyleDefault
+                                                handler:^(UIAlertAction *_) {
+            UIAlertController *modeSheet =
+                [UIAlertController alertControllerWithTitle:@"Auto-Reset Mode"
+                                                   message:nil
+                                            preferredStyle:UIAlertControllerStyleActionSheet];
+            for (NSString *mode in @[@"none", @"symbol", @"global"]) {
+                NSString *label = [mode isEqualToString:current] ?
+                    [NSString stringWithFormat:@"> %@", mode] : mode;
+                [modeSheet addAction:[UIAlertAction actionWithTitle:label
+                                                              style:UIAlertActionStyleDefault
+                                                            handler:^(UIAlertAction *_) {
+                    [SLSpinTarget shared].autoResetMode = mode;
+                }]];
+            }
+            [modeSheet addAction:[UIAlertAction actionWithTitle:@"Cancel"
+                                                          style:UIAlertActionStyleCancel handler:nil]];
+            UIViewController *p = SLTopVC();
+            if (p) {
+                modeSheet.popoverPresentationController.sourceView = p.view;
+                modeSheet.popoverPresentationController.sourceRect =
+                    CGRectMake(CGRectGetMidX(p.view.bounds), CGRectGetMidY(p.view.bounds), 0, 0);
+                [p presentViewController:modeSheet animated:YES completion:nil];
+            }
+        }]];
+    }
+
+    // ---- Network Monitor ----
+    [sheet addAction:[UIAlertAction actionWithTitle:@"Network Monitor"
                                               style:UIAlertActionStyleDefault
                                             handler:^(UIAlertAction *_) {
-        NSString *current = [SLSpinTarget shared].autoResetMode ?: @"none";
-        UIAlertController *modeSheet =
-            [UIAlertController alertControllerWithTitle:@"Auto-Reset Mode"
-                                               message:nil
-                                        preferredStyle:UIAlertControllerStyleActionSheet];
-
-        NSArray *modes = @[@"none", @"symbol", @"global"];
-        for (NSString *mode in modes) {
-            NSString *title = mode;
-            if ([mode isEqualToString:current]) {
-                title = [NSString stringWithFormat:@"\u2713 %@", mode];
-            }
-            [modeSheet addAction:[UIAlertAction actionWithTitle:title
-                                                          style:UIAlertActionStyleDefault
-                                                        handler:^(UIAlertAction *_) {
-                [SLSpinTarget shared].autoResetMode = mode;
-            }]];
-        }
-        [modeSheet addAction:[UIAlertAction actionWithTitle:@"Cancel"
-                                                      style:UIAlertActionStyleCancel
-                                                    handler:nil]];
-
-        UIViewController *presenter = SLTopVC();
-        if (presenter) {
-            modeSheet.popoverPresentationController.sourceView = presenter.view;
-            modeSheet.popoverPresentationController.sourceRect =
-                CGRectMake(CGRectGetMidX(presenter.view.bounds),
-                           CGRectGetMidY(presenter.view.bounds), 0, 0);
-            [presenter presentViewController:modeSheet animated:YES completion:nil];
-        }
+        [[SLNetworkMonitor shared] show];
     }]];
 
-    // ---- Reset Counters (destructive) ----
-    [sheet addAction:[UIAlertAction actionWithTitle:@"\U0001F5D1 Reset Counters"
+    // ---- Export Last Request as cURL ----
+    [sheet addAction:[UIAlertAction actionWithTitle:@"Copy Last cURL"
+                                              style:UIAlertActionStyleDefault
+                                            handler:^(UIAlertAction *_) {
+        NSArray *reqs = [[SLNetworkStore shared] allRequests];
+        if (reqs.count == 0) return;
+        NSString *curl = [[SLNetworkStore shared] curlForRequest:reqs.lastObject];
+        [UIPasteboard generalPasteboard].string = curl;
+    }]];
+
+    // ---- Toggle Counters ----
+    [sheet addAction:[UIAlertAction actionWithTitle:sCountersVisible ? @"Hide Counters" : @"Show Counters"
+                                              style:UIAlertActionStyleDefault
+                                            handler:^(UIAlertAction *_) {
+        sCountersVisible = !sCountersVisible;
+        sCountersVisible ? [[SLCounterOverlay shared] show] : [[SLCounterOverlay shared] hide];
+    }]];
+
+    // ---- Reset Counters ----
+    [sheet addAction:[UIAlertAction actionWithTitle:@"Reset Counters"
                                               style:UIAlertActionStyleDestructive
                                             handler:^(UIAlertAction *_) {
         [[SLCounterOverlay shared] resetAllCounters];
     }]];
 
-    // ---- Toggle Counters ----
-    [sheet addAction:[UIAlertAction actionWithTitle:@"\U0001F441 Toggle Counters"
-                                              style:UIAlertActionStyleDefault
-                                            handler:^(UIAlertAction *_) {
-        sCountersVisible = !sCountersVisible;
-        if (sCountersVisible) {
-            [[SLCounterOverlay shared] show];
-        } else {
-            [[SLCounterOverlay shared] hide];
-        }
-    }]];
-
-    // ---- Preset 1: Save / Load ----
-    [sheet addAction:[UIAlertAction actionWithTitle:@"\U0001F4BE Save Preset 1"
+    // ---- Presets ----
+    NSString *p1 = [[SLPresetManager shared] presetSummary:1];
+    [sheet addAction:[UIAlertAction actionWithTitle:[NSString stringWithFormat:@"Save Preset 1"]
                                               style:UIAlertActionStyleDefault
                                             handler:^(UIAlertAction *_) {
         [[SLPresetManager shared] savePreset:1];
     }]];
-
-    NSString *p1Summary = [[SLPresetManager shared] presetSummary:1] ?: @"empty";
-    NSString *p1Title = [NSString stringWithFormat:@"\U0001F4C2 Load Preset 1 (%@)", p1Summary];
-    [sheet addAction:[UIAlertAction actionWithTitle:p1Title
+    [sheet addAction:[UIAlertAction actionWithTitle:[NSString stringWithFormat:@"Load P1 (%@)", p1]
                                               style:UIAlertActionStyleDefault
                                             handler:^(UIAlertAction *_) {
         [[SLPresetManager shared] loadPreset:1];
     }]];
 
-    // ---- Preset 2: Save / Load ----
-    [sheet addAction:[UIAlertAction actionWithTitle:@"\U0001F4BE Save Preset 2"
+    NSString *p2 = [[SLPresetManager shared] presetSummary:2];
+    [sheet addAction:[UIAlertAction actionWithTitle:@"Save Preset 2"
                                               style:UIAlertActionStyleDefault
                                             handler:^(UIAlertAction *_) {
         [[SLPresetManager shared] savePreset:2];
     }]];
-
-    NSString *p2Summary = [[SLPresetManager shared] presetSummary:2] ?: @"empty";
-    NSString *p2Title = [NSString stringWithFormat:@"\U0001F4C2 Load Preset 2 (%@)", p2Summary];
-    [sheet addAction:[UIAlertAction actionWithTitle:p2Title
+    [sheet addAction:[UIAlertAction actionWithTitle:[NSString stringWithFormat:@"Load P2 (%@)", p2]
                                               style:UIAlertActionStyleDefault
                                             handler:^(UIAlertAction *_) {
         [[SLPresetManager shared] loadPreset:2];
@@ -261,25 +249,21 @@ static void SLShowSettingsMenu(void) {
 
     // ---- Close ----
     [sheet addAction:[UIAlertAction actionWithTitle:@"Close"
-                                              style:UIAlertActionStyleCancel
-                                            handler:nil]];
+                                              style:UIAlertActionStyleCancel handler:nil]];
 
-    // iPad popover anchor for the main sheet
     sheet.popoverPresentationController.sourceView = top.view;
     sheet.popoverPresentationController.sourceRect =
-        CGRectMake(CGRectGetMidX(top.view.bounds),
-                   CGRectGetMidY(top.view.bounds), 0, 0);
+        CGRectMake(CGRectGetMidX(top.view.bounds), CGRectGetMidY(top.view.bounds), 0, 0);
 
     [top presentViewController:sheet animated:YES completion:nil];
 }
 
 // ---------------------------------------------------------------------------
-//  SLMenuOverlayInstall — creates the floating "SL" button window
+//  Install — floating button
 // ---------------------------------------------------------------------------
 void SLMenuOverlayInstall(void) {
-    if (sMenuWindow) return;  // already installed
+    if (sMenuWindow) return;
 
-    // Find the active UIWindowScene
     UIWindowScene *activeScene = nil;
     for (UIScene *scene in UIApplication.sharedApplication.connectedScenes) {
         if ([scene isKindOfClass:[UIWindowScene class]] &&
@@ -290,50 +274,40 @@ void SLMenuOverlayInstall(void) {
     }
     if (!activeScene) return;
 
-    // Compute position: right edge, vertically centered
     CGRect screenBounds = activeScene.coordinateSpace.bounds;
     CGFloat btnSize = 50.0;
     CGFloat x = screenBounds.size.width - btnSize - 8.0;
     CGFloat y = screenBounds.size.height / 2.0 - btnSize / 2.0;
-    CGRect windowFrame = CGRectMake(x, y, btnSize, btnSize);
 
-    // Create a small overlay window
     UIWindow *overlay = [[UIWindow alloc] initWithWindowScene:activeScene];
-    overlay.frame = windowFrame;
+    overlay.frame = CGRectMake(x, y, btnSize, btnSize);
     overlay.windowLevel = UIWindowLevelAlert + 200;
     overlay.backgroundColor = [UIColor clearColor];
     overlay.clipsToBounds = YES;
 
-    // Root view controller to host the button
     UIViewController *rootVC = [[UIViewController alloc] init];
     rootVC.view.backgroundColor = [UIColor clearColor];
     overlay.rootViewController = rootVC;
 
-    // Create the round blue button
     UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
     btn.frame = CGRectMake(0, 0, btnSize, btnSize);
     btn.backgroundColor = [UIColor systemBlueColor];
     btn.layer.cornerRadius = btnSize / 2.0;
     btn.clipsToBounds = YES;
-
     [btn setTitle:@"SL" forState:UIControlStateNormal];
     [btn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     btn.titleLabel.font = [UIFont boldSystemFontOfSize:16.0];
 
-    // Tap target
     [btn addTarget:[SLMenuButtonTarget class]
             action:@selector(tapped)
   forControlEvents:UIControlEventTouchUpInside];
 
-    // Pan gesture for dragging
     UIPanGestureRecognizer *pan =
         [[UIPanGestureRecognizer alloc] initWithTarget:[SLMenuButtonTarget class]
                                                 action:@selector(handlePan:)];
     [btn addGestureRecognizer:pan];
-
     [rootVC.view addSubview:btn];
 
-    // Show the window
     overlay.hidden = NO;
     sMenuWindow = overlay;
 }

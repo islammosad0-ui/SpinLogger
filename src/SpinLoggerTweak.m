@@ -2,10 +2,12 @@
 #import "SLConstants.h"
 #import "SLCounterOverlay.h"
 #import "SLSpinTarget.h"
+#import "SLNetworkMonitor.h"
 
 // ---------------------------------------------------------------------------
-//  Forward declarations — implemented in other translation units
+//  Forward declarations
 // ---------------------------------------------------------------------------
+extern void SLJailbreakBypassInstall(void);
 extern void SLNetworkInterceptorInstall(void);
 extern void SLSpeedControllerInstall(void);
 extern void SLMenuOverlayInstall(void);
@@ -15,6 +17,9 @@ extern void SLMenuOverlayInstall(void);
 // ---------------------------------------------------------------------------
 __attribute__((constructor))
 static void SpinLoggerInit(void) {
+    // Jailbreak bypass must run IMMEDIATELY — before the app checks
+    SLJailbreakBypassInstall();
+
     dispatch_after(
         dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)),
         dispatch_get_main_queue(),
@@ -23,7 +28,10 @@ static void SpinLoggerInit(void) {
             SLSpeedControllerInstall();
             [[SLCounterOverlay shared] install];
             [[SLSpinTarget shared] install];
+            [[SLNetworkMonitor shared] install];
             SLMenuOverlayInstall();
+
+            NSLog(@"[SpinLogger] All components initialized (One.dylib clone v2)");
         }
     );
 }

@@ -15,23 +15,19 @@
     if (self) {
         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
         _lockTarget  = [defaults stringForKey:kSLDefaultsTrisLockTarget];
-        _skipEnabled = [defaults boolForKey:kSLDefaultsTrisSkipEnabled];
+        _skipEnabled = [defaults boolForKey:@"Speeder_TrisSkip"];
     }
     return self;
 }
-
-#pragma mark - Install
 
 - (void)install {
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(onTrisEvent:)
                                                  name:@"SLTrisEventNotification"
                                                object:nil];
-    NSLog(@"[SpinLogger] SLTrisController installed (lockTarget=%@, skipEnabled=%d)",
+    NSLog(@"[SpinLogger] TrisController installed (lock=%@, skip=%d)",
           _lockTarget ?: @"(none)", _skipEnabled);
 }
-
-#pragma mark - Notification handler
 
 - (void)onTrisEvent:(NSNotification *)notification {
     NSString *cardId = notification.userInfo[@"card_id"];
@@ -43,12 +39,10 @@
     }
 
     if (_skipEnabled) {
-        NSLog(@"[SpinLogger] Tris skip — card %@ does not match lock target %@",
+        NSLog(@"[SpinLogger] Tris skip — card %@ (target: %@)",
               cardId, _lockTarget ?: @"(none)");
     }
 }
-
-#pragma mark - Custom setters (persist to NSUserDefaults)
 
 - (void)setLockTarget:(NSString *)lockTarget {
     _lockTarget = [lockTarget copy];
@@ -59,7 +53,7 @@
 - (void)setSkipEnabled:(BOOL)skipEnabled {
     _skipEnabled = skipEnabled;
     [[NSUserDefaults standardUserDefaults] setBool:_skipEnabled
-                                            forKey:kSLDefaultsTrisSkipEnabled];
+                                            forKey:@"Speeder_TrisSkip"];
 }
 
 - (void)dealloc {

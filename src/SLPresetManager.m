@@ -13,68 +13,40 @@
     return instance;
 }
 
-#pragma mark - Helpers
-
 - (NSString *)keyForSlot:(NSInteger)slot {
-    switch (slot) {
-        case 1:  return kSLDefaultsPreset1;
-        case 2:  return kSLDefaultsPreset2;
-        default: return kSLDefaultsPreset1;
-    }
+    return (slot == 2) ? kSLDefaultsPreset2 : kSLDefaultsPreset1;
 }
 
-#pragma mark - Save / Load
-
 - (void)savePreset:(NSInteger)slot {
-    NSString *lockTarget = [SLTrisController shared].lockTarget ?: @"";
-
     NSDictionary *dict = @{
         @"speed":           @(SLSpeedControllerGetMultiplier()),
         @"spinTarget":      @([SLSpinTarget shared].targetSpinCount),
-        @"autoResetMode":   [SLSpinTarget shared].autoResetMode ?: @"",
-        @"trisLockTarget":  lockTarget,
+        @"autoResetMode":   [SLSpinTarget shared].autoResetMode ?: @"none",
+        @"trisLockTarget":  [SLTrisController shared].lockTarget ?: @"",
         @"trisSkipEnabled": @([SLTrisController shared].skipEnabled)
     };
-
-    NSString *key = [self keyForSlot:slot];
-    [[NSUserDefaults standardUserDefaults] setObject:dict forKey:key];
+    [[NSUserDefaults standardUserDefaults] setObject:dict forKey:[self keyForSlot:slot]];
     [[NSUserDefaults standardUserDefaults] synchronize];
-
-    NSLog(@"[SpinLogger] Saved preset %ld -> %@", (long)slot, key);
 }
 
 - (void)loadPreset:(NSInteger)slot {
-    NSString *key = [self keyForSlot:slot];
-    NSDictionary *dict = [[NSUserDefaults standardUserDefaults] dictionaryForKey:key];
-    if (!dict) {
-        NSLog(@"[SpinLogger] No preset found for slot %ld", (long)slot);
-        return;
-    }
+    NSDictionary *dict = [[NSUserDefaults standardUserDefaults] dictionaryForKey:[self keyForSlot:slot]];
+    if (!dict) return;
 
     SLSpeedControllerSetMultiplier([dict[@"speed"] doubleValue]);
     [SLSpinTarget shared].targetSpinCount = [dict[@"spinTarget"] integerValue];
-    [SLSpinTarget shared].autoResetMode   = dict[@"autoResetMode"] ?: @"";
+    [SLSpinTarget shared].autoResetMode   = dict[@"autoResetMode"] ?: @"none";
     [SLTrisController shared].lockTarget  = dict[@"trisLockTarget"] ?: @"";
     [SLTrisController shared].skipEnabled = [dict[@"trisSkipEnabled"] boolValue];
-
-    NSLog(@"[SpinLogger] Loaded preset %ld <- %@", (long)slot, key);
 }
 
-#pragma mark - Summary
-
 - (NSString *)presetSummary:(NSInteger)slot {
-    NSString *key = [self keyForSlot:slot];
-    NSDictionary *dict = [[NSUserDefaults standardUserDefaults] dictionaryForKey:key];
-    if (!dict) {
-        return @"(empty)";
-    }
-
-    double speed       = [dict[@"speed"] doubleValue];
-    NSInteger target   = [dict[@"spinTarget"] integerValue];
-    NSString *mode     = dict[@"autoResetMode"] ?: @"";
-
-    return [NSString stringWithFormat:@"Speed: %.0fx | Target: %ld | Reset: %@",
-            speed, (long)target, mode];
+    NSDictionary *dict = [[NSUserDefaults standardUserDefaults] dictionaryForKey:[self keyForSlot:slot]];
+    if (!dict) return @"(empty)";
+    return [NSString stringWithFormat:@"%.0fx | T:%ld | %@",
+            [dict[@"speed"] doubleValue],
+            (long)[dict[@"spinTarget"] integerValue],
+            dict[@"autoResetMode"] ?: @"none"];
 }
 
 @end

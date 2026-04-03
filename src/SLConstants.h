@@ -32,18 +32,18 @@ static NSString *const kSLOutcomeNoReward      = @"noreward";
 static NSString *const kSLOutcomeAccumulation  = @"accumulation";
 
 // ---------------------------------------------------------------------------
-//  NSUserDefaults storage keys (all prefixed SpinLogger_)
+//  NSUserDefaults storage keys — use Speeder_ prefix for One.dylib compat
 // ---------------------------------------------------------------------------
-static NSString *const kSLDefaultsSpeedMultiplier  = @"SpinLogger_SpeedMultiplier";
-static NSString *const kSLDefaultsSpinTarget       = @"SpinLogger_SpinTarget";
-static NSString *const kSLDefaultsAutoResetMode    = @"SpinLogger_AutoResetMode";
-static NSString *const kSLDefaultsCounterPositions = @"SpinLogger_CounterPositions";
-static NSString *const kSLDefaultsCounterVisible   = @"SpinLogger_CounterVisible";
-static NSString *const kSLDefaultsTrisLockTarget   = @"SpinLogger_TrisLockTarget";
-static NSString *const kSLDefaultsTrisSkipEnabled  = @"SpinLogger_TrisSkipEnabled";
-static NSString *const kSLDefaultsNetworkEnabled   = @"SpinLogger_NetworkEnabled";
-static NSString *const kSLDefaultsPreset1          = @"SpinLogger_Preset1";
-static NSString *const kSLDefaultsPreset2          = @"SpinLogger_Preset2";
+static NSString *const kSLDefaultsSpeedMultiplier  = @"Speeder_LastSpeed";
+static NSString *const kSLDefaultsSpinTarget       = @"Speeder_SpinTarget";
+static NSString *const kSLDefaultsAutoResetMode    = @"Speeder_AutoresetMode";
+static NSString *const kSLDefaultsCounterPositions = @"Speeder_CounterPositions";
+static NSString *const kSLDefaultsSpinCounter      = @"Speeder_SpinCounter";
+static NSString *const kSLDefaultsTrisLockTarget   = @"Speeder_TrisLock";
+static NSString *const kSLDefaultsTrisMonitor      = @"Speeder_TrisMonitor";
+static NSString *const kSLDefaultsNetworkEnabled   = @"Speeder_Network";
+static NSString *const kSLDefaultsPreset1          = @"Speeder_Preset1";
+static NSString *const kSLDefaultsPreset2          = @"Speeder_Preset2";
 
 // ---------------------------------------------------------------------------
 //  File names
@@ -53,11 +53,12 @@ static NSString *const kSLSpinHistoryFile = @"spin_history.csv";
 // ---------------------------------------------------------------------------
 //  NSNotification names & userInfo keys
 // ---------------------------------------------------------------------------
-static NSString *const SLSpinReceivedNotification = @"SLSpinReceivedNotification";
-static NSString *const SLSpinDataKey              = @"SLSpinDataKey";
+static NSString *const SLSpinReceivedNotification  = @"NetShearsSpinEvent";
+static NSString *const SLSpinDataKey               = @"SLSpinDataKey";
+static NSString *const SLNetworkRequestNotification = @"Name.NetShearsNewRequest";
 
 // ---------------------------------------------------------------------------
-//  SLTrackedSymbols — symbols that counters track
+//  SLTrackedSymbols
 // ---------------------------------------------------------------------------
 static inline NSArray<NSString *> *SLTrackedSymbols(void) {
     return @[

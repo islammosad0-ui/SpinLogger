@@ -1,8 +1,14 @@
 #!/bin/bash
 # inject.sh — Inject SpinLogger.dylib into a Coin Master IPA
-# Usage: ./inject.sh <path-to-ipa> <path-to-SpinLogger.dylib>
+#
+# Usage:  ./inject.sh <path-to-ipa> <path-to-SpinLogger.dylib>
+# Output: <name>_SpinLogger.ipa in the current directory
 #
 # Requirements: insert_dylib (brew install insert_dylib) or optool
+#
+# To replace One.dylib entirely:
+#   ./inject.sh "CMS One_3.5.2490.ipa" SpinLogger.dylib
+# Then sign with ESign and install.
 
 set -e
 
@@ -25,6 +31,12 @@ DYLIB_NAME="SpinLogger.dylib"
 echo "[*] Copying dylib..."
 cp "$DYLIB" "$APP/$DYLIB_NAME"
 
+# Remove One.dylib if present (SpinLogger replaces it)
+if [ -f "$APP/One.dylib" ]; then
+    echo "[*] Removing One.dylib (replaced by SpinLogger)..."
+    rm -f "$APP/One.dylib"
+fi
+
 echo "[*] Injecting load command..."
 if command -v insert_dylib &> /dev/null; then
     insert_dylib --inplace --all-yes "@executable_path/$DYLIB_NAME" "$BINARY"
@@ -36,6 +48,11 @@ else
     exit 1
 fi
 
+# If One.dylib's load command is in the binary, remove it
+if command -v optool &> /dev/null; then
+    optool uninstall -p "@executable_path/One.dylib" -t "$BINARY" 2>/dev/null || true
+fi
+
 echo "[*] Repacking IPA..."
 OUTPUT="${IPA%.ipa}_SpinLogger.ipa"
 cd "$WORK"
@@ -45,6 +62,9 @@ cd "$OLDPWD"
 echo "[*] Cleaning up..."
 rm -rf "$WORK"
 
-echo "[✓] Done: $(basename "$OUTPUT")"
+echo "[+] Done: $(basename "$OUTPUT")"
 echo ""
-echo "Next: Transfer to phone, sign with ESign, install."
+echo "Next steps:"
+echo "  1. Transfer to phone"
+echo "  2. Sign with ESign"
+echo "  3. Install and play"

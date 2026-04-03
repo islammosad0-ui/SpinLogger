@@ -2,9 +2,6 @@
 #import "SLSpinStore.h"
 #import "SLConstants.h"
 
-// ---------------------------------------------------------------------------
-//  SLSpinResult
-// ---------------------------------------------------------------------------
 @implementation SLSpinResult
 @end
 
@@ -29,14 +26,12 @@ void SLParseStrackBody(NSString *body) {
                                                                error:&error];
         if (error || ![json isKindOfClass:[NSDictionary class]]) continue;
 
-        // Only handle spin events
         NSString *event = json[@"event"];
         if (![event isEqualToString:@"spin"]) continue;
 
         NSDictionary *msg = json[@"msg"];
         if (![msg isKindOfClass:[NSDictionary class]]) continue;
 
-        // Parse reel symbols (comma-separated, e.g. "steal,steal,steal")
         NSString *symbols = msg[@"spin_result_symbols"];
         NSArray<NSString *> *reels = [symbols componentsSeparatedByString:@","];
 
@@ -59,10 +54,8 @@ void SLParseStrackBody(NSString *body) {
         result.allTimeSpins    = [msg[@"all_time_spins"]   integerValue];
         result.timestamp       = [NSDate date];
 
-        // Persist to store
         SLSpinStoreAppend(result);
 
-        // Notify observers on the main queue
         dispatch_async(dispatch_get_main_queue(), ^{
             [[NSNotificationCenter defaultCenter]
                 postNotificationName:SLSpinReceivedNotification
@@ -72,9 +65,7 @@ void SLParseStrackBody(NSString *body) {
 
         NSLog(@"[SpinLogger] Spin #%ld: [%@, %@, %@] -> %@",
               (long)result.spinNumber,
-              result.reel1,
-              result.reel2,
-              result.reel3,
+              result.reel1, result.reel2, result.reel3,
               result.spinResult);
     }
 }

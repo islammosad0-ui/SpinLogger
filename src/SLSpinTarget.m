@@ -25,8 +25,6 @@
     return self;
 }
 
-#pragma mark - Custom Setters
-
 - (void)setTargetSpinCount:(NSInteger)targetSpinCount {
     _targetSpinCount = targetSpinCount;
     [[NSUserDefaults standardUserDefaults] setInteger:targetSpinCount
@@ -39,8 +37,6 @@
                                               forKey:kSLDefaultsAutoResetMode];
 }
 
-#pragma mark - Install
-
 - (void)install {
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(onSpinReceived:)
@@ -48,14 +44,12 @@
                                                object:nil];
 }
 
-#pragma mark - Notification Handler
-
 - (void)onSpinReceived:(NSNotification *)notification {
     self.currentSessionSpins++;
 
     SLSpinResult *result = notification.userInfo[SLSpinDataKey];
 
-    // Auto-reset logic for 3-of-a-kind
+    // Auto-reset on 3-of-a-kind
     if (result && [result.reel1 isEqualToString:result.reel2] &&
         [result.reel2 isEqualToString:result.reel3]) {
         if ([self.autoResetMode isEqualToString:@"symbol"]) {
@@ -65,14 +59,11 @@
         }
     }
 
-    // Target reached check
     if (self.targetSpinCount > 0 &&
         self.currentSessionSpins >= self.targetSpinCount) {
         [self showTargetReachedAlert];
     }
 }
-
-#pragma mark - Alert
 
 - (void)showTargetReachedAlert {
     NSString *message = [NSString stringWithFormat:@"You have completed %ld spins.",
@@ -84,30 +75,19 @@
                                      preferredStyle:UIAlertControllerStyleAlert];
 
     __weak typeof(self) weakSelf = self;
-    UIAlertAction *resetAction =
-        [UIAlertAction actionWithTitle:@"Reset & Continue"
-                                 style:UIAlertActionStyleDefault
-                               handler:^(UIAlertAction *action) {
-            __strong typeof(weakSelf) strongSelf = weakSelf;
-            [[SLCounterOverlay shared] resetAllCounters];
-            strongSelf.currentSessionSpins = 0;
-        }];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Reset & Continue"
+                                              style:UIAlertActionStyleDefault
+                                            handler:^(UIAlertAction *_) {
+        weakSelf.currentSessionSpins = 0;
+        [[SLCounterOverlay shared] resetAllCounters];
+    }]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Stop"
+                                              style:UIAlertActionStyleCancel
+                                            handler:nil]];
 
-    UIAlertAction *stopAction =
-        [UIAlertAction actionWithTitle:@"Stop"
-                                 style:UIAlertActionStyleCancel
-                               handler:nil];
-
-    [alert addAction:resetAction];
-    [alert addAction:stopAction];
-
-    UIViewController *topVC = [self topViewController];
-    if (topVC) {
-        [topVC presentViewController:alert animated:YES completion:nil];
-    }
+    UIViewController *top = [self topViewController];
+    if (top) [top presentViewController:alert animated:YES completion:nil];
 }
-
-#pragma mark - Top View Controller
 
 - (UIViewController *)topViewController {
     UIWindowScene *activeScene = nil;
@@ -118,19 +98,12 @@
             break;
         }
     }
-
     UIWindow *keyWindow = nil;
     for (UIWindow *window in activeScene.windows) {
-        if (window.isKeyWindow) {
-            keyWindow = window;
-            break;
-        }
+        if (window.isKeyWindow) { keyWindow = window; break; }
     }
-
     UIViewController *vc = keyWindow.rootViewController;
-    while (vc.presentedViewController) {
-        vc = vc.presentedViewController;
-    }
+    while (vc.presentedViewController) vc = vc.presentedViewController;
     return vc;
 }
 
