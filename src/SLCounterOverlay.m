@@ -25,14 +25,13 @@ typedef struct {
 } SLSymbolDef;
 
 static const SLSymbolDef kSymbols[] = {
-    { "attack",       "🔨", 0.00, 0.90, 1.00 },  // cyan
-    { "steal",        "🐷", 1.00, 0.41, 0.71 },  // pink
-    { "spins",        "💊", 0.00, 0.74, 0.83 },  // teal
-    { "shield",       "🛡",  0.81, 0.58, 0.85 },  // purple
-    { "goldSack",     "🧪", 0.30, 0.69, 0.31 },  // green
-    { "accumulation", "⭐", 1.00, 0.84, 0.00 },  // gold/yellow
+    { "attack",       "🔨", 0.00, 0.90, 1.00 },  // cyan — hammer/attack
+    { "steal",        "🐷", 1.00, 0.41, 0.71 },  // pink — pig/raid
+    { "spins",        "💊", 0.00, 0.74, 0.83 },  // teal — energy capsule/spins
+    { "shield",       "🛡",  0.81, 0.58, 0.85 },  // purple — shield/defense
+    { "accumulation", "🧪", 0.30, 0.69, 0.31 },  // green — accumulation bar progress
 };
-static const int kSymbolCount = 6;
+static const int kSymbolCount = 5;
 
 @interface SLCounterTile : NSObject
 @property (nonatomic, strong) UIWindow *window;
