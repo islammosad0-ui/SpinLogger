@@ -211,12 +211,13 @@ static const int kSymbolCount = 6;
 - (void)flashTriple:(SLCounterTile *)tile {
     UIColor *glowColor = [UIColor colorWithRed:tile.colorR green:tile.colorG blue:tile.colorB alpha:0.6];
     UIColor *normalBg = [UIColor colorWithRed:0.06 green:0.08 blue:0.14 alpha:0.94];
-    CGColorRef glowBorder = [UIColor colorWithRed:tile.colorR green:tile.colorG blue:tile.colorB alpha:0.9].CGColor;
-    CGColorRef normalBorder = [UIColor colorWithWhite:1 alpha:0.06].CGColor;
+    // Keep UIColor objects alive so CGColorRef stays valid through animation blocks
+    UIColor *glowBorderColor = [UIColor colorWithRed:tile.colorR green:tile.colorG blue:tile.colorB alpha:0.9];
+    UIColor *normalBorderColor = [UIColor colorWithWhite:1 alpha:0.06];
 
     // Flash: bright glow bg + colored border
     tile.container.backgroundColor = glowColor;
-    tile.container.layer.borderColor = glowBorder;
+    tile.container.layer.borderColor = glowBorderColor.CGColor;
     tile.container.layer.borderWidth = 2.0;
 
     // Scale pop
@@ -228,7 +229,7 @@ static const int kSymbolCount = 6;
     } completion:^(BOOL finished) {
         [UIView animateWithDuration:0.6 delay:0.1 options:UIViewAnimationOptionCurveEaseInOut animations:^{
             tile.container.backgroundColor = normalBg;
-            tile.container.layer.borderColor = normalBorder;
+            tile.container.layer.borderColor = normalBorderColor.CGColor;
             tile.container.layer.borderWidth = 1.0;
         } completion:nil];
     }];
