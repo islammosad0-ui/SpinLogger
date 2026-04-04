@@ -3,17 +3,22 @@
 #import "SLCounterOverlay.h"
 #import "SLConstants.h"
 #import "SLSpinParser.h"
+#import "SLTrisController.h"
 
 // ---------------------------------------------------------------------------
-//  SLCounterOverlay — WKWebView compact counter tiles matching One.dylib
-//  Dark rounded squares with emoji icons and color-coded numbers
+//  SLCounterOverlay — Distance-between-triples counter
+//
+//  Each counter shows: how many spins since the last 3-of-a-kind for that symbol.
+//  When you hit 3 pigs, the pig counter resets to 0 and the distance is
+//  logged to the tris monitor. Same for all symbols.
 // ---------------------------------------------------------------------------
 
 @interface SLCounterOverlay () <WKScriptMessageHandler>
 @property (nonatomic, strong) UIWindow *overlayWindow;
 @property (nonatomic, strong) WKWebView *webView;
-@property (nonatomic, strong) NSMutableDictionary<NSString *, NSNumber *> *counts;
-@property (nonatomic, assign) NSInteger sessionSpinCount;
+// Distance counters: spins since last triple for each symbol
+@property (nonatomic, strong) NSMutableDictionary<NSString *, NSNumber *> *distances;
+@property (nonatomic, assign) NSInteger totalSpins;
 @property (nonatomic, assign) BOOL visible;
 @end
 
@@ -27,10 +32,15 @@
 }
 
 - (void)install {
-    self.counts = [NSMutableDictionary dictionary];
-    self.sessionSpinCount = 0;
+    self.distances = [NSMutableDictionary dictionary];
+    self.totalSpins = 0;
     self.visible = YES;
-    for (NSString *sym in SLTrackedSymbols()) self.counts[sym] = @0;
+
+    // All tracked symbols start at 0 distance
+    for (NSString *sym in @[kSLSymbolAttack, kSLSymbolSteal, kSLSymbolAccumulation,
+                            kSLSymbolShield, kSLSymbolGoldSack]) {
+        self.distances[sym] = @0;
+    }
 
     UIWindowScene *scene = nil;
     for (UIScene *s in [UIApplication sharedApplication].connectedScenes) {
@@ -42,7 +52,8 @@
     if (!scene) return;
 
     CGRect screen = scene.coordinateSpace.bounds;
-    CGFloat tileW = 56, gap = 4, count = 5;
+    CGFloat tileW = 56, gap = 4;
+    NSInteger count = 5;
     CGFloat totalW = count * tileW + (count - 1) * gap;
     CGFloat h = 74;
     CGFloat x = (screen.size.width - totalW) / 2;
@@ -58,7 +69,6 @@
     vc.view.backgroundColor = [UIColor clearColor];
     win.rootViewController = vc;
 
-    // Pan for dragging
     UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
     [vc.view addGestureRecognizer:pan];
 
@@ -75,7 +85,6 @@
 
     win.hidden = NO;
     self.overlayWindow = win;
-
     [self refreshHTML];
 
     [[NSNotificationCenter defaultCenter] addObserver:self
@@ -99,13 +108,11 @@
 }
 
 - (void)userContentController:(WKUserContentController *)uc didReceiveScriptMessage:(WKScriptMessage *)msg {
-    // future: tap on tile to reset individual counter
 }
 
 #pragma mark - HTML
 
 - (void)refreshHTML {
-    // Symbol config: key, emoji, color
     NSArray *symbols = @[
         @[@"attack",       @"🔨", @"#00e5ff"],
         @[@"steal",        @"🐷", @"#ff69b4"],
@@ -116,13 +123,13 @@
 
     NSMutableString *tiles = [NSMutableString string];
     for (NSArray *s in symbols) {
-        NSInteger c = [self.counts[s[0]] integerValue];
+        NSInteger d = [self.distances[s[0]] integerValue];
         [tiles appendFormat:
          @"<div class='tile'>"
          "<div class='icon'>%@</div>"
          "<div class='num' style='color:%@'>%ld</div>"
          "<div class='bar' style='background:%@'></div>"
-         "</div>", s[1], s[2], (long)c, s[2]];
+         "</div>", s[1], s[2], (long)d, s[2]];
     }
 
     NSString *html = [NSString stringWithFormat:@
@@ -143,30 +150,45 @@
 }
 
 - (void)updateCountsViaJS {
-    NSArray *keys = @[@"attack", @"steal", @"accumulation", @"shield", @"goldSack"];
-    NSArray *colors = @[@"#00e5ff", @"#ff69b4", @"#00bcd4", @"#9c27b0", @"#4caf50"];
+    NSArray *keys = @[kSLSymbolAttack, kSLSymbolSteal, kSLSymbolAccumulation, kSLSymbolShield, kSLSymbolGoldSack];
 
     NSMutableString *js = [NSMutableString stringWithString:@"(function(){var nums=document.querySelectorAll('.num');"];
     for (NSUInteger i = 0; i < keys.count; i++) {
-        NSInteger c = [self.counts[keys[i]] integerValue];
-        [js appendFormat:@"if(nums[%lu])nums[%lu].textContent='%ld';", (unsigned long)i, (unsigned long)i, (long)c];
+        NSInteger d = [self.distances[keys[i]] integerValue];
+        [js appendFormat:@"if(nums[%lu])nums[%lu].textContent='%ld';", (unsigned long)i, (unsigned long)i, (long)d];
     }
     [js appendString:@"})()"];
     [self.webView evaluateJavaScript:js completionHandler:nil];
 }
 
-#pragma mark - Spin handling
+#pragma mark - Spin handling (distance between triples)
 
 - (void)onSpinReceived:(NSNotification *)note {
-    self.sessionSpinCount++;
-
     SLSpinResult *result = note.userInfo[SLSpinDataKey];
     if (!result) return;
 
-    for (NSString *sym in @[result.reel1 ?: @"", result.reel2 ?: @"", result.reel3 ?: @""]) {
-        if (sym.length == 0) continue;
-        NSNumber *cur = self.counts[sym];
-        self.counts[sym] = cur ? @(cur.integerValue + 1) : @1;
+    self.totalSpins++;
+
+    // Increment ALL distance counters every spin
+    for (NSString *sym in self.distances.allKeys) {
+        self.distances[sym] = @([self.distances[sym] integerValue] + 1);
+    }
+
+    // Check for triple (3-of-a-kind)
+    BOOL isTriple = (result.reel1 && [result.reel1 isEqualToString:result.reel2] &&
+                     [result.reel2 isEqualToString:result.reel3]);
+
+    if (isTriple && result.reel1.length > 0) {
+        NSString *sym = result.reel1;
+        NSInteger distance = [self.distances[sym] integerValue];
+
+        // Log distance to tris monitor
+        [[SLTrisController shared] recordTriple:sym distance:distance];
+
+        NSLog(@"[SpinLogger] TRIPLE %@ after %ld spins", sym, (long)distance);
+
+        // Reset this symbol's distance counter
+        self.distances[sym] = @0;
     }
 
     [self updateCountsViaJS];
@@ -183,18 +205,18 @@
 - (void)hide  { self.overlayWindow.hidden = YES; self.visible = NO; }
 
 - (void)resetAllCounters {
-    for (NSString *sym in self.counts.allKeys) self.counts[sym] = @0;
-    self.sessionSpinCount = 0;
+    for (NSString *sym in self.distances.allKeys) self.distances[sym] = @0;
+    self.totalSpins = 0;
     [self refreshHTML];
 }
 
 - (void)resetCounterForSymbol:(NSString *)symbol {
-    if (self.counts[symbol]) self.counts[symbol] = @0;
+    if (self.distances[symbol]) self.distances[symbol] = @0;
     [self updateCountsViaJS];
 }
 
 - (NSDictionary<NSString *, NSNumber *> *)currentCounts {
-    return [self.counts copy];
+    return [self.distances copy];
 }
 
 - (void)dealloc {

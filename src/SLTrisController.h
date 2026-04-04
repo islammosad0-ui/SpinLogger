@@ -7,5 +7,6 @@
 - (void)install;
 - (void)showTrisMonitor;
 - (void)hideTrisMonitor;
-- (void)addSpinToHistory:(NSArray<NSString *> *)reels;
+// Called by counter overlay when a triple is hit
+- (void)recordTriple:(NSString *)symbol distance:(NSInteger)distance;
 @end

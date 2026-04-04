@@ -5,25 +5,26 @@
 #import <WebKit/WebKit.h>
 
 // ---------------------------------------------------------------------------
-//  SLTrisController — Tris Monitor with WKWebView columns
-//  Shows symbol count history in 5 colored columns (like One.dylib)
+//  SLTrisController — Tris Monitor
+//
+//  Records the DISTANCE (number of spins) between each 3-of-a-kind.
+//  When counter overlay detects a triple, it calls recordTriple:distance:
+//  which adds the distance to that symbol's column in the tris monitor.
+//
+//  Display: 5 colored columns (attack, steal, accum, shield, goldSack)
+//  Each row = one triple event, showing how many spins it took.
 // ---------------------------------------------------------------------------
 
 @interface SLTrisController () <WKScriptMessageHandler>
 @property (nonatomic, strong) UIWindow *trisWindow;
 @property (nonatomic, strong) WKWebView *trisWebView;
+// Each array stores distances between triples for that symbol
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *histAttack;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *histSteal;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *histAccum;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *histShield;
-@property (nonatomic, strong) NSMutableArray<NSNumber *> *histPotion;
+@property (nonatomic, strong) NSMutableArray<NSNumber *> *histGold;
 @property (nonatomic, assign) NSInteger totalSpins;
-// Running counters (reset each 3-of-a-kind or manual reset)
-@property (nonatomic, assign) NSInteger cntAttack;
-@property (nonatomic, assign) NSInteger cntSteal;
-@property (nonatomic, assign) NSInteger cntAccum;
-@property (nonatomic, assign) NSInteger cntShield;
-@property (nonatomic, assign) NSInteger cntPotion;
 @end
 
 @implementation SLTrisController
@@ -38,14 +39,13 @@
 - (instancetype)init {
     self = [super init];
     if (self) {
-        NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
-        _lockTarget  = [d stringForKey:kSLDefaultsTrisLockTarget];
-        _skipEnabled = [d boolForKey:@"Speeder_TrisSkip"];
+        _lockTarget  = [[NSUserDefaults standardUserDefaults] stringForKey:kSLDefaultsTrisLockTarget];
+        _skipEnabled = [[NSUserDefaults standardUserDefaults] boolForKey:@"Speeder_TrisSkip"];
         _histAttack = [NSMutableArray array];
         _histSteal  = [NSMutableArray array];
         _histAccum  = [NSMutableArray array];
         _histShield = [NSMutableArray array];
-        _histPotion = [NSMutableArray array];
+        _histGold   = [NSMutableArray array];
         _totalSpins = 0;
     }
     return self;
@@ -60,58 +60,40 @@
                                                  name:@"SLShowTrisMonitor" object:nil];
 }
 
-#pragma mark - Spin handling
-
 - (void)onSpinReceived:(NSNotification *)note {
-    SLSpinResult *r = note.userInfo[SLSpinDataKey];
-    if (!r) return;
-
     self.totalSpins++;
-
-    // Count each reel symbol
-    for (NSString *sym in @[r.reel1 ?: @"", r.reel2 ?: @"", r.reel3 ?: @""]) {
-        if ([sym isEqualToString:kSLSymbolAttack])       self.cntAttack++;
-        else if ([sym isEqualToString:kSLSymbolSteal])   self.cntSteal++;
-        else if ([sym isEqualToString:kSLSymbolAccumulation]) self.cntAccum++;
-        else if ([sym isEqualToString:kSLSymbolShield])  self.cntShield++;
-        else if ([sym isEqualToString:kSLSymbolGoldSack]) self.cntPotion++;
-    }
-
-    // On 3-of-a-kind: save counts to history and reset
-    if (r.reel1 && [r.reel1 isEqualToString:r.reel2] && [r.reel2 isEqualToString:r.reel3]) {
-        [self.histAttack addObject:@(self.cntAttack)];
-        [self.histSteal  addObject:@(self.cntSteal)];
-        [self.histAccum  addObject:@(self.cntAccum)];
-        [self.histShield addObject:@(self.cntShield)];
-        [self.histPotion addObject:@(self.cntPotion)];
-
-        // Keep last 50 entries
-        if (self.histAttack.count > 50) {
-            [self.histAttack removeObjectAtIndex:0];
-            [self.histSteal  removeObjectAtIndex:0];
-            [self.histAccum  removeObjectAtIndex:0];
-            [self.histShield removeObjectAtIndex:0];
-            [self.histPotion removeObjectAtIndex:0];
-        }
-
-        self.cntAttack = self.cntSteal = self.cntAccum = self.cntShield = self.cntPotion = 0;
-
-        // Update tris monitor if visible
-        if (self.trisWindow && !self.trisWindow.hidden) {
-            [self refreshTrisHTML];
-        }
-    }
 }
-
-- (void)addSpinToHistory:(NSArray<NSString *> *)reels {
-    // External API for adding from other sources
-}
-
-#pragma mark - Tris Monitor UI
 
 - (void)onShowTris:(NSNotification *)note {
     [self showTrisMonitor];
 }
+
+#pragma mark - Record triple from counter overlay
+
+- (void)recordTriple:(NSString *)symbol distance:(NSInteger)distance {
+    NSMutableArray *hist = [self historyForSymbol:symbol];
+    if (hist) {
+        [hist addObject:@(distance)];
+        // Keep last 50
+        if (hist.count > 50) [hist removeObjectAtIndex:0];
+    }
+
+    // Update tris view if visible
+    if (self.trisWindow && !self.trisWindow.hidden) {
+        [self refreshTrisHTML];
+    }
+}
+
+- (NSMutableArray *)historyForSymbol:(NSString *)sym {
+    if ([sym isEqualToString:kSLSymbolAttack])       return self.histAttack;
+    if ([sym isEqualToString:kSLSymbolSteal])        return self.histSteal;
+    if ([sym isEqualToString:kSLSymbolAccumulation]) return self.histAccum;
+    if ([sym isEqualToString:kSLSymbolShield])       return self.histShield;
+    if ([sym isEqualToString:kSLSymbolGoldSack])     return self.histGold;
+    return nil;
+}
+
+#pragma mark - Tris Monitor UI
 
 - (void)showTrisMonitor {
     if (self.trisWindow) {
@@ -131,7 +113,7 @@
 
     CGRect screen = scene.coordinateSpace.bounds;
     CGFloat w = MIN(screen.size.width - 20, 340);
-    CGFloat h = 380;
+    CGFloat h = 400;
     CGFloat x = (screen.size.width - w) / 2;
     CGFloat y = (screen.size.height - h) / 2;
 
@@ -159,7 +141,6 @@
 
     win.hidden = NO;
     self.trisWindow = win;
-
     [self refreshTrisHTML];
 }
 
@@ -188,43 +169,44 @@
         [self.histSteal  removeAllObjects];
         [self.histAccum  removeAllObjects];
         [self.histShield removeAllObjects];
-        [self.histPotion removeAllObjects];
-        self.cntAttack = self.cntSteal = self.cntAccum = self.cntShield = self.cntPotion = 0;
+        [self.histGold   removeAllObjects];
         self.totalSpins = 0;
         [self refreshTrisHTML];
     }
 }
 
-#pragma mark - Tris HTML
+#pragma mark - Tris HTML — 5 columns showing distance history
 
 - (void)refreshTrisHTML {
-    NSInteger rows = self.histAttack.count;
+    // Find max rows across all columns
+    NSInteger maxRows = self.histAttack.count;
+    if (self.histSteal.count  > maxRows) maxRows = self.histSteal.count;
+    if (self.histAccum.count  > maxRows) maxRows = self.histAccum.count;
+    if (self.histShield.count > maxRows) maxRows = self.histShield.count;
+    if (self.histGold.count   > maxRows) maxRows = self.histGold.count;
 
-    // Build column cells
-    NSMutableString *colAttack = [NSMutableString string];
-    NSMutableString *colSteal  = [NSMutableString string];
-    NSMutableString *colAccum  = [NSMutableString string];
-    NSMutableString *colShield = [NSMutableString string];
-    NSMutableString *colPotion = [NSMutableString string];
+    // Build grid rows (newest first)
+    NSMutableString *rows = [NSMutableString string];
+    for (NSInteger i = maxRows - 1; i >= 0 && i >= maxRows - 25; i--) {
+        NSString *a = (i < (NSInteger)self.histAttack.count) ?
+            [NSString stringWithFormat:@"%ld", (long)self.histAttack[i].integerValue] : @"";
+        NSString *s = (i < (NSInteger)self.histSteal.count) ?
+            [NSString stringWithFormat:@"%ld", (long)self.histSteal[i].integerValue] : @"";
+        NSString *c = (i < (NSInteger)self.histAccum.count) ?
+            [NSString stringWithFormat:@"%ld", (long)self.histAccum[i].integerValue] : @"";
+        NSString *h = (i < (NSInteger)self.histShield.count) ?
+            [NSString stringWithFormat:@"%ld", (long)self.histShield[i].integerValue] : @"";
+        NSString *g = (i < (NSInteger)self.histGold.count) ?
+            [NSString stringWithFormat:@"%ld", (long)self.histGold[i].integerValue] : @"";
 
-    // Show most recent first (reverse order)
-    for (NSInteger i = rows - 1; i >= 0 && i >= rows - 20; i--) {
-        [colAttack appendFormat:@"<div class='cell c0'>%ld</div>", (long)self.histAttack[i].integerValue];
-        [colSteal  appendFormat:@"<div class='cell c1'>%ld</div>", (long)self.histSteal[i].integerValue];
-        [colAccum  appendFormat:@"<div class='cell c2'>%ld</div>", (long)self.histAccum[i].integerValue];
-        [colShield appendFormat:@"<div class='cell c3'>%ld</div>", (long)self.histShield[i].integerValue];
-        [colPotion appendFormat:@"<div class='cell c4'>%ld</div>", (long)self.histPotion[i].integerValue];
+        [rows appendFormat:
+         @"<div class='c c0'>%@</div>"
+         "<div class='c c1'>%@</div>"
+         "<div class='c c2'>%@</div>"
+         "<div class='c c3'>%@</div>"
+         "<div class='c c4'>%@</div>",
+         a, s, c, h, g];
     }
-
-    // Current running counts at top
-    NSString *curRow = [NSString stringWithFormat:
-        @"<div class='cell c0 cur'>%ld</div>"
-        "<div class='cell c1 cur'>%ld</div>"
-        "<div class='cell c2 cur'>%ld</div>"
-        "<div class='cell c3 cur'>%ld</div>"
-        "<div class='cell c4 cur'>%ld</div>",
-        (long)self.cntAttack, (long)self.cntSteal, (long)self.cntAccum,
-        (long)self.cntShield, (long)self.cntPotion];
 
     NSString *html = [NSString stringWithFormat:@
     "<!doctype html><html><head><meta charset='utf-8'>"
@@ -233,28 +215,25 @@
     "*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none}"
     "body{background:transparent;font-family:-apple-system,sans-serif}"
     ".panel{background:rgba(15,20,35,0.95);border-radius:20px;overflow:hidden;"
-    "border:1px solid rgba(255,255,255,0.06)}"
-    /* Header icons */
-    ".hdr{display:flex;height:60px;align-items:center;padding:0 6px}"
-    ".hdr-icon{flex:1;display:flex;flex-direction:column;align-items:center;"
-    "justify-content:center;font-size:24px}"
+    "border:1px solid rgba(255,255,255,0.06);height:100vh;display:flex;flex-direction:column}"
+    ".hdr{display:flex;height:56px;align-items:center;padding:0 6px;flex-shrink:0}"
+    ".hdr-icon{flex:1;display:flex;flex-direction:column;align-items:center;font-size:24px}"
     ".hdr-bar{height:3px;width:80%%;border-radius:2px;margin-top:4px}"
-    ".hdr-close{width:40px;height:40px;background:rgba(255,255,255,0.12);"
-    "border-radius:20px;display:flex;align-items:center;justify-content:center;"
-    "font-size:20px;color:#fff;cursor:pointer;border:none;position:absolute;right:8px;top:8px}"
-    /* Grid */
-    ".grid{display:grid;grid-template-columns:repeat(5,1fr);gap:0;max-height:260px;overflow-y:auto}"
-    ".cell{text-align:center;padding:6px 2px;font-size:16px;font-weight:700;"
+    ".close{width:36px;height:36px;background:rgba(255,255,255,0.12);border-radius:18px;"
+    "display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;"
+    "cursor:pointer;border:none;position:absolute;right:10px;top:10px}"
+    ".grid{display:grid;grid-template-columns:repeat(5,1fr);flex:1;overflow-y:auto;"
+    "align-content:start}"
+    ".c{text-align:center;padding:8px 2px;font-size:17px;font-weight:700;"
     "border-bottom:1px solid rgba(255,255,255,0.04)}"
-    ".cur{font-size:18px;font-weight:800;border-bottom:2px solid rgba(255,255,255,0.1)}"
     ".c0{color:#00e5ff}.c1{color:#ff69b4}.c2{color:#00bcd4}.c3{color:#ce93d8}.c4{color:#4caf50}"
-    /* Footer */
-    ".foot{display:flex;justify-content:space-between;padding:8px 14px;color:#aaa;font-size:13px}"
+    ".foot{display:flex;justify-content:space-between;padding:10px 16px;"
+    "color:#aaa;font-size:14px;font-weight:600;flex-shrink:0;"
+    "border-top:1px solid rgba(255,255,255,0.06)}"
     ".foot span{cursor:pointer}"
     "</style></head><body>"
     "<div class='panel'>"
-    "<button class='hdr-close' onclick='msg(\"close\")'>✕</button>"
-    /* Header with icons and color bars */
+    "<button class='close' onclick='msg(\"close\")'>X</button>"
     "<div class='hdr'>"
     "<div class='hdr-icon'>🔨<div class='hdr-bar' style='background:#00e5ff'></div></div>"
     "<div class='hdr-icon'>🐷<div class='hdr-bar' style='background:#ff69b4'></div></div>"
@@ -262,11 +241,7 @@
     "<div class='hdr-icon'>🛡<div class='hdr-bar' style='background:#ce93d8'></div></div>"
     "<div class='hdr-icon'>🧪<div class='hdr-bar' style='background:#4caf50'></div></div>"
     "</div>"
-    /* Current counts */
     "<div class='grid'>%@</div>"
-    /* History */
-    "<div class='grid'>%@%@%@%@%@</div>"
-    /* Footer */
     "<div class='foot'>"
     "<span onclick='msg(\"reset\")'>RESET</span>"
     "<span>SPIN: %ld</span>"
@@ -274,9 +249,7 @@
     "</div>"
     "<script>function msg(s){window.webkit.messageHandlers.tris.postMessage(s)}</script>"
     "</body></html>",
-    curRow,
-    colAttack, colSteal, colAccum, colShield, colPotion,
-    (long)self.totalSpins];
+    rows, (long)self.totalSpins];
 
     [self.trisWebView loadHTMLString:html baseURL:nil];
 }
