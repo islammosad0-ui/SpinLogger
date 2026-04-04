@@ -5,9 +5,10 @@ static NSInteger sSpinCount = 0;
 static BOOL sHeaderEnsured = NO;
 
 static NSString *const kCSVHeader =
-    @"spin_number,timestamp,reel_1,reel_2,reel_3,spin_result,coins_won,"
-     "bet_type,auto_spin,coins,spins_remaining,shields,village,active_pet,"
-     "accum_bar_result,sos_symbol,all_time_spins";
+    @"seq,timestamp,r1,r2,r3,reel_1,reel_2,reel_3,spin_result,reward_code,"
+     "coins_won,coins,spins_remaining,shields,"
+     "accum_current,accum_total,accum_mission,accum_reward_type,accum_reward_amount,"
+     "is_triple,sos_symbol,all_time_spins";
 
 static NSString *SLCSVPath(void) {
     static NSString *path = nil;
@@ -60,19 +61,23 @@ void SLSpinStoreAppend(SLSpinResult *result) {
     });
 
     NSString *ts = result.timestamp ? [fmt stringFromDate:result.timestamp] : @"";
-    NSString *quotedAccum = [NSString stringWithFormat:@"\"%@\"",
-        [result.accumBarResult ?: @""
-            stringByReplacingOccurrencesOfString:@"\"" withString:@"\"\""]];
+    BOOL isTriple = (result.rawR1 == result.rawR2 && result.rawR2 == result.rawR3 && result.rawR1 != 0);
 
     NSString *row = [NSString stringWithFormat:
-        @"%ld,%@,%@,%@,%@,%@,%lld,%@,%@,%@,%@,%ld,%ld,%@,%@,%@,%ld\n",
-        (long)result.spinNumber, ts,
+        @"%ld,%@,%ld,%ld,%ld,%@,%@,%@,%@,%ld,"
+         "%lld,%@,%@,%ld,"
+         "%ld,%ld,%ld,%@,%lld,"
+         "%@,%@,%ld\n",
+        (long)result.seq, ts,
+        (long)result.rawR1, (long)result.rawR2, (long)result.rawR3,
         result.reel1 ?: @"", result.reel2 ?: @"", result.reel3 ?: @"",
-        result.spinResult ?: @"", result.coinsWon,
-        result.betType ?: @"", result.autoSpin ? @"true" : @"false",
-        result.coins ?: @"", result.spinsRemaining ?: @"",
-        (long)result.shields, (long)result.village,
-        result.activePet ?: @"", quotedAccum,
+        result.spinResult ?: @"", (long)result.rewardCode,
+        result.coinsWon, result.coins ?: @"", result.spinsRemaining ?: @"",
+        (long)result.shields,
+        (long)result.accumCurrent, (long)result.accumTotal,
+        (long)result.accumMissionIndex,
+        result.accumRewardType ?: @"", result.accumRewardAmount,
+        isTriple ? @"true" : @"false",
         result.sosSymbol ?: @"", (long)result.allTimeSpins];
 
     NSString *path = SLCSVPath();

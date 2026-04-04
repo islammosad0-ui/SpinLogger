@@ -7,6 +7,7 @@
 //  Endpoint matching
 // ---------------------------------------------------------------------------
 static NSString *const kSLStrackEndpoint = @"/vikings/v3/strack/gzip";
+static NSString *const kSLSpinEndpoint   = @"/spin";        // matches /api/v1/users/{id}/spin
 static NSString *const kSLGameAPIHost    = @"moonactive.net";
 
 // ---------------------------------------------------------------------------
@@ -19,6 +20,22 @@ static NSString *const kSLSymbolSteal         = @"steal";
 static NSString *const kSLSymbolGoldSack      = @"goldSack";
 static NSString *const kSLSymbolSpins         = @"spins";
 static NSString *const kSLSymbolAccumulation  = @"accumulation";
+
+// ---------------------------------------------------------------------------
+//  Raw reel value → symbol name mapping (from spin API r1/r2/r3)
+// ---------------------------------------------------------------------------
+static inline NSString *SLSymbolNameForReelValue(NSInteger val) {
+    switch (val) {
+        case 1:  return kSLSymbolCoin;
+        case 2:  return kSLSymbolGoldSack;
+        case 3:  return kSLSymbolAttack;
+        case 4:  return kSLSymbolSteal;
+        case 5:  return kSLSymbolShield;
+        case 6:  return kSLSymbolSpins;
+        case 30: return kSLSymbolAccumulation;
+        default: return [NSString stringWithFormat:@"unknown_%ld", (long)val];
+    }
+}
 
 // ---------------------------------------------------------------------------
 //  Spin result outcome constants

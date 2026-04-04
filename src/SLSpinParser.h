@@ -18,11 +18,18 @@
 @property (nonatomic, copy) NSString *sosSymbol;
 @property (nonatomic, assign) NSInteger allTimeSpins;
 @property (nonatomic, strong) NSDate *timestamp;
-// Raw numeric IDs from spin API
-@property (nonatomic, assign) NSInteger r1;
-@property (nonatomic, assign) NSInteger r2;
-@property (nonatomic, assign) NSInteger r3;
-@property (nonatomic, assign) NSInteger reward;
+// Raw spin API fields
+@property (nonatomic, assign) NSInteger rawR1;
+@property (nonatomic, assign) NSInteger rawR2;
+@property (nonatomic, assign) NSInteger rawR3;
+@property (nonatomic, assign) NSInteger rewardCode;
+@property (nonatomic, assign) NSInteger seq;
+// Accumulation bar state from spin API
+@property (nonatomic, assign) NSInteger accumCurrent;
+@property (nonatomic, assign) NSInteger accumTotal;
+@property (nonatomic, assign) NSInteger accumMissionIndex;
+@property (nonatomic, copy) NSString *accumRewardType;
+@property (nonatomic, assign) long long accumRewardAmount;
 @end
 
 // Parse real-time spin API response (JSON with r1/r2/r3 numeric IDs)

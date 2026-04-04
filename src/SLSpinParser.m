@@ -70,25 +70,39 @@ void SLParseSpinAPIResponse(NSData *responseData) {
     NSInteger r3 = r3num.integerValue;
 
     SLSpinResult *result = [[SLSpinResult alloc] init];
-    result.r1 = r1;
-    result.r2 = r2;
-    result.r3 = r3;
+    result.rawR1 = r1;
+    result.rawR2 = r2;
+    result.rawR3 = r3;
     result.reel1 = SLSymbolName(r1);
     result.reel2 = SLSymbolName(r2);
     result.reel3 = SLSymbolName(r3);
-    result.reward = [json[@"reward"] integerValue];
-    result.spinResult = SLRewardName(result.reward);
-    result.spinNumber = [json[@"seq"] integerValue];
+    result.rewardCode = [json[@"reward"] integerValue];
+    result.spinResult = SLRewardName(result.rewardCode);
+    result.seq = [json[@"seq"] integerValue];
+    result.spinNumber = result.seq;
     result.coinsWon = [json[@"pay"] longLongValue];
     result.coins = [json[@"coins"] description] ?: @"0";
     result.spinsRemaining = [json[@"spins"] description] ?: @"0";
     result.shields = [json[@"shields"] integerValue];
     result.timestamp = [NSDate date];
 
-    // Accumulation data
+    // Accumulation bar state — this is the key data for pattern detection
     NSDictionary *accum = json[@"accumulation"];
     if ([accum isKindOfClass:[NSDictionary class]]) {
-        result.accumBarResult = [accum[@"currentAmount"] description] ?: @"";
+        result.accumCurrent      = [accum[@"currentAmount"] integerValue];
+        result.accumTotal        = [accum[@"totalAmount"] integerValue];
+        result.accumMissionIndex = [accum[@"missionIndex"] integerValue];
+        result.accumBarResult    = [NSString stringWithFormat:@"%ld/%ld",
+                                    (long)result.accumCurrent, (long)result.accumTotal];
+
+        NSDictionary *accumReward = accum[@"reward"];
+        if ([accumReward isKindOfClass:[NSDictionary class]]) {
+            for (NSString *key in accumReward) {
+                result.accumRewardType   = key;
+                result.accumRewardAmount = [accumReward[key] longLongValue];
+                break;
+            }
+        }
     }
 
     SLSpinStoreAppend(result);
