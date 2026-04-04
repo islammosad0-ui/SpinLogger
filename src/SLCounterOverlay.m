@@ -261,7 +261,7 @@ static const int kSymbolCount = 6;
     self.totalSpins = 0;
     for (SLCounterTile *t in self.tiles) {
         t.distance = 0;
-        t.numLabel.text = @"0";
+        t.tripleLabel.text = @"3X: 0"; t.singleLabel.text = @"1X: 0";
     }
 }
 
@@ -269,7 +269,7 @@ static const int kSymbolCount = 6;
     for (SLCounterTile *t in self.tiles) {
         if ([t.symbolKey isEqualToString:symbol]) {
             t.distance = 0;
-            t.numLabel.text = @"0";
+            t.tripleLabel.text = @"3X: 0"; t.singleLabel.text = @"1X: 0";
             break;
         }
     }

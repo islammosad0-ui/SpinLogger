@@ -9,4 +9,5 @@
 - (void)hideTrisMonitor;
 // Called by counter overlay when a triple is hit
 - (void)recordTriple:(NSString *)symbol distance:(NSInteger)distance;
+- (void)recordTriple:(NSString *)symbol distance:(NSInteger)distance symbolCount:(NSInteger)symCount;
 @end
