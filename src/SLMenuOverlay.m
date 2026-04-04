@@ -118,32 +118,205 @@ static UIButton *SLMakeBtn(NSString *title, CGFloat w, CGFloat h, UIColor *bg, U
     [[self topVC] presentViewController:a animated:YES completion:nil];
 }
 
+static UIWindow *sSettingsWindow = nil;
+static UIView *sTrisContent = nil;
+static UIView *sCounterContent = nil;
+static UIButton *sTabTris = nil;
+static UIButton *sTabCounter = nil;
+static BOOL sTrisMonitorActive = NO;
+
 + (void)gearTap {
-    UIAlertController *sheet = [UIAlertController alertControllerWithTitle:@"SPEEDER Settings" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    [self showSettingsOverlay];
+}
 
-    [sheet addAction:[UIAlertAction actionWithTitle:@"Tris Monitor" style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) {
-        [[SLTrisController shared] showTrisMonitor];
-    }]];
-    [sheet addAction:[UIAlertAction actionWithTitle:@"Share CSV" style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) {
-        NSURL *url = [NSURL fileURLWithPath:SLSpinStoreCSVPath()];
-        UIActivityViewController *avc = [[UIActivityViewController alloc] initWithActivityItems:@[url] applicationActivities:nil];
-        UIViewController *p = [self topVC];
-        avc.popoverPresentationController.sourceView = p.view;
-        [p presentViewController:avc animated:YES completion:nil];
-    }]];
-    [sheet addAction:[UIAlertAction actionWithTitle:@"Toggle Counters" style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) {
-        [[NSNotificationCenter defaultCenter] postNotificationName:@"SLToggleCounters" object:nil];
-    }]];
-    [sheet addAction:[UIAlertAction actionWithTitle:@"Save Preset 1" style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) { [[SLPresetManager shared] savePreset:1]; }]];
-    [sheet addAction:[UIAlertAction actionWithTitle:[NSString stringWithFormat:@"Load P1 (%@)", [[SLPresetManager shared] presetSummary:1]] style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) { [[SLPresetManager shared] loadPreset:1]; [self syncUI]; }]];
-    [sheet addAction:[UIAlertAction actionWithTitle:@"Save Preset 2" style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) { [[SLPresetManager shared] savePreset:2]; }]];
-    [sheet addAction:[UIAlertAction actionWithTitle:[NSString stringWithFormat:@"Load P2 (%@)", [[SLPresetManager shared] presetSummary:2]] style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) { [[SLPresetManager shared] loadPreset:2]; [self syncUI]; }]];
-    [sheet addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
++ (void)showSettingsOverlay {
+    if (sSettingsWindow) { sSettingsWindow.hidden = NO; return; }
 
-    UIViewController *top = [self topVC];
-    sheet.popoverPresentationController.sourceView = top.view;
-    sheet.popoverPresentationController.sourceRect = CGRectMake(CGRectGetMidX(top.view.bounds), CGRectGetMidY(top.view.bounds), 0, 0);
-    [top presentViewController:sheet animated:YES completion:nil];
+    UIWindowScene *scene = nil;
+    for (UIScene *s in UIApplication.sharedApplication.connectedScenes)
+        if ([s isKindOfClass:[UIWindowScene class]]) { scene = (UIWindowScene *)s; break; }
+    if (!scene) return;
+
+    CGRect screen = scene.coordinateSpace.bounds;
+    CGFloat pw = MIN(screen.size.width * 0.78, 320);
+    CGFloat ph = 200;
+    CGFloat x = (screen.size.width - pw) / 2;
+    CGFloat y = (screen.size.height - ph) / 2;
+
+    UIWindow *win = [[UIWindow alloc] initWithWindowScene:scene];
+    win.frame = CGRectMake(x, y, pw, ph);
+    win.windowLevel = UIWindowLevelAlert + 450;
+    win.backgroundColor = [UIColor clearColor];
+
+    UIViewController *vc = [[UIViewController alloc] init];
+    vc.view.backgroundColor = [UIColor clearColor];
+    win.rootViewController = vc;
+
+    UIVisualEffectView *blur = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleDark]];
+    blur.frame = CGRectMake(0, 0, pw, ph);
+    blur.layer.cornerRadius = 18;
+    blur.clipsToBounds = YES;
+    blur.alpha = 0.95;
+    [vc.view addSubview:blur];
+    UIView *content = blur.contentView;
+
+    CGFloat pad = 12;
+
+    // Tab bar
+    CGFloat tabW = (pw - pad * 2 - 46) / 2;
+    sTabTris = SLMakeBtn(@"TRIS MONITOR", tabW, 32, SLAccent(), [UIColor blackColor], 12);
+    sTabTris.frame = CGRectMake(pad, 8, tabW, 32);
+    [sTabTris addTarget:self action:@selector(switchToTrisTab) forControlEvents:UIControlEventTouchUpInside];
+    [content addSubview:sTabTris];
+
+    sTabCounter = SLMakeBtn(@"SPIN COUNTER", tabW, 32, SLBtnBg(), SLMuted(), 12);
+    sTabCounter.frame = CGRectMake(pad + tabW + 4, 8, tabW, 32);
+    [sTabCounter addTarget:self action:@selector(switchToCounterTab) forControlEvents:UIControlEventTouchUpInside];
+    [content addSubview:sTabCounter];
+
+    // Close X
+    UIButton *closeBtn = SLMakeBtn(@"✕", 36, 32, [UIColor colorWithWhite:1 alpha:0.15], [UIColor whiteColor], 16);
+    closeBtn.frame = CGRectMake(pw - pad - 36, 8, 36, 32);
+    closeBtn.layer.cornerRadius = 16;
+    [closeBtn addTarget:self action:@selector(settingsClose) forControlEvents:UIControlEventTouchUpInside];
+    [content addSubview:closeBtn];
+
+    // === TRIS MONITOR content ===
+    sTrisContent = [[UIView alloc] initWithFrame:CGRectMake(0, 46, pw, ph - 46)];
+    [content addSubview:sTrisContent];
+
+    // ACTIVE MONITOR row
+    UILabel *amLabel = [[UILabel alloc] initWithFrame:CGRectMake(pad, 8, 150, 24)];
+    amLabel.text = @"ACTIVE MONITOR";
+    amLabel.font = [UIFont boldSystemFontOfSize:13];
+    amLabel.textColor = SLAccent();
+    [sTrisContent addSubview:amLabel];
+
+    UISwitch *amSwitch = [[UISwitch alloc] initWithFrame:CGRectMake(pw - pad - 51, 4, 51, 31)];
+    amSwitch.onTintColor = SLAccent();
+    amSwitch.on = sTrisMonitorActive;
+    [amSwitch addTarget:self action:@selector(trisMonitorToggle:) forControlEvents:UIControlEventValueChanged];
+    [sTrisContent addSubview:amSwitch];
+
+    // LOCK TARGET row
+    UILabel *ltLabel = [[UILabel alloc] initWithFrame:CGRectMake(pad, 40, 150, 24)];
+    ltLabel.text = @"LOCK TARGET";
+    ltLabel.font = [UIFont boldSystemFontOfSize:13];
+    ltLabel.textColor = SLAccent();
+    [sTrisContent addSubview:ltLabel];
+
+    NSArray *syms = @[@"🔨", @"🐷", @"💊", @"🛡", @"⭐", @"🧪"];
+    NSArray *keys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"goldSack"];
+    CGFloat symSize = 38;
+    CGFloat symGap = 5;
+    CGFloat symStartX = pad;
+    NSString *curLock = [SLTrisController shared].lockTarget;
+
+    for (NSUInteger i = 0; i < syms.count; i++) {
+        UIButton *sb = [UIButton buttonWithType:UIButtonTypeCustom];
+        sb.frame = CGRectMake(symStartX + i * (symSize + symGap), 68, symSize, symSize);
+        sb.backgroundColor = [UIColor colorWithWhite:0.15 alpha:1];
+        sb.layer.cornerRadius = 12;
+        sb.layer.borderWidth = 2;
+        sb.layer.borderColor = [curLock isEqualToString:keys[i]] ? SLAccent().CGColor : [UIColor clearColor].CGColor;
+        [sb setTitle:syms[i] forState:UIControlStateNormal];
+        sb.titleLabel.font = [UIFont systemFontOfSize:20];
+        sb.tag = 300 + i;
+        sb.showsTouchWhenHighlighted = YES;
+        [sb addTarget:self action:@selector(lockTargetTap:) forControlEvents:UIControlEventTouchUpInside];
+        [sTrisContent addSubview:sb];
+    }
+
+    // === SPIN COUNTER content (hidden by default) ===
+    sCounterContent = [[UIView alloc] initWithFrame:CGRectMake(0, 46, pw, ph - 46)];
+    sCounterContent.hidden = YES;
+    [content addSubview:sCounterContent];
+
+    UILabel *scLabel = [[UILabel alloc] initWithFrame:CGRectMake(pad, 8, 200, 24)];
+    scLabel.text = @"SHOW / HIDE COUNTERS";
+    scLabel.font = [UIFont boldSystemFontOfSize:13];
+    scLabel.textColor = SLAccent();
+    [sCounterContent addSubview:scLabel];
+
+    for (NSUInteger i = 0; i < syms.count; i++) {
+        UIButton *sb = [UIButton buttonWithType:UIButtonTypeCustom];
+        sb.frame = CGRectMake(symStartX + i * (symSize + symGap), 40, symSize, symSize);
+        sb.backgroundColor = [UIColor colorWithWhite:0.15 alpha:1];
+        sb.layer.cornerRadius = 12;
+        sb.layer.borderWidth = 2;
+        sb.layer.borderColor = SLAccent().CGColor;  // all visible by default
+        [sb setTitle:syms[i] forState:UIControlStateNormal];
+        sb.titleLabel.font = [UIFont systemFontOfSize:20];
+        sb.tag = 400 + i;
+        sb.showsTouchWhenHighlighted = YES;
+        [sb addTarget:self action:@selector(counterVisibilityTap:) forControlEvents:UIControlEventTouchUpInside];
+        [sCounterContent addSubview:sb];
+    }
+
+    win.hidden = NO;
+    sSettingsWindow = win;
+}
+
++ (void)switchToTrisTab {
+    sTabTris.backgroundColor = SLAccent();
+    [sTabTris setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    sTabCounter.backgroundColor = SLBtnBg();
+    [sTabCounter setTitleColor:SLMuted() forState:UIControlStateNormal];
+    sTrisContent.hidden = NO;
+    sCounterContent.hidden = YES;
+}
+
++ (void)switchToCounterTab {
+    sTabCounter.backgroundColor = SLAccent();
+    [sTabCounter setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    sTabTris.backgroundColor = SLBtnBg();
+    [sTabTris setTitleColor:SLMuted() forState:UIControlStateNormal];
+    sCounterContent.hidden = NO;
+    sTrisContent.hidden = YES;
+}
+
++ (void)settingsClose {
+    sSettingsWindow.hidden = YES;
+}
+
++ (void)trisMonitorToggle:(UISwitch *)sw {
+    sTrisMonitorActive = sw.on;
+    if (sw.on) [[SLTrisController shared] showTrisMonitor];
+    else [[SLTrisController shared] hideTrisMonitor];
+}
+
++ (void)lockTargetTap:(UIButton *)btn {
+    NSArray *keys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"goldSack"];
+    NSUInteger idx = btn.tag - 300;
+    if (idx >= keys.count) return;
+
+    NSString *cur = [SLTrisController shared].lockTarget;
+    if ([cur isEqualToString:keys[idx]]) {
+        [SLTrisController shared].lockTarget = nil;
+    } else {
+        [SLTrisController shared].lockTarget = keys[idx];
+    }
+
+    // Update borders
+    NSString *newLock = [SLTrisController shared].lockTarget;
+    for (NSUInteger i = 0; i < keys.count; i++) {
+        UIButton *sb = [sSettingsWindow.rootViewController.view viewWithTag:(300 + i)];
+        sb.layer.borderColor = [newLock isEqualToString:keys[i]] ? SLAccent().CGColor : [UIColor clearColor].CGColor;
+    }
+}
+
++ (void)counterVisibilityTap:(UIButton *)btn {
+    NSArray *keys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"goldSack"];
+    NSUInteger idx = btn.tag - 400;
+    if (idx >= keys.count) return;
+
+    // Toggle border (visible = cyan border, hidden = no border)
+    BOOL isActive = (btn.layer.borderColor != [UIColor clearColor].CGColor);
+    btn.layer.borderColor = isActive ? [UIColor clearColor].CGColor : SLAccent().CGColor;
+    btn.alpha = isActive ? 0.4 : 1.0;
+
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"SLToggleCounterSymbol" object:nil
+                                                      userInfo:@{@"symbol": keys[idx]}];
 }
 
 + (void)resetCounters {
