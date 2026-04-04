@@ -2,60 +2,59 @@
 #import "SLConstants.h"
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
-#import <objc/message.h>
+#import <dlfcn.h>
 
 // ---------------------------------------------------------------------------
-//  Speed Controller — SKScene.speed (like One.dylib)
+//  Speed Controller — Unity Time.timeScale (the CORRECT approach)
 //
-//  Coin Master uses SpriteKit. One.dylib sets SKScene.speed to the multiplier.
-//  We swizzle SKScene.didMoveToView: + periodic timer to apply speed.
+//  Android APK analysis confirmed: speed works via Time.timeScale
+//  iOS UnityFramework has "UnityEngine.Time::set_timeScale" icall
+//
+//  Approach: Use il2cpp_resolve_icall to get the set_timeScale function
+//  pointer, then call it directly with the multiplier value.
 // ---------------------------------------------------------------------------
 
 static double sSpeedMultiplier = 1.0;
-static IMP sOrigDidMoveToView = NULL;
 
-// Forward declaration
-static void SLFindAndApplySpeedInView(UIView *view);
+// Function pointer types for Unity Time API
+typedef void (*SetTimeScaleFn)(float);
+typedef float (*GetTimeScaleFn)(void);
 
-static void SLApplySpeed(id scene) {
-    if (sSpeedMultiplier > 1.0) {
-        SEL sel = @selector(setSpeed:);
-        if ([scene respondsToSelector:sel]) {
-            typedef void (*Fn)(id, SEL, CGFloat);
-            ((Fn)objc_msgSend)(scene, sel, (CGFloat)sSpeedMultiplier);
-        }
+static SetTimeScaleFn sSetTimeScale = NULL;
+static GetTimeScaleFn sGetTimeScale = NULL;
+
+// il2cpp_resolve_icall resolves Unity internal calls by name
+typedef void *(*ResolveICallFn)(const char *);
+
+static void SLResolveUnityTime(void) {
+    if (sSetTimeScale) return;  // already resolved
+
+    // Try to find il2cpp_resolve_icall in the loaded UnityFramework
+    ResolveICallFn resolveICall = (ResolveICallFn)dlsym(RTLD_DEFAULT, "il2cpp_resolve_icall");
+    if (!resolveICall) {
+        NSLog(@"[SpinLogger] il2cpp_resolve_icall not found — Unity not loaded yet?");
+        return;
+    }
+
+    sSetTimeScale = (SetTimeScaleFn)resolveICall("UnityEngine.Time::set_timeScale");
+    sGetTimeScale = (GetTimeScaleFn)resolveICall("UnityEngine.Time::get_timeScale");
+
+    if (sSetTimeScale) {
+        NSLog(@"[SpinLogger] Resolved Time.set_timeScale at %p", sSetTimeScale);
+    } else {
+        NSLog(@"[SpinLogger] FAILED to resolve Time.set_timeScale");
+    }
+    if (sGetTimeScale) {
+        NSLog(@"[SpinLogger] Resolved Time.get_timeScale at %p (current: %.2f)", sGetTimeScale, sGetTimeScale());
     }
 }
 
-static void SL_didMoveToView(id self, SEL _cmd, id view) {
-    if (sOrigDidMoveToView) {
-        ((void(*)(id, SEL, id))sOrigDidMoveToView)(self, _cmd, view);
+static void SLApplyTimeScale(void) {
+    if (!sSetTimeScale) {
+        SLResolveUnityTime();
     }
-    SLApplySpeed(self);
-}
-
-static void SLFindAndApplySpeedInView(UIView *view) {
-    Class skViewClass = NSClassFromString(@"SKView");
-    if (skViewClass && [view isKindOfClass:skViewClass]) {
-        SEL sceneSel = @selector(scene);
-        if ([view respondsToSelector:sceneSel]) {
-            id scene = ((id(*)(id, SEL))objc_msgSend)(view, sceneSel);
-            if (scene) SLApplySpeed(scene);
-        }
-    }
-    for (UIView *sub in view.subviews) {
-        SLFindAndApplySpeedInView(sub);
-    }
-}
-
-static void SLApplySpeedToAllScenes(void) {
-    for (UIScene *s in [UIApplication sharedApplication].connectedScenes) {
-        if (![s isKindOfClass:[UIWindowScene class]]) continue;
-        for (UIWindow *w in ((UIWindowScene *)s).windows) {
-            if (w.rootViewController.view) {
-                SLFindAndApplySpeedInView(w.rootViewController.view);
-            }
-        }
+    if (sSetTimeScale) {
+        sSetTimeScale((float)sSpeedMultiplier);
     }
 }
 
@@ -66,29 +65,31 @@ void SLSpeedControllerInstall(void) {
         if (sSpeedMultiplier > 50.0) sSpeedMultiplier = 50.0;
     }
 
-    // Swizzle SKScene.didMoveToView:
-    Class skSceneClass = NSClassFromString(@"SKScene");
-    if (skSceneClass) {
-        SEL sel = @selector(didMoveToView:);
-        Method m = class_getInstanceMethod(skSceneClass, sel);
-        if (m) {
-            sOrigDidMoveToView = method_getImplementation(m);
-            method_setImplementation(m, (IMP)SL_didMoveToView);
-            NSLog(@"[SpinLogger] Hooked SKScene.didMoveToView: for speed");
-        }
+    // Try to resolve immediately (might fail if Unity hasn't loaded yet)
+    SLResolveUnityTime();
+
+    // If not resolved, retry after Unity is fully loaded
+    if (!sSetTimeScale) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)),
+                       dispatch_get_main_queue(), ^{
+            SLResolveUnityTime();
+            if (sSetTimeScale && sSpeedMultiplier > 1.0) {
+                SLApplyTimeScale();
+            }
+        });
     }
 
-    // Periodic timer to re-apply speed (game may reset it on transitions)
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)),
+    // Periodic re-apply (game may reset timeScale on scene transitions)
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5.0 * NSEC_PER_SEC)),
                    dispatch_get_main_queue(), ^{
-        [NSTimer scheduledTimerWithTimeInterval:2.0
+        [NSTimer scheduledTimerWithTimeInterval:1.0
                                         repeats:YES
                                           block:^(NSTimer *t) {
-            if (sSpeedMultiplier > 1.0) SLApplySpeedToAllScenes();
+            if (sSpeedMultiplier > 1.0) SLApplyTimeScale();
         }];
     });
 
-    NSLog(@"[SpinLogger] Speed controller installed (SKScene.speed) — %.1fx", sSpeedMultiplier);
+    NSLog(@"[SpinLogger] Speed controller installed (Unity Time.timeScale) — %.1fx", sSpeedMultiplier);
 }
 
 void SLSpeedControllerSetMultiplier(double multiplier) {
@@ -97,8 +98,8 @@ void SLSpeedControllerSetMultiplier(double multiplier) {
     sSpeedMultiplier = multiplier;
     [[NSUserDefaults standardUserDefaults] setDouble:sSpeedMultiplier forKey:kSLDefaultsSpeedMultiplier];
     [[NSUserDefaults standardUserDefaults] synchronize];
-    dispatch_async(dispatch_get_main_queue(), ^{ SLApplySpeedToAllScenes(); });
-    NSLog(@"[SpinLogger] Speed set to %.1fx", sSpeedMultiplier);
+    SLApplyTimeScale();
+    NSLog(@"[SpinLogger] Speed set to %.1fx (Time.timeScale)", sSpeedMultiplier);
 }
 
 double SLSpeedControllerGetMultiplier(void) {
