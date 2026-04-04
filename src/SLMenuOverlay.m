@@ -559,15 +559,16 @@ static void SLShowPanel(void) {
     vc.view.backgroundColor = [UIColor clearColor];
     win.rootViewController = vc;
 
-    // Long press + drag to move panel (won't conflict with quick taps)
-    UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc]
-        initWithTarget:sHandler action:@selector(handleLongPressDrag:)];
-    longPress.minimumPressDuration = 0.3;  // hold 0.3s then drag
-    [wv addGestureRecognizer:longPress];
+    // 1-finger pan to drag panel
+    UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc]
+        initWithTarget:sHandler action:@selector(handlePan:)];
+    [vc.view addGestureRecognizer:pan];
 
     WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
     [config.userContentController addScriptMessageHandler:sHandler name:@"sl"];
-    config.preferences.javaScriptEnabled = YES;
+    WKWebpagePreferences *pagePrefs = [[WKWebpagePreferences alloc] init];
+    pagePrefs.allowsContentJavaScript = YES;
+    config.defaultWebpagePreferences = pagePrefs;
 
     WKWebView *wv = [[WKWebView alloc] initWithFrame:CGRectMake(0, 0, pw, ph)
                                         configuration:config];
