@@ -212,6 +212,20 @@ static NSString *SLPanelHTML(void);
         [pan setTranslation:CGPointZero inView:pan.view];
     }
 }
+- (void)handleLongPressDrag:(UILongPressGestureRecognizer *)lp {
+    static CGPoint startPoint;
+    static CGRect startFrame;
+    if (lp.state == UIGestureRecognizerStateBegan) {
+        startPoint = [lp locationInView:nil];
+        startFrame = sPanelWindow.frame;
+    } else if (lp.state == UIGestureRecognizerStateChanged) {
+        CGPoint cur = [lp locationInView:nil];
+        CGRect f = startFrame;
+        f.origin.x += cur.x - startPoint.x;
+        f.origin.y += cur.y - startPoint.y;
+        sPanelWindow.frame = f;
+    }
+}
 @end
 
 // ---------------------------------------------------------------------------
@@ -545,12 +559,11 @@ static void SLShowPanel(void) {
     vc.view.backgroundColor = [UIColor clearColor];
     win.rootViewController = vc;
 
-    // Pan gesture on the window itself (not the webview) for dragging
-    // Add to vc.view but require 2 fingers to not conflict with WKWebView taps
-    UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc]
-        initWithTarget:sHandler action:@selector(handlePan:)];
-    pan.minimumNumberOfTouches = 2;  // 2 fingers to drag, 1 finger for WKWebView
-    [vc.view addGestureRecognizer:pan];
+    // Long press + drag to move panel (won't conflict with quick taps)
+    UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc]
+        initWithTarget:sHandler action:@selector(handleLongPressDrag:)];
+    longPress.minimumPressDuration = 0.3;  // hold 0.3s then drag
+    [wv addGestureRecognizer:longPress];
 
     WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
     [config.userContentController addScriptMessageHandler:sHandler name:@"sl"];
