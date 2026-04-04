@@ -18,6 +18,15 @@
 @property (nonatomic, copy) NSString *sosSymbol;
 @property (nonatomic, assign) NSInteger allTimeSpins;
 @property (nonatomic, strong) NSDate *timestamp;
+// Raw numeric IDs from spin API
+@property (nonatomic, assign) NSInteger r1;
+@property (nonatomic, assign) NSInteger r2;
+@property (nonatomic, assign) NSInteger r3;
+@property (nonatomic, assign) NSInteger reward;
 @end
 
+// Parse real-time spin API response (JSON with r1/r2/r3 numeric IDs)
+void SLParseSpinAPIResponse(NSData *responseData);
+
+// Parse strack NDJSON body (legacy/backup)
 void SLParseStrackBody(NSString *body);

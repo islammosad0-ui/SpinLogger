@@ -1,12 +1,59 @@
 # SpinLogger — Discoveries & Technical Notes
 
-## Strack Endpoint
+## REAL-TIME Spin API (what One.dylib actually intercepts!)
+
+- **URL**: `POST https://vik-game.moonactive.net/api/v1/users/{userId}/spin`
+- **Called**: Once per spin, instantly
+- **Response**: ~10KB JSON with spin result
+- **THIS is what One.dylib intercepts — NOT strack!**
+
+### Spin API Response Format:
+| Field | Example | Type |
+|-------|---------|------|
+| r1 | 3 | int (symbol ID) |
+| r2 | 4 | int (symbol ID) |
+| r3 | 2 | int (symbol ID) |
+| reward | 1 | int (reward type) |
+| pay | 100000 | int (coins won) |
+| coins | 11648749247106 | long (balance) |
+| spins | 135527 | int (remaining) |
+| shields | 5 | int |
+| seq | 45439 | int (spin sequence #) |
+| accumulation | {...} | dict |
+
+### Symbol ID Mapping (verified from HAR cross-reference):
+| ID | Symbol | 3x Reward |
+|----|--------|-----------|
+| 1 | coin | reward=1, pay=250000 |
+| 2 | goldSack | reward=1, pay=150000 |
+| 3 | attack | reward=2, pay=0 |
+| 4 | steal/pig | reward=4 |
+| 5 | shield | reward=3, pay=1 |
+| 6 | spins | reward=5 |
+| 30 | accumulation | special |
+
+### Reward Types:
+| ID | Name |
+|----|------|
+| 1 | gold |
+| 2 | attack |
+| 3 | shield |
+| 4 | steal |
+| 5 | spins |
+
+### Request Body (form-encoded):
+```
+Device[udid]=...&API_KEY=viki&API_SECRET=coin&seq=45439&auto_spin=False&bet=1&Client[version]=3.5.2470_fbios
+```
+
+## Strack Endpoint (batched analytics — NOT real-time)
 
 - **URL**: `POST https://vik-ca.moonactive.net/vikings/v3/strack/gzip`
 - **Content-Type**: `application/octet-stream`
-- **Body format**: Newline-delimited JSON (NDJSON) — **NOT actually gzip compressed** despite the URL
+- **Body format**: Newline-delimited JSON (NDJSON), gzip on wire
 - **Response**: `{"code":200,"errors":null,"data":{"status":"OK"}}` (always 200 OK)
-- The game sends analytics events TO this endpoint (request body), spin results are NOT in the response
+- Batches 20+ spin events at once with delay — NOT suitable for real-time counting
+- Only useful as backup/CSV logging
 
 ## Spin Event Format
 
