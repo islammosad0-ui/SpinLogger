@@ -70,6 +70,8 @@ void SLParseSpinAPIResponse(NSData *responseData) {
     NSInteger r3 = r3num.integerValue;
 
     SLSpinResult *result = [[SLSpinResult alloc] init];
+
+    // --- Core reels ---
     result.rawR1 = r1;
     result.rawR2 = r2;
     result.rawR3 = r3;
@@ -84,9 +86,20 @@ void SLParseSpinAPIResponse(NSData *responseData) {
     result.coins = [json[@"coins"] description] ?: @"0";
     result.spinsRemaining = [json[@"spins"] description] ?: @"0";
     result.shields = [json[@"shields"] integerValue];
+    result.maxShields = [json[@"maxShields"] integerValue];
     result.timestamp = [NSDate date];
 
-    // Accumulation bar state — this is the key data for pattern detection
+    // --- Bet state (probability segments change by bet level) ---
+    NSDictionary *superBet = json[@"superBet"];
+    if ([superBet isKindOfClass:[NSDictionary class]]) {
+        result.betLevel = [superBet[@"betLevel"] integerValue];
+        NSArray *opts = superBet[@"betOptions"];
+        if ([opts isKindOfClass:[NSArray class]]) {
+            result.betOptions = [opts componentsJoinedByString:@","];
+        }
+    }
+
+    // --- Main GAE accumulation bar ---
     NSDictionary *accum = json[@"accumulation"];
     if ([accum isKindOfClass:[NSDictionary class]]) {
         result.accumCurrent      = [accum[@"currentAmount"] integerValue];
@@ -105,26 +118,85 @@ void SLParseSpinAPIResponse(NSData *responseData) {
         }
     }
 
-    // Potion Rush tracking — only trigger for the pr_ec bar
-    // Identified by rewards containing "progressive_reward_pr_ec"
+    // --- Second slot reels (slot-on-slot: Dove, Cookie, etc.) ---
+    NSDictionary *addSlots = json[@"additionalSlots"];
+    if ([addSlots isKindOfClass:[NSDictionary class]]) {
+        NSDictionary *secondSlot = addSlots[@"second_slot"];
+        if ([secondSlot isKindOfClass:[NSDictionary class]]) {
+            NSArray *reels = secondSlot[@"reels"];
+            if ([reels isKindOfClass:[NSArray class]]) {
+                result.slot2Reel1 = (reels.count > 0) ? [reels[0] description] : @"";
+                result.slot2Reel2 = (reels.count > 1) ? [reels[1] description] : @"";
+                result.slot2Reel3 = (reels.count > 2) ? [reels[2] description] : @"";
+            }
+        }
+    }
+
+    // --- All event bar snapshots (accumulationBarsById) ---
+    // Captures Potion Rush, Merge, Cave Blaster, Tournament, etc.
     NSDictionary *barsById = json[@"accumulationBarsById"];
-    if ([barsById isKindOfClass:[NSDictionary class]]) {
-        for (NSDictionary *bar in barsById.allValues) {
+    if ([barsById isKindOfClass:[NSDictionary class]] && barsById.count > 0) {
+        NSMutableDictionary *barSnapshot = [NSMutableDictionary dictionary];
+        for (NSString *barId in barsById) {
+            NSDictionary *bar = barsById[barId];
             if (![bar isKindOfClass:[NSDictionary class]]) continue;
-            NSDictionary *rewards = bar[@"rewards"];
-            if ([rewards isKindOfClass:[NSDictionary class]] && rewards[@"progressive_reward_pr_ec"]) {
-                result.potionBarChanged = YES;
-                break;
+            NSInteger cur = [bar[@"currentAmount"] integerValue];
+            NSInteger tot = [bar[@"totalAmount"] integerValue];
+            NSInteger mis = [bar[@"missionIndex"] integerValue];
+            // Use short key: first 8 chars of barId
+            NSString *shortId = barId.length > 8 ? [barId substringToIndex:8] : barId;
+            barSnapshot[shortId] = [NSString stringWithFormat:@"%ld/%ld@m%ld",
+                                    (long)cur, (long)tot, (long)mis];
+        }
+        NSData *barJSON = [NSJSONSerialization dataWithJSONObject:barSnapshot options:0 error:nil];
+        if (barJSON) {
+            result.eventBars = [[NSString alloc] initWithData:barJSON encoding:NSUTF8StringEncoding];
+        }
+    }
+
+    // --- Also check serializedEvents for slot-on-slot bar updates ---
+    NSDictionary *serialized = json[@"serializedEvents"];
+    if ([serialized isKindOfClass:[NSDictionary class]]) {
+        for (NSDictionary *evt in serialized.allValues) {
+            if (![evt isKindOfClass:[NSDictionary class]]) continue;
+            NSArray *common = evt[@"commonResponses"];
+            if (![common isKindOfClass:[NSArray class]]) continue;
+            for (NSDictionary *resp in common) {
+                if (![resp isKindOfClass:[NSDictionary class]]) continue;
+                NSDictionary *payload = resp[@"payload"];
+                if (![payload isKindOfClass:[NSDictionary class]]) continue;
+                NSDictionary *innerBars = payload[@"accumulationBarsById"];
+                if (![innerBars isKindOfClass:[NSDictionary class]]) continue;
+                // Append to eventBars
+                NSMutableDictionary *existing = [NSMutableDictionary dictionary];
+                if (result.eventBars.length > 0) {
+                    NSDictionary *prev = [NSJSONSerialization JSONObjectWithData:
+                        [result.eventBars dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
+                    if ([prev isKindOfClass:[NSDictionary class]]) [existing addEntriesFromDictionary:prev];
+                }
+                for (NSString *barId in innerBars) {
+                    NSDictionary *bar = innerBars[barId];
+                    if (![bar isKindOfClass:[NSDictionary class]]) continue;
+                    NSInteger cur = [bar[@"currentAmount"] integerValue];
+                    NSInteger tot = [bar[@"totalAmount"] integerValue];
+                    NSString *shortId = barId.length > 8 ? [barId substringToIndex:8] : barId;
+                    existing[shortId] = [NSString stringWithFormat:@"%ld/%ld", (long)cur, (long)tot];
+                }
+                NSData *d = [NSJSONSerialization dataWithJSONObject:existing options:0 error:nil];
+                if (d) result.eventBars = [[NSString alloc] initWithData:d encoding:NSUTF8StringEncoding];
             }
         }
     }
 
     SLSpinStoreAppend(result);
 
-    NSLog(@"[SpinLogger] SPIN #%ld: [%@,%@,%@] -> %@ (pay:%lld potion:%d)",
-          (long)result.spinNumber,
-          result.reel1, result.reel2, result.reel3,
-          result.spinResult, result.coinsWon, result.potionBarChanged);
+    NSLog(@"[SpinLogger] SPIN seq=%ld: r[%ld,%ld,%ld] -> %@ | bet=%ld shields=%ld/%ld accum=%ld/%ld slot2=[%@,%@,%@]",
+          (long)result.seq,
+          (long)result.rawR1, (long)result.rawR2, (long)result.rawR3,
+          result.spinResult, (long)result.betLevel,
+          (long)result.shields, (long)result.maxShields,
+          (long)result.accumCurrent, (long)result.accumTotal,
+          result.slot2Reel1 ?: @"", result.slot2Reel2 ?: @"", result.slot2Reel3 ?: @"");
 
     // Notify on main queue (UI updates)
     dispatch_async(dispatch_get_main_queue(), ^{

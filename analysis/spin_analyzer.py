@@ -56,9 +56,15 @@ def load_csv(path):
             spin["coins"] = row.get("coins", "")
             spin["spins_left"] = row.get("spins_remaining", "")
             spin["shields"] = int(row.get("shields", 0))
+            spin["max_shields"] = int(row.get("max_shields", 0))
+            spin["bet_level"] = int(row.get("bet_level", 0))
             spin["accum_current"] = int(row.get("accum_current", 0))
             spin["accum_total"] = int(row.get("accum_total", 0))
             spin["accum_mission"] = int(row.get("accum_mission", 0))
+            spin["slot2_r1"] = row.get("slot2_r1", "")
+            spin["slot2_r2"] = row.get("slot2_r2", "")
+            spin["slot2_r3"] = row.get("slot2_r3", "")
+            spin["event_bars"] = row.get("event_bars", "")
             spin["is_triple"] = (row.get("is_triple", "").lower() == "true" or
                                  (spin["r1"] == spin["r2"] == spin["r3"] and spin["r1"] > 0))
             spin["timestamp"] = row.get("timestamp", "")
@@ -103,14 +109,45 @@ def load_har(path):
             "coins": str(data.get("coins", "")),
             "spins_left": str(data.get("spins", "")),
             "shields": data.get("shields", 0),
+            "max_shields": data.get("maxShields", 0),
+            "bet_level": 0,
             "accum_current": 0, "accum_total": 0, "accum_mission": 0,
+            "slot2_r1": "", "slot2_r2": "", "slot2_r3": "",
+            "event_bars": "",
         }
 
+        # Bet state
+        sb = data.get("superBet", {})
+        if isinstance(sb, dict):
+            spin["bet_level"] = sb.get("betLevel", 0)
+
+        # Main GAE accumulation
         accum = data.get("accumulation", {})
         if isinstance(accum, dict):
             spin["accum_current"] = accum.get("currentAmount", 0)
             spin["accum_total"] = accum.get("totalAmount", 0)
             spin["accum_mission"] = accum.get("missionIndex", 0)
+
+        # Second slot reels
+        addslots = data.get("additionalSlots", {})
+        if isinstance(addslots, dict):
+            ss = addslots.get("second_slot", {})
+            if isinstance(ss, dict):
+                reels = ss.get("reels", [])
+                if len(reels) >= 3:
+                    spin["slot2_r1"] = str(reels[0])
+                    spin["slot2_r2"] = str(reels[1])
+                    spin["slot2_r3"] = str(reels[2])
+
+        # Event bars snapshot
+        bars = data.get("accumulationBarsById", {})
+        if isinstance(bars, dict) and bars:
+            bar_snap = {}
+            for bid, bar in bars.items():
+                if isinstance(bar, dict):
+                    short = bid[:8] if len(bid) > 8 else bid
+                    bar_snap[short] = f"{bar.get('currentAmount',0)}/{bar.get('totalAmount',0)}"
+            spin["event_bars"] = json.dumps(bar_snap)
 
         spin["is_triple"] = (spin["r1"] == spin["r2"] == spin["r3"])
         spin["result"] = REWARD_NAMES.get(spin["reward_code"], "?")
@@ -470,6 +507,171 @@ def hot_cold_windows(spins, window=20):
         print(f"  -> Moderate variance -- consistent with near-random distribution")
 
 
+def attack_steal_analysis(spins):
+    """Track attacks (r=3) and steals (r=4) -- frequency, gaps, shield correlation."""
+    print("\n" + "=" * 70)
+    print("  ATTACK & STEAL ANALYSIS")
+    print("=" * 70)
+
+    for sym_val, sym_name in [(3, "ATTACK"), (4, "STEAL")]:
+        triple_idx = [i for i, s in enumerate(spins)
+                      if s["r1"] == sym_val and s["r2"] == sym_val and s["r3"] == sym_val]
+        single_idx = [i for i, s in enumerate(spins)
+                      if any(r == sym_val for r in [s["r1"], s["r2"], s["r3"]])]
+
+        print(f"\n  --- {sym_name} (r={sym_val}) ---")
+        print(f"  Spins with 1+ {sym_name.lower()} symbol: {len(single_idx)}/{len(spins)} "
+              f"({len(single_idx)/len(spins)*100:.1f}%)")
+        print(f"  Triple {sym_name.lower()}: {len(triple_idx)} "
+              f"({len(triple_idx)/len(spins)*100:.2f}%)")
+
+        if len(triple_idx) > 1:
+            gaps = [triple_idx[i+1] - triple_idx[i] for i in range(len(triple_idx)-1)]
+            print(f"  Gap between 3x {sym_name.lower()}: "
+                  f"min={min(gaps)}, max={max(gaps)}, mean={sum(gaps)/len(gaps):.1f}")
+
+        # Shield state when attack/steal triple lands
+        if triple_idx:
+            shield_vals = [spins[i]["shields"] for i in triple_idx]
+            print(f"  Shield count when 3x {sym_name.lower()} hit: {shield_vals}")
+
+
+def shield_tracking(spins):
+    """Track shield count changes -- gains/losses per spin."""
+    print("\n" + "=" * 70)
+    print("  SHIELD COUNT CHANGES")
+    print("=" * 70)
+
+    if len(spins) < 2:
+        print("  Not enough spins.")
+        return
+
+    changes = []
+    for i in range(1, len(spins)):
+        prev = spins[i-1]["shields"]
+        curr = spins[i]["shields"]
+        delta = curr - prev
+        if delta != 0:
+            changes.append({
+                "idx": i, "spin": spins[i],
+                "prev": prev, "curr": curr, "delta": delta
+            })
+
+    print(f"\n  Shield changes: {len(changes)} out of {len(spins)-1} transitions")
+
+    gains = [c for c in changes if c["delta"] > 0]
+    losses = [c for c in changes if c["delta"] < 0]
+    print(f"  Shield gains: {len(gains)}")
+    print(f"  Shield losses: {len(losses)}")
+
+    if gains:
+        gain_deltas = Counter(c["delta"] for c in gains)
+        print(f"\n  Shield gain amounts:")
+        for d in sorted(gain_deltas):
+            print(f"    +{d}: {gain_deltas[d]} times")
+        # What reel result caused the gain?
+        gain_results = Counter(
+            f"r[{c['spin']['r1']},{c['spin']['r2']},{c['spin']['r3']}]"
+            for c in gains
+        )
+        print(f"  Reels when shield gained (top 5):")
+        for combo, cnt in gain_results.most_common(5):
+            print(f"    {combo}: {cnt}x")
+
+    if losses:
+        loss_deltas = Counter(c["delta"] for c in losses)
+        print(f"\n  Shield loss amounts:")
+        for d in sorted(loss_deltas):
+            print(f"    {d}: {loss_deltas[d]} times")
+        loss_results = Counter(
+            f"r[{c['spin']['r1']},{c['spin']['r2']},{c['spin']['r3']}] reward={c['spin']['reward_code']}"
+            for c in losses
+        )
+        print(f"  Reels when shield lost (top 5):")
+        for combo, cnt in loss_results.most_common(5):
+            print(f"    {combo}: {cnt}x")
+
+    # Shield state distribution
+    shield_dist = Counter(s["shields"] for s in spins)
+    print(f"\n  Shield count distribution:")
+    for sh in sorted(shield_dist):
+        c = shield_dist[sh]
+        bar = "#" * (c * 40 // len(spins))
+        print(f"    shields={sh}: {c:5d} spins ({c/len(spins)*100:.1f}%) {bar}")
+
+
+def second_slot_analysis(spins):
+    """Analyze slot-on-slot second reel patterns."""
+    print("\n" + "=" * 70)
+    print("  SECOND SLOT (SLOT-ON-SLOT) ANALYSIS")
+    print("=" * 70)
+
+    has_slot2 = [s for s in spins if any(s.get(f"slot2_r{i}", "") for i in [1,2,3])]
+    if not has_slot2:
+        print("  No second slot data found.")
+        return
+
+    # Count symbol appearances
+    all_syms = []
+    for s in spins:
+        for i in [1,2,3]:
+            v = s.get(f"slot2_r{i}", "")
+            if v:
+                all_syms.append(v)
+
+    sym_counts = Counter(all_syms)
+    total_positions = len(spins) * 3
+    empty = total_positions - len(all_syms)
+
+    print(f"\n  {len(spins)} spins, {total_positions} reel positions:")
+    print(f"    empty: {empty} ({empty/total_positions*100:.1f}%)")
+    for sym, cnt in sym_counts.most_common():
+        print(f"    {sym}: {cnt} ({cnt/total_positions*100:.1f}%)")
+
+    # Match counts per spin
+    for sym_name in sym_counts:
+        matches = []
+        for s in spins:
+            c = sum(1 for i in [1,2,3] if s.get(f"slot2_r{i}") == sym_name)
+            if c > 0:
+                matches.append(c)
+        match_dist = Counter(matches)
+        print(f"\n  {sym_name} per-spin matches:")
+        for n in sorted(match_dist):
+            print(f"    {n}x: {match_dist[n]} spins")
+
+    # Triple matches on second slot
+    triples_s2 = [(i, s) for i, s in enumerate(spins)
+                  if s.get("slot2_r1") and s["slot2_r1"] == s.get("slot2_r2") == s.get("slot2_r3")]
+    print(f"\n  Second slot triples (all 3 match): {len(triples_s2)}")
+    for idx, s in triples_s2:
+        print(f"    idx={idx} seq={s['seq']}: 3x {s['slot2_r1']}")
+
+
+def bet_level_correlation(spins):
+    """Check if bet level affects triple frequency."""
+    print("\n" + "=" * 70)
+    print("  BET LEVEL vs TRIPLE RATE CORRELATION")
+    print("=" * 70)
+
+    bet_spins = [s for s in spins if s.get("bet_level", 0) > 0]
+    if not bet_spins:
+        print("  No bet level data found.")
+        return
+
+    by_bet = defaultdict(list)
+    for s in bet_spins:
+        by_bet[s["bet_level"]].append(s)
+
+    print(f"\n  Bet level | Spins | Triples | Rate")
+    print(f"  ---------|-------|---------|-----")
+    for bet in sorted(by_bet):
+        group = by_bet[bet]
+        trips = sum(1 for s in group if s["is_triple"])
+        rate = trips / len(group) * 100 if group else 0
+        print(f"  bet={bet:4d}   | {len(group):5d} | {trips:7d} | {rate:.1f}%")
+
+
 def export_for_visualization(spins, output_path):
     """Export processed data as JSON for external visualization tools."""
     print(f"\n  Exporting {len(spins)} spins to {output_path}")
@@ -512,6 +714,10 @@ def main():
     triple_clustering(spins)
     accumulation_analysis(spins)
     spins_symbol_analysis(spins)
+    attack_steal_analysis(spins)
+    shield_tracking(spins)
+    second_slot_analysis(spins)
+    bet_level_correlation(spins)
     cycle_detection(spins)
     hot_cold_windows(spins, window=args.window)
 
