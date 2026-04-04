@@ -2,22 +2,17 @@
 #import "SLConstants.h"
 #import "SLCounterOverlay.h"
 #import "SLSpinTarget.h"
+#import "SLTrisController.h"
 #import "SLNetworkMonitor.h"
 
-// ---------------------------------------------------------------------------
-//  Forward declarations
-// ---------------------------------------------------------------------------
 extern void SLJailbreakBypassInstall(void);
 extern void SLNetworkInterceptorInstall(void);
 extern void SLSpeedControllerInstall(void);
 extern void SLMenuOverlayInstall(void);
 
-// ---------------------------------------------------------------------------
-//  Constructor — called automatically when the dylib is loaded
-// ---------------------------------------------------------------------------
 __attribute__((constructor))
 static void SpinLoggerInit(void) {
-    // Jailbreak bypass must run IMMEDIATELY — before the app checks
+    // Jailbreak bypass runs IMMEDIATELY before app checks
     SLJailbreakBypassInstall();
 
     dispatch_after(
@@ -28,10 +23,11 @@ static void SpinLoggerInit(void) {
             SLSpeedControllerInstall();
             [[SLCounterOverlay shared] install];
             [[SLSpinTarget shared] install];
+            [[SLTrisController shared] install];
             [[SLNetworkMonitor shared] install];
             SLMenuOverlayInstall();
 
-            NSLog(@"[SpinLogger] All components initialized (One.dylib clone v2)");
+            NSLog(@"[SpinLogger] SPEEDER ELITE initialized (all components ready)");
         }
     );
 }

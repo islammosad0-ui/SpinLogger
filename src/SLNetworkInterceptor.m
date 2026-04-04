@@ -5,275 +5,260 @@
 #import <objc/runtime.h>
 
 // ---------------------------------------------------------------------------
-//  Network Interceptor — swizzles NSURLSession to capture all HTTP traffic.
-//  Mirrors One.dylib's network interception + adds full request logging.
+//  Network Interceptor — swizzles NSURLSession to catch Unity HTTP traffic.
 //
-//  Hooks:
-//  1. -[NSURLSession dataTaskWithRequest:completionHandler:]
-//  2. -[NSURLSession uploadTaskWithRequest:fromData:completionHandler:]
-//  3. -[NSURLSession dataTaskWithRequest:] (no handler)
-//  4. +[NSURLConnection sendSynchronousRequest:returningResponse:error:]
+//  KEY INSIGHT from HAR analysis:
+//  - Strack URL: POST .../vikings/v3/strack/gzip
+//  - Content-Encoding: gzip (on wire), but NSURLSession's HTTPBody gives us
+//    the RAW UNCOMPRESSED NDJSON (gzip happens at transport layer)
+//  - So HTTPBody = plain text newline-delimited JSON
+//  - Try plain text FIRST, only decompress as fallback
 // ---------------------------------------------------------------------------
 
 static BOOL sNetworkEnabled = YES;
 
-#pragma mark - Helpers
+#pragma mark - URL matching
 
 static BOOL SLIsStrack(NSURLRequest *request) {
     NSString *url = request.URL.absoluteString;
-    return url && [url containsString:kSLStrackEndpoint];
+    if (!url) return NO;
+    return [url containsString:@"/strack"];
 }
 
-static NSData *SLDecompressGzip(NSData *data) {
-    if (!data || data.length < 2) return data;
-    const uint8_t *bytes = data.bytes;
-    if (bytes[0] != 0x1f || bytes[1] != 0x8b) return data;
-
-    @try {
-        NSError *err = nil;
-        NSData *decompressed = [data decompressedDataUsingAlgorithm:NSDataCompressionAlgorithmZlib
-                                                              error:&err];
-        if (decompressed) return decompressed;
-    } @catch (NSException *e) {}
-    return data;
-}
+#pragma mark - Body extraction
 
 static NSData *SLExtractBody(NSURLRequest *request, NSData *extraBody) {
-    NSData *body = extraBody;
-    if (!body) body = request.HTTPBody;
+    if (extraBody && extraBody.length > 0) return extraBody;
 
-    if (!body && request.HTTPBodyStream) {
+    NSData *body = request.HTTPBody;
+    if (body && body.length > 0) return body;
+
+    if (request.HTTPBodyStream) {
         NSInputStream *stream = request.HTTPBodyStream;
         [stream open];
         NSMutableData *acc = [NSMutableData data];
-        uint8_t buf[8192];
+        uint8_t buf[16384];
         NSInteger len;
         while ((len = [stream read:buf maxLength:sizeof(buf)]) > 0) {
             [acc appendBytes:buf length:(NSUInteger)len];
         }
         [stream close];
-        body = acc;
+        if (acc.length > 0) return acc;
     }
-    return body;
+    return nil;
 }
 
-static SLCapturedRequest *SLCaptureRequest(NSURLRequest *request, NSData *extraBody) {
-    SLCapturedRequest *cap = [[SLCapturedRequest alloc] init];
-    cap.requestId = [[NSUUID UUID] UUIDString];
-    cap.url = request.URL.absoluteString ?: @"";
-    cap.host = request.URL.host ?: @"";
-    cap.method = request.HTTPMethod ?: @"GET";
-    cap.scheme = request.URL.scheme ?: @"https";
-    cap.date = [NSDate date];
-    cap.statusCode = 0;
-    cap.duration = 0;
-    cap.isFinished = NO;
+#pragma mark - Parse strack body for spin data
 
-    // Copy request headers
-    NSMutableDictionary *headers = [NSMutableDictionary dictionary];
-    [request.allHTTPHeaderFields enumerateKeysAndObjectsUsingBlock:^(NSString *k, NSString *v, BOOL *stop) {
-        headers[k] = v;
-    }];
-    cap.requestHeaders = headers;
+static void SLTryParseBody(NSData *data) {
+    if (!data || data.length == 0) return;
 
-    // Extract body
-    cap.requestBody = SLExtractBody(request, extraBody);
+    // Try as plain UTF-8 first (HTTPBody is pre-compression)
+    NSString *str = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 
-    return cap;
-}
+    // If plain text fails, try gzip decompression
+    if (!str) {
+        @try {
+            NSError *err = nil;
+            NSData *decompressed = [data decompressedDataUsingAlgorithm:NSDataCompressionAlgorithmZlib
+                                                                  error:&err];
+            if (decompressed) {
+                str = [[NSString alloc] initWithData:decompressed encoding:NSUTF8StringEncoding];
+            }
+        } @catch (NSException *e) {}
+    }
 
-static void SLProcessForSpinData(NSURLRequest *request, NSData *body) {
-    if (!SLIsStrack(request)) return;
-    if (!body || body.length == 0) return;
+    if (!str || str.length == 0) return;
 
-    NSData *decompressed = SLDecompressGzip(body);
-    NSString *bodyStr = [[NSString alloc] initWithData:decompressed encoding:NSUTF8StringEncoding];
-    if (!bodyStr) return;
+    // Quick check: does this contain spin events?
+    if (![str containsString:@"\"spin\""]) return;
+
+    NSLog(@"[SpinLogger] Parsing strack body (%lu bytes, has spin events)", (unsigned long)data.length);
 
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
-        SLParseStrackBody(bodyStr);
+        SLParseStrackBody(str);
     });
 }
 
 #pragma mark - Original IMP storage
 
-static IMP sOrig_dataTaskWithReqHandler = NULL;
-static IMP sOrig_uploadTaskFromDataHandler = NULL;
-static IMP sOrig_dataTaskWithReq = NULL;
-static IMP sOrig_sendSyncRequest = NULL;
+static IMP sOrig_dataTaskReqHandler = NULL;
+static IMP sOrig_uploadTaskDataHandler = NULL;
+static IMP sOrig_dataTaskReq = NULL;
+static IMP sOrig_uploadTaskData = NULL;
+static IMP sOrig_sendSync = NULL;
 
-#pragma mark - Swizzled implementations
+#pragma mark - Swizzled: dataTaskWithRequest:completionHandler:
 
-// dataTaskWithRequest:completionHandler:
 static NSURLSessionDataTask *
-SL_dataTaskWithReqHandler(id self, SEL _cmd,
-                          NSURLRequest *request,
-                          void (^handler)(NSData *, NSURLResponse *, NSError *))
+SL_dataTaskReqHandler(id self, SEL _cmd, NSURLRequest *request,
+                      void (^handler)(NSData *, NSURLResponse *, NSError *))
 {
-    NSData *body = SLExtractBody(request, nil);
-    SLProcessForSpinData(request, body);
+    if (SLIsStrack(request)) {
+        NSData *body = SLExtractBody(request, nil);
+        if (body) {
+            NSLog(@"[SpinLogger] STRACK via dataTask:handler: (%lu bytes)", (unsigned long)body.length);
+            SLTryParseBody(body);
+        } else {
+            NSLog(@"[SpinLogger] STRACK via dataTask:handler: but NO BODY");
+        }
+    }
 
-    if (sNetworkEnabled) {
-        SLCapturedRequest *cap = SLCaptureRequest(request, nil);
-        NSDate *start = [NSDate date];
-
-        void (^wrappedHandler)(NSData *, NSURLResponse *, NSError *) = nil;
-        if (handler) {
-            wrappedHandler = ^(NSData *data, NSURLResponse *response, NSError *error) {
-                cap.duration = -[start timeIntervalSinceNow];
+    // Wrap handler to capture response (for network monitor)
+    if (sNetworkEnabled && handler) {
+        __block NSURLRequest *capturedReq = request;
+        void (^wrapped)(NSData *, NSURLResponse *, NSError *) =
+            ^(NSData *data, NSURLResponse *response, NSError *error) {
+                SLCapturedRequest *cap = [[SLCapturedRequest alloc] init];
+                cap.requestId = [[NSUUID UUID] UUIDString];
+                cap.url = capturedReq.URL.absoluteString ?: @"";
+                cap.host = capturedReq.URL.host ?: @"";
+                cap.method = capturedReq.HTTPMethod ?: @"GET";
+                cap.date = [NSDate date];
+                cap.responseData = data;
                 cap.isFinished = YES;
                 if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-                    NSHTTPURLResponse *http = (NSHTTPURLResponse *)response;
-                    cap.statusCode = http.statusCode;
-                    NSMutableDictionary *rh = [NSMutableDictionary dictionary];
-                    [http.allHeaderFields enumerateKeysAndObjectsUsingBlock:^(id k, id v, BOOL *stop) {
-                        rh[[k description]] = [v description];
-                    }];
-                    cap.responseHeaders = rh;
+                    cap.statusCode = ((NSHTTPURLResponse *)response).statusCode;
                 }
-                cap.responseData = data;
                 [[SLNetworkStore shared] addRequest:cap];
                 handler(data, response, error);
             };
-        } else {
-            [[SLNetworkStore shared] addRequest:cap];
-        }
 
         typedef NSURLSessionDataTask *(*Orig)(id, SEL, NSURLRequest *, id);
-        return ((Orig)sOrig_dataTaskWithReqHandler)(self, _cmd, request, wrappedHandler ?: handler);
+        return ((Orig)sOrig_dataTaskReqHandler)(self, _cmd, request, wrapped);
     }
 
     typedef NSURLSessionDataTask *(*Orig)(id, SEL, NSURLRequest *, id);
-    return ((Orig)sOrig_dataTaskWithReqHandler)(self, _cmd, request, handler);
+    return ((Orig)sOrig_dataTaskReqHandler)(self, _cmd, request, handler);
 }
 
-// uploadTaskWithRequest:fromData:completionHandler:
+#pragma mark - Swizzled: uploadTaskWithRequest:fromData:completionHandler:
+
 static NSURLSessionUploadTask *
-SL_uploadTaskFromDataHandler(id self, SEL _cmd,
-                              NSURLRequest *request,
-                              NSData *bodyData,
-                              void (^handler)(NSData *, NSURLResponse *, NSError *))
+SL_uploadTaskDataHandler(id self, SEL _cmd, NSURLRequest *request,
+                          NSData *bodyData,
+                          void (^handler)(NSData *, NSURLResponse *, NSError *))
 {
-    SLProcessForSpinData(request, bodyData);
-
-    if (sNetworkEnabled) {
-        SLCapturedRequest *cap = SLCaptureRequest(request, bodyData);
-        NSDate *start = [NSDate date];
-
-        void (^wrappedHandler)(NSData *, NSURLResponse *, NSError *) = nil;
-        if (handler) {
-            wrappedHandler = ^(NSData *data, NSURLResponse *response, NSError *error) {
-                cap.duration = -[start timeIntervalSinceNow];
-                cap.isFinished = YES;
-                if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-                    NSHTTPURLResponse *http = (NSHTTPURLResponse *)response;
-                    cap.statusCode = http.statusCode;
-                }
-                cap.responseData = data;
-                [[SLNetworkStore shared] addRequest:cap];
-                handler(data, response, error);
-            };
-        } else {
-            [[SLNetworkStore shared] addRequest:cap];
+    if (SLIsStrack(request)) {
+        NSData *body = bodyData ?: SLExtractBody(request, nil);
+        if (body) {
+            NSLog(@"[SpinLogger] STRACK via uploadTask:fromData: (%lu bytes)", (unsigned long)body.length);
+            SLTryParseBody(body);
         }
-
-        typedef NSURLSessionUploadTask *(*Orig)(id, SEL, NSURLRequest *, NSData *, id);
-        return ((Orig)sOrig_uploadTaskFromDataHandler)(self, _cmd, request, bodyData, wrappedHandler ?: handler);
     }
 
     typedef NSURLSessionUploadTask *(*Orig)(id, SEL, NSURLRequest *, NSData *, id);
-    return ((Orig)sOrig_uploadTaskFromDataHandler)(self, _cmd, request, bodyData, handler);
+    return ((Orig)sOrig_uploadTaskDataHandler)(self, _cmd, request, bodyData, handler);
 }
 
-// dataTaskWithRequest: (no handler)
-static NSURLSessionDataTask *
-SL_dataTaskWithReq(id self, SEL _cmd, NSURLRequest *request)
-{
-    SLProcessForSpinData(request, nil);
+#pragma mark - Swizzled: dataTaskWithRequest: (no handler)
 
-    if (sNetworkEnabled) {
-        SLCapturedRequest *cap = SLCaptureRequest(request, nil);
-        [[SLNetworkStore shared] addRequest:cap];
+static NSURLSessionDataTask *
+SL_dataTaskReq(id self, SEL _cmd, NSURLRequest *request)
+{
+    if (SLIsStrack(request)) {
+        NSData *body = SLExtractBody(request, nil);
+        if (body) {
+            NSLog(@"[SpinLogger] STRACK via dataTask: no-handler (%lu bytes)", (unsigned long)body.length);
+            SLTryParseBody(body);
+        }
     }
 
     typedef NSURLSessionDataTask *(*Orig)(id, SEL, NSURLRequest *);
-    return ((Orig)sOrig_dataTaskWithReq)(self, _cmd, request);
+    return ((Orig)sOrig_dataTaskReq)(self, _cmd, request);
 }
 
-// NSURLConnection sendSynchronousRequest:
-static NSData *
-SL_sendSyncRequest(id self, SEL _cmd, NSURLRequest *request,
-                   NSURLResponse **response, NSError **error)
+#pragma mark - Swizzled: uploadTaskWithRequest:fromData: (no handler)
+
+static NSURLSessionUploadTask *
+SL_uploadTaskData(id self, SEL _cmd, NSURLRequest *request, NSData *bodyData)
 {
-    SLProcessForSpinData(request, nil);
-
-    typedef NSData *(*Orig)(id, SEL, NSURLRequest *, NSURLResponse **, NSError **);
-    NSData *result = ((Orig)sOrig_sendSyncRequest)(self, _cmd, request, response, error);
-
-    if (sNetworkEnabled) {
-        SLCapturedRequest *cap = SLCaptureRequest(request, nil);
-        cap.isFinished = YES;
-        cap.responseData = result;
-        if (response && *response && [*response isKindOfClass:[NSHTTPURLResponse class]]) {
-            cap.statusCode = ((NSHTTPURLResponse *)*response).statusCode;
+    if (SLIsStrack(request)) {
+        NSData *body = bodyData ?: SLExtractBody(request, nil);
+        if (body) {
+            NSLog(@"[SpinLogger] STRACK via uploadTask:fromData: no-handler (%lu bytes)", (unsigned long)body.length);
+            SLTryParseBody(body);
         }
-        [[SLNetworkStore shared] addRequest:cap];
     }
 
-    return result;
+    typedef NSURLSessionUploadTask *(*Orig)(id, SEL, NSURLRequest *, NSData *);
+    return ((Orig)sOrig_uploadTaskData)(self, _cmd, request, bodyData);
+}
+
+#pragma mark - Swizzled: NSURLConnection sendSynchronousRequest:
+
+static NSData *
+SL_sendSync(id self, SEL _cmd, NSURLRequest *request,
+            NSURLResponse **response, NSError **error)
+{
+    if (SLIsStrack(request)) {
+        NSData *body = SLExtractBody(request, nil);
+        if (body) SLTryParseBody(body);
+    }
+
+    typedef NSData *(*Orig)(id, SEL, NSURLRequest *, NSURLResponse **, NSError **);
+    return ((Orig)sOrig_sendSync)(self, _cmd, request, response, error);
 }
 
 #pragma mark - Install
 
 void SLNetworkInterceptorInstall(void) {
-    // Restore network logging preference
     NSNumber *netPref = [[NSUserDefaults standardUserDefaults] objectForKey:kSLDefaultsNetworkEnabled];
-    if (netPref) {
-        sNetworkEnabled = netPref.boolValue;
-    }
+    if (netPref) sNetworkEnabled = netPref.boolValue;
 
-    Class sessionCls = [NSURLSession class];
+    Class cls = [NSURLSession class];
 
     // 1. dataTaskWithRequest:completionHandler:
     {
         SEL sel = @selector(dataTaskWithRequest:completionHandler:);
-        Method m = class_getInstanceMethod(sessionCls, sel);
+        Method m = class_getInstanceMethod(cls, sel);
         if (m) {
-            sOrig_dataTaskWithReqHandler = method_getImplementation(m);
-            method_setImplementation(m, (IMP)SL_dataTaskWithReqHandler);
+            sOrig_dataTaskReqHandler = method_getImplementation(m);
+            method_setImplementation(m, (IMP)SL_dataTaskReqHandler);
+            NSLog(@"[SpinLogger] Hooked dataTaskWithRequest:completionHandler:");
         }
     }
 
     // 2. uploadTaskWithRequest:fromData:completionHandler:
     {
         SEL sel = @selector(uploadTaskWithRequest:fromData:completionHandler:);
-        Method m = class_getInstanceMethod(sessionCls, sel);
+        Method m = class_getInstanceMethod(cls, sel);
         if (m) {
-            sOrig_uploadTaskFromDataHandler = method_getImplementation(m);
-            method_setImplementation(m, (IMP)SL_uploadTaskFromDataHandler);
+            sOrig_uploadTaskDataHandler = method_getImplementation(m);
+            method_setImplementation(m, (IMP)SL_uploadTaskDataHandler);
+            NSLog(@"[SpinLogger] Hooked uploadTask:fromData:completionHandler:");
         }
     }
 
     // 3. dataTaskWithRequest: (no handler)
     {
         SEL sel = @selector(dataTaskWithRequest:);
-        Method m = class_getInstanceMethod(sessionCls, sel);
+        Method m = class_getInstanceMethod(cls, sel);
         if (m) {
-            sOrig_dataTaskWithReq = method_getImplementation(m);
-            method_setImplementation(m, (IMP)SL_dataTaskWithReq);
+            sOrig_dataTaskReq = method_getImplementation(m);
+            method_setImplementation(m, (IMP)SL_dataTaskReq);
         }
     }
 
-    // 4. NSURLConnection legacy path
+    // 4. uploadTaskWithRequest:fromData: (no handler)
+    {
+        SEL sel = @selector(uploadTaskWithRequest:fromData:);
+        Method m = class_getInstanceMethod(cls, sel);
+        if (m) {
+            sOrig_uploadTaskData = method_getImplementation(m);
+            method_setImplementation(m, (IMP)SL_uploadTaskData);
+        }
+    }
+
+    // 5. NSURLConnection fallback
     {
         SEL sel = @selector(sendSynchronousRequest:returningResponse:error:);
         Method m = class_getClassMethod([NSURLConnection class], sel);
         if (m) {
-            sOrig_sendSyncRequest = method_getImplementation(m);
-            method_setImplementation(m, (IMP)SL_sendSyncRequest);
+            sOrig_sendSync = method_getImplementation(m);
+            method_setImplementation(m, (IMP)SL_sendSync);
         }
     }
 
-    NSLog(@"[SpinLogger] Network interceptor installed (network logging: %@)",
-          sNetworkEnabled ? @"ON" : @"OFF");
+    NSLog(@"[SpinLogger] Network interceptor installed (5 hooks)");
 }
