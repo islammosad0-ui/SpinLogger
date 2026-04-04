@@ -236,6 +236,26 @@ One.dylib uses a **dual approach**:
 - `PointerAuth` — ARM pointer authentication checks
 - `KeychainGuard` — keychain-based integrity verification
 
+## One.dylib Server Communication (from HAR)
+
+### Guard Worker — Anti-piracy heartbeat
+- **URL**: `POST https://speeder-guard-worker.g3r7services.workers.dev/heartbeat`
+- **Headers**: `X-PoW-Challenge: bcd2a31a`, `X-PoW-Nonce: 78180`
+- **Body**: 32 bytes encrypted (application/octet-stream)
+- **Response**: `{"status":"OK","wait":12,"token":3735928559}`
+- `token = 0xDEADBEEF` (magic number — validates the mod is licensed)
+- Called every ~10 seconds
+- **If this fails, the mod likely disables itself**
+
+### Monitor Worker — Config + telemetry
+- **URL**: `POST https://speeder-monitor.g3r7services.workers.dev/heartbeat`
+- **Body**: `{"version":"iOS 26.3.1","status":"online","deviceId":"7BDDCB73-..."}`
+- **Response**: `{"status":"Heartbeat Received","serverTime":...,"config":{"auto_reset":true,"autostop":true,"tier":"ELITE"},"monitor":"idle"}`
+- `tier: "ELITE"` — determines the UI title (SPEEDER ELITE vs SPEEDER)
+- `auto_reset: true` — server controls feature flags
+- `monitor: "idle"` — server can send remote commands
+- **This is how they control the mod remotely and enforce licensing**
+
 ### Encrypted Config Key
 From strings: `SPEEDER_LEVEL_SECURE_SALT_v2_LOCAL_ONLY`
 Hex key found: `2343453635021768305523525c27685f5d33335938435c2728165b282e1921445e28695b572b2f532843582928174e756d0765071e2529545422204222585f682c4b5729`
