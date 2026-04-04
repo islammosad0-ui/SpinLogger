@@ -76,7 +76,7 @@ static NSString *const kCSVHeader =
      "shields,max_shields,bet_multiplier,bet_level,"
      "atk_count,stl_count,shd_count,spn_count,acc_count,"
      "accum_current,accum_total,accum_mission,accum_delta,accum_pct,"
-     "gae_segment,gae_last_mission,"
+     "gae_segment,gae_last_mission,gae_grand_prize,"
      "slot2_r1,slot2_r2,slot2_r3,"
      "event_bars,"
      "sa_spins,sa_atk,sa_stl,sa_shd,sa_spn,sa_acc,sa_3x_atk,sa_3x_stl,sa_3x_shd,"
@@ -202,7 +202,7 @@ void SLSpinStoreAppend(SLSpinResult *result) {
          "%ld,%ld,%ld,%ld,"
          "%ld,%ld,%ld,%ld,%ld,"
          "%ld,%ld,%ld,%ld,%.1f,"
-         "%@,%ld,"
+         "%@,%ld,%ld,"
          "%@,%@,%@,"
          "%@,"
          "%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,"
@@ -217,7 +217,7 @@ void SLSpinStoreAppend(SLSpinResult *result) {
         (long)atkCount, (long)stlCount, (long)shdCount, (long)spnCount, (long)accCount,
         (long)result.accumCurrent, (long)result.accumTotal, (long)result.accumMissionIndex,
         (long)accumDelta, accumPct,
-        result.gaeSegment ?: @"", (long)result.gaeLastMission,
+        result.gaeSegment ?: @"", (long)result.gaeLastMission, (long)result.gaeGrandPrize,
         result.slot2Reel1 ?: @"", result.slot2Reel2 ?: @"", result.slot2Reel3 ?: @"",
         quotedBars,
         // Since last 3x accumulation

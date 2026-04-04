@@ -130,7 +130,18 @@ void SLParseSpinAPIResponseWithBet(NSData *responseData, NSInteger betMultiplier
         }
         NSDictionary *gaeMap = accum[@"gaeMapData"];
         if ([gaeMap isKindOfClass:[NSDictionary class]]) {
-            result.gaeLastMission = [gaeMap[@"lastMissionIndex"] integerValue];
+            NSInteger lastIdx = [gaeMap[@"lastMissionIndex"] integerValue];
+            result.gaeLastMission = lastIdx;
+            NSDictionary *missions = gaeMap[@"missions"];
+            if ([missions isKindOfClass:[NSDictionary class]]) {
+                NSDictionary *lastMission = missions[[NSString stringWithFormat:@"%ld", (long)lastIdx]];
+                if ([lastMission isKindOfClass:[NSDictionary class]]) {
+                    NSDictionary *reward = lastMission[@"reward"];
+                    if ([reward isKindOfClass:[NSDictionary class]]) {
+                        result.gaeGrandPrize = [reward[@"spins"] integerValue];
+                    }
+                }
+            }
         }
     }
 

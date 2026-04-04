@@ -16,7 +16,7 @@ CSV files are date-based: `spin_history_YYYY-MM-DD.csv`. The date is the session
 
 ---
 
-## Column Reference (53 columns)
+## Column Reference (54 columns)
 
 ### Core Spin Data (columns 1-11)
 
@@ -126,12 +126,13 @@ The GAE (Global Accumulation Event) is the main weekly progress bar. It resets e
 
 ---
 
-### GAE List Identification (columns 29-30)
+### GAE List Identification (columns 29-31)
 
 | # | Column | Type | Description |
 |---|--------|------|-------------|
 | 29 | `gae_segment` | string | Server-assigned list segment (e.g. `bonus_bs15_gae0_no`). Encodes the player's reward list tier. |
-| 30 | `gae_last_mission` | int | Total missions/milestones in this list (e.g. 59). Each list tier has a different count, so this fingerprints the exact list. |
+| 30 | `gae_last_mission` | int | Last mission index (total milestones in this list, e.g. 59). Different list tiers may have different mission counts. |
+| 31 | `gae_grand_prize` | int | Spins reward of the final mission (grand prize). E.g. 80000 = 80k spins list. Extracted from `gaeMapData.missions[lastMissionIndex].reward.spins`. This directly identifies the list on coinmasterspins.de. |
 
 **Event List Assignment:** At the START of each new event, the player's current spin count determines which reward list they get:
 
@@ -151,17 +152,17 @@ Higher lists require more points for the same spin rewards but offer higher tota
 
 **Surprise Events:** When a player is inactive for ~1 week, the server assigns an easier "surprise" list to encourage return. These are randomly assigned regardless of spin count. The `gae_segment` will differ from standard lists.
 
-**How to identify your list:** Use `gae_segment` + `gae_last_mission` + `spins_remaining` from row 1 of the CSV. The segment string uniquely identifies the server's list assignment. Reference tables at coinmasterspins.de.
+**How to identify your list:** Use `gae_segment` + `gae_grand_prize` from row 1 of the CSV. The grand prize (e.g. 80000 spins) directly maps to the list tables on coinmasterspins.de.
 
 ---
 
-### Second Slot / Slot-on-Slot (columns 31-33)
+### Second Slot / Slot-on-Slot (columns 32-34)
 
 | # | Column | Type | Description |
 |---|--------|------|-------------|
-| 31 | `slot2_r1` | string | Second slot reel 1. Empty string or event symbol name. |
-| 32 | `slot2_r2` | string | Second slot reel 2. |
-| 33 | `slot2_r3` | string | Second slot reel 3. |
+| 32 | `slot2_r1` | string | Second slot reel 1. Empty string or event symbol name. |
+| 33 | `slot2_r2` | string | Second slot reel 2. |
+| 34 | `slot2_r3` | string | Second slot reel 3. |
 
 **Known symbol names (rotate seasonally):**
 - `GCEaster26` (Easter Dove) — fills egg currency bar
@@ -173,11 +174,11 @@ Higher lists require more points for the same spin rewards but offer higher tota
 
 ---
 
-### Event Bars Snapshot (column 34)
+### Event Bars Snapshot (column 35)
 
 | # | Column | Type | Description |
 |---|--------|------|-------------|
-| 34 | `event_bars` | JSON string | Snapshot of ALL active event progress bars. Quoted JSON object. |
+| 35 | `event_bars` | JSON string | Snapshot of ALL active event progress bars. Quoted JSON object. |
 
 Format: `{"348a373a":"27/40@m7","bf1b4f4b":"396/400@m27"}` where `27/40@m7` = currentAmount=27, totalAmount=40, missionIndex=7.
 
@@ -196,39 +197,39 @@ Format: `{"348a373a":"27/40@m7","bf1b4f4b":"396/400@m27"}` where `27/40@m7` = cu
 
 ---
 
-### Running Counters: Since Last Triple Accumulation (columns 35-43)
+### Running Counters: Since Last Triple Accumulation (columns 36-44)
 
 These counters track what happened between consecutive triple accumulation events (30,30,30). They increment every spin and **reset to 0 when a triple accumulation lands** (after writing the row). All counters persist across app restarts via NSUserDefaults.
 
 | # | Column | Type | Description |
 |---|--------|------|-------------|
-| 35 | `sa_spins` | int | Total spins since last triple accumulation. |
-| 36 | `sa_atk` | int | Total attack symbols (r=3) since last triple accum. |
-| 37 | `sa_stl` | int | Total steal symbols (r=4) since last triple accum. |
-| 38 | `sa_shd` | int | Total shield symbols (r=5) since last triple accum. |
-| 39 | `sa_spn` | int | Total spins symbols (r=6) since last triple accum. |
-| 40 | `sa_acc` | int | Total accumulation symbols (r=30) since last triple accum. |
-| 41 | `sa_3x_atk` | int | Triple attacks since last triple accum. |
-| 42 | `sa_3x_stl` | int | Triple steals since last triple accum. |
-| 43 | `sa_3x_shd` | int | Triple shields since last triple accum. |
+| 36 | `sa_spins` | int | Total spins since last triple accumulation. |
+| 37 | `sa_atk` | int | Total attack symbols (r=3) since last triple accum. |
+| 38 | `sa_stl` | int | Total steal symbols (r=4) since last triple accum. |
+| 39 | `sa_shd` | int | Total shield symbols (r=5) since last triple accum. |
+| 40 | `sa_spn` | int | Total spins symbols (r=6) since last triple accum. |
+| 41 | `sa_acc` | int | Total accumulation symbols (r=30) since last triple accum. |
+| 42 | `sa_3x_atk` | int | Triple attacks since last triple accum. |
+| 43 | `sa_3x_stl` | int | Triple steals since last triple accum. |
+| 44 | `sa_3x_shd` | int | Triple shields since last triple accum. |
 
 ---
 
-### Running Counters: Since Last Triple Spins (columns 44-52)
+### Running Counters: Since Last Triple Spins (columns 45-53)
 
 Identical to `sa_` counters but reset on triple spins (6,6,6).
 
 | # | Column | Type | Description |
 |---|--------|------|-------------|
-| 44 | `ss_spins` | int | Total spins since last triple spins. |
-| 45 | `ss_atk` | int | Total attack symbols since last triple spins. |
-| 46 | `ss_stl` | int | Total steal symbols since last triple spins. |
-| 47 | `ss_shd` | int | Total shield symbols since last triple spins. |
-| 48 | `ss_spn` | int | Total spins symbols since last triple spins. |
-| 49 | `ss_acc` | int | Total accumulation symbols since last triple spins. |
-| 50 | `ss_3x_atk` | int | Triple attacks since last triple spins. |
-| 51 | `ss_3x_stl` | int | Triple steals since last triple spins. |
-| 52 | `ss_3x_shd` | int | Triple shields since last triple spins. |
+| 45 | `ss_spins` | int | Total spins since last triple spins. |
+| 46 | `ss_atk` | int | Total attack symbols since last triple spins. |
+| 47 | `ss_stl` | int | Total steal symbols since last triple spins. |
+| 48 | `ss_shd` | int | Total shield symbols since last triple spins. |
+| 49 | `ss_spn` | int | Total spins symbols since last triple spins. |
+| 50 | `ss_acc` | int | Total accumulation symbols since last triple spins. |
+| 51 | `ss_3x_atk` | int | Triple attacks since last triple spins. |
+| 52 | `ss_3x_stl` | int | Triple steals since last triple spins. |
+| 53 | `ss_3x_shd` | int | Triple shields since last triple spins. |
 
 ---
 
