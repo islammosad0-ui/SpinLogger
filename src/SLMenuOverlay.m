@@ -35,7 +35,10 @@ static UIColor *SLMuted(void) { return [UIColor colorWithRed:0.48 green:0.54 blu
 
 #pragma mark - Button factory
 
-static UIButton *sSpeedBadgeBtn = nil;  // need reference to update title
+static UIButton *sSpeedBadgeBtn = nil;
+static UIButton *sRefreshBtn = nil;    // ↺ counter toggle
+static UIButton *sNetBtn = nil;        // 📶 network toggle
+static BOOL sCountersVisible = YES;
 
 static UIButton *SLMakeBtn(NSString *title, CGFloat w, CGFloat h, UIColor *bg, UIColor *fg, CGFloat fontSize) {
     UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -157,6 +160,9 @@ static BOOL sTrisMonitorActive = NO;
     blur.layer.cornerRadius = 18;
     blur.clipsToBounds = YES;
     blur.alpha = 0.95;
+    blur.userInteractionEnabled = YES;
+    UIPanGestureRecognizer *settingsPan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragSettings:)];
+    [blur addGestureRecognizer:settingsPan];
     [vc.view addSubview:blur];
     UIView *content = blur.contentView;
 
@@ -279,6 +285,16 @@ static BOOL sTrisMonitorActive = NO;
     sSettingsWindow.hidden = YES;
 }
 
++ (void)dragSettings:(UIPanGestureRecognizer *)pan {
+    if (pan.state == UIGestureRecognizerStateBegan || pan.state == UIGestureRecognizerStateChanged) {
+        CGPoint t = [pan translationInView:pan.view];
+        CGRect f = sSettingsWindow.frame;
+        f.origin.x += t.x; f.origin.y += t.y;
+        sSettingsWindow.frame = f;
+        [pan setTranslation:CGPointZero inView:pan.view];
+    }
+}
+
 + (void)trisMonitorToggle:(UISwitch *)sw {
     sTrisMonitorActive = sw.on;
     if (sw.on) [[SLTrisController shared] showTrisMonitor];
@@ -320,8 +336,10 @@ static BOOL sTrisMonitorActive = NO;
 }
 
 + (void)resetCounters {
-    // Toggle all counters show/hide (NOT reset)
+    sCountersVisible = !sCountersVisible;
     [[NSNotificationCenter defaultCenter] postNotificationName:@"SLToggleCounters" object:nil];
+    sRefreshBtn.backgroundColor = sCountersVisible ? SLBtnActive() : SLBtnBg();
+    [sRefreshBtn setTitleColor:sCountersVisible ? [UIColor whiteColor] : SLMuted() forState:UIControlStateNormal];
 }
 
 + (void)targetSpin {
@@ -363,6 +381,8 @@ static BOOL sTargetActive = NO;
     bg.layer.borderWidth = 1.5;
     bg.layer.borderColor = [UIColor colorWithRed:0 green:0.8 blue:0 alpha:0.6].CGColor;
     bg.clipsToBounds = YES;
+    UIPanGestureRecognizer *targetPan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragTarget:)];
+    [bg addGestureRecognizer:targetPan];
     [vc.view addSubview:bg];
 
     CGFloat pad = 14;
@@ -499,6 +519,16 @@ static BOOL sTargetActive = NO;
     sTargetWindow.hidden = YES;
 }
 
++ (void)dragTarget:(UIPanGestureRecognizer *)pan {
+    if (pan.state == UIGestureRecognizerStateBegan || pan.state == UIGestureRecognizerStateChanged) {
+        CGPoint t = [pan translationInView:pan.view];
+        CGRect f = sTargetWindow.frame;
+        f.origin.x += t.x; f.origin.y += t.y;
+        sTargetWindow.frame = f;
+        [pan setTranslation:CGPointZero inView:pan.view];
+    }
+}
+
 + (void)targetSave {
     if (sTargetSymbol && sTargetMaxSpins > 0) {
         [SLSpinTarget shared].targetSpinCount = sTargetMaxSpins;
@@ -510,6 +540,8 @@ static BOOL sTargetActive = NO;
 
 + (void)networkToggle {
     sNetworkLocked = !sNetworkLocked;
+    sNetBtn.backgroundColor = sNetworkLocked ? SLBtnBg() : SLBtnActive();
+    [sNetBtn setTitleColor:sNetworkLocked ? SLMuted() : [UIColor whiteColor] forState:UIControlStateNormal];
     NSLog(@"[SpinLogger] Network %@", sNetworkLocked ? @"BLOCKED" : @"RESTORED");
 }
 
@@ -572,8 +604,8 @@ static void SLShowPanel(void) {
     if (!scene) return;
 
     CGRect screen = scene.coordinateSpace.bounds;
-    CGFloat pw = MIN(screen.size.width * 0.62, 250);
-    CGFloat ph = 155;
+    CGFloat pw = MIN(screen.size.width * 0.80, 310);
+    CGFloat ph = 140;
     CGFloat ix = sIconWindow ? sIconWindow.frame.origin.x : screen.size.width - 60;
     CGFloat iy = sIconWindow ? sIconWindow.frame.origin.y : screen.size.height / 2;
     CGFloat x = MIN(ix, screen.size.width - pw - 10);
@@ -703,6 +735,9 @@ static void SLShowPanel(void) {
         if ([def[1] length] > 0) {
             [abtn addTarget:[SLActions class] action:NSSelectorFromString(def[1]) forControlEvents:UIControlEventTouchUpInside];
         }
+        // Store refs for toggle buttons
+        if ([def[0] isEqualToString:@"↺"]) sRefreshBtn = abtn;
+        if ([def[0] isEqualToString:@"📶"]) sNetBtn = abtn;
         [content addSubview:abtn];
         ax += w + agap;
     }
