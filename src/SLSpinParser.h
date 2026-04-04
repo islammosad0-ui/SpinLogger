@@ -43,8 +43,9 @@
 // --- Event bar snapshots (all accumulationBarsById) ---
 @property (nonatomic, copy) NSString *eventBars;  // JSON: {"barId": current/total, ...}
 
-// --- Potion Rush bar (progressive_reward_pr_ec) ---
-@property (nonatomic, assign) NSInteger potionRushMissionIndex;  // -1 if not present this spin
+// --- Event bar mission tracking (any bar completion triggers 🧪 tile) ---
+@property (nonatomic, assign) NSInteger potionRushMissionIndex;  // deprecated, kept for compat
+@property (nonatomic, strong) NSDictionary *eventBarMissions;    // barShortId -> @(missionIndex)
 
 // --- Attack/Steal tracking ---
 @property (nonatomic, copy) NSString *attackTarget;  // who was attacked (from messages)

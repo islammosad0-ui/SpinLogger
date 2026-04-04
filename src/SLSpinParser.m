@@ -160,34 +160,34 @@ void SLParseSpinAPIResponseWithBet(NSData *responseData, NSInteger betMultiplier
     }
 
     // --- All event bar snapshots (accumulationBarsById) ---
-    // Captures Potion Rush, Merge, Cave Blaster, Tournament, etc.
+    // Captures any active event bars: Potion Rush, Merge, Expedition, etc.
+    // Collects from both top-level AND serializedEvents
     result.potionRushMissionIndex = -1;
-    NSDictionary *barsById = json[@"accumulationBarsById"];
-    if ([barsById isKindOfClass:[NSDictionary class]] && barsById.count > 0) {
-        NSMutableDictionary *barSnapshot = [NSMutableDictionary dictionary];
-        for (NSString *barId in barsById) {
-            NSDictionary *bar = barsById[barId];
+    NSMutableDictionary *barSnapshot = [NSMutableDictionary dictionary];
+    NSMutableDictionary *barMissions = [NSMutableDictionary dictionary];
+
+    // Helper block: process a bars dictionary from any source
+    void (^processBars)(NSDictionary *) = ^(NSDictionary *bars) {
+        for (NSString *barId in bars) {
+            NSDictionary *bar = bars[barId];
             if (![bar isKindOfClass:[NSDictionary class]]) continue;
             NSInteger cur = [bar[@"currentAmount"] integerValue];
             NSInteger tot = [bar[@"totalAmount"] integerValue];
             NSInteger mis = [bar[@"missionIndex"] integerValue];
-            // Detect Potion Rush by reward key (progressive_reward_pr_ec) — bar UUID changes per event
-            NSDictionary *rewards = bar[@"rewards"];
-            if ([rewards isKindOfClass:[NSDictionary class]] && rewards[@"progressive_reward_pr_ec"]) {
-                result.potionRushMissionIndex = mis;
-            }
-            // Use short key: first 8 chars of barId
             NSString *shortId = barId.length > 8 ? [barId substringToIndex:8] : barId;
             barSnapshot[shortId] = [NSString stringWithFormat:@"%ld/%ld@m%ld",
                                     (long)cur, (long)tot, (long)mis];
+            barMissions[shortId] = @(mis);
         }
-        NSData *barJSON = [NSJSONSerialization dataWithJSONObject:barSnapshot options:0 error:nil];
-        if (barJSON) {
-            result.eventBars = [[NSString alloc] initWithData:barJSON encoding:NSUTF8StringEncoding];
-        }
+    };
+
+    // Top-level bars
+    NSDictionary *barsById = json[@"accumulationBarsById"];
+    if ([barsById isKindOfClass:[NSDictionary class]] && barsById.count > 0) {
+        processBars(barsById);
     }
 
-    // --- Also check serializedEvents for slot-on-slot bar updates ---
+    // serializedEvents bars (slot-on-slot and others)
     NSDictionary *serialized = json[@"serializedEvents"];
     if ([serialized isKindOfClass:[NSDictionary class]]) {
         for (NSDictionary *evt in serialized.allValues) {
@@ -199,27 +199,20 @@ void SLParseSpinAPIResponseWithBet(NSData *responseData, NSInteger betMultiplier
                 NSDictionary *payload = resp[@"payload"];
                 if (![payload isKindOfClass:[NSDictionary class]]) continue;
                 NSDictionary *innerBars = payload[@"accumulationBarsById"];
-                if (![innerBars isKindOfClass:[NSDictionary class]]) continue;
-                // Append to eventBars
-                NSMutableDictionary *existing = [NSMutableDictionary dictionary];
-                if (result.eventBars.length > 0) {
-                    NSDictionary *prev = [NSJSONSerialization JSONObjectWithData:
-                        [result.eventBars dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
-                    if ([prev isKindOfClass:[NSDictionary class]]) [existing addEntriesFromDictionary:prev];
+                if ([innerBars isKindOfClass:[NSDictionary class]]) {
+                    processBars(innerBars);
                 }
-                for (NSString *barId in innerBars) {
-                    NSDictionary *bar = innerBars[barId];
-                    if (![bar isKindOfClass:[NSDictionary class]]) continue;
-                    NSInteger cur = [bar[@"currentAmount"] integerValue];
-                    NSInteger tot = [bar[@"totalAmount"] integerValue];
-                    NSString *shortId = barId.length > 8 ? [barId substringToIndex:8] : barId;
-                    existing[shortId] = [NSString stringWithFormat:@"%ld/%ld", (long)cur, (long)tot];
-                }
-                NSData *d = [NSJSONSerialization dataWithJSONObject:existing options:0 error:nil];
-                if (d) result.eventBars = [[NSString alloc] initWithData:d encoding:NSUTF8StringEncoding];
             }
         }
     }
+
+    if (barSnapshot.count > 0) {
+        NSData *barJSON = [NSJSONSerialization dataWithJSONObject:barSnapshot options:0 error:nil];
+        if (barJSON) {
+            result.eventBars = [[NSString alloc] initWithData:barJSON encoding:NSUTF8StringEncoding];
+        }
+    }
+    result.eventBarMissions = [barMissions copy];
 
     SLSpinStoreAppend(result);
 

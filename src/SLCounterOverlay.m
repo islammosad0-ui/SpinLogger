@@ -271,13 +271,22 @@ static const int kSymbolCount = 6;
         }
     }
 
-    // Check for Potion Rush bar completion (🧪 goldSack tile)
-    // Identified by progressive_reward_pr_ec reward key (UUID changes per event)
-    static NSInteger sPotionMissionIndex = -1;
-    if (result.potionRushMissionIndex >= 0) {
-        NSInteger mIdx = result.potionRushMissionIndex;
-        if (sPotionMissionIndex >= 0 && mIdx > sPotionMissionIndex) {
-            // missionIndex increased — bar completed
+    // Check for ANY event bar mission completion (🧪 goldSack tile)
+    // Works with any event: Potion Rush, Expedition, Merge, etc.
+    static NSMutableDictionary *sPrevBarMissions = nil;
+    if (!sPrevBarMissions) sPrevBarMissions = [NSMutableDictionary dictionary];
+
+    if (result.eventBarMissions.count > 0) {
+        BOOL anyCompleted = NO;
+        for (NSString *barId in result.eventBarMissions) {
+            NSInteger curMission = [result.eventBarMissions[barId] integerValue];
+            NSNumber *prevVal = sPrevBarMissions[barId];
+            if (prevVal && curMission > prevVal.integerValue) {
+                anyCompleted = YES;
+            }
+            sPrevBarMissions[barId] = @(curMission);
+        }
+        if (anyCompleted) {
             for (SLCounterTile *tile in self.tiles) {
                 if ([tile.symbolKey isEqualToString:@"goldSack"]) {
                     [[SLTrisController shared] recordTriple:@"goldSack" distance:tile.distance symbolCount:tile.singleCount];
@@ -288,7 +297,6 @@ static const int kSymbolCount = 6;
                 }
             }
         }
-        sPotionMissionIndex = mIdx;
     }
 
     // Update all labels
