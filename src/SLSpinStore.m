@@ -3,6 +3,7 @@
 
 static NSInteger sSpinCount = 0;
 static BOOL sHeaderEnsured = NO;
+static BOOL sCountersRestored = NO;
 
 // ---------------------------------------------------------------------------
 //  Running counters — reset on triple accumulation (sa_) or triple spins (ss_)
@@ -10,14 +11,14 @@ static BOOL sHeaderEnsured = NO;
 // ---------------------------------------------------------------------------
 // Since last 3x accumulation (30,30,30)
 static NSInteger sa_spins = 0;
-static NSInteger sa_atk = 0;      // total attack symbols (includes triples)
-static NSInteger sa_stl = 0;      // total steal symbols
-static NSInteger sa_shd = 0;      // total shield symbols
-static NSInteger sa_spn = 0;      // total spins symbols (r=6)
-static NSInteger sa_acc = 0;      // total accumulation symbols (r=30)
-static NSInteger sa_3x_atk = 0;   // how many triple attacks
-static NSInteger sa_3x_stl = 0;   // how many triple steals
-static NSInteger sa_3x_shd = 0;   // how many triple shields
+static NSInteger sa_atk = 0;
+static NSInteger sa_stl = 0;
+static NSInteger sa_shd = 0;
+static NSInteger sa_spn = 0;
+static NSInteger sa_acc = 0;
+static NSInteger sa_3x_atk = 0;
+static NSInteger sa_3x_stl = 0;
+static NSInteger sa_3x_shd = 0;
 
 // Since last 3x spins (6,6,6)
 static NSInteger ss_spins = 0;
@@ -34,25 +35,76 @@ static NSInteger ss_3x_shd = 0;
 static NSInteger sPrevAccumCurrent = -1;
 static NSInteger sPrevAccumMission = -1;
 
+// ---------------------------------------------------------------------------
+//  Running counter persistence
+// ---------------------------------------------------------------------------
+static void SLSaveRunningCounters(void) {
+    NSDictionary *d = @{
+        @"sa_spins": @(sa_spins), @"sa_atk": @(sa_atk), @"sa_stl": @(sa_stl),
+        @"sa_shd": @(sa_shd), @"sa_spn": @(sa_spn), @"sa_acc": @(sa_acc),
+        @"sa_3x_atk": @(sa_3x_atk), @"sa_3x_stl": @(sa_3x_stl), @"sa_3x_shd": @(sa_3x_shd),
+        @"ss_spins": @(ss_spins), @"ss_atk": @(ss_atk), @"ss_stl": @(ss_stl),
+        @"ss_shd": @(ss_shd), @"ss_spn": @(ss_spn), @"ss_acc": @(ss_acc),
+        @"ss_3x_atk": @(ss_3x_atk), @"ss_3x_stl": @(ss_3x_stl), @"ss_3x_shd": @(ss_3x_shd),
+        @"prevAccumCurrent": @(sPrevAccumCurrent), @"prevAccumMission": @(sPrevAccumMission),
+    };
+    [[NSUserDefaults standardUserDefaults] setObject:d forKey:@"Speeder_CSVCounters"];
+}
+
+static void SLRestoreRunningCounters(void) {
+    if (sCountersRestored) return;
+    sCountersRestored = YES;
+    NSDictionary *d = [[NSUserDefaults standardUserDefaults] dictionaryForKey:@"Speeder_CSVCounters"];
+    if (!d) return;
+    sa_spins = [d[@"sa_spins"] integerValue]; sa_atk = [d[@"sa_atk"] integerValue];
+    sa_stl = [d[@"sa_stl"] integerValue]; sa_shd = [d[@"sa_shd"] integerValue];
+    sa_spn = [d[@"sa_spn"] integerValue]; sa_acc = [d[@"sa_acc"] integerValue];
+    sa_3x_atk = [d[@"sa_3x_atk"] integerValue]; sa_3x_stl = [d[@"sa_3x_stl"] integerValue];
+    sa_3x_shd = [d[@"sa_3x_shd"] integerValue];
+    ss_spins = [d[@"ss_spins"] integerValue]; ss_atk = [d[@"ss_atk"] integerValue];
+    ss_stl = [d[@"ss_stl"] integerValue]; ss_shd = [d[@"ss_shd"] integerValue];
+    ss_spn = [d[@"ss_spn"] integerValue]; ss_acc = [d[@"ss_acc"] integerValue];
+    ss_3x_atk = [d[@"ss_3x_atk"] integerValue]; ss_3x_stl = [d[@"ss_3x_stl"] integerValue];
+    ss_3x_shd = [d[@"ss_3x_shd"] integerValue];
+    sPrevAccumCurrent = [d[@"prevAccumCurrent"] integerValue];
+    sPrevAccumMission = [d[@"prevAccumMission"] integerValue];
+}
+
 static NSString *const kCSVHeader =
     @"seq,timestamp,r1,r2,r3,reel_1,reel_2,reel_3,spin_result,reward_code,is_triple,"
      "coins_won,coins,spins_remaining,"
      "shields,max_shields,bet_multiplier,bet_level,"
+     "atk_count,stl_count,shd_count,spn_count,acc_count,"
      "accum_current,accum_total,accum_mission,accum_delta,accum_pct,"
+     "gae_segment,gae_last_mission,"
      "slot2_r1,slot2_r2,slot2_r3,"
      "event_bars,"
      "sa_spins,sa_atk,sa_stl,sa_shd,sa_spn,sa_acc,sa_3x_atk,sa_3x_stl,sa_3x_shd,"
      "ss_spins,ss_atk,ss_stl,ss_shd,ss_spn,ss_acc,ss_3x_atk,ss_3x_stl,ss_3x_shd";
 
+// Session date stored in UserDefaults — determines which CSV file to write to
+static NSString *sSessionDate = nil;
+
+static NSString *SLSessionDate(void) {
+    if (!sSessionDate) {
+        sSessionDate = [[NSUserDefaults standardUserDefaults] stringForKey:@"Speeder_SessionDate"];
+        if (!sSessionDate) {
+            // First launch — use today's date
+            NSDateFormatter *df = [[NSDateFormatter alloc] init];
+            df.dateFormat = @"yyyy-MM-dd";
+            df.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
+            sSessionDate = [df stringFromDate:[NSDate date]];
+            [[NSUserDefaults standardUserDefaults] setObject:sSessionDate forKey:@"Speeder_SessionDate"];
+        }
+    }
+    return sSessionDate;
+}
+
 static NSString *SLCSVPath(void) {
-    static NSString *path = nil;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        NSString *docs = NSSearchPathForDirectoriesInDomains(
-            NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
-        path = [docs stringByAppendingPathComponent:kSLSpinHistoryFile];
-    });
-    return path;
+    NSString *docs = NSSearchPathForDirectoriesInDomains(
+        NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
+    NSString *filename = [NSString stringWithFormat:@"spin_history_%@.csv", SLSessionDate()];
+    return [docs stringByAppendingPathComponent:filename];
 }
 
 static void SLEnsureCSVHeader(void) {
@@ -83,6 +135,7 @@ static void SLEnsureCSVHeader(void) {
 
 void SLSpinStoreAppend(SLSpinResult *result) {
     if (!result) return;
+    SLRestoreRunningCounters();
     SLEnsureCSVHeader();
     sSpinCount++;
 
@@ -147,7 +200,9 @@ void SLSpinStoreAppend(SLSpinResult *result) {
         @"%ld,%@,%ld,%ld,%ld,%@,%@,%@,%@,%ld,%@,"
          "%lld,%@,%@,"
          "%ld,%ld,%ld,%ld,"
+         "%ld,%ld,%ld,%ld,%ld,"
          "%ld,%ld,%ld,%ld,%.1f,"
+         "%@,%ld,"
          "%@,%@,%@,"
          "%@,"
          "%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,"
@@ -159,8 +214,10 @@ void SLSpinStoreAppend(SLSpinResult *result) {
         isTriple ? @"true" : @"false",
         result.coinsWon, result.coins ?: @"", result.spinsRemaining ?: @"",
         (long)result.shields, (long)result.maxShields, (long)result.betMultiplier, (long)result.betLevel,
+        (long)atkCount, (long)stlCount, (long)shdCount, (long)spnCount, (long)accCount,
         (long)result.accumCurrent, (long)result.accumTotal, (long)result.accumMissionIndex,
         (long)accumDelta, accumPct,
+        result.gaeSegment ?: @"", (long)result.gaeLastMission,
         result.slot2Reel1 ?: @"", result.slot2Reel2 ?: @"", result.slot2Reel3 ?: @"",
         quotedBars,
         // Since last 3x accumulation
@@ -180,6 +237,8 @@ void SLSpinStoreAppend(SLSpinResult *result) {
         ss_spn = 0; ss_acc = 0; ss_3x_atk = 0; ss_3x_stl = 0; ss_3x_shd = 0;
     }
 
+    SLSaveRunningCounters();
+
     NSString *path = SLCSVPath();
     NSFileManager *fm = [NSFileManager defaultManager];
 
@@ -195,6 +254,29 @@ void SLSpinStoreAppend(SLSpinResult *result) {
         [fh writeData:[row dataUsingEncoding:NSUTF8StringEncoding]];
         [fh closeFile];
     }
+}
+
+void SLSpinStoreRotateCSV(void) {
+    // Start a new CSV session with today's date
+    NSDateFormatter *df = [[NSDateFormatter alloc] init];
+    df.dateFormat = @"yyyy-MM-dd";
+    df.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
+    sSessionDate = [df stringFromDate:[NSDate date]];
+    [[NSUserDefaults standardUserDefaults] setObject:sSessionDate forKey:@"Speeder_SessionDate"];
+
+    // Reset CSV state so next append creates a fresh file with header
+    sHeaderEnsured = NO;
+    sSpinCount = 0;
+
+    // Reset running counters
+    sa_spins = 0; sa_atk = 0; sa_stl = 0; sa_shd = 0;
+    sa_spn = 0; sa_acc = 0; sa_3x_atk = 0; sa_3x_stl = 0; sa_3x_shd = 0;
+    ss_spins = 0; ss_atk = 0; ss_stl = 0; ss_shd = 0;
+    ss_spn = 0; ss_acc = 0; ss_3x_atk = 0; ss_3x_stl = 0; ss_3x_shd = 0;
+    sPrevAccumCurrent = -1; sPrevAccumMission = -1;
+    SLSaveRunningCounters();
+
+    NSLog(@"[SpinLogger] CSV rotated → spin_history_%@.csv", sSessionDate);
 }
 
 NSString *SLSpinStoreCSVPath(void) {

@@ -122,6 +122,16 @@ void SLParseSpinAPIResponseWithBet(NSData *responseData, NSInteger betMultiplier
                 break;
             }
         }
+
+        // GAE list identification — segment encodes list tier, lastMission fingerprints the list
+        NSDictionary *bonus = accum[@"bonus"];
+        if ([bonus isKindOfClass:[NSDictionary class]]) {
+            result.gaeSegment = [bonus[@"segment"] description];
+        }
+        NSDictionary *gaeMap = accum[@"gaeMapData"];
+        if ([gaeMap isKindOfClass:[NSDictionary class]]) {
+            result.gaeLastMission = [gaeMap[@"lastMissionIndex"] integerValue];
+        }
     }
 
     // --- Second slot reels (slot-on-slot: Dove, Cookie, etc.) ---

@@ -1,4 +1,6 @@
 #import "SLTrisController.h"
+#import "SLCounterOverlay.h"
+#import "SLSpinStore.h"
 #import "SLConstants.h"
 #import "SLSpinParser.h"
 #import <UIKit/UIKit.h>
@@ -63,8 +65,38 @@
         _symHistGold   = [NSMutableArray array];
         _totalSpins = 0;
         _symbolCountMode = NO;
+        [self restoreState];
     }
     return self;
+}
+
+#pragma mark - Persistence
+
+- (void)saveState {
+    NSDictionary *state = @{
+        @"totalSpins": @(_totalSpins),
+        @"histAttack": _histAttack, @"histSteal": _histSteal, @"histSpins": _histSpins,
+        @"histShield": _histShield, @"histAccum": _histAccum, @"histGold": _histGold,
+        @"symHistAttack": _symHistAttack, @"symHistSteal": _symHistSteal, @"symHistSpins": _symHistSpins,
+        @"symHistShield": _symHistShield, @"symHistAccum": _symHistAccum, @"symHistGold": _symHistGold,
+    };
+    [[NSUserDefaults standardUserDefaults] setObject:state forKey:@"Speeder_TrisState"];
+}
+
+- (void)restoreState {
+    NSDictionary *state = [[NSUserDefaults standardUserDefaults] dictionaryForKey:@"Speeder_TrisState"];
+    if (!state) return;
+    _totalSpins = [state[@"totalSpins"] integerValue];
+    NSArray *keys = @[@"histAttack", @"histSteal", @"histSpins", @"histShield", @"histAccum", @"histGold",
+                      @"symHistAttack", @"symHistSteal", @"symHistSpins", @"symHistShield", @"symHistAccum", @"symHistGold"];
+    NSArray *arrays = @[_histAttack, _histSteal, _histSpins, _histShield, _histAccum, _histGold,
+                        _symHistAttack, _symHistSteal, _symHistSpins, _symHistShield, _symHistAccum, _symHistGold];
+    for (NSUInteger i = 0; i < keys.count; i++) {
+        NSArray *saved = state[keys[i]];
+        if ([saved isKindOfClass:[NSArray class]]) {
+            [arrays[i] addObjectsFromArray:saved];
+        }
+    }
 }
 
 - (void)install {
@@ -101,6 +133,8 @@
         [symHist addObject:@(symCount)];
         if (symHist.count > 50) [symHist removeObjectAtIndex:0];
     }
+
+    [self saveState];
 
     // Update tris view if visible
     if (self.trisWindow && !self.trisWindow.hidden) {
@@ -205,10 +239,21 @@
     } else if ([body isEqualToString:@"reset"]) {
         [self.histAttack removeAllObjects];
         [self.histSteal  removeAllObjects];
-        [self.histAccum  removeAllObjects];
+        [self.histSpins  removeAllObjects];
         [self.histShield removeAllObjects];
+        [self.histAccum  removeAllObjects];
         [self.histGold   removeAllObjects];
+        [self.symHistAttack removeAllObjects];
+        [self.symHistSteal  removeAllObjects];
+        [self.symHistSpins  removeAllObjects];
+        [self.symHistShield removeAllObjects];
+        [self.symHistAccum  removeAllObjects];
+        [self.symHistGold   removeAllObjects];
         self.totalSpins = 0;
+        [self saveState];
+        // Also reset counter overlay + rotate to new CSV session
+        [[SLCounterOverlay shared] resetAllCounters];
+        SLSpinStoreRotateCSV();
         [self refreshTrisHTML];
     }
 }

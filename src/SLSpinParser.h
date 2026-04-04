@@ -31,6 +31,8 @@
 @property (nonatomic, copy) NSString *accumRewardType;
 @property (nonatomic, assign) long long accumRewardAmount;
 @property (nonatomic, copy) NSString *accumBarResult;
+@property (nonatomic, copy) NSString *gaeSegment;       // e.g. "bonus_bs15_gae0_no" — identifies list tier
+@property (nonatomic, assign) NSInteger gaeLastMission;  // total missions in this list (fingerprint)
 
 // --- Second slot reels (slot-on-slot events) ---
 @property (nonatomic, copy) NSString *slot2Reel1;

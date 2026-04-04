@@ -61,6 +61,28 @@ static const int kSymbolCount = 6;
     return instance;
 }
 
+- (void)saveState {
+    NSMutableDictionary *state = [NSMutableDictionary dictionary];
+    state[@"totalSpins"] = @(self.totalSpins);
+    for (SLCounterTile *t in self.tiles) {
+        state[[t.symbolKey stringByAppendingString:@"_d"]] = @(t.distance);
+        state[[t.symbolKey stringByAppendingString:@"_s"]] = @(t.singleCount);
+    }
+    [[NSUserDefaults standardUserDefaults] setObject:state forKey:@"Speeder_CounterState"];
+}
+
+- (void)restoreState {
+    NSDictionary *state = [[NSUserDefaults standardUserDefaults] dictionaryForKey:@"Speeder_CounterState"];
+    if (!state) return;
+    self.totalSpins = [state[@"totalSpins"] integerValue];
+    for (SLCounterTile *t in self.tiles) {
+        t.distance    = [state[[t.symbolKey stringByAppendingString:@"_d"]] integerValue];
+        t.singleCount = [state[[t.symbolKey stringByAppendingString:@"_s"]] integerValue];
+        t.tripleLabel.text = [NSString stringWithFormat:@"3X: %ld", (long)t.distance];
+        t.singleLabel.text = [NSString stringWithFormat:@"1X: %ld", (long)t.singleCount];
+    }
+}
+
 - (void)install {
     self.tiles = [NSMutableArray array];
     self.totalSpins = 0;
@@ -148,6 +170,9 @@ static const int kSymbolCount = 6;
         [self.tiles addObject:tile];
     }
 
+    // Restore persisted counter values from previous session
+    [self restoreState];
+
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(onSpinReceived:)
                                                  name:SLSpinReceivedNotification object:nil];
@@ -233,6 +258,8 @@ static const int kSymbolCount = 6;
         tile.tripleLabel.text = [NSString stringWithFormat:@"3X: %ld", (long)tile.distance];
         tile.singleLabel.text = [NSString stringWithFormat:@"1X: %ld", (long)tile.singleCount];
     }
+
+    [self saveState];
 }
 
 #pragma mark - Visibility
@@ -269,8 +296,10 @@ static const int kSymbolCount = 6;
     self.totalSpins = 0;
     for (SLCounterTile *t in self.tiles) {
         t.distance = 0;
+        t.singleCount = 0;
         t.tripleLabel.text = @"3X: 0"; t.singleLabel.text = @"1X: 0";
     }
+    [self saveState];
 }
 
 - (void)resetCounterForSymbol:(NSString *)symbol {
