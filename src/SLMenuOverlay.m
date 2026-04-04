@@ -210,7 +210,7 @@ static void SLShowPanel(void) {
     if (!scene) return;
 
     CGRect screen = scene.coordinateSpace.bounds;
-    CGFloat pw = MIN(screen.size.width - 24, 340);
+    CGFloat pw = MIN(screen.size.width * 0.62, 250);
     CGFloat ph = 155;
     CGFloat ix = sIconWindow ? sIconWindow.frame.origin.x : screen.size.width - 60;
     CGFloat iy = sIconWindow ? sIconWindow.frame.origin.y : screen.size.height / 2;
