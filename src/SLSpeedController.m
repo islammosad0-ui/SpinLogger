@@ -59,23 +59,17 @@ static void SLApplyTimeScale(void) {
 }
 
 void SLSpeedControllerInstall(void) {
-    double saved = [[NSUserDefaults standardUserDefaults] doubleForKey:kSLDefaultsSpeedMultiplier];
-    if (saved >= 1.0) {
-        sSpeedMultiplier = saved;
-        if (sSpeedMultiplier > 50.0) sSpeedMultiplier = 50.0;
-    }
+    // Always start at 1.0x — don't auto-apply saved speed on restart
+    sSpeedMultiplier = 1.0;
 
-    // Try to resolve immediately (might fail if Unity hasn't loaded yet)
+    // Resolve Unity Time API (but don't apply speed yet)
     SLResolveUnityTime();
 
-    // If not resolved, retry after Unity is fully loaded
     if (!sSetTimeScale) {
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)),
                        dispatch_get_main_queue(), ^{
             SLResolveUnityTime();
-            if (sSetTimeScale && sSpeedMultiplier > 1.0) {
-                SLApplyTimeScale();
-            }
+            // Don't auto-apply — user must set speed manually
         });
     }
 

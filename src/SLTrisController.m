@@ -148,7 +148,7 @@
     if ([sym isEqualToString:kSLSymbolSpins])        return self.histSpins;
     if ([sym isEqualToString:kSLSymbolShield])       return self.histShield;
     if ([sym isEqualToString:kSLSymbolAccumulation]) return self.histAccum;
-    if ([sym isEqualToString:kSLSymbolGoldSack])     return self.histGold;
+    if ([sym isEqualToString:kSLSymbolGoldSack] || [sym isEqualToString:@"potion"]) return self.histGold;
     return nil;
 }
 
@@ -158,7 +158,7 @@
     if ([sym isEqualToString:kSLSymbolSpins])        return self.symHistSpins;
     if ([sym isEqualToString:kSLSymbolShield])       return self.symHistShield;
     if ([sym isEqualToString:kSLSymbolAccumulation]) return self.symHistAccum;
-    if ([sym isEqualToString:kSLSymbolGoldSack])     return self.symHistGold;
+    if ([sym isEqualToString:kSLSymbolGoldSack] || [sym isEqualToString:@"potion"]) return self.symHistGold;
     return nil;
 }
 

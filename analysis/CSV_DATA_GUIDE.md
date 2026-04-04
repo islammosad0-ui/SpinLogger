@@ -195,7 +195,11 @@ Format: `{"348a373a":"27/40@m7","bf1b4f4b":"396/400@m27"}` where `27/40@m7` = cu
 | `token_currency_wheel_token_cw_one` | Wheel Token |
 | `mystery_chest_easter_dream_chest` | Easter Dream Chest |
 
-**Bar type identification:** Slot-on-slot bars have IDs starting with `slot_on_slot_`. Main event bars use UUID format (`f7424ea7-...`). The 🧪 counter tile tracks only main event bars (any mission completion), automatically adapting when events rotate.
+**Bar type identification:** Slot-on-slot bars have IDs starting with `slot_on_slot_`. Main event bars use UUID format (`f7424ea7-...`).
+
+**Important:** Bars do NOT update every spin. The server only includes `accumulationBarsById` in the response when a bar's value actually changes. Most spins will have an empty `event_bars` column. When analyzing, count the gap (number of spins) between non-empty appearances to measure bar fill rate.
+
+**Potion Rush vs Expedition:** These are separate events assigned per account, not a rotation. One account may have `progressive_reward_pr_ec` (Potion Rush) while another has `generic_currency_expedition_nl_currency` (Expedition). Both are tracked by the parser.
 
 ---
 

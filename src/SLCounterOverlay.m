@@ -15,7 +15,7 @@
 //    🐷 steal    (pink #ff69b4)
 //    💊 spins    (cyan #00bcd4)
 //    🛡 shield   (purple #ce93d8)
-//    🧪 goldSack (green #4caf50)
+//    🧪 potion (green #4caf50)
 // ---------------------------------------------------------------------------
 
 typedef struct {
@@ -30,7 +30,7 @@ static const SLSymbolDef kSymbols[] = {
     { "spins",        "💊", 0.00, 0.74, 0.83 },  // teal — energy capsule/spins
     { "shield",       "🛡",  0.81, 0.58, 0.85 },  // purple — shield/defense
     { "accumulation", "⭐", 1.00, 0.84, 0.00 },  // gold — accumulation bar
-    { "goldSack",     "🧪", 0.30, 0.69, 0.31 },  // green — potion/event progress
+    { "potion",       "🧪", 0.30, 0.69, 0.31 },  // green — potion rush / expedition bar
 };
 static const int kSymbolCount = 6;
 
@@ -248,18 +248,18 @@ static const int kSymbolCount = 6;
         tile.distance++;
     }
 
-    // Increment 1X count for reel symbols (goldSack excluded — driven by Potion Rush bar below)
+    // Increment 1X count for reel symbols (potion excluded — driven by Potion Rush bar below)
     for (NSString *sym in @[result.reel1 ?: @"", result.reel2 ?: @"", result.reel3 ?: @""]) {
-        if (sym.length == 0 || [sym isEqualToString:@"goldSack"]) continue;
+        if (sym.length == 0 || [sym isEqualToString:@"potion"]) continue;
         for (SLCounterTile *tile in self.tiles) {
             if ([tile.symbolKey isEqualToString:sym]) { tile.singleCount++; break; }
         }
     }
 
-    // Check for triple (reel symbols, goldSack excluded — driven by Potion Rush bar below)
+    // Check for triple (reel symbols, potion excluded — driven by Potion Rush bar below)
     if (result.reel1 && [result.reel1 isEqualToString:result.reel2] &&
         [result.reel2 isEqualToString:result.reel3] &&
-        ![result.reel1 isEqualToString:@"goldSack"]) {
+        ![result.reel1 isEqualToString:@"potion"]) {
         for (SLCounterTile *tile in self.tiles) {
             if ([tile.symbolKey isEqualToString:result.reel1]) {
                 [[SLTrisController shared] recordTriple:tile.symbolKey distance:tile.distance symbolCount:tile.singleCount];
@@ -271,26 +271,27 @@ static const int kSymbolCount = 6;
         }
     }
 
-    // Check for ANY event bar mission completion (🧪 goldSack tile)
-    // Works with any event: Potion Rush, Expedition, Merge, etc.
-    static NSMutableDictionary *sPrevBarMissions = nil;
-    if (!sPrevBarMissions) sPrevBarMissions = [NSMutableDictionary dictionary];
+    // 🧪 Potion Rush / Expedition bar tracking
+    // Tracks distance (spins) between each time the bar's currentAmount increases.
+    // The bar only appears in the response when it changes — so when we see it,
+    // compare against the last known value to detect an increase.
+    static NSMutableDictionary *sPrevBarAmounts = nil;
+    if (!sPrevBarAmounts) sPrevBarAmounts = [NSMutableDictionary dictionary];
 
-    if (result.eventBarMissions.count > 0) {
-        BOOL anyCompleted = NO;
-        for (NSString *barId in result.eventBarMissions) {
-            NSInteger curMission = [result.eventBarMissions[barId] integerValue];
-            NSNumber *prevVal = sPrevBarMissions[barId];
-            if (prevVal && curMission > prevVal.integerValue) {
-                anyCompleted = YES;
+    if (result.eventBarAmounts.count > 0) {
+        BOOL barIncreased = NO;
+        for (NSString *barId in result.eventBarAmounts) {
+            NSInteger curAmount = [result.eventBarAmounts[barId] integerValue];
+            NSNumber *prevVal = sPrevBarAmounts[barId];
+            if (prevVal && curAmount > prevVal.integerValue) {
+                barIncreased = YES;
             }
-            sPrevBarMissions[barId] = @(curMission);
+            sPrevBarAmounts[barId] = @(curAmount);
         }
-        if (anyCompleted) {
+        if (barIncreased) {
             for (SLCounterTile *tile in self.tiles) {
-                if ([tile.symbolKey isEqualToString:@"goldSack"]) {
-                    [[SLTrisController shared] recordTriple:@"goldSack" distance:tile.distance symbolCount:tile.singleCount];
-                    tile.singleCount++;  // 1X = completions this session
+                if ([tile.symbolKey isEqualToString:@"potion"]) {
+                    [[SLTrisController shared] recordTriple:@"potion" distance:tile.distance symbolCount:0];
                     tile.distance = 0;
                     [self flashTriple:tile];
                     break;
@@ -301,8 +302,15 @@ static const int kSymbolCount = 6;
 
     // Update all labels
     for (SLCounterTile *tile in self.tiles) {
-        tile.tripleLabel.text = [NSString stringWithFormat:@"%ld", (long)tile.distance];
-        tile.singleLabel.text = [NSString stringWithFormat:@"1X:%ld", (long)tile.singleCount];
+        if ([tile.symbolKey isEqualToString:@"potion"]) {
+            // 🧪 Potion tile: just distance since last bar increase
+            tile.tripleLabel.text = [NSString stringWithFormat:@"%ld", (long)tile.distance];
+            tile.singleLabel.text = @"";
+        } else {
+            // Reel tiles: distance since last triple, individual symbol count below
+            tile.tripleLabel.text = [NSString stringWithFormat:@"%ld", (long)tile.distance];
+            tile.singleLabel.text = [NSString stringWithFormat:@"1X:%ld", (long)tile.singleCount];
+        }
     }
 
     [self saveState];

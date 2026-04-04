@@ -162,9 +162,9 @@ void SLParseSpinAPIResponseWithBet(NSData *responseData, NSInteger betMultiplier
     // --- All event bar snapshots (accumulationBarsById) ---
     // Captures any active event bars: Potion Rush, Merge, Expedition, etc.
     // Collects from both top-level AND serializedEvents
-    result.potionRushMissionIndex = -1;
     NSMutableDictionary *barSnapshot = [NSMutableDictionary dictionary];
     NSMutableDictionary *barMissions = [NSMutableDictionary dictionary];
+    NSMutableDictionary *barAmounts  = [NSMutableDictionary dictionary];
 
     // Helper block: process a bars dictionary from any source
     void (^processBars)(NSDictionary *) = ^(NSDictionary *bars) {
@@ -177,11 +177,12 @@ void SLParseSpinAPIResponseWithBet(NSData *responseData, NSInteger betMultiplier
             NSString *shortId = barId.length > 8 ? [barId substringToIndex:8] : barId;
             barSnapshot[shortId] = [NSString stringWithFormat:@"%ld/%ld@m%ld",
                                     (long)cur, (long)tot, (long)mis];
-            // Only track Potion Rush / Expedition for 🧪 tile
+            // Track Potion Rush / Expedition bars for the 🧪 tile
             NSDictionary *rewards = bar[@"rewards"];
             if ([rewards isKindOfClass:[NSDictionary class]] &&
                 (rewards[@"progressive_reward_pr_ec"] || rewards[@"generic_currency_expedition_nl_currency"])) {
                 barMissions[shortId] = @(mis);
+                barAmounts[shortId]  = @(cur);
             }
         }
     };
@@ -218,6 +219,7 @@ void SLParseSpinAPIResponseWithBet(NSData *responseData, NSInteger betMultiplier
         }
     }
     result.eventBarMissions = [barMissions copy];
+    result.eventBarAmounts  = [barAmounts copy];
 
     SLSpinStoreAppend(result);
 
