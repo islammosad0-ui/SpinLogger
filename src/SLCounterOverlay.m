@@ -208,8 +208,8 @@ static const int kSymbolCount = 6;
         }
     }
 
-    // Check for potion bar change (🧪 counter)
-    if (result.potionBarChanged) {
+    // Check for potion bar change (🧪 counter) — eventBars contains pr_ec bar
+    if (result.eventBars && [result.eventBars containsString:@"6aa02145"]) {
         for (SLCounterTile *tile in self.tiles) {
             if ([tile.symbolKey isEqualToString:@"goldSack"]) {
                 [[SLTrisController shared] recordTriple:@"goldSack" distance:tile.distance];
