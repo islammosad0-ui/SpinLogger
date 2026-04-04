@@ -5,134 +5,192 @@
 #import <objc/runtime.h>
 
 // ---------------------------------------------------------------------------
-//  Network Interceptor — SAFE approach: swizzle completion handlers only
+//  Network Interceptor — NSURLProtocol with FIXED infinite loop
 //
-//  Problem with NSURLProtocol: it intercepts AND re-forwards requests,
-//  which broke the game (infinite loops, corrupted responses).
+//  Previous NSURLProtocol attempt broke the game because:
+//  - We swizzled defaultSessionConfiguration to inject our protocol
+//  - Our protocol created a forwarding session using defaultSessionConfiguration
+//  - That triggered our protocol again → infinite loop → game hung
 //
-//  New approach: Swizzle NSURLSession methods to WRAP the completion handler.
-//  We read the RESPONSE data transparently without touching the request flow.
-//  The game works exactly as before — we just peek at the responses.
+//  FIX: Don't swizzle session configs. Instead:
+//  1. Register protocol globally (catches shared session)
+//  2. Swizzle session CREATION to inject protocol into custom sessions
+//  3. Forwarding session uses a PRIVATE clean config (no protocol)
 //
-//  Target: POST /api/v1/users/{id}/spin → response has r1,r2,r3,reward,pay
+//  Why NSURLProtocol? Unity uses delegate-based NSURLSession (no completion
+//  handlers), so completion-handler swizzles catch NOTHING.
 // ---------------------------------------------------------------------------
+
+static NSString *const kSLHandledKey = @"SL_Handled";
 
 #pragma mark - URL matching
 
-static BOOL SLIsSpinResponse(NSURLRequest *request) {
-    if (!request.URL) return NO;
+static BOOL SLIsSpinAPI(NSURLRequest *request) {
     NSString *path = request.URL.path;
-    // Match: /api/v1/users/{userId}/spin (or /api/v2/...)
-    return (path &&
-            [path hasSuffix:@"/spin"] &&
-            [path containsString:@"/users/"]);
+    return (path && [path hasSuffix:@"/spin"] && [path containsString:@"/users/"]);
 }
 
-#pragma mark - Original IMPs
+#pragma mark - SLURLProtocol
 
-static IMP sOrig_dataTaskReqHandler = NULL;
-static IMP sOrig_uploadTaskDataHandler = NULL;
+@interface SLURLProtocol : NSURLProtocol <NSURLSessionDataDelegate>
+@property (nonatomic, strong) NSURLSession *internalSession;
+@property (nonatomic, strong) NSURLSessionDataTask *internalTask;
+@property (nonatomic, strong) NSMutableData *accumulatedData;
+@end
 
-#pragma mark - Swizzled: dataTaskWithRequest:completionHandler:
-
-static NSURLSessionDataTask *
-SL_dataTaskReqHandler(id self, SEL _cmd, NSURLRequest *request,
-                      void (^handler)(NSData *, NSURLResponse *, NSError *))
-{
-    // If no handler or not a spin request, pass through unchanged
-    if (!handler || !SLIsSpinResponse(request)) {
-        typedef NSURLSessionDataTask *(*Orig)(id, SEL, NSURLRequest *, id);
-        return ((Orig)sOrig_dataTaskReqHandler)(self, _cmd, request, handler);
-    }
-
-    // Wrap the handler to peek at the response
-    void (^wrappedHandler)(NSData *, NSURLResponse *, NSError *) =
-        ^(NSData *data, NSURLResponse *response, NSError *error) {
-            // Parse spin response (non-blocking, async)
-            if (data && data.length > 0 && !error) {
-                NSData *copy = [data copy];
-                dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
-                    SLParseSpinAPIResponse(copy);
-                });
-            }
-
-            // Network store logging
-            if (data && !error) {
-                SLCapturedRequest *cap = [[SLCapturedRequest alloc] init];
-                cap.requestId = [[NSUUID UUID] UUIDString];
-                cap.url = request.URL.absoluteString ?: @"";
-                cap.host = request.URL.host ?: @"";
-                cap.method = request.HTTPMethod ?: @"POST";
-                cap.date = [NSDate date];
-                cap.responseData = data;
-                cap.isFinished = YES;
-                if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-                    cap.statusCode = ((NSHTTPURLResponse *)response).statusCode;
-                }
-                [[SLNetworkStore shared] addRequest:cap];
-            }
-
-            // Always call the original handler — game gets its data untouched
-            handler(data, response, error);
-        };
-
-    typedef NSURLSessionDataTask *(*Orig)(id, SEL, NSURLRequest *, id);
-    return ((Orig)sOrig_dataTaskReqHandler)(self, _cmd, request, wrappedHandler);
+// A private clean config for forwarding (NO protocol injection)
+static NSURLSessionConfiguration *SLCleanConfig(void) {
+    NSURLSessionConfiguration *config = [NSURLSessionConfiguration ephemeralSessionConfiguration];
+    // Strip ALL custom protocols to guarantee no recursion
+    config.protocolClasses = @[];
+    return config;
 }
 
-#pragma mark - Swizzled: uploadTaskWithRequest:fromData:completionHandler:
+@implementation SLURLProtocol
 
-static NSURLSessionUploadTask *
-SL_uploadTaskDataHandler(id self, SEL _cmd, NSURLRequest *request,
-                          NSData *bodyData,
-                          void (^handler)(NSData *, NSURLResponse *, NSError *))
++ (BOOL)canInitWithRequest:(NSURLRequest *)request {
+    // Only intercept if not already handled
+    if ([NSURLProtocol propertyForKey:kSLHandledKey inRequest:request]) return NO;
+    NSString *scheme = request.URL.scheme.lowercaseString;
+    if (![scheme isEqualToString:@"http"] && ![scheme isEqualToString:@"https"]) return NO;
+    return YES;
+}
+
++ (NSURLRequest *)canonicalRequestForRequest:(NSURLRequest *)request {
+    return request;
+}
+
+- (void)startLoading {
+    NSMutableURLRequest *tagged = [self.request mutableCopy];
+    [NSURLProtocol setProperty:@YES forKey:kSLHandledKey inRequest:tagged];
+
+    // Forward through a CLEAN session (no protocol → no recursion)
+    self.internalSession = [NSURLSession sessionWithConfiguration:SLCleanConfig()
+                                                         delegate:self
+                                                    delegateQueue:nil];
+    self.accumulatedData = [NSMutableData data];
+    self.internalTask = [self.internalSession dataTaskWithRequest:tagged];
+    [self.internalTask resume];
+}
+
+- (void)stopLoading {
+    [self.internalTask cancel];
+    [self.internalSession invalidateAndCancel];
+}
+
+#pragma mark - NSURLSessionDataDelegate
+
+- (void)URLSession:(NSURLSession *)session
+          dataTask:(NSURLSessionDataTask *)dataTask
+    didReceiveResponse:(NSURLResponse *)response
+     completionHandler:(void (^)(NSURLSessionResponseDisposition))handler {
+    [self.client URLProtocol:self didReceiveResponse:response
+          cacheStoragePolicy:NSURLCacheStorageNotAllowed];
+    handler(NSURLSessionResponseAllow);
+}
+
+- (void)URLSession:(NSURLSession *)session
+          dataTask:(NSURLSessionDataTask *)dataTask
+    didReceiveData:(NSData *)data {
+    [self.accumulatedData appendData:data];
+    [self.client URLProtocol:self didLoadData:data];
+}
+
+- (void)URLSession:(NSURLSession *)session
+              task:(NSURLSessionTask *)task
+    didCompleteWithError:(NSError *)error {
+    if (error) {
+        [self.client URLProtocol:self didFailWithError:error];
+    } else {
+        // === INTERCEPT: Check if this is a spin API response ===
+        if (SLIsSpinAPI(task.originalRequest) && self.accumulatedData.length > 0) {
+            NSData *copy = [self.accumulatedData copy];
+            NSLog(@"[SpinLogger] SPIN response captured! %lu bytes",
+                  (unsigned long)copy.length);
+            dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+                SLParseSpinAPIResponse(copy);
+            });
+        }
+
+        // Log moonactive requests to network store
+        if ([task.originalRequest.URL.host containsString:@"moonactive"]) {
+            SLCapturedRequest *cap = [[SLCapturedRequest alloc] init];
+            cap.requestId = [[NSUUID UUID] UUIDString];
+            cap.url = task.originalRequest.URL.absoluteString ?: @"";
+            cap.host = task.originalRequest.URL.host ?: @"";
+            cap.method = task.originalRequest.HTTPMethod ?: @"GET";
+            cap.date = [NSDate date];
+            cap.responseData = self.accumulatedData;
+            cap.isFinished = YES;
+            if ([task.response isKindOfClass:[NSHTTPURLResponse class]]) {
+                cap.statusCode = ((NSHTTPURLResponse *)task.response).statusCode;
+            }
+            [[SLNetworkStore shared] addRequest:cap];
+        }
+
+        [self.client URLProtocolDidFinishLoading:self];
+    }
+}
+
+- (void)URLSession:(NSURLSession *)session
+              task:(NSURLSessionTask *)task
+    willPerformHTTPRedirection:(NSHTTPURLResponse *)response
+            newRequest:(NSURLRequest *)request
+     completionHandler:(void (^)(NSURLRequest *))handler {
+    NSMutableURLRequest *redir = [request mutableCopy];
+    [NSURLProtocol removePropertyForKey:kSLHandledKey inRequest:redir];
+    [self.client URLProtocol:self wasRedirectedToRequest:redir redirectResponse:response];
+    handler(redir);
+}
+
+- (void)URLSession:(NSURLSession *)session
+    didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
+      completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential *))handler {
+    // Accept all certificates (game handles its own TLS)
+    NSURLCredential *cred = [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust];
+    handler(NSURLSessionAuthChallengeUseCredential, cred);
+}
+
+@end
+
+#pragma mark - Swizzle session creation to inject protocol
+
+static IMP sOrig_sessionWithConfig = NULL;
+
+static NSURLSession *
+SL_sessionWithConfig(id self, SEL _cmd,
+                     NSURLSessionConfiguration *config,
+                     id delegate, NSOperationQueue *queue)
 {
-    if (!handler || !SLIsSpinResponse(request)) {
-        typedef NSURLSessionUploadTask *(*Orig)(id, SEL, NSURLRequest *, NSData *, id);
-        return ((Orig)sOrig_uploadTaskDataHandler)(self, _cmd, request, bodyData, handler);
+    // Inject our protocol into every new session's config
+    if (config) {
+        NSMutableArray *protos = [config.protocolClasses mutableCopy] ?: [NSMutableArray array];
+        if (![protos containsObject:[SLURLProtocol class]]) {
+            [protos insertObject:[SLURLProtocol class] atIndex:0];
+        }
+        config.protocolClasses = protos;
     }
 
-    void (^wrappedHandler)(NSData *, NSURLResponse *, NSError *) =
-        ^(NSData *data, NSURLResponse *response, NSError *error) {
-            if (data && data.length > 0 && !error) {
-                NSData *copy = [data copy];
-                dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
-                    SLParseSpinAPIResponse(copy);
-                });
-            }
-            handler(data, response, error);
-        };
-
-    typedef NSURLSessionUploadTask *(*Orig)(id, SEL, NSURLRequest *, NSData *, id);
-    return ((Orig)sOrig_uploadTaskDataHandler)(self, _cmd, request, bodyData, wrappedHandler);
+    typedef NSURLSession *(*Orig)(id, SEL, NSURLSessionConfiguration *, id, NSOperationQueue *);
+    return ((Orig)sOrig_sessionWithConfig)(self, _cmd, config, delegate, queue);
 }
 
 #pragma mark - Install
 
 void SLNetworkInterceptorInstall(void) {
-    Class cls = [NSURLSession class];
+    // 1. Register globally (catches shared session)
+    [NSURLProtocol registerClass:[SLURLProtocol class]];
 
-    // dataTaskWithRequest:completionHandler:
+    // 2. Swizzle session creation to inject into custom sessions (Unity!)
     {
-        SEL sel = @selector(dataTaskWithRequest:completionHandler:);
-        Method m = class_getInstanceMethod(cls, sel);
+        SEL sel = @selector(sessionWithConfiguration:delegate:delegateQueue:);
+        Method m = class_getClassMethod([NSURLSession class], sel);
         if (m) {
-            sOrig_dataTaskReqHandler = method_getImplementation(m);
-            method_setImplementation(m, (IMP)SL_dataTaskReqHandler);
-            NSLog(@"[SpinLogger] Hooked dataTaskWithRequest:completionHandler:");
+            sOrig_sessionWithConfig = method_getImplementation(m);
+            method_setImplementation(m, (IMP)SL_sessionWithConfig);
+            NSLog(@"[SpinLogger] Hooked sessionWithConfiguration:delegate:delegateQueue:");
         }
     }
 
-    // uploadTaskWithRequest:fromData:completionHandler:
-    {
-        SEL sel = @selector(uploadTaskWithRequest:fromData:completionHandler:);
-        Method m = class_getInstanceMethod(cls, sel);
-        if (m) {
-            sOrig_uploadTaskDataHandler = method_getImplementation(m);
-            method_setImplementation(m, (IMP)SL_uploadTaskDataHandler);
-            NSLog(@"[SpinLogger] Hooked uploadTask:fromData:completionHandler:");
-        }
-    }
-
-    NSLog(@"[SpinLogger] Interceptor installed — watching /spin responses (safe swizzle, no NSURLProtocol)");
+    NSLog(@"[SpinLogger] Interceptor ready — NSURLProtocol + session injection (loop-safe)");
 }
