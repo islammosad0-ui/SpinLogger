@@ -225,67 +225,57 @@ static NSString *SLPanelHTML(void) {
     "<meta name='viewport' content='width=device-width,initial-scale=1,user-scalable=no'>"
     "<style>"
     ":root{"
-    "--bg:rgba(16,22,36,0.94);"
-    "--bg2:rgba(22,30,48,0.92);"
+    "--bg:rgba(30,42,60,0.75);"
     "--accent:#00e5ff;"
-    "--accent2:#00b8d4;"
-    "--btn:rgba(255,255,255,0.07);"
-    "--btn-active:linear-gradient(135deg,#00c9db,#009aaa);"
+    "--btn:rgba(255,255,255,0.08);"
+    "--btn-active:linear-gradient(135deg,#2dd4bf,#0891b2);"
     "--text:#fff;"
-    "--muted:#7a8a9e;"
-    "--radius:16px;"
+    "--muted:#8899aa;"
+    "--r:18px;"
     "}"
     "*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}"
-    "body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;"
-    "background:transparent;overflow:hidden}"
+    "body{font-family:-apple-system,sans-serif;background:transparent;overflow:hidden}"
 
-    /* === PANEL === */
-    "#panel{border-radius:var(--radius);"
-    "background:var(--bg);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);"
-    "border:1px solid rgba(255,255,255,0.08);overflow:hidden;"
-    "box-shadow:0 8px 40px rgba(0,0,0,0.5)}"
+    "#panel{border-radius:var(--r);"
+    "background:var(--bg);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);"
+    "border:1px solid rgba(255,255,255,0.1);overflow:hidden;"
+    "box-shadow:0 4px 30px rgba(0,0,0,0.4)}"
 
-    /* Top bar */
-    ".top{display:flex;align-items:center;gap:8px;padding:10px 12px 6px}"
-    ".logo{width:38px;height:38px;background:linear-gradient(135deg,#0891b2,#06b6d4);"
-    "border-radius:12px;display:flex;align-items:center;justify-content:center;"
-    "font-size:18px;color:#fff}"
-    ".title{flex:1;font-size:15px;font-weight:700;color:var(--text);letter-spacing:0.5px}"
+    ".top{display:flex;align-items:center;gap:6px;padding:8px 10px 5px}"
+    ".logo{width:32px;height:32px;background:linear-gradient(135deg,#0891b2,#06b6d4);"
+    "border-radius:10px;display:flex;align-items:center;justify-content:center;"
+    "font-size:15px;color:#fff}"
+    ".title{flex:1;font-size:14px;font-weight:700;color:var(--text);letter-spacing:0.5px}"
     ".title em{font-style:normal;color:var(--accent)}"
-    ".speed-badge{background:rgba(0,229,255,0.12);border:1.5px solid var(--accent);"
-    "border-radius:10px;padding:4px 12px;font-size:16px;font-weight:700;"
-    "color:var(--accent);min-width:62px;text-align:center}"
-    ".gear{width:38px;height:38px;background:rgba(255,255,255,0.08);border-radius:50%%;"
+    ".speed-badge{background:rgba(0,229,255,0.1);border:1.5px solid var(--accent);"
+    "border-radius:8px;padding:3px 10px;font-size:14px;font-weight:700;"
+    "color:var(--accent);min-width:55px;text-align:center;cursor:pointer}"
+    ".gear{width:32px;height:32px;background:rgba(255,255,255,0.1);border-radius:50%%;"
     "border:none;display:flex;align-items:center;justify-content:center;"
-    "font-size:18px;color:var(--muted);cursor:pointer}"
-    ".gear:active{background:rgba(255,255,255,0.15)}"
+    "font-size:16px;color:var(--muted);cursor:pointer}"
 
-    /* Controls row */
-    ".controls{display:flex;align-items:center;gap:5px;"
-    "background:rgba(0,0,0,0.25);border-radius:14px;padding:5px 7px;margin:0 10px}"
-    ".cbtn{width:42px;height:42px;border-radius:12px;border:none;display:flex;"
-    "align-items:center;justify-content:center;font-size:18px;cursor:pointer;"
-    "color:var(--text);background:var(--btn);transition:all .15s}"
-    ".cbtn:active{transform:scale(0.92)}"
-    ".cbtn-play{background:var(--btn-active);width:46px;height:46px;border-radius:14px;"
-    "font-size:20px}"
-    ".cbtn-collapse{color:var(--muted);font-size:20px}"
-    ".slider-wrap{flex:1;padding:0 6px}"
-    "input[type=range]{-webkit-appearance:none;width:100%%;height:5px;"
-    "background:rgba(255,255,255,0.12);border-radius:3px;outline:none}"
-    "input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;"
-    "background:#fff;border-radius:50%%;cursor:pointer;"
-    "box-shadow:0 2px 8px rgba(0,0,0,0.3)}"
+    ".controls{display:flex;align-items:center;gap:4px;"
+    "background:rgba(0,0,0,0.2);border-radius:12px;padding:4px 6px;margin:0 8px}"
+    ".cbtn{width:36px;height:36px;border-radius:10px;border:none;display:flex;"
+    "align-items:center;justify-content:center;font-size:16px;cursor:pointer;"
+    "color:var(--text);background:var(--btn)}"
+    ".cbtn:active{transform:scale(0.9)}"
+    ".cbtn-play{background:var(--btn-active);width:38px;height:38px;border-radius:11px;font-size:17px}"
+    ".cbtn-collapse{color:var(--muted);font-size:18px}"
+    ".slider-wrap{flex:1;padding:0 4px}"
+    "input[type=range]{-webkit-appearance:none;width:100%%;height:4px;"
+    "background:rgba(255,255,255,0.12);border-radius:2px;outline:none}"
+    "input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;"
+    "background:#fff;border-radius:50%%;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.3)}"
 
-    /* Action row */
-    ".actions{display:flex;gap:5px;padding:6px 10px 10px}"
-    ".abtn{height:42px;border-radius:12px;border:none;font-size:13px;font-weight:700;"
-    "cursor:pointer;color:#fff;padding:0 14px;display:flex;align-items:center;"
-    "justify-content:center;transition:all .15s}"
-    ".abtn:active{transform:scale(0.93)}"
+    ".actions{display:flex;gap:4px;padding:5px 8px 8px}"
+    ".abtn{height:36px;border-radius:10px;border:none;font-size:12px;font-weight:700;"
+    "cursor:pointer;color:#fff;padding:0 12px;display:flex;align-items:center;"
+    "justify-content:center}"
+    ".abtn:active{transform:scale(0.92)}"
     ".abtn-on{background:var(--btn-active)}"
     ".abtn-off{background:var(--btn);color:var(--muted)}"
-    ".abtn-skip{min-width:60px;font-size:14px;letter-spacing:1px}"
+    ".abtn-skip{min-width:50px;font-size:12px;letter-spacing:1px}"
 
     /* === SETTINGS VIEW === */
     "#settings{display:none;padding:0}"
@@ -532,12 +522,12 @@ static void SLShowPanel(void) {
     sHandler = [[SLPanelHandler alloc] init];
 
     CGRect screen = scene.coordinateSpace.bounds;
-    CGFloat pw = MIN(screen.size.width - 20, 380);
-    CGFloat ph = 195;
+    CGFloat pw = MIN(screen.size.width - 24, 340);
+    CGFloat ph = 165;
     CGFloat x = (screen.size.width - pw) / 2;
 
     UIWindow *win = [[UIWindow alloc] initWithWindowScene:scene];
-    win.frame = CGRectMake(x, 50, pw, ph);
+    win.frame = CGRectMake(x, 55, pw, ph);
     win.windowLevel = UIWindowLevelAlert + 400;
     win.backgroundColor = [UIColor clearColor];
 
@@ -545,12 +535,12 @@ static void SLShowPanel(void) {
     vc.view.backgroundColor = [UIColor clearColor];
     win.rootViewController = vc;
 
-    UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc]
-        initWithTarget:sHandler action:@selector(handlePan:)];
-    [vc.view addGestureRecognizer:pan];
+    // NO pan gesture on panel — it blocks WKWebView touches
+    // Panel is fixed position, only icon is draggable
 
     WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
     [config.userContentController addScriptMessageHandler:sHandler name:@"sl"];
+    config.preferences.javaScriptEnabled = YES;
 
     WKWebView *wv = [[WKWebView alloc] initWithFrame:CGRectMake(0, 0, pw, ph)
                                         configuration:config];
