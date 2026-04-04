@@ -152,7 +152,187 @@ static UIButton *SLMakeBtn(NSString *title, CGFloat w, CGFloat h, UIColor *bg, U
 }
 
 + (void)targetSpin {
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"SLShowTrisMonitor" object:nil];
+    [self showTargetSpinOverlay];
+}
+
+static UIWindow *sTargetWindow = nil;
+static NSString *sTargetSymbol = nil;
+static NSInteger sTargetMaxSpins = 0;
+static BOOL sTargetActive = NO;
+
++ (void)showTargetSpinOverlay {
+    if (sTargetWindow) { sTargetWindow.hidden = NO; return; }
+
+    UIWindowScene *scene = nil;
+    for (UIScene *s in UIApplication.sharedApplication.connectedScenes)
+        if ([s isKindOfClass:[UIWindowScene class]]) { scene = (UIWindowScene *)s; break; }
+    if (!scene) return;
+
+    CGRect screen = scene.coordinateSpace.bounds;
+    CGFloat pw = MIN(screen.size.width * 0.75, 300);
+    CGFloat ph = 180;
+    CGFloat x = (screen.size.width - pw) / 2;
+    CGFloat y = (screen.size.height - ph) / 2;
+
+    UIWindow *win = [[UIWindow alloc] initWithWindowScene:scene];
+    win.frame = CGRectMake(x, y, pw, ph);
+    win.windowLevel = UIWindowLevelAlert + 500;
+    win.backgroundColor = [UIColor clearColor];
+
+    UIViewController *vc = [[UIViewController alloc] init];
+    vc.view.backgroundColor = [UIColor clearColor];
+    win.rootViewController = vc;
+
+    // Dark background with green border (matching screenshot)
+    UIView *bg = [[UIView alloc] initWithFrame:CGRectMake(0, 0, pw, ph)];
+    bg.backgroundColor = [UIColor colorWithRed:0.08 green:0.12 blue:0.1 alpha:0.95];
+    bg.layer.cornerRadius = 18;
+    bg.layer.borderWidth = 1.5;
+    bg.layer.borderColor = [UIColor colorWithRed:0 green:0.8 blue:0 alpha:0.6].CGColor;
+    bg.clipsToBounds = YES;
+    [vc.view addSubview:bg];
+
+    CGFloat pad = 14;
+
+    // Title: TARGET SPIN
+    UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(pad, 10, 140, 28)];
+    title.text = @"TARGET SPIN";
+    title.font = [UIFont boldSystemFontOfSize:16];
+    title.textColor = [UIColor colorWithRed:0 green:0.9 blue:0 alpha:1];
+    [bg addSubview:title];
+
+    // ∞ input box
+    UIButton *inputBox = [UIButton buttonWithType:UIButtonTypeCustom];
+    inputBox.frame = CGRectMake(pw - pad - 100, 8, 100, 32);
+    inputBox.backgroundColor = [UIColor colorWithWhite:0.1 alpha:1];
+    inputBox.layer.cornerRadius = 8;
+    [inputBox setTitle:(sTargetMaxSpins > 0 ? [NSString stringWithFormat:@"%ld", (long)sTargetMaxSpins] : @"∞") forState:UIControlStateNormal];
+    [inputBox setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    inputBox.titleLabel.font = [UIFont boldSystemFontOfSize:16];
+    inputBox.showsTouchWhenHighlighted = YES;
+    [inputBox addTarget:self action:@selector(targetInputTap) forControlEvents:UIControlEventTouchUpInside];
+    inputBox.tag = 999;
+    [bg addSubview:inputBox];
+
+    // Symbol buttons row
+    CGFloat symY = 48;
+    CGFloat symSize = 40;
+    CGFloat symGap = 6;
+    NSArray *syms = @[@"🔨", @"🐷", @"💊", @"🛡", @"⭐", @"🧪"];
+    NSArray *keys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"goldSack"];
+    CGFloat totalSymW = syms.count * symSize + (syms.count - 1) * symGap;
+    CGFloat symStartX = (pw - totalSymW) / 2;
+
+    for (NSUInteger i = 0; i < syms.count; i++) {
+        UIButton *sb = [UIButton buttonWithType:UIButtonTypeCustom];
+        sb.frame = CGRectMake(symStartX + i * (symSize + symGap), symY, symSize, symSize);
+        sb.backgroundColor = [UIColor colorWithWhite:0.15 alpha:1];
+        sb.layer.cornerRadius = 12;
+        sb.layer.borderWidth = 2;
+        sb.layer.borderColor = [UIColor clearColor].CGColor;
+        [sb setTitle:syms[i] forState:UIControlStateNormal];
+        sb.titleLabel.font = [UIFont systemFontOfSize:22];
+        sb.tag = 100 + i;
+        sb.showsTouchWhenHighlighted = YES;
+        [sb addTarget:self action:@selector(targetSymbolTap:) forControlEvents:UIControlEventTouchUpInside];
+
+        // Highlight if already selected
+        if ([sTargetSymbol isEqualToString:keys[i]]) {
+            sb.layer.borderColor = [UIColor colorWithRed:0 green:0.9 blue:0 alpha:1].CGColor;
+            sb.backgroundColor = [UIColor colorWithRed:0 green:0.2 blue:0 alpha:1];
+        }
+        [bg addSubview:sb];
+    }
+
+    // Bottom row: Power, BACK, SAVE
+    CGFloat btnY = symY + symSize + 14;
+
+    // Power button
+    UIButton *power = [UIButton buttonWithType:UIButtonTypeCustom];
+    power.frame = CGRectMake(pad, btnY, 36, 36);
+    power.layer.cornerRadius = 18;
+    power.layer.borderWidth = 2;
+    power.layer.borderColor = [UIColor redColor].CGColor;
+    power.backgroundColor = [UIColor clearColor];
+    [power setTitle:@"⏻" forState:UIControlStateNormal];
+    [power setTitleColor:(sTargetActive ? [UIColor greenColor] : [UIColor redColor]) forState:UIControlStateNormal];
+    power.titleLabel.font = [UIFont systemFontOfSize:16];
+    power.tag = 200;
+    power.showsTouchWhenHighlighted = YES;
+    [power addTarget:self action:@selector(targetPowerTap:) forControlEvents:UIControlEventTouchUpInside];
+    [bg addSubview:power];
+
+    // BACK button
+    UIButton *back = SLMakeBtn(@"BACK", 90, 36, [UIColor colorWithWhite:0.2 alpha:1], [UIColor whiteColor], 14);
+    back.frame = CGRectMake(pad + 44, btnY, 90, 36);
+    back.showsTouchWhenHighlighted = YES;
+    [back addTarget:self action:@selector(targetBack) forControlEvents:UIControlEventTouchUpInside];
+    [bg addSubview:back];
+
+    // SAVE button (green)
+    UIButton *save = SLMakeBtn(@"SAVE", 90, 36, [UIColor colorWithRed:0 green:0.85 blue:0 alpha:1], [UIColor blackColor], 14);
+    save.frame = CGRectMake(pw - pad - 90, btnY, 90, 36);
+    save.showsTouchWhenHighlighted = YES;
+    [save addTarget:self action:@selector(targetSave) forControlEvents:UIControlEventTouchUpInside];
+    [bg addSubview:save];
+
+    win.hidden = NO;
+    sTargetWindow = win;
+}
+
++ (void)targetInputTap {
+    UIAlertController *a = [UIAlertController alertControllerWithTitle:@"Max Spins" message:@"Cut internet after this many spins" preferredStyle:UIAlertControllerStyleAlert];
+    [a addTextFieldWithConfigurationHandler:^(UITextField *tf) {
+        tf.keyboardType = UIKeyboardTypeNumberPad;
+        if (sTargetMaxSpins > 0) tf.text = [NSString stringWithFormat:@"%ld", (long)sTargetMaxSpins];
+    }];
+    [a addAction:[UIAlertAction actionWithTitle:@"Set" style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) {
+        sTargetMaxSpins = a.textFields.firstObject.text.integerValue;
+        // Update button text
+        UIButton *box = [sTargetWindow.rootViewController.view viewWithTag:999];
+        [box setTitle:(sTargetMaxSpins > 0 ? [NSString stringWithFormat:@"%ld", (long)sTargetMaxSpins] : @"∞") forState:UIControlStateNormal];
+    }]];
+    [a addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [[self topVC] presentViewController:a animated:YES completion:nil];
+}
+
++ (void)targetSymbolTap:(UIButton *)btn {
+    NSArray *keys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"goldSack"];
+    NSUInteger idx = btn.tag - 100;
+    if (idx >= keys.count) return;
+
+    sTargetSymbol = keys[idx];
+
+    // Update borders — highlight selected, clear others
+    for (NSUInteger i = 0; i < keys.count; i++) {
+        UIButton *sb = [sTargetWindow.rootViewController.view viewWithTag:(100 + i)];
+        if (i == idx) {
+            sb.layer.borderColor = [UIColor colorWithRed:0 green:0.9 blue:0 alpha:1].CGColor;
+            sb.backgroundColor = [UIColor colorWithRed:0 green:0.2 blue:0 alpha:1];
+        } else {
+            sb.layer.borderColor = [UIColor clearColor].CGColor;
+            sb.backgroundColor = [UIColor colorWithWhite:0.15 alpha:1];
+        }
+    }
+}
+
++ (void)targetPowerTap:(UIButton *)btn {
+    sTargetActive = !sTargetActive;
+    [btn setTitleColor:(sTargetActive ? [UIColor greenColor] : [UIColor redColor]) forState:UIControlStateNormal];
+    btn.layer.borderColor = (sTargetActive ? [UIColor greenColor] : [UIColor redColor]).CGColor;
+}
+
++ (void)targetBack {
+    sTargetWindow.hidden = YES;
+}
+
++ (void)targetSave {
+    if (sTargetSymbol && sTargetMaxSpins > 0) {
+        [SLSpinTarget shared].targetSpinCount = sTargetMaxSpins;
+        [SLTrisController shared].lockTarget = sTargetSymbol;
+        NSLog(@"[SpinLogger] Target: %@ within %ld spins (active=%d)", sTargetSymbol, (long)sTargetMaxSpins, sTargetActive);
+        sTargetWindow.hidden = YES;
+    }
 }
 
 + (void)networkToggle {
