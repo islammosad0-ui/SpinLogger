@@ -39,6 +39,7 @@ static BOOL SLIsSpinAPI(NSURLRequest *request) {
 @property (nonatomic, strong) NSURLSession *internalSession;
 @property (nonatomic, strong) NSURLSessionDataTask *internalTask;
 @property (nonatomic, strong) NSMutableData *accumulatedData;
+@property (nonatomic, assign) NSInteger capturedBet;  // extracted from request body in startLoading
 @end
 
 // A private clean config for forwarding (NO protocol injection)
@@ -75,6 +76,38 @@ static NSURLSessionConfiguration *SLCleanConfig(void) {
 
     NSMutableURLRequest *tagged = [self.request mutableCopy];
     [NSURLProtocol setProperty:@YES forKey:kSLHandledKey inRequest:tagged];
+
+    // Capture bet value from request body here — HTTPBody may be nil by didCompleteWithError
+    // Unity sometimes sends bodies as HTTPBodyStream (consumed after forwarding)
+    self.capturedBet = 1;
+    if (SLIsSpinAPI(self.request)) {
+        NSData *body = self.request.HTTPBody;
+        if (!body && self.request.HTTPBodyStream) {
+            // Read stream into data and replace on tagged so forwarding still works
+            NSInputStream *stream = self.request.HTTPBodyStream;
+            [stream open];
+            NSMutableData *streamData = [NSMutableData data];
+            uint8_t buf[4096];
+            NSInteger len;
+            while ((len = [stream read:buf maxLength:sizeof(buf)]) > 0) {
+                [streamData appendBytes:buf length:len];
+            }
+            [stream close];
+            body = streamData;
+            tagged.HTTPBody = body;
+            tagged.HTTPBodyStream = nil;
+        }
+        if (body) {
+            NSString *bodyStr = [[NSString alloc] initWithData:body encoding:NSUTF8StringEncoding];
+            for (NSString *pair in [bodyStr componentsSeparatedByString:@"&"]) {
+                if ([pair hasPrefix:@"bet="]) {
+                    // bet value IS the actual multiplier (e.g. bet=15 → 15x)
+                    self.capturedBet = [[pair substringFromIndex:4] integerValue];
+                    break;
+                }
+            }
+        }
+    }
 
     // Forward through a CLEAN session (no protocol → no recursion)
     self.internalSession = [NSURLSession sessionWithConfiguration:SLCleanConfig()
@@ -117,25 +150,12 @@ static NSURLSessionConfiguration *SLCleanConfig(void) {
         // === INTERCEPT: Check if this is a spin API response ===
         if (SLIsSpinAPI(task.originalRequest) && self.accumulatedData.length > 0) {
             NSData *copy = [self.accumulatedData copy];
-
-            // Extract bet multiplier from request body (form-encoded: "bet=50")
-            NSData *reqBody = task.originalRequest.HTTPBody;
-            NSString *reqStr = reqBody ? [[NSString alloc] initWithData:reqBody encoding:NSUTF8StringEncoding] : nil;
-            NSInteger betMult = 1;
-            if (reqStr) {
-                for (NSString *pair in [reqStr componentsSeparatedByString:@"&"]) {
-                    if ([pair hasPrefix:@"bet="]) {
-                        betMult = [[pair substringFromIndex:4] integerValue];
-                        break;
-                    }
-                }
-            }
-            NSNumber *betBox = @(betMult);
+            NSInteger betMult = self.capturedBet;  // captured in startLoading before body was consumed
 
             NSLog(@"[SpinLogger] SPIN response captured! %lu bytes (bet=%ld)",
                   (unsigned long)copy.length, (long)betMult);
             dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
-                SLParseSpinAPIResponseWithBet(copy, betBox.integerValue);
+                SLParseSpinAPIResponseWithBet(copy, betMult);
             });
         }
 

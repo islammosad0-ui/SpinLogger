@@ -187,17 +187,18 @@ static const int kSymbolCount = 6;
         tile.distance++;
     }
 
-    // Increment 1X count for symbols appearing in this spin
+    // Increment 1X count for reel symbols (goldSack excluded — driven by Potion Rush bar below)
     for (NSString *sym in @[result.reel1 ?: @"", result.reel2 ?: @"", result.reel3 ?: @""]) {
-        if (sym.length == 0) continue;
+        if (sym.length == 0 || [sym isEqualToString:@"goldSack"]) continue;
         for (SLCounterTile *tile in self.tiles) {
             if ([tile.symbolKey isEqualToString:sym]) { tile.singleCount++; break; }
         }
     }
 
-    // Check for triple (reel symbols)
+    // Check for triple (reel symbols, goldSack excluded — driven by Potion Rush bar below)
     if (result.reel1 && [result.reel1 isEqualToString:result.reel2] &&
-        [result.reel2 isEqualToString:result.reel3]) {
+        [result.reel2 isEqualToString:result.reel3] &&
+        ![result.reel1 isEqualToString:@"goldSack"]) {
         for (SLCounterTile *tile in self.tiles) {
             if ([tile.symbolKey isEqualToString:result.reel1]) {
                 [[SLTrisController shared] recordTriple:tile.symbolKey distance:tile.distance symbolCount:tile.singleCount];
@@ -208,16 +209,23 @@ static const int kSymbolCount = 6;
         }
     }
 
-    // Check for potion bar change (🧪 counter) — eventBars contains pr_ec bar
-    if (result.eventBars && [result.eventBars containsString:@"6aa02145"]) {
-        for (SLCounterTile *tile in self.tiles) {
-            if ([tile.symbolKey isEqualToString:@"goldSack"]) {
-                [[SLTrisController shared] recordTriple:@"goldSack" distance:tile.distance];
-                tile.distance = 0;
-                tile.singleCount = 0;
-                break;
+    // Check for Potion Rush bar completion (🧪 goldSack tile)
+    // Identified by progressive_reward_pr_ec reward key (UUID changes per event)
+    static NSInteger sPotionMissionIndex = -1;
+    if (result.potionRushMissionIndex >= 0) {
+        NSInteger mIdx = result.potionRushMissionIndex;
+        if (sPotionMissionIndex >= 0 && mIdx > sPotionMissionIndex) {
+            // missionIndex increased — bar completed
+            for (SLCounterTile *tile in self.tiles) {
+                if ([tile.symbolKey isEqualToString:@"goldSack"]) {
+                    [[SLTrisController shared] recordTriple:@"goldSack" distance:tile.distance symbolCount:tile.singleCount];
+                    tile.singleCount++;  // 1X = completions this session
+                    tile.distance = 0;
+                    break;
+                }
             }
         }
+        sPotionMissionIndex = mIdx;
     }
 
     // Update all labels
