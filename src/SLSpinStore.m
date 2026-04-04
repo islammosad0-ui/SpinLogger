@@ -39,7 +39,7 @@ static NSInteger sPrevAccumMission = -1;
 static NSString *const kCSVHeader =
     @"seq,timestamp,r1,r2,r3,reel_1,reel_2,reel_3,spin_result,reward_code,is_triple,"
      "coins_won,coins,spins_remaining,"
-     "shields,max_shields,bet_level,"
+     "shields,max_shields,bet_multiplier,bet_level,"
      "accum_current,accum_total,accum_mission,accum_delta,accum_pct,"
      "slot2_r1,slot2_r2,slot2_r3,"
      "event_bars,"
@@ -148,7 +148,7 @@ void SLSpinStoreAppend(SLSpinResult *result) {
     NSString *row = [NSString stringWithFormat:
         @"%ld,%@,%ld,%ld,%ld,%@,%@,%@,%@,%ld,%@,"
          "%lld,%@,%@,"
-         "%ld,%ld,%ld,"
+         "%ld,%ld,%ld,%ld,"
          "%ld,%ld,%ld,%ld,%.1f,"
          "%@,%@,%@,"
          "%@,"
@@ -160,7 +160,7 @@ void SLSpinStoreAppend(SLSpinResult *result) {
         result.spinResult ?: @"", (long)result.rewardCode,
         isTriple ? @"true" : @"false",
         result.coinsWon, result.coins ?: @"", result.spinsRemaining ?: @"",
-        (long)result.shields, (long)result.maxShields, (long)result.betLevel,
+        (long)result.shields, (long)result.maxShields, (long)result.betMultiplier, (long)result.betLevel,
         (long)result.accumCurrent, (long)result.accumTotal, (long)result.accumMissionIndex,
         (long)accumDelta, accumPct,
         result.slot2Reel1 ?: @"", result.slot2Reel2 ?: @"", result.slot2Reel3 ?: @"",

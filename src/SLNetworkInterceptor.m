@@ -117,10 +117,25 @@ static NSURLSessionConfiguration *SLCleanConfig(void) {
         // === INTERCEPT: Check if this is a spin API response ===
         if (SLIsSpinAPI(task.originalRequest) && self.accumulatedData.length > 0) {
             NSData *copy = [self.accumulatedData copy];
-            NSLog(@"[SpinLogger] SPIN response captured! %lu bytes",
-                  (unsigned long)copy.length);
+
+            // Extract bet multiplier from request body (form-encoded: "bet=50")
+            NSData *reqBody = task.originalRequest.HTTPBody;
+            NSString *reqStr = reqBody ? [[NSString alloc] initWithData:reqBody encoding:NSUTF8StringEncoding] : nil;
+            NSInteger betMult = 1;
+            if (reqStr) {
+                for (NSString *pair in [reqStr componentsSeparatedByString:@"&"]) {
+                    if ([pair hasPrefix:@"bet="]) {
+                        betMult = [[pair substringFromIndex:4] integerValue];
+                        break;
+                    }
+                }
+            }
+            NSNumber *betBox = @(betMult);
+
+            NSLog(@"[SpinLogger] SPIN response captured! %lu bytes (bet=%ld)",
+                  (unsigned long)copy.length, (long)betMult);
             dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
-                SLParseSpinAPIResponse(copy);
+                SLParseSpinAPIResponseWithBet(copy, betBox.integerValue);
             });
         }
 

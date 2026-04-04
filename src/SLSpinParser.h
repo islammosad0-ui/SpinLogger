@@ -20,8 +20,9 @@
 @property (nonatomic, strong) NSDate *timestamp;
 
 // --- Bet state (affects probability segment) ---
-@property (nonatomic, assign) NSInteger betLevel;
-@property (nonatomic, copy) NSString *betOptions;  // e.g. "1,2,3,15,50,400,1500,6000,20000"
+@property (nonatomic, assign) NSInteger betMultiplier;  // actual bet (1, 3, 15, 50, etc.) from request
+@property (nonatomic, assign) NSInteger betLevel;       // internal bet level index from response
+@property (nonatomic, copy) NSString *betOptions;       // e.g. "1,2,3,15,50,400,1500,6000,20000"
 
 // --- Main GAE accumulation bar ---
 @property (nonatomic, assign) NSInteger accumCurrent;
@@ -54,6 +55,7 @@
 
 // Parse real-time spin API response (JSON with r1/r2/r3 numeric IDs)
 void SLParseSpinAPIResponse(NSData *responseData);
+void SLParseSpinAPIResponseWithBet(NSData *responseData, NSInteger betMultiplier);
 
 // Parse strack NDJSON body (legacy/backup)
 void SLParseStrackBody(NSString *body);

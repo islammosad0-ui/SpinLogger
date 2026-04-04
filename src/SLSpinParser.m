@@ -51,6 +51,10 @@ static NSString *SLRewardName(NSInteger reward) {
 //  This is called INSTANTLY per spin (not batched like strack)
 // ---------------------------------------------------------------------------
 void SLParseSpinAPIResponse(NSData *responseData) {
+    SLParseSpinAPIResponseWithBet(responseData, 0);
+}
+
+void SLParseSpinAPIResponseWithBet(NSData *responseData, NSInteger betMultiplier) {
     if (!responseData || responseData.length == 0) return;
 
     NSError *error = nil;
@@ -88,6 +92,7 @@ void SLParseSpinAPIResponse(NSData *responseData) {
     result.shields = [json[@"shields"] integerValue];
     result.maxShields = [json[@"maxShields"] integerValue];
     result.timestamp = [NSDate date];
+    result.betMultiplier = betMultiplier;
 
     // --- Bet state (probability segments change by bet level) ---
     NSDictionary *superBet = json[@"superBet"];
