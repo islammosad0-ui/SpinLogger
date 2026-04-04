@@ -256,6 +256,50 @@ One.dylib uses a **dual approach**:
 - `monitor: "idle"` — server can send remote commands
 - **This is how they control the mod remotely and enforce licensing**
 
+## All Progress Bars in Spin API Response
+
+### 3 API fields carry bar data per spin:
+| API Field | What It Tracks |
+|-----------|----------------|
+| `accumulation` | Main GAE only (top-level) |
+| `accumulationBarsById` | Potion Rush, Cave Blaster, Merge, Tournament, BBF |
+| `serializedEvents` | Slot-on-Slot events (Dove + Cookie, only when 2nd slot has symbols) |
+
+### Complete Bar Map:
+| # | In-Game Name | API Field | What Fills It | Points Per Spin |
+|---|-------------|-----------|---------------|-----------------|
+| 1 | Main GAE (Rabbit Race) | `accumulation` | Accum symbols (r=30) on main slot | varies |
+| 2 | Potion Rush (Expedition Cave) | `accumulationBarsById[pr_ec UUID]` | Every spin = +2pts | 2 |
+| 3 | Cave Blaster (Expedition) | `accumulationBarsById[blaster UUID]` | Every spin = +1pt | 1 |
+| 4 | Easter Dove (Slot-on-Slot) | `serializedEvents[GCEaster26]` | Dove symbols on 2nd slot | 1/2/5 |
+| 5 | Easter Cookie (Slot-on-Slot) | `serializedEvents[LongExtraDayReduced]` | Cookie symbols on 2nd slot | 1/2/5 |
+| 6 | Merge Energy | `accumulationBarsById[merge UUID]` | Every spin = +1pt | 1 |
+| 7 | Bunny Dash (Tournament) | `accumulationBarsById[tournament UUID]` | Raids/Attacks (8/6/5/4pts) | varies |
+| 8 | Bring Back Friends | `accumulationBarsById[BBF UUID]` | Friend collects | 0 |
+| 9 | Single Reward | `accumulationBarsById[UUID]` | ? | ? |
+
+### Second Slot Symbols (additionalSlots.second_slot.reels[]):
+| HAR value | Maps to | Scoring |
+|-----------|---------|---------|
+| `GCEaster26` | Easter Dove (#4) | 1 sym=+1, 2 sym=+2, 3 sym=+5 (x bet) |
+| `LongExtraDayReduced` | Easter Cookie (#5) | 1 sym=+1, 2 sym=+2, 3 sym=+5 (x bet) |
+| `""` (empty) | nothing | no points |
+
+### Reward Currency Mapping:
+| HAR reward key | In-game name |
+|---------------|--------------|
+| `progressive_reward_pr_ec` | Potion Rush points |
+| `expedition_cave_blaster` | Cave blaster item |
+| `generic_currency_egg_currency` | Easter eggs |
+| `token_currency_wheel_token_cw_one` | Wheel token |
+| `generic_currency_merge_energy` | Merge energy |
+
+### Mini Events Rotation:
+- Mini events rotate (unlike main GAE which resets every Monday)
+- Potion Rush, Cave Blaster, Merge Energy are common rotating events
+- Slot-on-Slot events (Easter Dove/Cookie) are seasonal
+- Tournament (Bunny Dash) is periodic
+
 ### Encrypted Config Key
 From strings: `SPEEDER_LEVEL_SECURE_SALT_v2_LOCAL_ONLY`
 Hex key found: `2343453635021768305523525c27685f5d33335938435c2728165b282e1921445e28695b572b2f532843582928174e756d0765071e2529545422204222585f682c4b5729`
