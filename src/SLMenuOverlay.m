@@ -234,6 +234,7 @@ static NSString *SLPanelHTML(void) {
     "--r:18px;"
     "}"
     "*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}"
+    "button,.cbtn,.abtn,.gear,.tab,.toggle,.sym-btn,.tab-close,[data-action]{cursor:pointer;-webkit-touch-callout:none}"
     "body{font-family:-apple-system,sans-serif;background:transparent;overflow:hidden}"
 
     "#panel{border-radius:var(--r);"
@@ -314,24 +315,24 @@ static NSString *SLPanelHTML(void) {
     "<div class='top'>"
     "<div class='logo'>✈</div>"
     "<div class='title'>SPEEDER <em>ELITE</em></div>"
-    "<div class='speed-badge' id='speedBadge' onclick='promptSpeed()'>%.2fx</div>"
-    "<button class='gear' onclick='showSettings()'>⚙</button>"
+    "<div class='speed-badge' id='speedBadge' data-action='promptSpeed()'>%.2fx</div>"
+    "<button class='gear' data-action='showSettings()'>⚙</button>"
     "</div>"
     "<div class='controls'>"
-    "<button class='cbtn cbtn-play' onclick='msg({action:\"play\"})'>▶</button>"
-    "<button class='cbtn' onclick='msg({action:\"minus\"})'>−</button>"
+    "<button class='cbtn cbtn-play' data-action='msg({action:\"play\"})'>▶</button>"
+    "<button class='cbtn' data-action='msg({action:\"minus\"})'>−</button>"
     "<div class='slider-wrap'>"
     "<input type='range' id='slider' min='1' max='50' step='0.5' value='%.1f'"
     " oninput='onSlide(this.value)'>"
     "</div>"
-    "<button class='cbtn' onclick='msg({action:\"plus\"})'>+</button>"
-    "<button class='cbtn cbtn-collapse' onclick='collapse()'>✕</button>"
+    "<button class='cbtn' data-action='msg({action:\"plus\"})'>+</button>"
+    "<button class='cbtn cbtn-collapse' data-action='collapse()'>✕</button>"
     "</div>"
     "<div class='actions'>"
-    "<button class='abtn abtn-on' onclick='toggleAllCounters()'>↺</button>"
+    "<button class='abtn abtn-on' data-action='toggleAllCounters()'>↺</button>"
     "<button class='abtn abtn-off abtn-skip'>SKIP</button>"
-    "<button class='abtn abtn-on' onclick='showTargetSpin()'>∞</button>"
-    "<button class='abtn abtn-on' id='netBtn' onclick='toggleNet()'>📶</button>"
+    "<button class='abtn abtn-on' data-action='showTargetSpin()'>∞</button>"
+    "<button class='abtn abtn-on' id='netBtn' data-action='toggleNet()'>📶</button>"
     "<button class='abtn abtn-off'>+</button>"
     "<button class='abtn abtn-off'>+</button>"
     "</div>"
@@ -340,36 +341,36 @@ static NSString *SLPanelHTML(void) {
     /* Settings view (hidden by default) */
     "<div id='settings'>"
     "<div class='tabs'>"
-    "<div class='tab active' id='tabTris' onclick='switchTab(\"tris\")'>TRIS MONITOR</div>"
-    "<div class='tab' id='tabCounter' onclick='switchTab(\"counter\")'>SPIN COUNTER</div>"
-    "<button class='tab-close' onclick='hideSettings()'>✕</button>"
+    "<div class='tab active' id='tabTris' data-action='switchTab(\"tris\")'>TRIS MONITOR</div>"
+    "<div class='tab' id='tabCounter' data-action='switchTab(\"counter\")'>SPIN COUNTER</div>"
+    "<button class='tab-close' data-action='hideSettings()'>✕</button>"
     "</div>"
     /* Tris tab content */
     "<div class='tab-body' id='trisContent'>"
     "<div class='setting-row'>"
     "<span class='setting-label'>ACTIVE MONITOR</span>"
-    "<div class='toggle' id='trisToggle' onclick='toggleTris()'><div class='toggle-knob'></div></div>"
+    "<div class='toggle' id='trisToggle' data-action='toggleTris()'><div class='toggle-knob'></div></div>"
     "</div>"
     "<div class='setting-label' style='padding-top:8px'>LOCK TARGET</div>"
     "<div class='sym-row' id='lockRow'>"
-    "<div class='sym-btn' data-sym='attack' onclick='lockTarget(\"attack\")'>🔨</div>"
-    "<div class='sym-btn' data-sym='steal' onclick='lockTarget(\"steal\")'>🐷</div>"
-    "<div class='sym-btn' data-sym='spins' onclick='lockTarget(\"spins\")'>💊</div>"
-    "<div class='sym-btn' data-sym='shield' onclick='lockTarget(\"shield\")'>🛡</div>"
-    "<div class='sym-btn' data-sym='accumulation' onclick='lockTarget(\"accumulation\")'>⭐</div>"
-    "<div class='sym-btn' data-sym='goldSack' onclick='lockTarget(\"goldSack\")'>🧪</div>"
+    "<div class='sym-btn' data-sym='attack' data-action='lockTarget(\"attack\")'>🔨</div>"
+    "<div class='sym-btn' data-sym='steal' data-action='lockTarget(\"steal\")'>🐷</div>"
+    "<div class='sym-btn' data-sym='spins' data-action='lockTarget(\"spins\")'>💊</div>"
+    "<div class='sym-btn' data-sym='shield' data-action='lockTarget(\"shield\")'>🛡</div>"
+    "<div class='sym-btn' data-sym='accumulation' data-action='lockTarget(\"accumulation\")'>⭐</div>"
+    "<div class='sym-btn' data-sym='goldSack' data-action='lockTarget(\"goldSack\")'>🧪</div>"
     "</div>"
     "</div>"
     /* Counter tab content */
     "<div class='tab-body' id='counterContent' style='display:none'>"
     "<div class='setting-label'>SHOW / HIDE COUNTERS</div>"
     "<div class='sym-row' id='counterRow'>"
-    "<div class='sym-btn active' data-sym='attack' onclick='toggleCounterSym(\"attack\")'>🔨</div>"
-    "<div class='sym-btn active' data-sym='steal' onclick='toggleCounterSym(\"steal\")'>🐷</div>"
-    "<div class='sym-btn active' data-sym='spins' onclick='toggleCounterSym(\"spins\")'>💊</div>"
-    "<div class='sym-btn active' data-sym='shield' onclick='toggleCounterSym(\"shield\")'>🛡</div>"
-    "<div class='sym-btn active' data-sym='accumulation' onclick='toggleCounterSym(\"accumulation\")'>⭐</div>"
-    "<div class='sym-btn active' data-sym='goldSack' onclick='toggleCounterSym(\"goldSack\")'>🧪</div>"
+    "<div class='sym-btn active' data-sym='attack' data-action='toggleCounterSym(\"attack\")'>🔨</div>"
+    "<div class='sym-btn active' data-sym='steal' data-action='toggleCounterSym(\"steal\")'>🐷</div>"
+    "<div class='sym-btn active' data-sym='spins' data-action='toggleCounterSym(\"spins\")'>💊</div>"
+    "<div class='sym-btn active' data-sym='shield' data-action='toggleCounterSym(\"shield\")'>🛡</div>"
+    "<div class='sym-btn active' data-sym='accumulation' data-action='toggleCounterSym(\"accumulation\")'>⭐</div>"
+    "<div class='sym-btn active' data-sym='goldSack' data-action='toggleCounterSym(\"goldSack\")'>🧪</div>"
     "</div>"
     "</div>"
 
@@ -378,22 +379,22 @@ static NSString *SLPanelHTML(void) {
     "<div class='setting-label' style='font-size:15px;color:#0f0;padding-bottom:10px'>TARGET SPIN</div>"
     "<div style='display:flex;align-items:center;gap:10px;padding-bottom:12px'>"
     "<div class='speed-badge' style='flex:1;font-size:18px;cursor:pointer;border-color:#0f0;color:#0f0'"
-    " id='targetInput' onclick='promptTarget()'>∞</div>"
+    " id='targetInput' data-action='promptTarget()'>∞</div>"
     "</div>"
     "<div class='sym-row' id='targetSymRow'>"
-    "<div class='sym-btn' data-sym='attack' onclick='selectTargetSym(\"attack\")'>🔨</div>"
-    "<div class='sym-btn' data-sym='steal' onclick='selectTargetSym(\"steal\")'>🐷</div>"
-    "<div class='sym-btn' data-sym='spins' onclick='selectTargetSym(\"spins\")'>💊</div>"
-    "<div class='sym-btn' data-sym='shield' onclick='selectTargetSym(\"shield\")'>🛡</div>"
-    "<div class='sym-btn' data-sym='accumulation' onclick='selectTargetSym(\"accumulation\")'>⭐</div>"
-    "<div class='sym-btn' data-sym='goldSack' onclick='selectTargetSym(\"goldSack\")'>🧪</div>"
+    "<div class='sym-btn' data-sym='attack' data-action='selectTargetSym(\"attack\")'>🔨</div>"
+    "<div class='sym-btn' data-sym='steal' data-action='selectTargetSym(\"steal\")'>🐷</div>"
+    "<div class='sym-btn' data-sym='spins' data-action='selectTargetSym(\"spins\")'>💊</div>"
+    "<div class='sym-btn' data-sym='shield' data-action='selectTargetSym(\"shield\")'>🛡</div>"
+    "<div class='sym-btn' data-sym='accumulation' data-action='selectTargetSym(\"accumulation\")'>⭐</div>"
+    "<div class='sym-btn' data-sym='goldSack' data-action='selectTargetSym(\"goldSack\")'>🧪</div>"
     "</div>"
     "<div style='display:flex;gap:8px;padding-top:10px;align-items:center'>"
-    "<button class='cbtn' id='targetPower' onclick='toggleTargetPower()'"
+    "<button class='cbtn' id='targetPower' data-action='toggleTargetPower()'"
     " style='width:36px;height:36px;border-radius:18px;font-size:16px;color:#f44'>⏻</button>"
-    "<button class='abtn abtn-off' style='flex:1' onclick='hideTargetSpin()'>BACK</button>"
+    "<button class='abtn abtn-off' style='flex:1' data-action='hideTargetSpin()'>BACK</button>"
     "<button class='abtn' style='flex:1;background:#0f0;color:#000;font-weight:800'"
-    " onclick='saveTarget()'>SAVE</button>"
+    " data-action='saveTarget()'>SAVE</button>"
     "</div>"
     "</div>"
 
@@ -401,6 +402,13 @@ static NSString *SLPanelHTML(void) {
     "</div>"
 
     "<script>"
+    /* Fix WKWebView touch: use touchend for all buttons */
+    "document.addEventListener('DOMContentLoaded',function(){"
+    "document.querySelectorAll('[data-action]').forEach(function(el){"
+    "el.addEventListener('touchend',function(e){e.preventDefault();"
+    "var fn=el.getAttribute('data-action');if(fn)eval(fn)},{passive:false});"
+    "el.addEventListener('click',function(e){var fn=el.getAttribute('data-action');if(fn)eval(fn)})"
+    "})});"
     "function msg(o){window.webkit.messageHandlers.sl.postMessage(o)}"
     "function collapse(){msg({action:'collapse'})}"
     "function onSlide(v){document.getElementById('speedBadge').textContent="
@@ -527,10 +535,16 @@ static void SLShowPanel(void) {
     CGRect screen = scene.coordinateSpace.bounds;
     CGFloat pw = MIN(screen.size.width - 24, 340);
     CGFloat ph = 165;
-    CGFloat x = (screen.size.width - pw) / 2;
+
+    // Position panel where the icon was (or nearby)
+    CGFloat iconX = sIconWindow ? sIconWindow.frame.origin.x : screen.size.width - 60;
+    CGFloat iconY = sIconWindow ? sIconWindow.frame.origin.y : screen.size.height / 2;
+    // Clamp so panel stays on screen
+    CGFloat x = MIN(iconX, screen.size.width - pw - 10);
+    CGFloat y = MAX(40, MIN(iconY - 20, screen.size.height - ph - 40));
 
     UIWindow *win = [[UIWindow alloc] initWithWindowScene:scene];
-    win.frame = CGRectMake(x, 55, pw, ph);
+    win.frame = CGRectMake(x, y, pw, ph);
     win.windowLevel = UIWindowLevelAlert + 400;
     win.backgroundColor = [UIColor clearColor];
 
@@ -551,6 +565,8 @@ static void SLShowPanel(void) {
     wv.opaque = NO;
     wv.scrollView.scrollEnabled = NO;
     wv.scrollView.bounces = NO;
+    wv.userInteractionEnabled = YES;
+    wv.scrollView.delaysContentTouches = NO;
     [wv loadHTMLString:SLPanelHTML() baseURL:nil];
     [vc.view addSubview:wv];
     sPanelWebView = wv;
