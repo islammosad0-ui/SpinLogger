@@ -192,3 +192,55 @@ One.dylib uses a **dual approach**:
 ### Encrypted Config Key
 From strings: `SPEEDER_LEVEL_SECURE_SALT_v2_LOCAL_ONLY`
 Hex key found: `2343453635021768305523525c27685f5d33335938435c2728165b282e1921445e28695b572b2f532843582928174e756d0765071e2529545422204222585f682c4b5729`
+
+## Where One.dylib Gets Its UI (HTML/CSS/JS)
+
+**The UI is NOT hardcoded — it's fetched and cached from an encrypted server.**
+
+### Content Delivery Architecture:
+1. `O8xJs4` class (content fetcher) has these methods:
+   - `fetchFrontendWithCompletion:` — Fetches the main SPEEDER ELITE panel HTML
+   - `fetchSingleCounterWithId:completion:` — Fetches individual counter HTML (loads `index.html` from `%@/counter/%@` URL pattern)
+   - `fetchSpinCounterWithCompletion:` — Fetches spin counter HTML
+   - `fetchSpinCounterWithStaticHashCompletion:` — Fetches with hash validation
+   - `fetchTrisMonitorWithCompletion:` — Fetches tris monitor HTML
+2. Content is validated: checks for `<!doctype` or `<html` prefix
+3. Cached locally: `frontend_cache.dat` + `frontend_meta.plist` (hash, tier)
+4. Encrypted content uses `resolveBunkerString:length:` to decrypt embedded data
+5. Some HTML is embedded as encrypted byte arrays (`FUN_0003db40` + encrypted DAT_ blocks)
+
+### HTML Resources:
+| Resource | Purpose |
+|----------|---------|
+| `index.html` | Main frontend entry point |
+| `%@/counter/%@` | Individual counter WebView (per symbol) |
+| `tris_monitor.html` | Tris monitor with columns |
+| `spin_counter.html` | Spin counter display |
+| `frontend_cache.dat` | Cached binary frontend data |
+
+### WebView Architecture:
+- `mainWebView` — The SPEEDER ELITE panel (fetched frontend)
+- `spinWebView` — Spin counter display (separate window)
+- `trisWebView` — Tris monitor with 5 columns
+- `counterWebViews` — Dict of `[String: WKWebView]`, one per symbol (hammer, pig, pills, potion, symbol)
+- Each counter is its own draggable WKWebView window
+- All use `nativeBridge` script message handler
+
+### Data Flow (Spin → UI):
+1. Strack POST intercepted by NSURLProtocol
+2. `KEDCui.K8CGHq(payload:)` posts `NetShearsSpinEvent` notification
+3. `GajlCdZgJ.handleSpinNotification:` receives it
+4. For counters: `window.increment()` injected into each counter's WKWebView
+5. For spin display: `window.incrementSpin()` injected
+6. For tris: `window.registerTris('symbol')` injected into trisWebView
+7. On 3-of-a-kind: counts snapshot to tris history, counters reset
+
+### KEY INSIGHT: The UI HTML/CSS/JS is NOT in the dylib binary
+The polished SPEEDER ELITE look (glassmorphism, gradients, animations) comes from
+HTML/CSS/JS that is either:
+- Fetched from a remote server (encrypted)
+- Embedded as encrypted byte arrays and decrypted at runtime via `resolveBunkerString`
+- Cached in `frontend_cache.dat` for offline use
+
+This means we CANNOT extract the exact CSS/HTML from the binary — it's encrypted.
+We must recreate the UI from the screenshots.
