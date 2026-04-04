@@ -175,14 +175,24 @@ static const int kSymbolCount = 6;
         tile.numLabel.text = [NSString stringWithFormat:@"%ld", (long)tile.distance];
     }
 
-    // Check for triple
+    // Check for triple (reel symbols)
     if (result.reel1 && [result.reel1 isEqualToString:result.reel2] &&
         [result.reel2 isEqualToString:result.reel3]) {
         for (SLCounterTile *tile in self.tiles) {
             if ([tile.symbolKey isEqualToString:result.reel1]) {
-                // Log to tris monitor
                 [[SLTrisController shared] recordTriple:tile.symbolKey distance:tile.distance];
-                // Reset this counter
+                tile.distance = 0;
+                tile.numLabel.text = @"0";
+                break;
+            }
+        }
+    }
+
+    // Check for potion bar change (🧪 counter)
+    if (result.potionBarChanged) {
+        for (SLCounterTile *tile in self.tiles) {
+            if ([tile.symbolKey isEqualToString:@"goldSack"]) {
+                [[SLTrisController shared] recordTriple:@"goldSack" distance:tile.distance];
                 tile.distance = 0;
                 tile.numLabel.text = @"0";
                 break;

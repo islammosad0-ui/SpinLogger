@@ -105,12 +105,25 @@ void SLParseSpinAPIResponse(NSData *responseData) {
         }
     }
 
+    // Potion rush / mini-event bar tracking
+    // If accumulationBarsById exists and has any dict entries, the bar changed this spin
+    NSDictionary *barsById = json[@"accumulationBarsById"];
+    if ([barsById isKindOfClass:[NSDictionary class]] && barsById.count > 0) {
+        // Check if any bar has actual dict data (not just empty)
+        for (id val in barsById.allValues) {
+            if ([val isKindOfClass:[NSDictionary class]]) {
+                result.potionBarChanged = YES;
+                break;
+            }
+        }
+    }
+
     SLSpinStoreAppend(result);
 
-    NSLog(@"[SpinLogger] SPIN #%ld: [%@,%@,%@] → %@ (pay:%lld)",
+    NSLog(@"[SpinLogger] SPIN #%ld: [%@,%@,%@] -> %@ (pay:%lld potion:%d)",
           (long)result.spinNumber,
           result.reel1, result.reel2, result.reel3,
-          result.spinResult, result.coinsWon);
+          result.spinResult, result.coinsWon, result.potionBarChanged);
 
     // Notify on main queue (UI updates)
     dispatch_async(dispatch_get_main_queue(), ^{

@@ -1,35 +1,62 @@
 #import "SLSpeedController.h"
 #import "SLConstants.h"
+#import <UIKit/UIKit.h>
 #import <objc/runtime.h>
-#import <QuartzCore/QuartzCore.h>
+#import <objc/message.h>
+
+// ---------------------------------------------------------------------------
+//  Speed Controller — SKScene.speed (like One.dylib)
+//
+//  Coin Master uses SpriteKit. One.dylib sets SKScene.speed to the multiplier.
+//  We swizzle SKScene.didMoveToView: + periodic timer to apply speed.
+// ---------------------------------------------------------------------------
 
 static double sSpeedMultiplier = 1.0;
+static IMP sOrigDidMoveToView = NULL;
 
-typedef NSTimer *(*OrigScheduledTimerIMP)(id, SEL, NSTimeInterval, id, SEL, id, BOOL);
-static OrigScheduledTimerIMP sOrigScheduledTimer = NULL;
+// Forward declaration
+static void SLFindAndApplySpeedInView(UIView *view);
 
-typedef void (*OrigAddToRunLoopIMP)(id, SEL, NSRunLoop *, NSRunLoopMode);
-static OrigAddToRunLoopIMP sOrigAddToRunLoop = NULL;
-
-static NSTimer *SL_scheduledTimer(id self, SEL _cmd,
-                                  NSTimeInterval interval,
-                                  id target, SEL selector,
-                                  id userInfo, BOOL repeats) {
-    if (sSpeedMultiplier > 1.0 && interval > 0.001) {
-        interval /= sSpeedMultiplier;
+static void SLApplySpeed(id scene) {
+    if (sSpeedMultiplier > 1.0) {
+        SEL sel = @selector(setSpeed:);
+        if ([scene respondsToSelector:sel]) {
+            typedef void (*Fn)(id, SEL, CGFloat);
+            ((Fn)objc_msgSend)(scene, sel, (CGFloat)sSpeedMultiplier);
+        }
     }
-    return sOrigScheduledTimer(self, _cmd, interval, target, selector, userInfo, repeats);
 }
 
-static void SL_addToRunLoop(id self, SEL _cmd,
-                            NSRunLoop *runLoop,
-                            NSRunLoopMode mode) {
-    if (sSpeedMultiplier > 1.0) {
-        NSInteger fps = (NSInteger)(60.0 * sSpeedMultiplier);
-        if (fps > 240) fps = 240;
-        [(CADisplayLink *)self setPreferredFramesPerSecond:fps];
+static void SL_didMoveToView(id self, SEL _cmd, id view) {
+    if (sOrigDidMoveToView) {
+        ((void(*)(id, SEL, id))sOrigDidMoveToView)(self, _cmd, view);
     }
-    sOrigAddToRunLoop(self, _cmd, runLoop, mode);
+    SLApplySpeed(self);
+}
+
+static void SLFindAndApplySpeedInView(UIView *view) {
+    Class skViewClass = NSClassFromString(@"SKView");
+    if (skViewClass && [view isKindOfClass:skViewClass]) {
+        SEL sceneSel = @selector(scene);
+        if ([view respondsToSelector:sceneSel]) {
+            id scene = ((id(*)(id, SEL))objc_msgSend)(view, sceneSel);
+            if (scene) SLApplySpeed(scene);
+        }
+    }
+    for (UIView *sub in view.subviews) {
+        SLFindAndApplySpeedInView(sub);
+    }
+}
+
+static void SLApplySpeedToAllScenes(void) {
+    for (UIScene *s in [UIApplication sharedApplication].connectedScenes) {
+        if (![s isKindOfClass:[UIWindowScene class]]) continue;
+        for (UIWindow *w in ((UIWindowScene *)s).windows) {
+            if (w.rootViewController.view) {
+                SLFindAndApplySpeedInView(w.rootViewController.view);
+            }
+        }
+    }
 }
 
 void SLSpeedControllerInstall(void) {
@@ -39,34 +66,38 @@ void SLSpeedControllerInstall(void) {
         if (sSpeedMultiplier > 50.0) sSpeedMultiplier = 50.0;
     }
 
-    {
-        SEL sel = @selector(scheduledTimerWithTimeInterval:target:selector:userInfo:repeats:);
-        Method m = class_getClassMethod([NSTimer class], sel);
+    // Swizzle SKScene.didMoveToView:
+    Class skSceneClass = NSClassFromString(@"SKScene");
+    if (skSceneClass) {
+        SEL sel = @selector(didMoveToView:);
+        Method m = class_getInstanceMethod(skSceneClass, sel);
         if (m) {
-            sOrigScheduledTimer = (OrigScheduledTimerIMP)method_getImplementation(m);
-            method_setImplementation(m, (IMP)SL_scheduledTimer);
+            sOrigDidMoveToView = method_getImplementation(m);
+            method_setImplementation(m, (IMP)SL_didMoveToView);
+            NSLog(@"[SpinLogger] Hooked SKScene.didMoveToView: for speed");
         }
     }
 
-    {
-        SEL sel = @selector(addToRunLoop:forMode:);
-        Method m = class_getInstanceMethod([CADisplayLink class], sel);
-        if (m) {
-            sOrigAddToRunLoop = (OrigAddToRunLoopIMP)method_getImplementation(m);
-            method_setImplementation(m, (IMP)SL_addToRunLoop);
-        }
-    }
+    // Periodic timer to re-apply speed (game may reset it on transitions)
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)),
+                   dispatch_get_main_queue(), ^{
+        [NSTimer scheduledTimerWithTimeInterval:2.0
+                                        repeats:YES
+                                          block:^(NSTimer *t) {
+            if (sSpeedMultiplier > 1.0) SLApplySpeedToAllScenes();
+        }];
+    });
 
-    NSLog(@"[SpinLogger] Speed controller installed — %.1fx", sSpeedMultiplier);
+    NSLog(@"[SpinLogger] Speed controller installed (SKScene.speed) — %.1fx", sSpeedMultiplier);
 }
 
 void SLSpeedControllerSetMultiplier(double multiplier) {
     if (multiplier < 1.0)  multiplier = 1.0;
     if (multiplier > 50.0) multiplier = 50.0;
     sSpeedMultiplier = multiplier;
-    [[NSUserDefaults standardUserDefaults] setDouble:sSpeedMultiplier
-                                              forKey:kSLDefaultsSpeedMultiplier];
+    [[NSUserDefaults standardUserDefaults] setDouble:sSpeedMultiplier forKey:kSLDefaultsSpeedMultiplier];
     [[NSUserDefaults standardUserDefaults] synchronize];
+    dispatch_async(dispatch_get_main_queue(), ^{ SLApplySpeedToAllScenes(); });
     NSLog(@"[SpinLogger] Speed set to %.1fx", sSpeedMultiplier);
 }
 

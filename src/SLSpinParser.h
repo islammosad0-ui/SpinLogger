@@ -30,6 +30,8 @@
 @property (nonatomic, assign) NSInteger accumMissionIndex;
 @property (nonatomic, copy) NSString *accumRewardType;
 @property (nonatomic, assign) long long accumRewardAmount;
+// Potion rush / mini-event bar tracking
+@property (nonatomic, assign) BOOL potionBarChanged;  // YES if accumulationBarsById present this spin
 @end
 
 // Parse real-time spin API response (JSON with r1/r2/r3 numeric IDs)
