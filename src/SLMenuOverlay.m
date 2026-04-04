@@ -36,8 +36,10 @@ static UIColor *SLMuted(void) { return [UIColor colorWithRed:0.48 green:0.54 blu
 #pragma mark - Button factory
 
 static UIButton *sSpeedBadgeBtn = nil;
-static UIButton *sRefreshBtn = nil;    // ↺ counter toggle
-static UIButton *sNetBtn = nil;        // 📶 network toggle
+static UIButton *sRefreshBtn = nil;
+static UIButton *sNetBtn = nil;
+static UIButton *sPreset1Btn = nil;
+static UIButton *sPreset2Btn = nil;
 static BOOL sCountersVisible = YES;
 
 static UIButton *SLMakeBtn(NSString *title, CGFloat w, CGFloat h, UIColor *bg, UIColor *fg, CGFloat fontSize) {
@@ -549,6 +551,43 @@ static BOOL sTargetActive = NO;
     [[SLTrisController shared] showTrisMonitor];
 }
 
+// Speed presets — tap to activate, long press to set
++ (void)preset1Tap {
+    double v = [[NSUserDefaults standardUserDefaults] doubleForKey:@"Speeder_Preset1Speed"];
+    if (v > 0) { SLSpeedControllerSetMultiplier(v); [self syncUI]; }
+}
++ (void)preset2Tap {
+    double v = [[NSUserDefaults standardUserDefaults] doubleForKey:@"Speeder_Preset2Speed"];
+    if (v > 0) { SLSpeedControllerSetMultiplier(v); [self syncUI]; }
+}
++ (void)preset1LongPress:(UILongPressGestureRecognizer *)lp {
+    if (lp.state != UIGestureRecognizerStateBegan) return;
+    [self setPreset:1 btn:sPreset1Btn key:@"Speeder_Preset1Speed"];
+}
++ (void)preset2LongPress:(UILongPressGestureRecognizer *)lp {
+    if (lp.state != UIGestureRecognizerStateBegan) return;
+    [self setPreset:2 btn:sPreset2Btn key:@"Speeder_Preset2Speed"];
+}
++ (void)setPreset:(int)num btn:(UIButton *)btn key:(NSString *)key {
+    UIAlertController *a = [UIAlertController alertControllerWithTitle:[NSString stringWithFormat:@"Preset %d", num]
+                                                               message:@"Enter speed value"
+                                                        preferredStyle:UIAlertControllerStyleAlert];
+    [a addTextFieldWithConfigurationHandler:^(UITextField *tf) {
+        tf.keyboardType = UIKeyboardTypeDecimalPad;
+        double cur = [[NSUserDefaults standardUserDefaults] doubleForKey:key];
+        if (cur > 0) tf.text = [NSString stringWithFormat:@"%.0f", cur];
+    }];
+    [a addAction:[UIAlertAction actionWithTitle:@"Save" style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) {
+        double v = a.textFields.firstObject.text.doubleValue;
+        if (v >= 1.0) {
+            [[NSUserDefaults standardUserDefaults] setDouble:v forKey:key];
+            [btn setTitle:[NSString stringWithFormat:@"%.0fx", v] forState:UIControlStateNormal];
+        }
+    }]];
+    [a addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [[self topVC] presentViewController:a animated:YES completion:nil];
+}
+
 + (void)syncUI {
     double v = SLSpeedControllerGetMultiplier();
     [sSpeedBadgeBtn setTitle:[NSString stringWithFormat:@"%.2fx", v] forState:UIControlStateNormal];
@@ -717,27 +756,43 @@ static void SLShowPanel(void) {
     CGFloat abtnW = 42, abtnH = 36, agap = 5;
     NSArray *abtnDefs = @[
         @[@"↺", @"resetCounters", @YES],
-        @[@"SKIP", @"", @NO],
+        @[@"TRIS", @"trisMonitor", @YES],
         @[@"∞", @"targetSpin", @YES],
         @[@"📶", @"networkToggle", @YES],
-        @[@"+", @"", @NO],
-        @[@"+", @"", @NO],
+        @[@"preset1", @"preset1Tap", @NO],
+        @[@"preset2", @"preset2Tap", @NO],
     ];
 
     CGFloat ax = pad;
     for (NSArray *def in abtnDefs) {
-        CGFloat w = [def[0] isEqualToString:@"SKIP"] ? 52 : abtnW;
+        CGFloat w = ([def[0] isEqualToString:@"TRIS"] || [def[0] isEqualToString:@"preset1"] || [def[0] isEqualToString:@"preset2"]) ? 48 : abtnW;
         BOOL active = [def[2] boolValue];
         UIButton *abtn = SLMakeBtn(def[0], w, abtnH, active ? SLBtnActive() : SLBtnBg(),
                                     active ? [UIColor whiteColor] : SLMuted(),
-                                    [def[0] isEqualToString:@"SKIP"] ? 12 : 14);
+                                    ([def[0] isEqualToString:@"TRIS"] || [def[0] isEqualToString:@"preset1"] || [def[0] isEqualToString:@"preset2"]) ? 11 : 14);
         abtn.frame = CGRectMake(ax, r3y, w, abtnH);
         if ([def[1] length] > 0) {
             [abtn addTarget:[SLActions class] action:NSSelectorFromString(def[1]) forControlEvents:UIControlEventTouchUpInside];
         }
-        // Store refs for toggle buttons
+        // Store refs for toggle buttons + presets
         if ([def[0] isEqualToString:@"↺"]) sRefreshBtn = abtn;
         if ([def[0] isEqualToString:@"📶"]) sNetBtn = abtn;
+        if ([def[0] isEqualToString:@"preset1"]) {
+            sPreset1Btn = abtn;
+            double v = [[NSUserDefaults standardUserDefaults] doubleForKey:@"Speeder_Preset1Speed"];
+            [abtn setTitle:(v > 0 ? [NSString stringWithFormat:@"%.0fx", v] : @"+") forState:UIControlStateNormal];
+            UILongPressGestureRecognizer *lp = [[UILongPressGestureRecognizer alloc] initWithTarget:[SLActions class] action:@selector(preset1LongPress:)];
+            lp.minimumPressDuration = 0.5;
+            [abtn addGestureRecognizer:lp];
+        }
+        if ([def[0] isEqualToString:@"preset2"]) {
+            sPreset2Btn = abtn;
+            double v = [[NSUserDefaults standardUserDefaults] doubleForKey:@"Speeder_Preset2Speed"];
+            [abtn setTitle:(v > 0 ? [NSString stringWithFormat:@"%.0fx", v] : @"+") forState:UIControlStateNormal];
+            UILongPressGestureRecognizer *lp = [[UILongPressGestureRecognizer alloc] initWithTarget:[SLActions class] action:@selector(preset2LongPress:)];
+            lp.minimumPressDuration = 0.5;
+            [abtn addGestureRecognizer:lp];
+        }
         [content addSubview:abtn];
         ax += w + agap;
     }

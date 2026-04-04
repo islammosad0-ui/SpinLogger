@@ -25,6 +25,13 @@
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *histShield;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *histGold;
 @property (nonatomic, assign) NSInteger totalSpins;
+@property (nonatomic, assign) BOOL symbolCountMode;  // NO=spins between triples, YES=symbols between triples
+// Symbol count histories (how many of that symbol appeared between triples)
+@property (nonatomic, strong) NSMutableArray<NSNumber *> *symHistAttack;
+@property (nonatomic, strong) NSMutableArray<NSNumber *> *symHistSteal;
+@property (nonatomic, strong) NSMutableArray<NSNumber *> *symHistAccum;
+@property (nonatomic, strong) NSMutableArray<NSNumber *> *symHistShield;
+@property (nonatomic, strong) NSMutableArray<NSNumber *> *symHistGold;
 @end
 
 @implementation SLTrisController
@@ -46,7 +53,13 @@
         _histAccum  = [NSMutableArray array];
         _histShield = [NSMutableArray array];
         _histGold   = [NSMutableArray array];
+        _symHistAttack = [NSMutableArray array];
+        _symHistSteal  = [NSMutableArray array];
+        _symHistAccum  = [NSMutableArray array];
+        _symHistShield = [NSMutableArray array];
+        _symHistGold   = [NSMutableArray array];
         _totalSpins = 0;
+        _symbolCountMode = NO;
     }
     return self;
 }
@@ -71,11 +84,19 @@
 #pragma mark - Record triple from counter overlay
 
 - (void)recordTriple:(NSString *)symbol distance:(NSInteger)distance {
+    [self recordTriple:symbol distance:distance symbolCount:0];
+}
+
+- (void)recordTriple:(NSString *)symbol distance:(NSInteger)distance symbolCount:(NSInteger)symCount {
     NSMutableArray *hist = [self historyForSymbol:symbol];
     if (hist) {
         [hist addObject:@(distance)];
-        // Keep last 50
         if (hist.count > 50) [hist removeObjectAtIndex:0];
+    }
+    NSMutableArray *symHist = [self symbolHistoryForSymbol:symbol];
+    if (symHist) {
+        [symHist addObject:@(symCount)];
+        if (symHist.count > 50) [symHist removeObjectAtIndex:0];
     }
 
     // Update tris view if visible
@@ -90,6 +111,15 @@
     if ([sym isEqualToString:kSLSymbolAccumulation]) return self.histAccum;
     if ([sym isEqualToString:kSLSymbolShield])       return self.histShield;
     if ([sym isEqualToString:kSLSymbolGoldSack])     return self.histGold;
+    return nil;
+}
+
+- (NSMutableArray *)symbolHistoryForSymbol:(NSString *)sym {
+    if ([sym isEqualToString:kSLSymbolAttack])       return self.symHistAttack;
+    if ([sym isEqualToString:kSLSymbolSteal])        return self.symHistSteal;
+    if ([sym isEqualToString:kSLSymbolAccumulation]) return self.symHistAccum;
+    if ([sym isEqualToString:kSLSymbolShield])       return self.symHistShield;
+    if ([sym isEqualToString:kSLSymbolGoldSack])     return self.symHistGold;
     return nil;
 }
 
@@ -164,6 +194,9 @@
     NSString *body = [msg.body description];
     if ([body isEqualToString:@"close"]) {
         self.trisWindow.hidden = YES;
+    } else if ([body isEqualToString:@"toggleMode"]) {
+        self.symbolCountMode = !self.symbolCountMode;
+        [self refreshTrisHTML];
     } else if ([body isEqualToString:@"reset"]) {
         [self.histAttack removeAllObjects];
         [self.histSteal  removeAllObjects];
@@ -178,26 +211,28 @@
 #pragma mark - Tris HTML — 5 columns showing distance history
 
 - (void)refreshTrisHTML {
-    // Find max rows across all columns
-    NSInteger maxRows = self.histAttack.count;
-    if (self.histSteal.count  > maxRows) maxRows = self.histSteal.count;
-    if (self.histAccum.count  > maxRows) maxRows = self.histAccum.count;
-    if (self.histShield.count > maxRows) maxRows = self.histShield.count;
-    if (self.histGold.count   > maxRows) maxRows = self.histGold.count;
+    // Choose which history to show based on mode
+    NSArray *ha = self.symbolCountMode ? self.symHistAttack : self.histAttack;
+    NSArray *hs = self.symbolCountMode ? self.symHistSteal  : self.histSteal;
+    NSArray *hc = self.symbolCountMode ? self.symHistAccum  : self.histAccum;
+    NSArray *hh = self.symbolCountMode ? self.symHistShield : self.histShield;
+    NSArray *hg = self.symbolCountMode ? self.symHistGold   : self.histGold;
 
-    // Build grid rows (newest first)
+    NSInteger maxRows = ha.count;
+    if (hs.count  > maxRows) maxRows = (NSInteger)hs.count;
+    if (hc.count  > maxRows) maxRows = (NSInteger)hc.count;
+    if (hh.count > maxRows) maxRows = (NSInteger)hh.count;
+    if (hg.count   > maxRows) maxRows = (NSInteger)hg.count;
+
     NSMutableString *rows = [NSMutableString string];
-    for (NSInteger i = maxRows - 1; i >= 0 && i >= maxRows - 25; i--) {
-        NSString *a = (i < (NSInteger)self.histAttack.count) ?
-            [NSString stringWithFormat:@"%ld", (long)self.histAttack[i].integerValue] : @"";
-        NSString *s = (i < (NSInteger)self.histSteal.count) ?
-            [NSString stringWithFormat:@"%ld", (long)self.histSteal[i].integerValue] : @"";
-        NSString *c = (i < (NSInteger)self.histAccum.count) ?
-            [NSString stringWithFormat:@"%ld", (long)self.histAccum[i].integerValue] : @"";
-        NSString *h = (i < (NSInteger)self.histShield.count) ?
-            [NSString stringWithFormat:@"%ld", (long)self.histShield[i].integerValue] : @"";
-        NSString *g = (i < (NSInteger)self.histGold.count) ?
-            [NSString stringWithFormat:@"%ld", (long)self.histGold[i].integerValue] : @"";
+    // Top to bottom = oldest first
+    NSInteger startIdx = (maxRows > 25) ? maxRows - 25 : 0;
+    for (NSInteger i = startIdx; i < maxRows; i++) {
+        NSString *a = (i < (NSInteger)ha.count) ? [NSString stringWithFormat:@"%ld", (long)[ha[i] integerValue]] : @"";
+        NSString *s = (i < (NSInteger)hs.count) ? [NSString stringWithFormat:@"%ld", (long)[hs[i] integerValue]] : @"";
+        NSString *c = (i < (NSInteger)hc.count) ? [NSString stringWithFormat:@"%ld", (long)[hc[i] integerValue]] : @"";
+        NSString *h = (i < (NSInteger)hh.count) ? [NSString stringWithFormat:@"%ld", (long)[hh[i] integerValue]] : @"";
+        NSString *g = (i < (NSInteger)hg.count) ? [NSString stringWithFormat:@"%ld", (long)[hg[i] integerValue]] : @"";
 
         [rows appendFormat:
          @"<div class='c c0'>%@</div>"
@@ -244,12 +279,15 @@
     "<div class='grid'>%@</div>"
     "<div class='foot'>"
     "<span onclick='msg(\"reset\")'>RESET</span>"
+    "<span onclick='msg(\"toggleMode\")'>%@</span>"
     "<span>SPIN: %ld</span>"
     "</div>"
     "</div>"
     "<script>function msg(s){window.webkit.messageHandlers.tris.postMessage(s)}</script>"
     "</body></html>",
-    rows, (long)self.totalSpins];
+    rows,
+    self.symbolCountMode ? @"[SYM]" : @"[SPIN]",
+    (long)self.totalSpins];
 
     [self.trisWebView loadHTMLString:html baseURL:nil];
 }

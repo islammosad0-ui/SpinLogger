@@ -36,9 +36,11 @@ static const int kSymbolCount = 6;
 
 @interface SLCounterTile : NSObject
 @property (nonatomic, strong) UIWindow *window;
-@property (nonatomic, strong) UILabel *numLabel;
+@property (nonatomic, strong) UILabel *tripleLabel;   // 3X: distance between triples
+@property (nonatomic, strong) UILabel *singleLabel;   // 1X: single symbol count (resets on triple too)
 @property (nonatomic, copy) NSString *symbolKey;
-@property (nonatomic, assign) NSInteger distance;
+@property (nonatomic, assign) NSInteger distance;     // spins since last triple (3X)
+@property (nonatomic, assign) NSInteger singleCount;  // individual appearances since last triple (1X)
 @property (nonatomic, assign) BOOL visible;
 @end
 
@@ -84,6 +86,7 @@ static const int kSymbolCount = 6;
         SLCounterTile *tile = [[SLCounterTile alloc] init];
         tile.symbolKey = [NSString stringWithUTF8String:def.key];
         tile.distance = 0;
+        tile.singleCount = 0;
         tile.visible = YES;
 
         UIWindow *win = [[UIWindow alloc] initWithWindowScene:scene];
@@ -95,32 +98,42 @@ static const int kSymbolCount = 6;
         vc.view.backgroundColor = [UIColor clearColor];
         win.rootViewController = vc;
 
-        // Container
         UIView *container = [[UIView alloc] initWithFrame:CGRectMake(0, 0, tileW, tileH)];
         container.backgroundColor = [[UIColor colorWithRed:0.08 green:0.10 blue:0.15 alpha:0.92] colorWithAlphaComponent:0.92];
         container.layer.cornerRadius = 14;
         container.clipsToBounds = YES;
         [vc.view addSubview:container];
 
+        UIColor *symColor = [UIColor colorWithRed:def.r green:def.g blue:def.b alpha:1.0];
+
         // Emoji
-        UILabel *emojiLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 6, tileW, 26)];
+        UILabel *emojiLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 2, tileW, 20)];
         emojiLabel.text = [NSString stringWithUTF8String:def.emoji];
-        emojiLabel.font = [UIFont systemFontOfSize:22];
+        emojiLabel.font = [UIFont systemFontOfSize:16];
         emojiLabel.textAlignment = NSTextAlignmentCenter;
         [container addSubview:emojiLabel];
 
-        // Number
-        UILabel *numLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 32, tileW, 24)];
-        numLabel.text = @"0";
-        numLabel.font = [UIFont boldSystemFontOfSize:18];
-        numLabel.textColor = [UIColor colorWithRed:def.r green:def.g blue:def.b alpha:1.0];
-        numLabel.textAlignment = NSTextAlignmentCenter;
-        [container addSubview:numLabel];
-        tile.numLabel = numLabel;
+        // 3X line
+        UILabel *tripleLabel = [[UILabel alloc] initWithFrame:CGRectMake(2, 22, tileW - 4, 14)];
+        tripleLabel.text = @"3X: 0";
+        tripleLabel.font = [UIFont boldSystemFontOfSize:10];
+        tripleLabel.textColor = symColor;
+        tripleLabel.textAlignment = NSTextAlignmentCenter;
+        [container addSubview:tripleLabel];
+        tile.tripleLabel = tripleLabel;
 
-        // Color bar at bottom
+        // 1X line
+        UILabel *singleLabel = [[UILabel alloc] initWithFrame:CGRectMake(2, 37, tileW - 4, 14)];
+        singleLabel.text = @"1X: 0";
+        singleLabel.font = [UIFont systemFontOfSize:9];
+        singleLabel.textColor = [symColor colorWithAlphaComponent:0.6];
+        singleLabel.textAlignment = NSTextAlignmentCenter;
+        [container addSubview:singleLabel];
+        tile.singleLabel = singleLabel;
+
+        // Color bar
         UIView *bar = [[UIView alloc] initWithFrame:CGRectMake(4, tileH - 4, tileW - 8, 3)];
-        bar.backgroundColor = [UIColor colorWithRed:def.r green:def.g blue:def.b alpha:0.8];
+        bar.backgroundColor = [symColor colorWithAlphaComponent:0.8];
         bar.layer.cornerRadius = 1.5;
         [container addSubview:bar];
 
@@ -169,10 +182,17 @@ static const int kSymbolCount = 6;
 
     self.totalSpins++;
 
-    // Increment ALL distance counters
+    // Increment ALL 3X distance counters every spin
     for (SLCounterTile *tile in self.tiles) {
         tile.distance++;
-        tile.numLabel.text = [NSString stringWithFormat:@"%ld", (long)tile.distance];
+    }
+
+    // Increment 1X count for symbols appearing in this spin
+    for (NSString *sym in @[result.reel1 ?: @"", result.reel2 ?: @"", result.reel3 ?: @""]) {
+        if (sym.length == 0) continue;
+        for (SLCounterTile *tile in self.tiles) {
+            if ([tile.symbolKey isEqualToString:sym]) { tile.singleCount++; break; }
+        }
     }
 
     // Check for triple (reel symbols)
@@ -180,9 +200,9 @@ static const int kSymbolCount = 6;
         [result.reel2 isEqualToString:result.reel3]) {
         for (SLCounterTile *tile in self.tiles) {
             if ([tile.symbolKey isEqualToString:result.reel1]) {
-                [[SLTrisController shared] recordTriple:tile.symbolKey distance:tile.distance];
+                [[SLTrisController shared] recordTriple:tile.symbolKey distance:tile.distance symbolCount:tile.singleCount];
                 tile.distance = 0;
-                tile.numLabel.text = @"0";
+                tile.singleCount = 0;
                 break;
             }
         }
@@ -194,10 +214,16 @@ static const int kSymbolCount = 6;
             if ([tile.symbolKey isEqualToString:@"goldSack"]) {
                 [[SLTrisController shared] recordTriple:@"goldSack" distance:tile.distance];
                 tile.distance = 0;
-                tile.numLabel.text = @"0";
+                tile.singleCount = 0;
                 break;
             }
         }
+    }
+
+    // Update all labels
+    for (SLCounterTile *tile in self.tiles) {
+        tile.tripleLabel.text = [NSString stringWithFormat:@"3X: %ld", (long)tile.distance];
+        tile.singleLabel.text = [NSString stringWithFormat:@"1X: %ld", (long)tile.singleCount];
     }
 }
 
