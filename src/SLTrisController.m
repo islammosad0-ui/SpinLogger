@@ -21,16 +21,17 @@
 // Each array stores distances between triples for that symbol
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *histAttack;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *histSteal;
-@property (nonatomic, strong) NSMutableArray<NSNumber *> *histAccum;
+@property (nonatomic, strong) NSMutableArray<NSNumber *> *histSpins;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *histShield;
+@property (nonatomic, strong) NSMutableArray<NSNumber *> *histAccum;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *histGold;
 @property (nonatomic, assign) NSInteger totalSpins;
 @property (nonatomic, assign) BOOL symbolCountMode;  // NO=spins between triples, YES=symbols between triples
-// Symbol count histories (how many of that symbol appeared between triples)
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *symHistAttack;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *symHistSteal;
-@property (nonatomic, strong) NSMutableArray<NSNumber *> *symHistAccum;
+@property (nonatomic, strong) NSMutableArray<NSNumber *> *symHistSpins;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *symHistShield;
+@property (nonatomic, strong) NSMutableArray<NSNumber *> *symHistAccum;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *symHistGold;
 @end
 
@@ -50,13 +51,15 @@
         _skipEnabled = [[NSUserDefaults standardUserDefaults] boolForKey:@"Speeder_TrisSkip"];
         _histAttack = [NSMutableArray array];
         _histSteal  = [NSMutableArray array];
-        _histAccum  = [NSMutableArray array];
+        _histSpins  = [NSMutableArray array];
         _histShield = [NSMutableArray array];
+        _histAccum  = [NSMutableArray array];
         _histGold   = [NSMutableArray array];
         _symHistAttack = [NSMutableArray array];
         _symHistSteal  = [NSMutableArray array];
-        _symHistAccum  = [NSMutableArray array];
+        _symHistSpins  = [NSMutableArray array];
         _symHistShield = [NSMutableArray array];
+        _symHistAccum  = [NSMutableArray array];
         _symHistGold   = [NSMutableArray array];
         _totalSpins = 0;
         _symbolCountMode = NO;
@@ -108,8 +111,9 @@
 - (NSMutableArray *)historyForSymbol:(NSString *)sym {
     if ([sym isEqualToString:kSLSymbolAttack])       return self.histAttack;
     if ([sym isEqualToString:kSLSymbolSteal])        return self.histSteal;
-    if ([sym isEqualToString:kSLSymbolAccumulation]) return self.histAccum;
+    if ([sym isEqualToString:kSLSymbolSpins])        return self.histSpins;
     if ([sym isEqualToString:kSLSymbolShield])       return self.histShield;
+    if ([sym isEqualToString:kSLSymbolAccumulation]) return self.histAccum;
     if ([sym isEqualToString:kSLSymbolGoldSack])     return self.histGold;
     return nil;
 }
@@ -117,8 +121,9 @@
 - (NSMutableArray *)symbolHistoryForSymbol:(NSString *)sym {
     if ([sym isEqualToString:kSLSymbolAttack])       return self.symHistAttack;
     if ([sym isEqualToString:kSLSymbolSteal])        return self.symHistSteal;
-    if ([sym isEqualToString:kSLSymbolAccumulation]) return self.symHistAccum;
+    if ([sym isEqualToString:kSLSymbolSpins])        return self.symHistSpins;
     if ([sym isEqualToString:kSLSymbolShield])       return self.symHistShield;
+    if ([sym isEqualToString:kSLSymbolAccumulation]) return self.symHistAccum;
     if ([sym isEqualToString:kSLSymbolGoldSack])     return self.symHistGold;
     return nil;
 }
@@ -142,8 +147,8 @@
     if (!scene) return;
 
     CGRect screen = scene.coordinateSpace.bounds;
-    CGFloat w = MIN(screen.size.width - 20, 340);
-    CGFloat h = 400;
+    CGFloat w = MIN(screen.size.width - 20, 300);
+    CGFloat h = screen.size.height * 0.25;
     CGFloat x = (screen.size.width - w) / 2;
     CGFloat y = (screen.size.height - h) / 2;
 
@@ -211,36 +216,27 @@
 #pragma mark - Tris HTML — 5 columns showing distance history
 
 - (void)refreshTrisHTML {
-    // Choose which history to show based on mode
-    NSArray *ha = self.symbolCountMode ? self.symHistAttack : self.histAttack;
-    NSArray *hs = self.symbolCountMode ? self.symHistSteal  : self.histSteal;
-    NSArray *hc = self.symbolCountMode ? self.symHistAccum  : self.histAccum;
-    NSArray *hh = self.symbolCountMode ? self.symHistShield : self.histShield;
-    NSArray *hg = self.symbolCountMode ? self.symHistGold   : self.histGold;
+    // 6 history arrays: attack, steal, spins, shield, accumulation, goldSack
+    NSArray *arrays[6], *symArrays[6];
+    arrays[0] = self.histAttack; arrays[1] = self.histSteal; arrays[2] = self.histSpins;
+    arrays[3] = self.histShield; arrays[4] = self.histAccum; arrays[5] = self.histGold;
+    symArrays[0] = self.symHistAttack; symArrays[1] = self.symHistSteal; symArrays[2] = self.symHistSpins;
+    symArrays[3] = self.symHistShield; symArrays[4] = self.symHistAccum; symArrays[5] = self.symHistGold;
 
-    NSInteger maxRows = ha.count;
-    if (hs.count  > maxRows) maxRows = (NSInteger)hs.count;
-    if (hc.count  > maxRows) maxRows = (NSInteger)hc.count;
-    if (hh.count > maxRows) maxRows = (NSInteger)hh.count;
-    if (hg.count   > maxRows) maxRows = (NSInteger)hg.count;
+    NSInteger maxRows = 0;
+    for (int c = 0; c < 6; c++) {
+        NSArray *arr = self.symbolCountMode ? symArrays[c] : arrays[c];
+        if ((NSInteger)arr.count > maxRows) maxRows = (NSInteger)arr.count;
+    }
 
     NSMutableString *rows = [NSMutableString string];
-    // Top to bottom = oldest first
     NSInteger startIdx = (maxRows > 25) ? maxRows - 25 : 0;
     for (NSInteger i = startIdx; i < maxRows; i++) {
-        NSString *a = (i < (NSInteger)ha.count) ? [NSString stringWithFormat:@"%ld", (long)[ha[i] integerValue]] : @"";
-        NSString *s = (i < (NSInteger)hs.count) ? [NSString stringWithFormat:@"%ld", (long)[hs[i] integerValue]] : @"";
-        NSString *c = (i < (NSInteger)hc.count) ? [NSString stringWithFormat:@"%ld", (long)[hc[i] integerValue]] : @"";
-        NSString *h = (i < (NSInteger)hh.count) ? [NSString stringWithFormat:@"%ld", (long)[hh[i] integerValue]] : @"";
-        NSString *g = (i < (NSInteger)hg.count) ? [NSString stringWithFormat:@"%ld", (long)[hg[i] integerValue]] : @"";
-
-        [rows appendFormat:
-         @"<div class='c c0'>%@</div>"
-         "<div class='c c1'>%@</div>"
-         "<div class='c c2'>%@</div>"
-         "<div class='c c3'>%@</div>"
-         "<div class='c c4'>%@</div>",
-         a, s, c, h, g];
+        for (int c = 0; c < 6; c++) {
+            NSArray *arr = self.symbolCountMode ? symArrays[c] : arrays[c];
+            NSString *val = (i < (NSInteger)arr.count) ? [NSString stringWithFormat:@"%ld", (long)[arr[i] integerValue]] : @"";
+            [rows appendFormat:@"<div class='c c%d'>%@</div>", c, val];
+        }
     }
 
     NSString *html = [NSString stringWithFormat:@
@@ -249,21 +245,21 @@
     "<style>"
     "*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none}"
     "body{background:transparent;font-family:-apple-system,sans-serif}"
-    ".panel{background:rgba(15,20,35,0.95);border-radius:20px;overflow:hidden;"
+    ".panel{background:rgba(15,20,35,0.95);border-radius:14px;overflow:hidden;"
     "border:1px solid rgba(255,255,255,0.06);height:100vh;display:flex;flex-direction:column}"
-    ".hdr{display:flex;height:56px;align-items:center;padding:0 6px;flex-shrink:0}"
-    ".hdr-icon{flex:1;display:flex;flex-direction:column;align-items:center;font-size:24px}"
-    ".hdr-bar{height:3px;width:80%%;border-radius:2px;margin-top:4px}"
-    ".close{width:36px;height:36px;background:rgba(255,255,255,0.12);border-radius:18px;"
-    "display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;"
-    "cursor:pointer;border:none;position:absolute;right:10px;top:10px}"
-    ".grid{display:grid;grid-template-columns:repeat(5,1fr);flex:1;overflow-y:auto;"
+    ".hdr{display:flex;height:36px;align-items:center;padding:0 4px;flex-shrink:0}"
+    ".hdr-icon{flex:1;display:flex;flex-direction:column;align-items:center;font-size:14px}"
+    ".hdr-bar{height:2px;width:80%%;border-radius:1px;margin-top:2px}"
+    ".close{width:24px;height:24px;background:rgba(255,255,255,0.12);border-radius:12px;"
+    "display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;"
+    "cursor:pointer;border:none;position:absolute;right:6px;top:6px}"
+    ".grid{display:grid;grid-template-columns:repeat(6,1fr);flex:1;overflow-y:auto;"
     "align-content:start}"
-    ".c{text-align:center;padding:8px 2px;font-size:17px;font-weight:700;"
+    ".c{text-align:center;padding:4px 1px;font-size:12px;font-weight:700;"
     "border-bottom:1px solid rgba(255,255,255,0.04)}"
-    ".c0{color:#00e5ff}.c1{color:#ff69b4}.c2{color:#00bcd4}.c3{color:#ce93d8}.c4{color:#4caf50}"
-    ".foot{display:flex;justify-content:space-between;padding:10px 16px;"
-    "color:#aaa;font-size:14px;font-weight:600;flex-shrink:0;"
+    ".c0{color:#00e5ff}.c1{color:#ff69b4}.c2{color:#00bcd4}.c3{color:#ce93d8}.c4{color:#ffd700}.c5{color:#4caf50}"
+    ".foot{display:flex;justify-content:space-between;padding:6px 10px;"
+    "color:#aaa;font-size:11px;font-weight:600;flex-shrink:0;"
     "border-top:1px solid rgba(255,255,255,0.06)}"
     ".foot span{cursor:pointer}"
     "</style></head><body>"
@@ -274,6 +270,7 @@
     "<div class='hdr-icon'>🐷<div class='hdr-bar' style='background:#ff69b4'></div></div>"
     "<div class='hdr-icon'>💊<div class='hdr-bar' style='background:#00bcd4'></div></div>"
     "<div class='hdr-icon'>🛡<div class='hdr-bar' style='background:#ce93d8'></div></div>"
+    "<div class='hdr-icon'>⭐<div class='hdr-bar' style='background:#ffd700'></div></div>"
     "<div class='hdr-icon'>🧪<div class='hdr-bar' style='background:#4caf50'></div></div>"
     "</div>"
     "<div class='grid'>%@</div>"
