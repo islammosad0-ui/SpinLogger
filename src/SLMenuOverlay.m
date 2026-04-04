@@ -20,7 +20,6 @@ BOOL sNetworkLocked = NO;
 
 static UIWindow *sIconWindow = nil;
 static UIWindow *sPanelWindow = nil;
-static UILabel *sSpeedLabel = nil;
 static UISlider *sSlider = nil;
 
 // Forward declarations
@@ -36,6 +35,8 @@ static UIColor *SLMuted(void) { return [UIColor colorWithRed:0.48 green:0.54 blu
 
 #pragma mark - Button factory
 
+static UIButton *sSpeedBadgeBtn = nil;  // need reference to update title
+
 static UIButton *SLMakeBtn(NSString *title, CGFloat w, CGFloat h, UIColor *bg, UIColor *fg, CGFloat fontSize) {
     UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
     btn.frame = CGRectMake(0, 0, w, h);
@@ -45,6 +46,11 @@ static UIButton *SLMakeBtn(NSString *title, CGFloat w, CGFloat h, UIColor *bg, U
     [btn setTitle:title forState:UIControlStateNormal];
     [btn setTitleColor:fg forState:UIControlStateNormal];
     btn.titleLabel.font = [UIFont boldSystemFontOfSize:fontSize];
+    // Press feedback: dim on highlight
+    [btn setTitleColor:[fg colorWithAlphaComponent:0.5] forState:UIControlStateHighlighted];
+    btn.adjustsImageWhenHighlighted = YES;
+    [btn addTarget:btn action:@selector(setNeedsDisplay) forControlEvents:UIControlEventTouchDown];
+    btn.showsTouchWhenHighlighted = YES;
     return btn;
 }
 
@@ -95,7 +101,7 @@ static UIButton *SLMakeBtn(NSString *title, CGFloat w, CGFloat h, UIColor *bg, U
     double v = slider.value;
     [[NSUserDefaults standardUserDefaults] setDouble:v forKey:@"Speeder_SavedSpeed"];
     SLSpeedControllerSetMultiplier(v);
-    sSpeedLabel.text = [NSString stringWithFormat:@"%.2fx", v];
+    [sSpeedBadgeBtn setTitle:[NSString stringWithFormat:@"%.2fx", v] forState:UIControlStateNormal];
 }
 
 + (void)speedBadgeTap {
@@ -140,7 +146,10 @@ static UIButton *SLMakeBtn(NSString *title, CGFloat w, CGFloat h, UIColor *bg, U
     [top presentViewController:sheet animated:YES completion:nil];
 }
 
-+ (void)resetCounters { [[SLCounterOverlay shared] resetAllCounters]; }
++ (void)resetCounters {
+    // Toggle all counters show/hide (NOT reset)
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"SLToggleCounters" object:nil];
+}
 
 + (void)targetSpin {
     [[NSNotificationCenter defaultCenter] postNotificationName:@"SLShowTrisMonitor" object:nil];
@@ -157,7 +166,7 @@ static UIButton *SLMakeBtn(NSString *title, CGFloat w, CGFloat h, UIColor *bg, U
 
 + (void)syncUI {
     double v = SLSpeedControllerGetMultiplier();
-    sSpeedLabel.text = [NSString stringWithFormat:@"%.2fx", v];
+    [sSpeedBadgeBtn setTitle:[NSString stringWithFormat:@"%.2fx", v] forState:UIControlStateNormal];
     sSlider.value = (float)v;
 }
 
@@ -272,7 +281,7 @@ static void SLShowPanel(void) {
     [speedBadge setTitleColor:SLAccent() forState:UIControlStateNormal];
     [speedBadge setTitle:[NSString stringWithFormat:@"%.2fx", SLSpeedControllerGetMultiplier()] forState:UIControlStateNormal];
     [speedBadge addTarget:[SLActions class] action:@selector(speedBadgeTap) forControlEvents:UIControlEventTouchUpInside];
-    sSpeedLabel = speedBadge.titleLabel;
+    sSpeedBadgeBtn = speedBadge;
     [content addSubview:speedBadge];
 
     UIButton *gear = SLMakeBtn(@"⚙", 32, 32, [UIColor colorWithWhite:1 alpha:0.1], SLMuted(), 16);
