@@ -29,9 +29,10 @@ static const SLSymbolDef kSymbols[] = {
     { "steal",        "🐷", 1.00, 0.41, 0.71 },  // pink — pig/raid
     { "spins",        "💊", 0.00, 0.74, 0.83 },  // teal — energy capsule/spins
     { "shield",       "🛡",  0.81, 0.58, 0.85 },  // purple — shield/defense
-    { "accumulation", "🧪", 0.30, 0.69, 0.31 },  // green — accumulation bar progress
+    { "accumulation", "⭐", 1.00, 0.84, 0.00 },  // gold — accumulation bar
+    { "goldSack",     "🧪", 0.30, 0.69, 0.31 },  // green — potion/event progress
 };
-static const int kSymbolCount = 5;
+static const int kSymbolCount = 6;
 
 @interface SLCounterTile : NSObject
 @property (nonatomic, strong) UIWindow *window;
