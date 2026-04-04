@@ -11,32 +11,50 @@
 #import <WebKit/WebKit.h>
 
 // ---------------------------------------------------------------------------
-//  SPEEDER ELITE — WKWebView-based floating panel
-//  Matches One.dylib's dark glassmorphism UI with speed slider + buttons
+//  SPEEDER ELITE — Complete UI System
+//
+//  Single WKWebView that manages all states:
+//  - Collapsed: floating icon
+//  - Expanded: main panel with speed controls
+//  - Settings: two tabs (Tris Monitor / Spin Counter)
+//
+//  All in one panel that transforms between states.
 // ---------------------------------------------------------------------------
 
-static UIWindow *sMenuWindow = nil;
 static UIWindow *sPanelWindow = nil;
 static WKWebView *sPanelWebView = nil;
+static BOOL sExpanded = NO;
+static BOOL sNetworkLocked = NO;
 
-@interface SLMenuHandler : NSObject <WKScriptMessageHandler>
+@interface SLPanelHandler : NSObject <WKScriptMessageHandler>
 @end
 
-@implementation SLMenuHandler
+@implementation SLPanelHandler
 
-- (void)userContentController:(WKUserContentController *)uc didReceiveScriptMessage:(WKScriptMessage *)message {
-    NSString *body = [message.body description];
+- (void)userContentController:(WKUserContentController *)uc
+      didReceiveScriptMessage:(WKScriptMessage *)message {
+    NSDictionary *msg = nil;
+    if ([message.body isKindOfClass:[NSDictionary class]]) {
+        msg = message.body;
+    } else {
+        // Simple string message
+        NSString *body = [message.body description];
+        msg = @{@"action": body};
+    }
 
-    if ([body isEqualToString:@"close"]) {
-        sPanelWindow.hidden = YES;
+    NSString *action = msg[@"action"] ?: @"";
+
+    // --- Panel state ---
+    if ([action isEqualToString:@"expand"]) {
+        sExpanded = YES;
+        [self resizePanel];
     }
-    else if ([body hasPrefix:@"speed:"]) {
-        double val = [[body substringFromIndex:6] doubleValue];
-        if (val >= 1.0) SLSpeedControllerSetMultiplier(val);
-        [self refreshPanel];
+    else if ([action isEqualToString:@"collapse"]) {
+        sExpanded = NO;
+        [self resizePanel];
     }
-    else if ([body isEqualToString:@"play"]) {
-        // Toggle between 1x and saved speed
+    // --- Speed ---
+    else if ([action isEqualToString:@"play"]) {
         double cur = SLSpeedControllerGetMultiplier();
         if (cur > 1.01) {
             SLSpeedControllerSetMultiplier(1.0);
@@ -44,47 +62,102 @@ static WKWebView *sPanelWebView = nil;
             double saved = [[NSUserDefaults standardUserDefaults] doubleForKey:@"Speeder_SavedSpeed"];
             SLSpeedControllerSetMultiplier(saved > 1.0 ? saved : 10.0);
         }
-        [self refreshPanel];
+        [self syncSpeed];
     }
-    else if ([body isEqualToString:@"minus"]) {
+    else if ([action isEqualToString:@"minus"]) {
         double cur = SLSpeedControllerGetMultiplier();
         SLSpeedControllerSetMultiplier(MAX(1.0, cur - 1.0));
-        [self refreshPanel];
+        [self syncSpeed];
     }
-    else if ([body isEqualToString:@"plus"]) {
+    else if ([action isEqualToString:@"plus"]) {
         double cur = SLSpeedControllerGetMultiplier();
         [[NSUserDefaults standardUserDefaults] setDouble:cur + 1.0 forKey:@"Speeder_SavedSpeed"];
         SLSpeedControllerSetMultiplier(MIN(50.0, cur + 1.0));
-        [self refreshPanel];
+        [self syncSpeed];
     }
-    else if ([body isEqualToString:@"reset"]) {
+    else if ([action isEqualToString:@"speed"]) {
+        double val = [msg[@"value"] doubleValue];
+        if (val >= 1.0) {
+            [[NSUserDefaults standardUserDefaults] setDouble:val forKey:@"Speeder_SavedSpeed"];
+            SLSpeedControllerSetMultiplier(val);
+        }
+    }
+    // --- Features ---
+    else if ([action isEqualToString:@"reset"]) {
         [[SLCounterOverlay shared] resetAllCounters];
-        [SLSpinTarget shared].currentSessionSpins = 0;
     }
-    else if ([body isEqualToString:@"skip"]) {
+    else if ([action isEqualToString:@"skip"]) {
         [SLTrisController shared].skipEnabled = ![SLTrisController shared].skipEnabled;
-        [self refreshPanel];
     }
-    else if ([body isEqualToString:@"network"]) {
+    else if ([action isEqualToString:@"trisMonitor"]) {
+        BOOL on = [msg[@"value"] boolValue];
+        if (on) [[SLTrisController shared] showTrisMonitor];
+        else [[SLTrisController shared] hideTrisMonitor];
+    }
+    else if ([action isEqualToString:@"network"]) {
         [[SLNetworkMonitor shared] show];
     }
-    else if ([body isEqualToString:@"tris"]) {
-        // Post notification to show tris monitor
-        [[NSNotificationCenter defaultCenter] postNotificationName:@"SLShowTrisMonitor" object:nil];
+    else if ([action isEqualToString:@"lockTarget"]) {
+        NSString *sym = msg[@"symbol"];
+        NSString *current = [SLTrisController shared].lockTarget;
+        if ([sym isEqualToString:current]) {
+            [SLTrisController shared].lockTarget = nil;  // deselect
+        } else {
+            [SLTrisController shared].lockTarget = sym;
+        }
     }
-    else if ([body isEqualToString:@"counters"]) {
-        [[NSNotificationCenter defaultCenter] postNotificationName:@"SLToggleCounters" object:nil];
+    else if ([action isEqualToString:@"toggleCounter"]) {
+        NSString *sym = msg[@"symbol"];
+        [[NSNotificationCenter defaultCenter]
+            postNotificationName:@"SLToggleCounterSymbol"
+                          object:nil
+                        userInfo:@{@"symbol": sym ?: @""}];
     }
-    else if ([body isEqualToString:@"settings"]) {
+    else if ([action isEqualToString:@"networkLockResume"]) {
+        sNetworkLocked = NO;
+    }
+    else if ([action isEqualToString:@"showAllCounters"]) {
+        [[SLCounterOverlay shared] show];
+    }
+    else if ([action isEqualToString:@"hideAllCounters"]) {
+        [[SLCounterOverlay shared] hide];
+    }
+    // --- Presets (from settings gear → action sheet) ---
+    else if ([action isEqualToString:@"settings"]) {
         [self showSettingsAlert];
     }
 }
 
-- (void)refreshPanel {
-    if (!sPanelWebView || sPanelWindow.hidden) return;
+- (void)syncSpeed {
     NSString *js = [NSString stringWithFormat:
-        @"updateSpeed(%.2f)", SLSpeedControllerGetMultiplier()];
+        @"if(window.setSpeed)window.setSpeed(%.2f)", SLSpeedControllerGetMultiplier()];
     [sPanelWebView evaluateJavaScript:js completionHandler:nil];
+}
+
+- (void)resizePanel {
+    if (!sPanelWindow) return;
+
+    UIWindowScene *scene = nil;
+    for (UIScene *s in UIApplication.sharedApplication.connectedScenes) {
+        if ([s isKindOfClass:[UIWindowScene class]]) { scene = (UIWindowScene *)s; break; }
+    }
+    if (!scene) return;
+
+    CGRect screen = scene.coordinateSpace.bounds;
+    CGFloat sw = screen.size.width;
+
+    if (sExpanded) {
+        CGFloat pw = MIN(sw - 20, 380);
+        CGFloat ph = 185;
+        sPanelWindow.frame = CGRectMake((sw - pw) / 2, 50, pw, ph);
+        sPanelWebView.frame = CGRectMake(0, 0, pw, ph);
+    } else {
+        CGFloat sz = 50;
+        sPanelWindow.frame = CGRectMake(sw - sz - 10,
+                                         screen.size.height / 2 - sz / 2,
+                                         sz, sz);
+        sPanelWebView.frame = CGRectMake(0, 0, sz, sz);
+    }
 }
 
 - (void)showSettingsAlert {
@@ -96,53 +169,20 @@ static WKWebView *sPanelWebView = nil;
                                             message:nil
                                      preferredStyle:UIAlertControllerStyleActionSheet];
 
-    // Share CSV
     [sheet addAction:[UIAlertAction actionWithTitle:@"Share CSV" style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) {
         NSURL *url = [NSURL fileURLWithPath:SLSpinStoreCSVPath()];
         UIActivityViewController *avc = [[UIActivityViewController alloc] initWithActivityItems:@[url] applicationActivities:nil];
         UIViewController *p = [self topVC];
         avc.popoverPresentationController.sourceView = p.view;
-        avc.popoverPresentationController.sourceRect = CGRectMake(CGRectGetMidX(p.view.bounds), CGRectGetMidY(p.view.bounds), 0, 0);
         [p presentViewController:avc animated:YES completion:nil];
     }]];
 
-    // Set Spin Target
-    [sheet addAction:[UIAlertAction actionWithTitle:@"Set Spin Target" style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) {
-        UIAlertController *a = [UIAlertController alertControllerWithTitle:@"Spin Target" message:nil preferredStyle:UIAlertControllerStyleAlert];
-        [a addTextFieldWithConfigurationHandler:^(UITextField *tf) {
-            tf.keyboardType = UIKeyboardTypeNumberPad;
-            tf.text = [NSString stringWithFormat:@"%ld", (long)[SLSpinTarget shared].targetSpinCount];
-        }];
-        [a addAction:[UIAlertAction actionWithTitle:@"Set" style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) {
-            [SLSpinTarget shared].targetSpinCount = a.textFields.firstObject.text.integerValue;
-        }]];
-        [a addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
-        [[self topVC] presentViewController:a animated:YES completion:nil];
-    }]];
-
-    // Auto-Reset Mode
-    NSString *mode = [SLSpinTarget shared].autoResetMode ?: @"none";
-    [sheet addAction:[UIAlertAction actionWithTitle:[NSString stringWithFormat:@"Auto-Reset: %@", mode] style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) {
-        UIAlertController *m = [UIAlertController alertControllerWithTitle:@"Auto-Reset" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
-        for (NSString *opt in @[@"none", @"symbol", @"global"]) {
-            [m addAction:[UIAlertAction actionWithTitle:opt style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) {
-                [SLSpinTarget shared].autoResetMode = opt;
-            }]];
-        }
-        [m addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
-        UIViewController *p = [self topVC];
-        m.popoverPresentationController.sourceView = p.view;
-        m.popoverPresentationController.sourceRect = CGRectMake(CGRectGetMidX(p.view.bounds), CGRectGetMidY(p.view.bounds), 0, 0);
-        [p presentViewController:m animated:YES completion:nil];
-    }]];
-
-    // Save/Load Presets
     [sheet addAction:[UIAlertAction actionWithTitle:@"Save Preset 1" style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) { [[SLPresetManager shared] savePreset:1]; }]];
     [sheet addAction:[UIAlertAction actionWithTitle:[NSString stringWithFormat:@"Load P1 (%@)", [[SLPresetManager shared] presetSummary:1]] style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) { [[SLPresetManager shared] loadPreset:1]; }]];
     [sheet addAction:[UIAlertAction actionWithTitle:@"Save Preset 2" style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) { [[SLPresetManager shared] savePreset:2]; }]];
     [sheet addAction:[UIAlertAction actionWithTitle:[NSString stringWithFormat:@"Load P2 (%@)", [[SLPresetManager shared] presetSummary:2]] style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) { [[SLPresetManager shared] loadPreset:2]; }]];
-
     [sheet addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+
     sheet.popoverPresentationController.sourceView = top.view;
     sheet.popoverPresentationController.sourceRect = CGRectMake(CGRectGetMidX(top.view.bounds), CGRectGetMidY(top.view.bounds), 0, 0);
     [top presentViewController:sheet animated:YES completion:nil];
@@ -151,9 +191,7 @@ static WKWebView *sPanelWebView = nil;
 - (UIViewController *)topVC {
     UIWindowScene *s = nil;
     for (UIScene *sc in UIApplication.sharedApplication.connectedScenes) {
-        if ([sc isKindOfClass:[UIWindowScene class]] && sc.activationState == UISceneActivationStateForegroundActive) {
-            s = (UIWindowScene *)sc; break;
-        }
+        if ([sc isKindOfClass:[UIWindowScene class]] && sc.activationState == UISceneActivationStateForegroundActive) { s = (UIWindowScene *)sc; break; }
     }
     UIWindow *kw = nil;
     for (UIWindow *w in s.windows) { if (w.isKeyWindow) { kw = w; break; } }
@@ -165,158 +203,13 @@ static WKWebView *sPanelWebView = nil;
 @end
 
 // ---------------------------------------------------------------------------
-//  HTML for SPEEDER ELITE panel
+//  Drag handler
 // ---------------------------------------------------------------------------
-static NSString *SLPanelHTML(void) {
-    double speed = SLSpeedControllerGetMultiplier();
-    BOOL skipOn = [SLTrisController shared].skipEnabled;
+@interface SLPanelHandler (Drag)
+- (void)handlePan:(UIPanGestureRecognizer *)pan;
+@end
 
-    return [NSString stringWithFormat:@
-    "<!doctype html><html><head><meta charset='utf-8'>"
-    "<meta name='viewport' content='width=device-width,initial-scale=1,user-scalable=no'>"
-    "<style>"
-    "*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none}"
-    "body{font-family:-apple-system,sans-serif;background:transparent;overflow:hidden}"
-    ".panel{background:rgba(18,25,40,0.92);border-radius:20px;padding:12px 14px;"
-    "backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);"
-    "border:1px solid rgba(255,255,255,0.08)}"
-    /* Top row: icon + title + speed badge + gear */
-    ".top{display:flex;align-items:center;gap:8px;margin-bottom:10px}"
-    ".logo{width:36px;height:36px;background:linear-gradient(135deg,#00c9db,#0099aa);"
-    "border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}"
-    ".title{flex:1;font-size:15px;font-weight:700;color:#fff;letter-spacing:1px}"
-    ".title span{color:#00e5ff}"
-    ".speed-badge{background:rgba(0,229,255,0.15);border:1.5px solid #00e5ff;"
-    "border-radius:10px;padding:4px 12px;font-size:16px;font-weight:700;color:#00e5ff;"
-    "min-width:65px;text-align:center}"
-    ".gear{width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:50%%;"
-    "display:flex;align-items:center;justify-content:center;font-size:18px;color:#aaa;"
-    "cursor:pointer;border:none}"
-    /* Middle row: play, minus, slider, plus, close */
-    ".controls{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.3);"
-    "border-radius:14px;padding:6px 8px;margin-bottom:10px}"
-    ".btn{width:40px;height:40px;border-radius:12px;border:none;display:flex;"
-    "align-items:center;justify-content:center;font-size:18px;cursor:pointer;"
-    "color:#fff;background:rgba(255,255,255,0.08)}"
-    ".btn-play{background:linear-gradient(135deg,#00c9db,#009aaa);width:44px;height:44px}"
-    ".btn-close{color:#aaa;font-size:22px}"
-    ".slider-wrap{flex:1;padding:0 4px}"
-    "input[type=range]{-webkit-appearance:none;width:100%%;height:6px;"
-    "background:rgba(255,255,255,0.15);border-radius:3px;outline:none}"
-    "input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;"
-    "background:#fff;border-radius:50%%;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.3)}"
-    /* Bottom row: action buttons */
-    ".actions{display:flex;gap:6px}"
-    ".abtn{height:42px;border-radius:12px;border:none;font-size:13px;font-weight:700;"
-    "cursor:pointer;color:#fff;padding:0 14px;display:flex;align-items:center;justify-content:center}"
-    ".abtn-active{background:linear-gradient(135deg,#00c9db,#009aaa)}"
-    ".abtn-dim{background:rgba(255,255,255,0.08);color:#aaa}"
-    ".abtn-skip{min-width:58px;font-size:14px;letter-spacing:1px}"
-    ".flex1{flex:1}"
-    "</style></head><body>"
-    "<div class='panel'>"
-    /* Top row */
-    "<div class='top'>"
-    "<div class='logo'>✈</div>"
-    "<div class='title'>SPEEDER <span>ELITE</span></div>"
-    "<div class='speed-badge' id='speedBadge'>%.2fx</div>"
-    "<button class='gear' onclick='msg(\"settings\")'>⚙</button>"
-    "</div>"
-    /* Controls row */
-    "<div class='controls'>"
-    "<button class='btn btn-play' onclick='msg(\"play\")'>▶</button>"
-    "<button class='btn' onclick='msg(\"minus\")'>−</button>"
-    "<div class='slider-wrap'>"
-    "<input type='range' id='slider' min='1' max='50' step='0.5' value='%.1f'"
-    " oninput='onSlide(this.value)'>"
-    "</div>"
-    "<button class='btn' onclick='msg(\"plus\")'>+</button>"
-    "<button class='btn btn-close' onclick='msg(\"close\")'>✕</button>"
-    "</div>"
-    /* Action buttons */
-    "<div class='actions'>"
-    "<button class='abtn abtn-active' onclick='msg(\"reset\")'>↺</button>"
-    "<button class='abtn %@ abtn-skip' onclick='msg(\"skip\")'>SKIP</button>"
-    "<button class='abtn abtn-active' onclick='msg(\"tris\")'>∞</button>"
-    "<button class='abtn abtn-active' onclick='msg(\"network\")'>📶</button>"
-    "<button class='abtn abtn-dim' onclick='msg(\"counters\")'>▦</button>"
-    "<button class='abtn abtn-dim' onclick='msg(\"settings\")'>+</button>"
-    "</div>"
-    "</div>"
-    "<script>"
-    "function msg(s){window.webkit.messageHandlers.sl.postMessage(s)}"
-    "function onSlide(v){document.getElementById('speedBadge').textContent=parseFloat(v).toFixed(2)+'x';msg('speed:'+v)}"
-    "function updateSpeed(v){document.getElementById('speedBadge').textContent=v.toFixed(2)+'x';"
-    "document.getElementById('slider').value=v}"
-    "</script></body></html>",
-    speed, speed, skipOn ? @"abtn-active" : @"abtn-dim"];
-}
-
-// ---------------------------------------------------------------------------
-//  Show/Hide Panel
-// ---------------------------------------------------------------------------
-static SLMenuHandler *sHandler = nil;
-
-static void SLShowPanel(void) {
-    if (sPanelWindow) {
-        sPanelWindow.hidden = !sPanelWindow.hidden;
-        if (!sPanelWindow.hidden) {
-            [sPanelWebView loadHTMLString:SLPanelHTML() baseURL:nil];
-        }
-        return;
-    }
-
-    UIWindowScene *scene = nil;
-    for (UIScene *s in UIApplication.sharedApplication.connectedScenes) {
-        if ([s isKindOfClass:[UIWindowScene class]]) {
-            scene = (UIWindowScene *)s;
-            if (s.activationState == UISceneActivationStateForegroundActive) break;
-        }
-    }
-    if (!scene) return;
-
-    sHandler = [[SLMenuHandler alloc] init];
-
-    CGRect screen = scene.coordinateSpace.bounds;
-    CGFloat panelW = MIN(screen.size.width - 20, 380);
-    CGFloat panelH = 170;
-    CGFloat x = (screen.size.width - panelW) / 2;
-    CGFloat y = 50;  // top of screen with safe area
-
-    UIWindow *win = [[UIWindow alloc] initWithWindowScene:scene];
-    win.frame = CGRectMake(x, y, panelW, panelH);
-    win.windowLevel = UIWindowLevelAlert + 300;
-    win.backgroundColor = [UIColor clearColor];
-
-    UIViewController *vc = [[UIViewController alloc] init];
-    vc.view.backgroundColor = [UIColor clearColor];
-    win.rootViewController = vc;
-
-    // Add pan gesture to the window for dragging
-    UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:sHandler action:@selector(handlePan:)];
-    [vc.view addGestureRecognizer:pan];
-
-    WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
-    [config.userContentController addScriptMessageHandler:sHandler name:@"sl"];
-
-    WKWebView *wv = [[WKWebView alloc] initWithFrame:CGRectMake(0, 0, panelW, panelH) configuration:config];
-    wv.backgroundColor = [UIColor clearColor];
-    wv.opaque = NO;
-    wv.scrollView.scrollEnabled = NO;
-    wv.scrollView.bounces = NO;
-    [wv loadHTMLString:SLPanelHTML() baseURL:nil];
-    [vc.view addSubview:wv];
-    sPanelWebView = wv;
-
-    win.hidden = NO;
-    sPanelWindow = win;
-}
-
-// ---------------------------------------------------------------------------
-//  Drag handler (category on SLMenuHandler)
-// ---------------------------------------------------------------------------
-@implementation SLMenuHandler (Drag)
-
+@implementation SLPanelHandler (Drag)
 - (void)handlePan:(UIPanGestureRecognizer *)pan {
     if (pan.state == UIGestureRecognizerStateBegan ||
         pan.state == UIGestureRecognizerStateChanged) {
@@ -328,40 +221,249 @@ static void SLShowPanel(void) {
         [pan setTranslation:CGPointZero inView:pan.view];
     }
 }
-
 @end
 
 // ---------------------------------------------------------------------------
-//  Floating "SL" button
+//  HTML — Complete SPEEDER ELITE UI
 // ---------------------------------------------------------------------------
-@interface SLMenuButton : NSObject
-+ (void)tapped;
-+ (void)handlePan:(UIPanGestureRecognizer *)r;
-@end
+static NSString *SLPanelHTML(void) {
+    double speed = SLSpeedControllerGetMultiplier();
 
-@implementation SLMenuButton
+    return [NSString stringWithFormat:@
+    "<!doctype html><html><head><meta charset='utf-8'>"
+    "<meta name='viewport' content='width=device-width,initial-scale=1,user-scalable=no'>"
+    "<style>"
+    ":root{"
+    "--bg:rgba(16,22,36,0.94);"
+    "--bg2:rgba(22,30,48,0.92);"
+    "--accent:#00e5ff;"
+    "--accent2:#00b8d4;"
+    "--btn:rgba(255,255,255,0.07);"
+    "--btn-active:linear-gradient(135deg,#00c9db,#009aaa);"
+    "--text:#fff;"
+    "--muted:#7a8a9e;"
+    "--radius:16px;"
+    "}"
+    "*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}"
+    "body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;"
+    "background:transparent;overflow:hidden}"
 
-+ (void)tapped { SLShowPanel(); }
+    /* === ICON (collapsed) === */
+    "#icon{width:50px;height:50px;border-radius:25px;"
+    "background:var(--accent);display:flex;align-items:center;justify-content:center;"
+    "font-size:20px;font-weight:700;color:#fff;cursor:pointer;"
+    "box-shadow:0 4px 20px rgba(0,229,255,0.3);transition:transform .2s}"
+    "#icon:active{transform:scale(0.9)}"
 
-+ (void)handlePan:(UIPanGestureRecognizer *)r {
-    if (r.state == UIGestureRecognizerStateBegan ||
-        r.state == UIGestureRecognizerStateChanged) {
-        CGPoint t = [r translationInView:r.view.superview];
-        CGRect f = sMenuWindow.frame;
-        f.origin.x += t.x;
-        f.origin.y += t.y;
-        sMenuWindow.frame = f;
-        [r setTranslation:CGPointZero inView:r.view.superview];
-    }
+    /* === PANEL (expanded) === */
+    "#panel{display:none;border-radius:var(--radius);"
+    "background:var(--bg);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);"
+    "border:1px solid rgba(255,255,255,0.08);overflow:hidden;"
+    "box-shadow:0 8px 40px rgba(0,0,0,0.5)}"
+
+    /* Top bar */
+    ".top{display:flex;align-items:center;gap:8px;padding:10px 12px 6px}"
+    ".logo{width:38px;height:38px;background:linear-gradient(135deg,#0891b2,#06b6d4);"
+    "border-radius:12px;display:flex;align-items:center;justify-content:center;"
+    "font-size:18px;color:#fff}"
+    ".title{flex:1;font-size:15px;font-weight:700;color:var(--text);letter-spacing:0.5px}"
+    ".title em{font-style:normal;color:var(--accent)}"
+    ".speed-badge{background:rgba(0,229,255,0.12);border:1.5px solid var(--accent);"
+    "border-radius:10px;padding:4px 12px;font-size:16px;font-weight:700;"
+    "color:var(--accent);min-width:62px;text-align:center}"
+    ".gear{width:38px;height:38px;background:rgba(255,255,255,0.08);border-radius:50%%;"
+    "border:none;display:flex;align-items:center;justify-content:center;"
+    "font-size:18px;color:var(--muted);cursor:pointer}"
+    ".gear:active{background:rgba(255,255,255,0.15)}"
+
+    /* Controls row */
+    ".controls{display:flex;align-items:center;gap:5px;"
+    "background:rgba(0,0,0,0.25);border-radius:14px;padding:5px 7px;margin:0 10px}"
+    ".cbtn{width:42px;height:42px;border-radius:12px;border:none;display:flex;"
+    "align-items:center;justify-content:center;font-size:18px;cursor:pointer;"
+    "color:var(--text);background:var(--btn);transition:all .15s}"
+    ".cbtn:active{transform:scale(0.92)}"
+    ".cbtn-play{background:var(--btn-active);width:46px;height:46px;border-radius:14px;"
+    "font-size:20px}"
+    ".cbtn-collapse{color:var(--muted);font-size:20px}"
+    ".slider-wrap{flex:1;padding:0 6px}"
+    "input[type=range]{-webkit-appearance:none;width:100%%;height:5px;"
+    "background:rgba(255,255,255,0.12);border-radius:3px;outline:none}"
+    "input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;"
+    "background:#fff;border-radius:50%%;cursor:pointer;"
+    "box-shadow:0 2px 8px rgba(0,0,0,0.3)}"
+
+    /* Action row */
+    ".actions{display:flex;gap:5px;padding:6px 10px 10px}"
+    ".abtn{height:42px;border-radius:12px;border:none;font-size:13px;font-weight:700;"
+    "cursor:pointer;color:#fff;padding:0 14px;display:flex;align-items:center;"
+    "justify-content:center;transition:all .15s}"
+    ".abtn:active{transform:scale(0.93)}"
+    ".abtn-on{background:var(--btn-active)}"
+    ".abtn-off{background:var(--btn);color:var(--muted)}"
+    ".abtn-skip{min-width:60px;font-size:14px;letter-spacing:1px}"
+
+    /* === SETTINGS VIEW === */
+    "#settings{display:none;padding:0}"
+    ".tabs{display:flex;padding:10px 10px 0;gap:0;position:relative}"
+    ".tab{flex:1;padding:10px 0;text-align:center;font-size:13px;font-weight:700;"
+    "color:var(--muted);cursor:pointer;border-radius:10px 10px 0 0;transition:all .2s}"
+    ".tab.active{color:var(--accent);background:rgba(0,229,255,0.08)}"
+    ".tab-close{width:40px;height:40px;background:rgba(255,255,255,0.1);"
+    "border-radius:20px;border:none;font-size:18px;color:#fff;cursor:pointer;"
+    "display:flex;align-items:center;justify-content:center}"
+    ".tab-body{padding:12px 14px}"
+    ".setting-row{display:flex;align-items:center;justify-content:space-between;"
+    "padding:8px 0}"
+    ".setting-label{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:1px}"
+    /* Toggle switch */
+    ".toggle{width:48px;height:26px;border-radius:13px;background:rgba(255,255,255,0.15);"
+    "position:relative;cursor:pointer;transition:background .2s}"
+    ".toggle.on{background:var(--accent)}"
+    ".toggle-knob{width:22px;height:22px;border-radius:11px;background:#fff;"
+    "position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,0.3)}"
+    ".toggle.on .toggle-knob{left:24px}"
+    /* Symbol selector */
+    ".sym-row{display:flex;gap:8px;padding:8px 0}"
+    ".sym-btn{width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,0.06);"
+    "border:2px solid transparent;display:flex;align-items:center;justify-content:center;"
+    "font-size:24px;cursor:pointer;transition:all .2s;opacity:0.5}"
+    ".sym-btn.active{opacity:1;border-color:var(--accent);"
+    "background:rgba(0,229,255,0.1);box-shadow:0 0 12px rgba(0,229,255,0.2)}"
+    ".sym-btn:active{transform:scale(0.9)}"
+
+    "</style></head><body>"
+
+    /* ===== ICON (collapsed state) ===== */
+    "<div id='icon' onclick='expand()'>SL</div>"
+
+    /* ===== PANEL (expanded state) ===== */
+    "<div id='panel'>"
+    /* Main view */
+    "<div id='mainView'>"
+    "<div class='top'>"
+    "<div class='logo'>✈</div>"
+    "<div class='title'>SPEEDER <em>ELITE</em></div>"
+    "<div class='speed-badge' id='speedBadge' onclick='promptSpeed()'>%.2fx</div>"
+    "<button class='gear' onclick='showSettings()'>⚙</button>"
+    "</div>"
+    "<div class='controls'>"
+    "<button class='cbtn cbtn-play' onclick='msg({action:\"play\"})'>▶</button>"
+    "<button class='cbtn' onclick='msg({action:\"minus\"})'>−</button>"
+    "<div class='slider-wrap'>"
+    "<input type='range' id='slider' min='1' max='50' step='0.5' value='%.1f'"
+    " oninput='onSlide(this.value)'>"
+    "</div>"
+    "<button class='cbtn' onclick='msg({action:\"plus\"})'>+</button>"
+    "<button class='cbtn cbtn-collapse' onclick='collapse()'>✕</button>"
+    "</div>"
+    "<div class='actions'>"
+    "<button class='abtn abtn-on' onclick='toggleAllCounters()'>↺</button>"
+    "<button class='abtn abtn-off abtn-skip'>SKIP</button>"
+    "<button class='abtn abtn-on' onclick='showSettings()'>∞</button>"
+    "<button class='abtn abtn-on' onclick='msg({action:\"network\"})'>📶</button>"
+    "<button class='abtn abtn-off'>+</button>"
+    "<button class='abtn abtn-off'>+</button>"
+    "</div>"
+    "</div>"
+
+    /* Settings view (hidden by default) */
+    "<div id='settings'>"
+    "<div class='tabs'>"
+    "<div class='tab active' id='tabTris' onclick='switchTab(\"tris\")'>TRIS MONITOR</div>"
+    "<div class='tab' id='tabCounter' onclick='switchTab(\"counter\")'>SPIN COUNTER</div>"
+    "<button class='tab-close' onclick='hideSettings()'>✕</button>"
+    "</div>"
+    /* Tris tab content */
+    "<div class='tab-body' id='trisContent'>"
+    "<div class='setting-row'>"
+    "<span class='setting-label'>ACTIVE MONITOR</span>"
+    "<div class='toggle' id='trisToggle' onclick='toggleTris()'><div class='toggle-knob'></div></div>"
+    "</div>"
+    "<div class='setting-label' style='padding-top:8px'>LOCK TARGET</div>"
+    "<div class='sym-row' id='lockRow'>"
+    "<div class='sym-btn' data-sym='attack' onclick='lockTarget(\"attack\")'>🔨</div>"
+    "<div class='sym-btn' data-sym='steal' onclick='lockTarget(\"steal\")'>🐷</div>"
+    "<div class='sym-btn' data-sym='accumulation' onclick='lockTarget(\"accumulation\")'>💊</div>"
+    "<div class='sym-btn' data-sym='shield' onclick='lockTarget(\"shield\")'>🛡</div>"
+    "<div class='sym-btn' data-sym='goldSack' onclick='lockTarget(\"goldSack\")'>🧪</div>"
+    "</div>"
+    "</div>"
+    /* Counter tab content */
+    "<div class='tab-body' id='counterContent' style='display:none'>"
+    "<div class='setting-label'>SHOW / HIDE COUNTERS</div>"
+    "<div class='sym-row' id='counterRow'>"
+    "<div class='sym-btn active' data-sym='attack' onclick='toggleCounterSym(\"attack\")'>🔨</div>"
+    "<div class='sym-btn active' data-sym='steal' onclick='toggleCounterSym(\"steal\")'>🐷</div>"
+    "<div class='sym-btn active' data-sym='accumulation' onclick='toggleCounterSym(\"accumulation\")'>💊</div>"
+    "<div class='sym-btn active' data-sym='shield' onclick='toggleCounterSym(\"shield\")'>🛡</div>"
+    "<div class='sym-btn active' data-sym='goldSack' onclick='toggleCounterSym(\"goldSack\")'>🧪</div>"
+    "</div>"
+    "</div>"
+    "</div>"
+    "</div>"
+
+    "<script>"
+    "function msg(o){window.webkit.messageHandlers.sl.postMessage(o)}"
+    "function expand(){document.getElementById('icon').style.display='none';"
+    "document.getElementById('panel').style.display='block';msg({action:'expand'})}"
+    "function collapse(){document.getElementById('icon').style.display='flex';"
+    "document.getElementById('panel').style.display='none';"
+    "document.getElementById('settings').style.display='none';"
+    "document.getElementById('mainView').style.display='block';msg({action:'collapse'})}"
+    "function onSlide(v){document.getElementById('speedBadge').textContent="
+    "parseFloat(v).toFixed(2)+'x';msg({action:'speed',value:parseFloat(v)})}"
+    "window.setSpeed=function(v){document.getElementById('speedBadge').textContent="
+    "v.toFixed(2)+'x';document.getElementById('slider').value=v}"
+
+    /* Settings */
+    "function showSettings(){document.getElementById('mainView').style.display='none';"
+    "document.getElementById('settings').style.display='block'}"
+    "function hideSettings(){document.getElementById('settings').style.display='none';"
+    "document.getElementById('mainView').style.display='block'}"
+    "function switchTab(t){var tris=t==='tris';"
+    "document.getElementById('tabTris').className='tab'+(tris?' active':'');"
+    "document.getElementById('tabCounter').className='tab'+(!tris?' active':'');"
+    "document.getElementById('trisContent').style.display=tris?'block':'none';"
+    "document.getElementById('counterContent').style.display=!tris?'block':'none'}"
+
+    /* Tris toggle */
+    "var trisOn=false;"
+    "function toggleTris(){trisOn=!trisOn;"
+    "document.getElementById('trisToggle').className='toggle'+(trisOn?' on':'');"
+    "msg({action:'trisMonitor',value:trisOn})}"
+
+    /* Lock target */
+    "var lockedSym=null;"
+    "function lockTarget(s){var btns=document.querySelectorAll('#lockRow .sym-btn');"
+    "if(lockedSym===s){lockedSym=null;btns.forEach(function(b){b.className='sym-btn'})}"
+    "else{lockedSym=s;btns.forEach(function(b){"
+    "b.className='sym-btn'+(b.dataset.sym===s?' active':'')})}"
+    "msg({action:'lockTarget',symbol:lockedSym})}"
+
+    /* Counter visibility toggles */
+    "function toggleCounterSym(s){var btn=document.querySelector('#counterRow [data-sym=\"'+s+'\"]');"
+    "btn.classList.toggle('active');msg({action:'toggleCounter',symbol:s})}"
+
+    /* Speed manual input */
+    "function promptSpeed(){var v=prompt('Enter speed (1-50):',document.getElementById('slider').value);"
+    "if(v&&parseFloat(v)>=1){onSlide(parseFloat(v));document.getElementById('slider').value=parseFloat(v)}}"
+
+    /* Toggle all counters visibility */
+    "var allCountersVisible=true;"
+    "function toggleAllCounters(){allCountersVisible=!allCountersVisible;"
+    "msg({action:allCountersVisible?'showAllCounters':'hideAllCounters'})}"
+    "</script></body></html>",
+    speed, speed];
 }
-
-@end
 
 // ---------------------------------------------------------------------------
 //  Install
 // ---------------------------------------------------------------------------
+static SLPanelHandler *sHandler = nil;
+
 void SLMenuOverlayInstall(void) {
-    if (sMenuWindow) return;
+    if (sPanelWindow) return;
 
     UIWindowScene *scene = nil;
     for (UIScene *s in UIApplication.sharedApplication.connectedScenes) {
@@ -372,34 +474,40 @@ void SLMenuOverlayInstall(void) {
     }
     if (!scene) return;
 
+    sHandler = [[SLPanelHandler alloc] init];
+
+    // Start as icon (50x50)
     CGRect screen = scene.coordinateSpace.bounds;
     CGFloat sz = 50;
-    CGFloat x = screen.size.width - sz - 8;
+    CGFloat x = screen.size.width - sz - 10;
     CGFloat y = screen.size.height / 2 - sz / 2;
 
-    UIWindow *w = [[UIWindow alloc] initWithWindowScene:scene];
-    w.frame = CGRectMake(x, y, sz, sz);
-    w.windowLevel = UIWindowLevelAlert + 400;
-    w.backgroundColor = [UIColor clearColor];
+    UIWindow *win = [[UIWindow alloc] initWithWindowScene:scene];
+    win.frame = CGRectMake(x, y, sz, sz);
+    win.windowLevel = UIWindowLevelAlert + 400;
+    win.backgroundColor = [UIColor clearColor];
 
     UIViewController *vc = [[UIViewController alloc] init];
     vc.view.backgroundColor = [UIColor clearColor];
-    w.rootViewController = vc;
+    win.rootViewController = vc;
 
-    UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
-    btn.frame = CGRectMake(0, 0, sz, sz);
-    btn.backgroundColor = [UIColor colorWithRed:0 green:0.79 blue:0.86 alpha:1];
-    btn.layer.cornerRadius = sz / 2;
-    btn.clipsToBounds = YES;
-    [btn setTitle:@"SL" forState:UIControlStateNormal];
-    [btn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    btn.titleLabel.font = [UIFont boldSystemFontOfSize:16];
-    [btn addTarget:[SLMenuButton class] action:@selector(tapped) forControlEvents:UIControlEventTouchUpInside];
+    UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc]
+        initWithTarget:sHandler action:@selector(handlePan:)];
+    [vc.view addGestureRecognizer:pan];
 
-    UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:[SLMenuButton class] action:@selector(handlePan:)];
-    [btn addGestureRecognizer:pan];
-    [vc.view addSubview:btn];
+    WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
+    [config.userContentController addScriptMessageHandler:sHandler name:@"sl"];
 
-    w.hidden = NO;
-    sMenuWindow = w;
+    WKWebView *wv = [[WKWebView alloc] initWithFrame:CGRectMake(0, 0, sz, sz)
+                                        configuration:config];
+    wv.backgroundColor = [UIColor clearColor];
+    wv.opaque = NO;
+    wv.scrollView.scrollEnabled = NO;
+    wv.scrollView.bounces = NO;
+    [wv loadHTMLString:SLPanelHTML() baseURL:nil];
+    [vc.view addSubview:wv];
+    sPanelWebView = wv;
+
+    win.hidden = NO;
+    sPanelWindow = win;
 }
