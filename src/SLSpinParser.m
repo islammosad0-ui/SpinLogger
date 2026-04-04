@@ -177,8 +177,10 @@ void SLParseSpinAPIResponseWithBet(NSData *responseData, NSInteger betMultiplier
             NSString *shortId = barId.length > 8 ? [barId substringToIndex:8] : barId;
             barSnapshot[shortId] = [NSString stringWithFormat:@"%ld/%ld@m%ld",
                                     (long)cur, (long)tot, (long)mis];
-            // Only track main event bars for 🧪 tile (skip slot-on-slot bars)
-            if (![barId hasPrefix:@"slot_on_slot"]) {
+            // Only track Potion Rush / Expedition for 🧪 tile
+            NSDictionary *rewards = bar[@"rewards"];
+            if ([rewards isKindOfClass:[NSDictionary class]] &&
+                (rewards[@"progressive_reward_pr_ec"] || rewards[@"generic_currency_expedition_nl_currency"])) {
                 barMissions[shortId] = @(mis);
             }
         }
