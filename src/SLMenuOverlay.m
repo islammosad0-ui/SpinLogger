@@ -25,6 +25,11 @@ static UIWindow *sPanelWindow = nil;
 static WKWebView *sPanelWebView = nil;
 BOOL sNetworkLocked = NO;  // non-static — accessed by SLNetworkInterceptor via extern
 
+// Forward declarations
+static void SLShowPanel(void);
+static void SLHidePanel(void);
+static NSString *SLPanelHTML(void);
+
 @interface SLPanelHandler : NSObject <WKScriptMessageHandler>
 @end
 
@@ -485,9 +490,6 @@ static NSString *SLPanelHTML(void) {
 // ---------------------------------------------------------------------------
 static SLPanelHandler *sHandler = nil;
 static UIWindow *sIconWindow = nil;
-
-static void SLShowPanel(void);
-static void SLHidePanel(void);
 
 @interface SLIconTarget : NSObject
 + (void)tapped;
