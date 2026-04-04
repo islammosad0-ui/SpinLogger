@@ -36,9 +36,11 @@ static const int kSymbolCount = 6;
 
 @interface SLCounterTile : NSObject
 @property (nonatomic, strong) UIWindow *window;
+@property (nonatomic, strong) UIView *container;       // background tile view (for glow animation)
 @property (nonatomic, strong) UILabel *tripleLabel;   // 3X: distance between triples
 @property (nonatomic, strong) UILabel *singleLabel;   // 1X: single symbol count (resets on triple too)
 @property (nonatomic, copy) NSString *symbolKey;
+@property (nonatomic, assign) CGFloat colorR, colorG, colorB;  // symbol color
 @property (nonatomic, assign) NSInteger distance;     // spins since last triple (3X)
 @property (nonatomic, assign) NSInteger singleCount;  // individual appearances since last triple (1X)
 @property (nonatomic, assign) BOOL visible;
@@ -78,8 +80,8 @@ static const int kSymbolCount = 6;
     for (SLCounterTile *t in self.tiles) {
         t.distance    = [state[[t.symbolKey stringByAppendingString:@"_d"]] integerValue];
         t.singleCount = [state[[t.symbolKey stringByAppendingString:@"_s"]] integerValue];
-        t.tripleLabel.text = [NSString stringWithFormat:@"3X: %ld", (long)t.distance];
-        t.singleLabel.text = [NSString stringWithFormat:@"1X: %ld", (long)t.singleCount];
+        t.tripleLabel.text = [NSString stringWithFormat:@"%ld", (long)t.distance];
+        t.singleLabel.text = [NSString stringWithFormat:@"1X:%ld", (long)t.singleCount];
     }
 }
 
@@ -97,16 +99,18 @@ static const int kSymbolCount = 6;
     if (!scene) return;
 
     CGRect screen = scene.coordinateSpace.bounds;
-    CGFloat tileW = 52, tileH = 68;
-    CGFloat startX = (screen.size.width - (kSymbolCount * (tileW + 6))) / 2;
+    CGFloat tileW = 50, tileH = 56;
+    CGFloat tileGap = 4;
+    CGFloat startX = (screen.size.width - (kSymbolCount * (tileW + tileGap))) / 2;
     CGFloat startY = screen.size.height - tileH - 80;
 
     for (int i = 0; i < kSymbolCount; i++) {
         SLSymbolDef def = kSymbols[i];
-        CGFloat x = startX + i * (tileW + 6);
+        CGFloat x = startX + i * (tileW + tileGap);
 
         SLCounterTile *tile = [[SLCounterTile alloc] init];
         tile.symbolKey = [NSString stringWithUTF8String:def.key];
+        tile.colorR = def.r; tile.colorG = def.g; tile.colorB = def.b;
         tile.distance = 0;
         tile.singleCount = 0;
         tile.visible = YES;
@@ -121,42 +125,45 @@ static const int kSymbolCount = 6;
         win.rootViewController = vc;
 
         UIView *container = [[UIView alloc] initWithFrame:CGRectMake(0, 0, tileW, tileH)];
-        container.backgroundColor = [[UIColor colorWithRed:0.08 green:0.10 blue:0.15 alpha:0.92] colorWithAlphaComponent:0.92];
-        container.layer.cornerRadius = 14;
+        container.backgroundColor = [UIColor colorWithRed:0.06 green:0.08 blue:0.14 alpha:0.94];
+        container.layer.cornerRadius = 12;
+        container.layer.borderWidth = 1.0;
+        container.layer.borderColor = [UIColor colorWithWhite:1 alpha:0.06].CGColor;
         container.clipsToBounds = YES;
         [vc.view addSubview:container];
+        tile.container = container;
 
         UIColor *symColor = [UIColor colorWithRed:def.r green:def.g blue:def.b alpha:1.0];
 
-        // Emoji
-        UILabel *emojiLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 2, tileW, 20)];
+        // Emoji icon (smaller, top area)
+        UILabel *emojiLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 1, tileW, 18)];
         emojiLabel.text = [NSString stringWithUTF8String:def.emoji];
-        emojiLabel.font = [UIFont systemFontOfSize:16];
+        emojiLabel.font = [UIFont systemFontOfSize:13];
         emojiLabel.textAlignment = NSTextAlignmentCenter;
         [container addSubview:emojiLabel];
 
-        // 3X line
-        UILabel *tripleLabel = [[UILabel alloc] initWithFrame:CGRectMake(2, 22, tileW - 4, 14)];
-        tripleLabel.text = @"3X: 0";
-        tripleLabel.font = [UIFont boldSystemFontOfSize:10];
+        // 3X distance — prominent number
+        UILabel *tripleLabel = [[UILabel alloc] initWithFrame:CGRectMake(2, 18, tileW - 4, 16)];
+        tripleLabel.text = @"0";
+        tripleLabel.font = [UIFont boldSystemFontOfSize:13];
         tripleLabel.textColor = symColor;
         tripleLabel.textAlignment = NSTextAlignmentCenter;
         [container addSubview:tripleLabel];
         tile.tripleLabel = tripleLabel;
 
-        // 1X line
-        UILabel *singleLabel = [[UILabel alloc] initWithFrame:CGRectMake(2, 37, tileW - 4, 14)];
-        singleLabel.text = @"1X: 0";
+        // 1X count — smaller, dimmer
+        UILabel *singleLabel = [[UILabel alloc] initWithFrame:CGRectMake(2, 33, tileW - 4, 12)];
+        singleLabel.text = @"1X:0";
         singleLabel.font = [UIFont systemFontOfSize:9];
-        singleLabel.textColor = [symColor colorWithAlphaComponent:0.6];
+        singleLabel.textColor = [symColor colorWithAlphaComponent:0.5];
         singleLabel.textAlignment = NSTextAlignmentCenter;
         [container addSubview:singleLabel];
         tile.singleLabel = singleLabel;
 
-        // Color bar
-        UIView *bar = [[UIView alloc] initWithFrame:CGRectMake(4, tileH - 4, tileW - 8, 3)];
-        bar.backgroundColor = [symColor colorWithAlphaComponent:0.8];
-        bar.layer.cornerRadius = 1.5;
+        // Color accent bar at bottom
+        UIView *bar = [[UIView alloc] initWithFrame:CGRectMake(6, tileH - 4, tileW - 12, 2)];
+        bar.backgroundColor = [symColor colorWithAlphaComponent:0.7];
+        bar.layer.cornerRadius = 1;
         [container addSubview:bar];
 
         // Pan gesture for individual dragging
@@ -199,6 +206,34 @@ static const int kSymbolCount = 6;
     }
 }
 
+#pragma mark - Triple glow animation
+
+- (void)flashTriple:(SLCounterTile *)tile {
+    UIColor *glowColor = [UIColor colorWithRed:tile.colorR green:tile.colorG blue:tile.colorB alpha:0.6];
+    UIColor *normalBg = [UIColor colorWithRed:0.06 green:0.08 blue:0.14 alpha:0.94];
+    CGColorRef glowBorder = [UIColor colorWithRed:tile.colorR green:tile.colorG blue:tile.colorB alpha:0.9].CGColor;
+    CGColorRef normalBorder = [UIColor colorWithWhite:1 alpha:0.06].CGColor;
+
+    // Flash: bright glow bg + colored border
+    tile.container.backgroundColor = glowColor;
+    tile.container.layer.borderColor = glowBorder;
+    tile.container.layer.borderWidth = 2.0;
+
+    // Scale pop
+    tile.container.transform = CGAffineTransformMakeScale(1.15, 1.15);
+
+    // Animate back to normal
+    [UIView animateWithDuration:0.25 delay:0 options:UIViewAnimationOptionCurveEaseOut animations:^{
+        tile.container.transform = CGAffineTransformIdentity;
+    } completion:^(BOOL finished) {
+        [UIView animateWithDuration:0.6 delay:0.1 options:UIViewAnimationOptionCurveEaseInOut animations:^{
+            tile.container.backgroundColor = normalBg;
+            tile.container.layer.borderColor = normalBorder;
+            tile.container.layer.borderWidth = 1.0;
+        } completion:nil];
+    }];
+}
+
 #pragma mark - Spin handling (distance between triples)
 
 - (void)onSpinReceived:(NSNotification *)note {
@@ -229,6 +264,7 @@ static const int kSymbolCount = 6;
                 [[SLTrisController shared] recordTriple:tile.symbolKey distance:tile.distance symbolCount:tile.singleCount];
                 tile.distance = 0;
                 tile.singleCount = 0;
+                [self flashTriple:tile];
                 break;
             }
         }
@@ -246,6 +282,7 @@ static const int kSymbolCount = 6;
                     [[SLTrisController shared] recordTriple:@"goldSack" distance:tile.distance symbolCount:tile.singleCount];
                     tile.singleCount++;  // 1X = completions this session
                     tile.distance = 0;
+                    [self flashTriple:tile];
                     break;
                 }
             }
@@ -255,8 +292,8 @@ static const int kSymbolCount = 6;
 
     // Update all labels
     for (SLCounterTile *tile in self.tiles) {
-        tile.tripleLabel.text = [NSString stringWithFormat:@"3X: %ld", (long)tile.distance];
-        tile.singleLabel.text = [NSString stringWithFormat:@"1X: %ld", (long)tile.singleCount];
+        tile.tripleLabel.text = [NSString stringWithFormat:@"%ld", (long)tile.distance];
+        tile.singleLabel.text = [NSString stringWithFormat:@"1X:%ld", (long)tile.singleCount];
     }
 
     [self saveState];
@@ -297,7 +334,7 @@ static const int kSymbolCount = 6;
     for (SLCounterTile *t in self.tiles) {
         t.distance = 0;
         t.singleCount = 0;
-        t.tripleLabel.text = @"3X: 0"; t.singleLabel.text = @"1X: 0";
+        t.tripleLabel.text = @"0"; t.singleLabel.text = @"1X:0";
     }
     [self saveState];
 }
@@ -306,7 +343,7 @@ static const int kSymbolCount = 6;
     for (SLCounterTile *t in self.tiles) {
         if ([t.symbolKey isEqualToString:symbol]) {
             t.distance = 0;
-            t.tripleLabel.text = @"3X: 0"; t.singleLabel.text = @"1X: 0";
+            t.tripleLabel.text = @"0"; t.singleLabel.text = @"1X:0";
             break;
         }
     }

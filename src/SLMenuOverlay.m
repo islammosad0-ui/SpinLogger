@@ -143,8 +143,8 @@ static BOOL sTrisMonitorActive = NO;
     if (!scene) return;
 
     CGRect screen = scene.coordinateSpace.bounds;
-    CGFloat pw = MIN(screen.size.width * 0.78, 320);
-    CGFloat ph = 200;
+    CGFloat pw = MIN(screen.size.width * 0.78, 300);
+    CGFloat ph = 180;
     CGFloat x = (screen.size.width - pw) / 2;
     CGFloat y = (screen.size.height - ph) / 2;
 
@@ -159,9 +159,9 @@ static BOOL sTrisMonitorActive = NO;
 
     UIVisualEffectView *blur = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleDark]];
     blur.frame = CGRectMake(0, 0, pw, ph);
-    blur.layer.cornerRadius = 18;
+    blur.layer.cornerRadius = 16;
     blur.clipsToBounds = YES;
-    blur.alpha = 0.95;
+    blur.alpha = 0.96;
     blur.userInteractionEnabled = YES;
     UIPanGestureRecognizer *settingsPan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragSettings:)];
     [blur addGestureRecognizer:settingsPan];
@@ -171,64 +171,65 @@ static BOOL sTrisMonitorActive = NO;
     CGFloat pad = 12;
 
     // Tab bar
-    CGFloat tabW = (pw - pad * 2 - 46) / 2;
-    sTabTris = SLMakeBtn(@"TRIS MONITOR", tabW, 32, SLAccent(), [UIColor blackColor], 12);
-    sTabTris.frame = CGRectMake(pad, 8, tabW, 32);
+    CGFloat tabW = (pw - pad * 2 - 40) / 2;
+    sTabTris = SLMakeBtn(@"TRIS MONITOR", tabW, 30, SLAccent(), [UIColor blackColor], 11);
+    sTabTris.frame = CGRectMake(pad, 8, tabW, 30);
     [sTabTris addTarget:self action:@selector(switchToTrisTab) forControlEvents:UIControlEventTouchUpInside];
     [content addSubview:sTabTris];
 
-    sTabCounter = SLMakeBtn(@"SPIN COUNTER", tabW, 32, SLBtnBg(), SLMuted(), 12);
-    sTabCounter.frame = CGRectMake(pad + tabW + 4, 8, tabW, 32);
+    sTabCounter = SLMakeBtn(@"SPIN COUNTER", tabW, 30, SLBtnBg(), SLMuted(), 11);
+    sTabCounter.frame = CGRectMake(pad + tabW + 4, 8, tabW, 30);
     [sTabCounter addTarget:self action:@selector(switchToCounterTab) forControlEvents:UIControlEventTouchUpInside];
     [content addSubview:sTabCounter];
 
     // Close X
-    UIButton *closeBtn = SLMakeBtn(@"✕", 36, 32, [UIColor colorWithWhite:1 alpha:0.15], [UIColor whiteColor], 16);
-    closeBtn.frame = CGRectMake(pw - pad - 36, 8, 36, 32);
-    closeBtn.layer.cornerRadius = 16;
+    UIButton *closeBtn = SLMakeBtn(@"✕", 32, 30, [UIColor colorWithWhite:1 alpha:0.12], [UIColor whiteColor], 14);
+    closeBtn.frame = CGRectMake(pw - pad - 32, 8, 32, 30);
+    closeBtn.layer.cornerRadius = 15;
     [closeBtn addTarget:self action:@selector(settingsClose) forControlEvents:UIControlEventTouchUpInside];
     [content addSubview:closeBtn];
 
     // === TRIS MONITOR content ===
-    sTrisContent = [[UIView alloc] initWithFrame:CGRectMake(0, 46, pw, ph - 46)];
+    sTrisContent = [[UIView alloc] initWithFrame:CGRectMake(0, 42, pw, ph - 42)];
     [content addSubview:sTrisContent];
 
     // ACTIVE MONITOR row
-    UILabel *amLabel = [[UILabel alloc] initWithFrame:CGRectMake(pad, 8, 150, 24)];
+    UILabel *amLabel = [[UILabel alloc] initWithFrame:CGRectMake(pad, 6, 150, 22)];
     amLabel.text = @"ACTIVE MONITOR";
-    amLabel.font = [UIFont boldSystemFontOfSize:13];
+    amLabel.font = [UIFont boldSystemFontOfSize:12];
     amLabel.textColor = SLAccent();
     [sTrisContent addSubview:amLabel];
 
-    UISwitch *amSwitch = [[UISwitch alloc] initWithFrame:CGRectMake(pw - pad - 51, 4, 51, 31)];
+    UISwitch *amSwitch = [[UISwitch alloc] initWithFrame:CGRectMake(pw - pad - 51, 3, 51, 31)];
     amSwitch.onTintColor = SLAccent();
+    amSwitch.transform = CGAffineTransformMakeScale(0.85, 0.85);
     amSwitch.on = sTrisMonitorActive;
     [amSwitch addTarget:self action:@selector(trisMonitorToggle:) forControlEvents:UIControlEventValueChanged];
     [sTrisContent addSubview:amSwitch];
 
     // LOCK TARGET row
-    UILabel *ltLabel = [[UILabel alloc] initWithFrame:CGRectMake(pad, 40, 150, 24)];
+    UILabel *ltLabel = [[UILabel alloc] initWithFrame:CGRectMake(pad, 32, 150, 22)];
     ltLabel.text = @"LOCK TARGET";
-    ltLabel.font = [UIFont boldSystemFontOfSize:13];
+    ltLabel.font = [UIFont boldSystemFontOfSize:12];
     ltLabel.textColor = SLAccent();
     [sTrisContent addSubview:ltLabel];
 
     NSArray *syms = @[@"🔨", @"🐷", @"💊", @"🛡", @"⭐", @"🧪"];
     NSArray *keys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"goldSack"];
-    CGFloat symSize = 38;
-    CGFloat symGap = 5;
+    CGFloat symSize = 36;
+    CGFloat symGap = 4;
     CGFloat symStartX = pad;
     NSString *curLock = [SLTrisController shared].lockTarget;
 
     for (NSUInteger i = 0; i < syms.count; i++) {
         UIButton *sb = [UIButton buttonWithType:UIButtonTypeCustom];
-        sb.frame = CGRectMake(symStartX + i * (symSize + symGap), 68, symSize, symSize);
+        sb.frame = CGRectMake(symStartX + i * (symSize + symGap), 56, symSize, symSize);
         sb.backgroundColor = [UIColor colorWithWhite:0.15 alpha:1];
-        sb.layer.cornerRadius = 12;
+        sb.layer.cornerRadius = 10;
         sb.layer.borderWidth = 2;
         sb.layer.borderColor = [curLock isEqualToString:keys[i]] ? SLAccent().CGColor : [UIColor clearColor].CGColor;
         [sb setTitle:syms[i] forState:UIControlStateNormal];
-        sb.titleLabel.font = [UIFont systemFontOfSize:20];
+        sb.titleLabel.font = [UIFont systemFontOfSize:18];
         sb.tag = 300 + i;
         sb.showsTouchWhenHighlighted = YES;
         [sb addTarget:self action:@selector(lockTargetTap:) forControlEvents:UIControlEventTouchUpInside];
@@ -236,25 +237,25 @@ static BOOL sTrisMonitorActive = NO;
     }
 
     // === SPIN COUNTER content (hidden by default) ===
-    sCounterContent = [[UIView alloc] initWithFrame:CGRectMake(0, 46, pw, ph - 46)];
+    sCounterContent = [[UIView alloc] initWithFrame:CGRectMake(0, 42, pw, ph - 42)];
     sCounterContent.hidden = YES;
     [content addSubview:sCounterContent];
 
-    UILabel *scLabel = [[UILabel alloc] initWithFrame:CGRectMake(pad, 8, 200, 24)];
+    UILabel *scLabel = [[UILabel alloc] initWithFrame:CGRectMake(pad, 8, 200, 22)];
     scLabel.text = @"SHOW / HIDE COUNTERS";
-    scLabel.font = [UIFont boldSystemFontOfSize:13];
+    scLabel.font = [UIFont boldSystemFontOfSize:12];
     scLabel.textColor = SLAccent();
     [sCounterContent addSubview:scLabel];
 
     for (NSUInteger i = 0; i < syms.count; i++) {
         UIButton *sb = [UIButton buttonWithType:UIButtonTypeCustom];
-        sb.frame = CGRectMake(symStartX + i * (symSize + symGap), 40, symSize, symSize);
+        sb.frame = CGRectMake(symStartX + i * (symSize + symGap), 36, symSize, symSize);
         sb.backgroundColor = [UIColor colorWithWhite:0.15 alpha:1];
-        sb.layer.cornerRadius = 12;
+        sb.layer.cornerRadius = 10;
         sb.layer.borderWidth = 2;
         sb.layer.borderColor = SLAccent().CGColor;  // all visible by default
         [sb setTitle:syms[i] forState:UIControlStateNormal];
-        sb.titleLabel.font = [UIFont systemFontOfSize:20];
+        sb.titleLabel.font = [UIFont systemFontOfSize:18];
         sb.tag = 400 + i;
         sb.showsTouchWhenHighlighted = YES;
         [sb addTarget:self action:@selector(counterVisibilityTap:) forControlEvents:UIControlEventTouchUpInside];
@@ -376,16 +377,17 @@ static BOOL sTargetActive = NO;
     vc.view.backgroundColor = [UIColor clearColor];
     win.rootViewController = vc;
 
-    // Dark background with green border (matching screenshot)
-    UIView *bg = [[UIView alloc] initWithFrame:CGRectMake(0, 0, pw, ph)];
-    bg.backgroundColor = [UIColor colorWithRed:0.08 green:0.12 blue:0.1 alpha:0.95];
-    bg.layer.cornerRadius = 18;
-    bg.layer.borderWidth = 1.5;
-    bg.layer.borderColor = [UIColor colorWithRed:0 green:0.8 blue:0 alpha:0.6].CGColor;
-    bg.clipsToBounds = YES;
+    // Glassmorphism background (matching main panel style)
+    UIVisualEffectView *blurView = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleDark]];
+    blurView.frame = CGRectMake(0, 0, pw, ph);
+    blurView.layer.cornerRadius = 18;
+    blurView.clipsToBounds = YES;
+    blurView.alpha = 0.95;
+    blurView.userInteractionEnabled = YES;
     UIPanGestureRecognizer *targetPan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragTarget:)];
-    [bg addGestureRecognizer:targetPan];
-    [vc.view addSubview:bg];
+    [blurView addGestureRecognizer:targetPan];
+    [vc.view addSubview:blurView];
+    UIView *bg = blurView.contentView;
 
     CGFloat pad = 14;
 
@@ -393,7 +395,7 @@ static BOOL sTargetActive = NO;
     UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(pad, 10, 140, 28)];
     title.text = @"TARGET SPIN";
     title.font = [UIFont boldSystemFontOfSize:16];
-    title.textColor = [UIColor colorWithRed:0 green:0.9 blue:0 alpha:1];
+    title.textColor = SLAccent();
     [bg addSubview:title];
 
     // ∞ input box
@@ -433,8 +435,8 @@ static BOOL sTargetActive = NO;
 
         // Highlight if already selected
         if ([sTargetSymbol isEqualToString:keys[i]]) {
-            sb.layer.borderColor = [UIColor colorWithRed:0 green:0.9 blue:0 alpha:1].CGColor;
-            sb.backgroundColor = [UIColor colorWithRed:0 green:0.2 blue:0 alpha:1];
+            sb.layer.borderColor = SLAccent().CGColor;
+            sb.backgroundColor = [UIColor colorWithRed:0 green:0.15 blue:0.18 alpha:1];
         }
         [bg addSubview:sb];
     }
@@ -464,8 +466,8 @@ static BOOL sTargetActive = NO;
     [back addTarget:self action:@selector(targetBack) forControlEvents:UIControlEventTouchUpInside];
     [bg addSubview:back];
 
-    // SAVE button (green)
-    UIButton *save = SLMakeBtn(@"SAVE", 90, 36, [UIColor colorWithRed:0 green:0.85 blue:0 alpha:1], [UIColor blackColor], 14);
+    // SAVE button (accent color)
+    UIButton *save = SLMakeBtn(@"SAVE", 90, 36, SLAccent(), [UIColor blackColor], 14);
     save.frame = CGRectMake(pw - pad - 90, btnY, 90, 36);
     save.showsTouchWhenHighlighted = YES;
     [save addTarget:self action:@selector(targetSave) forControlEvents:UIControlEventTouchUpInside];
@@ -502,8 +504,8 @@ static BOOL sTargetActive = NO;
     for (NSUInteger i = 0; i < keys.count; i++) {
         UIButton *sb = [sTargetWindow.rootViewController.view viewWithTag:(100 + i)];
         if (i == idx) {
-            sb.layer.borderColor = [UIColor colorWithRed:0 green:0.9 blue:0 alpha:1].CGColor;
-            sb.backgroundColor = [UIColor colorWithRed:0 green:0.2 blue:0 alpha:1];
+            sb.layer.borderColor = SLAccent().CGColor;
+            sb.backgroundColor = [UIColor colorWithRed:0 green:0.15 blue:0.18 alpha:1];
         } else {
             sb.layer.borderColor = [UIColor clearColor].CGColor;
             sb.backgroundColor = [UIColor colorWithWhite:0.15 alpha:1];
@@ -643,8 +645,8 @@ static void SLShowPanel(void) {
     if (!scene) return;
 
     CGRect screen = scene.coordinateSpace.bounds;
-    CGFloat pw = MIN(screen.size.width * 0.80, 310);
-    CGFloat ph = 140;
+    CGFloat pw = MIN(screen.size.width * 0.80, 300);
+    CGFloat ph = 130;
     CGFloat ix = sIconWindow ? sIconWindow.frame.origin.x : screen.size.width - 60;
     CGFloat iy = sIconWindow ? sIconWindow.frame.origin.y : screen.size.height / 2;
     CGFloat x = MIN(ix, screen.size.width - pw - 10);
@@ -752,8 +754,8 @@ static void SLShowPanel(void) {
     [controlsBg addSubview:closeBtn];
 
     // === ROW 3: Action buttons ===
-    CGFloat r3y = r2y + 46;
-    CGFloat abtnW = 42, abtnH = 36, agap = 5;
+    CGFloat r3y = r2y + 44;
+    CGFloat abtnW = 40, abtnH = 34, agap = 4;
     NSArray *abtnDefs = @[
         @[@"↺", @"resetCounters", @YES],
         @[@"TRIS", @"trisMonitor", @YES],
@@ -838,10 +840,10 @@ void SLMenuOverlayInstall(void) {
     if (!scene) return;
 
     CGRect screen = scene.coordinateSpace.bounds;
-    CGFloat sz = 50;
+    CGFloat sz = 42;
 
     UIWindow *iconWin = [[UIWindow alloc] initWithWindowScene:scene];
-    iconWin.frame = CGRectMake(screen.size.width - sz - 10, screen.size.height / 2 - sz / 2, sz, sz);
+    iconWin.frame = CGRectMake(screen.size.width - sz - 8, screen.size.height / 2 - sz / 2, sz, sz);
     iconWin.windowLevel = UIWindowLevelAlert + 400;
     iconWin.backgroundColor = [UIColor clearColor];
 
@@ -851,12 +853,12 @@ void SLMenuOverlayInstall(void) {
 
     UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
     btn.frame = CGRectMake(0, 0, sz, sz);
-    btn.backgroundColor = SLAccent();
+    btn.backgroundColor = [UIColor colorWithRed:0 green:0.75 blue:0.85 alpha:0.85];
     btn.layer.cornerRadius = sz / 2;
     btn.clipsToBounds = YES;
     [btn setTitle:@"SL" forState:UIControlStateNormal];
     [btn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    btn.titleLabel.font = [UIFont boldSystemFontOfSize:18];
+    btn.titleLabel.font = [UIFont boldSystemFontOfSize:15];
     [btn addTarget:[SLIconTarget class] action:@selector(tapped) forControlEvents:UIControlEventTouchUpInside];
 
     UIPanGestureRecognizer *iconPan = [[UIPanGestureRecognizer alloc] initWithTarget:[SLIconTarget class] action:@selector(handleIconPan:)];
