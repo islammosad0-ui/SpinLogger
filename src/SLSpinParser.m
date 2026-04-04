@@ -105,13 +105,14 @@ void SLParseSpinAPIResponse(NSData *responseData) {
         }
     }
 
-    // Potion rush / mini-event bar tracking
-    // If accumulationBarsById exists and has any dict entries, the bar changed this spin
+    // Potion Rush tracking — only trigger for the pr_ec bar
+    // Identified by rewards containing "progressive_reward_pr_ec"
     NSDictionary *barsById = json[@"accumulationBarsById"];
-    if ([barsById isKindOfClass:[NSDictionary class]] && barsById.count > 0) {
-        // Check if any bar has actual dict data (not just empty)
-        for (id val in barsById.allValues) {
-            if ([val isKindOfClass:[NSDictionary class]]) {
+    if ([barsById isKindOfClass:[NSDictionary class]]) {
+        for (NSDictionary *bar in barsById.allValues) {
+            if (![bar isKindOfClass:[NSDictionary class]]) continue;
+            NSDictionary *rewards = bar[@"rewards"];
+            if ([rewards isKindOfClass:[NSDictionary class]] && rewards[@"progressive_reward_pr_ec"]) {
                 result.potionBarChanged = YES;
                 break;
             }
