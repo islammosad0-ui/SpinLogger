@@ -188,12 +188,14 @@ Format: `{"348a373a":"27/40@m7","bf1b4f4b":"396/400@m27"}` where `27/40@m7` = cu
 |---|---|
 | `progressive_reward_pr_ec` | Potion Rush (Expedition Cave) |
 | `expedition_cave_blaster` | Cave Blaster |
+| `generic_currency_expedition_nl_currency` | Expedition |
 | `generic_currency_merge_energy` | Merge Energy |
 | `generic_currency_egg_currency` | Easter Eggs |
 | `generic_currency_picks_currency` | Picks event |
 | `token_currency_wheel_token_cw_one` | Wheel Token |
+| `mystery_chest_easter_dream_chest` | Easter Dream Chest |
 
-**Note:** The Potion Rush bar is also tracked separately via `potionRushMissionIndex` in the parser, detected by the `progressive_reward_pr_ec` reward key (not by hardcoded UUID).
+**Bar type identification:** Slot-on-slot bars have IDs starting with `slot_on_slot_`. Main event bars use UUID format (`f7424ea7-...`). The 🧪 counter tile tracks only main event bars (any mission completion), automatically adapting when events rotate.
 
 ---
 

@@ -364,8 +364,10 @@ Known bet values from HAR: `1, 2, 3, 15, 50, 150, 200, 600`
 | `progressive_reward_pr_ec` | Potion Rush points |
 | `expedition_cave_blaster` | Cave blaster item |
 | `generic_currency_egg_currency` | Easter eggs |
+| `generic_currency_expedition_nl_currency` | Expedition currency |
 | `token_currency_wheel_token_cw_one` | Wheel token |
 | `generic_currency_merge_energy` | Merge energy |
+| `mystery_chest_easter_dream_chest` | Easter Dream Chest |
 
 ### Mini Events Rotation:
 - Mini events rotate (unlike main GAE which resets every Monday)
