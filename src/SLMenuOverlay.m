@@ -23,7 +23,6 @@
 
 static UIWindow *sPanelWindow = nil;
 static WKWebView *sPanelWebView = nil;
-static BOOL sExpanded = NO;
 BOOL sNetworkLocked = NO;  // non-static — accessed by SLNetworkInterceptor via extern
 
 @interface SLPanelHandler : NSObject <WKScriptMessageHandler>
@@ -45,13 +44,8 @@ BOOL sNetworkLocked = NO;  // non-static — accessed by SLNetworkInterceptor vi
     NSString *action = msg[@"action"] ?: @"";
 
     // --- Panel state ---
-    if ([action isEqualToString:@"expand"]) {
-        sExpanded = YES;
-        [self resizePanel];
-    }
-    else if ([action isEqualToString:@"collapse"]) {
-        sExpanded = NO;
-        [self resizePanel];
+    if ([action isEqualToString:@"collapse"]) {
+        SLHidePanel();
     }
     // --- Speed ---
     else if ([action isEqualToString:@"play"]) {
@@ -152,32 +146,6 @@ BOOL sNetworkLocked = NO;  // non-static — accessed by SLNetworkInterceptor vi
     [sPanelWebView evaluateJavaScript:js completionHandler:nil];
 }
 
-- (void)resizePanel {
-    if (!sPanelWindow) return;
-
-    UIWindowScene *scene = nil;
-    for (UIScene *s in UIApplication.sharedApplication.connectedScenes) {
-        if ([s isKindOfClass:[UIWindowScene class]]) { scene = (UIWindowScene *)s; break; }
-    }
-    if (!scene) return;
-
-    CGRect screen = scene.coordinateSpace.bounds;
-    CGFloat sw = screen.size.width;
-
-    if (sExpanded) {
-        CGFloat pw = MIN(sw - 20, 380);
-        CGFloat ph = 185;
-        sPanelWindow.frame = CGRectMake((sw - pw) / 2, 50, pw, ph);
-        sPanelWebView.frame = CGRectMake(0, 0, pw, ph);
-    } else {
-        CGFloat sz = 50;
-        sPanelWindow.frame = CGRectMake(sw - sz - 10,
-                                         screen.size.height / 2 - sz / 2,
-                                         sz, sz);
-        sPanelWebView.frame = CGRectMake(0, 0, sz, sz);
-    }
-}
-
 - (void)showSettingsAlert {
     UIViewController *top = [self topVC];
     if (!top) return;
@@ -266,15 +234,8 @@ static NSString *SLPanelHTML(void) {
     "body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;"
     "background:transparent;overflow:hidden}"
 
-    /* === ICON (collapsed) === */
-    "#icon{width:50px;height:50px;border-radius:25px;"
-    "background:var(--accent);display:flex;align-items:center;justify-content:center;"
-    "font-size:20px;font-weight:700;color:#fff;cursor:pointer;"
-    "box-shadow:0 4px 20px rgba(0,229,255,0.3);transition:transform .2s}"
-    "#icon:active{transform:scale(0.9)}"
-
-    /* === PANEL (expanded) === */
-    "#panel{display:none;border-radius:var(--radius);"
+    /* === PANEL === */
+    "#panel{border-radius:var(--radius);"
     "background:var(--bg);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);"
     "border:1px solid rgba(255,255,255,0.08);overflow:hidden;"
     "box-shadow:0 8px 40px rgba(0,0,0,0.5)}"
@@ -352,10 +313,6 @@ static NSString *SLPanelHTML(void) {
 
     "</style></head><body>"
 
-    /* ===== ICON (collapsed state) ===== */
-    "<div id='icon' onclick='expand()'>SL</div>"
-
-    /* ===== PANEL (expanded state) ===== */
     "<div id='panel'>"
     /* Main view */
     "<div id='mainView'>"
@@ -447,12 +404,7 @@ static NSString *SLPanelHTML(void) {
 
     "<script>"
     "function msg(o){window.webkit.messageHandlers.sl.postMessage(o)}"
-    "function expand(){document.getElementById('icon').style.display='none';"
-    "document.getElementById('panel').style.display='block';msg({action:'expand'})}"
-    "function collapse(){document.getElementById('icon').style.display='flex';"
-    "document.getElementById('panel').style.display='none';"
-    "document.getElementById('settings').style.display='none';"
-    "document.getElementById('mainView').style.display='block';msg({action:'collapse'})}"
+    "function collapse(){msg({action:'collapse'})}"
     "function onSlide(v){document.getElementById('speedBadge').textContent="
     "parseFloat(v).toFixed(2)+'x';msg({action:'speed',value:parseFloat(v)})}"
     "window.setSpeed=function(v){document.getElementById('speedBadge').textContent="
@@ -529,32 +481,61 @@ static NSString *SLPanelHTML(void) {
 }
 
 // ---------------------------------------------------------------------------
-//  Install
+//  Install — Native button for icon, WKWebView for panel
 // ---------------------------------------------------------------------------
 static SLPanelHandler *sHandler = nil;
+static UIWindow *sIconWindow = nil;
 
-void SLMenuOverlayInstall(void) {
-    if (sPanelWindow) return;
+static void SLShowPanel(void);
+static void SLHidePanel(void);
+
+@interface SLIconTarget : NSObject
++ (void)tapped;
++ (void)handleIconPan:(UIPanGestureRecognizer *)r;
+@end
+
+@implementation SLIconTarget
++ (void)tapped {
+    SLShowPanel();
+}
++ (void)handleIconPan:(UIPanGestureRecognizer *)r {
+    if (r.state == UIGestureRecognizerStateBegan ||
+        r.state == UIGestureRecognizerStateChanged) {
+        CGPoint t = [r translationInView:r.view.superview];
+        CGRect f = sIconWindow.frame;
+        f.origin.x += t.x;
+        f.origin.y += t.y;
+        sIconWindow.frame = f;
+        [r setTranslation:CGPointZero inView:r.view.superview];
+    }
+}
+@end
+
+static void SLShowPanel(void) {
+    sIconWindow.hidden = YES;
+
+    if (sPanelWindow) {
+        // Reload HTML to get fresh speed value
+        [sPanelWebView loadHTMLString:SLPanelHTML() baseURL:nil];
+        sPanelWindow.hidden = NO;
+        return;
+    }
 
     UIWindowScene *scene = nil;
     for (UIScene *s in UIApplication.sharedApplication.connectedScenes) {
-        if ([s isKindOfClass:[UIWindowScene class]] &&
-            s.activationState == UISceneActivationStateForegroundActive) {
-            scene = (UIWindowScene *)s; break;
-        }
+        if ([s isKindOfClass:[UIWindowScene class]]) { scene = (UIWindowScene *)s; break; }
     }
     if (!scene) return;
 
     sHandler = [[SLPanelHandler alloc] init];
 
-    // Start as icon (50x50)
     CGRect screen = scene.coordinateSpace.bounds;
-    CGFloat sz = 50;
-    CGFloat x = screen.size.width - sz - 10;
-    CGFloat y = screen.size.height / 2 - sz / 2;
+    CGFloat pw = MIN(screen.size.width - 20, 380);
+    CGFloat ph = 195;
+    CGFloat x = (screen.size.width - pw) / 2;
 
     UIWindow *win = [[UIWindow alloc] initWithWindowScene:scene];
-    win.frame = CGRectMake(x, y, sz, sz);
+    win.frame = CGRectMake(x, 50, pw, ph);
     win.windowLevel = UIWindowLevelAlert + 400;
     win.backgroundColor = [UIColor clearColor];
 
@@ -569,7 +550,7 @@ void SLMenuOverlayInstall(void) {
     WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
     [config.userContentController addScriptMessageHandler:sHandler name:@"sl"];
 
-    WKWebView *wv = [[WKWebView alloc] initWithFrame:CGRectMake(0, 0, sz, sz)
+    WKWebView *wv = [[WKWebView alloc] initWithFrame:CGRectMake(0, 0, pw, ph)
                                         configuration:config];
     wv.backgroundColor = [UIColor clearColor];
     wv.opaque = NO;
@@ -581,4 +562,55 @@ void SLMenuOverlayInstall(void) {
 
     win.hidden = NO;
     sPanelWindow = win;
+}
+
+static void SLHidePanel(void) {
+    sPanelWindow.hidden = YES;
+    sIconWindow.hidden = NO;
+}
+
+void SLMenuOverlayInstall(void) {
+    if (sIconWindow) return;
+
+    UIWindowScene *scene = nil;
+    for (UIScene *s in UIApplication.sharedApplication.connectedScenes) {
+        if ([s isKindOfClass:[UIWindowScene class]] &&
+            s.activationState == UISceneActivationStateForegroundActive) {
+            scene = (UIWindowScene *)s; break;
+        }
+    }
+    if (!scene) return;
+
+    // Native floating button
+    CGRect screen = scene.coordinateSpace.bounds;
+    CGFloat sz = 50;
+    CGFloat bx = screen.size.width - sz - 10;
+    CGFloat by = screen.size.height / 2 - sz / 2;
+
+    UIWindow *iconWin = [[UIWindow alloc] initWithWindowScene:scene];
+    iconWin.frame = CGRectMake(bx, by, sz, sz);
+    iconWin.windowLevel = UIWindowLevelAlert + 400;
+    iconWin.backgroundColor = [UIColor clearColor];
+
+    UIViewController *iconVC = [[UIViewController alloc] init];
+    iconVC.view.backgroundColor = [UIColor clearColor];
+    iconWin.rootViewController = iconVC;
+
+    UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
+    btn.frame = CGRectMake(0, 0, sz, sz);
+    btn.backgroundColor = [UIColor colorWithRed:0 green:0.9 blue:1.0 alpha:1.0];
+    btn.layer.cornerRadius = sz / 2;
+    btn.clipsToBounds = YES;
+    [btn setTitle:@"SL" forState:UIControlStateNormal];
+    [btn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    btn.titleLabel.font = [UIFont boldSystemFontOfSize:18];
+    [btn addTarget:[SLIconTarget class] action:@selector(tapped) forControlEvents:UIControlEventTouchUpInside];
+
+    UIPanGestureRecognizer *iconPan = [[UIPanGestureRecognizer alloc]
+        initWithTarget:[SLIconTarget class] action:@selector(handleIconPan:)];
+    [btn addGestureRecognizer:iconPan];
+
+    [iconVC.view addSubview:btn];
+    iconWin.hidden = NO;
+    sIconWindow = iconWin;
 }
