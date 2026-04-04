@@ -177,7 +177,10 @@ void SLParseSpinAPIResponseWithBet(NSData *responseData, NSInteger betMultiplier
             NSString *shortId = barId.length > 8 ? [barId substringToIndex:8] : barId;
             barSnapshot[shortId] = [NSString stringWithFormat:@"%ld/%ld@m%ld",
                                     (long)cur, (long)tot, (long)mis];
-            barMissions[shortId] = @(mis);
+            // Only track main event bars for 🧪 tile (skip slot-on-slot bars)
+            if (![barId hasPrefix:@"slot_on_slot"]) {
+                barMissions[shortId] = @(mis);
+            }
         }
     };
 
