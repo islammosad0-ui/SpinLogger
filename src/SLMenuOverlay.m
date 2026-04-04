@@ -113,8 +113,26 @@ static BOOL sNetworkLocked = NO;
                           object:nil
                         userInfo:@{@"symbol": sym ?: @""}];
     }
+    else if ([action isEqualToString:@"networkToggle"]) {
+        BOOL on = [msg[@"value"] boolValue];
+        sNetworkLocked = !on;
+        NSLog(@"[SpinLogger] Network %@", sNetworkLocked ? @"BLOCKED" : @"RESTORED");
+    }
     else if ([action isEqualToString:@"networkLockResume"]) {
         sNetworkLocked = NO;
+    }
+    else if ([action isEqualToString:@"targetSpinSave"]) {
+        NSString *sym = msg[@"symbol"];
+        NSInteger maxSpins = [msg[@"maxSpins"] integerValue];
+        BOOL active = [msg[@"active"] boolValue];
+        [SLSpinTarget shared].targetSpinCount = maxSpins;
+        [SLTrisController shared].lockTarget = sym;
+        NSLog(@"[SpinLogger] Target Spin: %@ within %ld spins (active=%d)", sym, (long)maxSpins, active);
+    }
+    else if ([action isEqualToString:@"targetSpinPower"]) {
+        // Toggle target spin monitoring on/off
+        BOOL active = [msg[@"active"] boolValue];
+        NSLog(@"[SpinLogger] Target Spin power: %@", active ? @"ON" : @"OFF");
     }
     else if ([action isEqualToString:@"showAllCounters"]) {
         [[SLCounterOverlay shared] show];
@@ -360,8 +378,8 @@ static NSString *SLPanelHTML(void) {
     "<div class='actions'>"
     "<button class='abtn abtn-on' onclick='toggleAllCounters()'>↺</button>"
     "<button class='abtn abtn-off abtn-skip'>SKIP</button>"
-    "<button class='abtn abtn-on' onclick='showSettings()'>∞</button>"
-    "<button class='abtn abtn-on' onclick='msg({action:\"network\"})'>📶</button>"
+    "<button class='abtn abtn-on' onclick='showTargetSpin()'>∞</button>"
+    "<button class='abtn abtn-on' id='netBtn' onclick='toggleNet()'>📶</button>"
     "<button class='abtn abtn-off'>+</button>"
     "<button class='abtn abtn-off'>+</button>"
     "</div>"
@@ -400,6 +418,30 @@ static NSString *SLPanelHTML(void) {
     "<div class='sym-btn active' data-sym='goldSack' onclick='toggleCounterSym(\"goldSack\")'>🧪</div>"
     "</div>"
     "</div>"
+
+    /* Target Spin view */
+    "<div id='targetSpin' style='display:none;padding:12px 14px'>"
+    "<div class='setting-label' style='font-size:15px;color:#0f0;padding-bottom:10px'>TARGET SPIN</div>"
+    "<div style='display:flex;align-items:center;gap:10px;padding-bottom:12px'>"
+    "<div class='speed-badge' style='flex:1;font-size:18px;cursor:pointer;border-color:#0f0;color:#0f0'"
+    " id='targetInput' onclick='promptTarget()'>∞</div>"
+    "</div>"
+    "<div class='sym-row' id='targetSymRow'>"
+    "<div class='sym-btn' data-sym='attack' onclick='selectTargetSym(\"attack\")'>🔨</div>"
+    "<div class='sym-btn' data-sym='steal' onclick='selectTargetSym(\"steal\")'>🐷</div>"
+    "<div class='sym-btn' data-sym='accumulation' onclick='selectTargetSym(\"accumulation\")'>💊</div>"
+    "<div class='sym-btn' data-sym='shield' onclick='selectTargetSym(\"shield\")'>🛡</div>"
+    "<div class='sym-btn' data-sym='goldSack' onclick='selectTargetSym(\"goldSack\")'>🧪</div>"
+    "</div>"
+    "<div style='display:flex;gap:8px;padding-top:10px;align-items:center'>"
+    "<button class='cbtn' id='targetPower' onclick='toggleTargetPower()'"
+    " style='width:36px;height:36px;border-radius:18px;font-size:16px;color:#f44'>⏻</button>"
+    "<button class='abtn abtn-off' style='flex:1' onclick='hideTargetSpin()'>BACK</button>"
+    "<button class='abtn' style='flex:1;background:#0f0;color:#000;font-weight:800'"
+    " onclick='saveTarget()'>SAVE</button>"
+    "</div>"
+    "</div>"
+
     "</div>"
     "</div>"
 
@@ -453,6 +495,35 @@ static NSString *SLPanelHTML(void) {
     "var allCountersVisible=true;"
     "function toggleAllCounters(){allCountersVisible=!allCountersVisible;"
     "msg({action:allCountersVisible?'showAllCounters':'hideAllCounters'})}"
+
+    /* Network manual kill switch */
+    "var netOff=false;"
+    "function toggleNet(){netOff=!netOff;"
+    "var btn=document.getElementById('netBtn');"
+    "btn.className='abtn '+(netOff?'abtn-off':'abtn-on');"
+    "btn.style.opacity=netOff?'0.5':'1';"
+    "msg({action:'networkToggle',value:!netOff})}"
+
+    /* Target Spin */
+    "var targetSym=null,targetCount=0,targetActive=false;"
+    "function showTargetSpin(){document.getElementById('mainView').style.display='none';"
+    "document.getElementById('settings').style.display='none';"
+    "document.getElementById('targetSpin').style.display='block'}"
+    "function hideTargetSpin(){document.getElementById('targetSpin').style.display='none';"
+    "document.getElementById('mainView').style.display='block'}"
+    "function promptTarget(){var v=prompt('Max spins before cutoff:',targetCount||'');"
+    "if(v&&parseInt(v)>0){targetCount=parseInt(v);"
+    "document.getElementById('targetInput').textContent=targetCount}}"
+    "function selectTargetSym(s){targetSym=s;"
+    "document.querySelectorAll('#targetSymRow .sym-btn').forEach(function(b){"
+    "b.className='sym-btn'+(b.dataset.sym===s?' active':'')})}"
+    "function toggleTargetPower(){targetActive=!targetActive;"
+    "var btn=document.getElementById('targetPower');"
+    "btn.style.color=targetActive?'#0f0':'#f44';"
+    "msg({action:'targetSpinPower',active:targetActive})}"
+    "function saveTarget(){if(targetSym&&targetCount>0){"
+    "msg({action:'targetSpinSave',symbol:targetSym,maxSpins:targetCount,active:targetActive});"
+    "hideTargetSpin()}else{alert('Select a symbol and set max spins')}}"
     "</script></body></html>",
     speed, speed];
 }

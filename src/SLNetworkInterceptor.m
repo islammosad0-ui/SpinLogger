@@ -23,6 +23,9 @@
 
 static NSString *const kSLHandledKey = @"SL_Handled";
 
+// Extern: set by SLMenuOverlay when network kill switch is active
+extern BOOL sNetworkLocked;
+
 #pragma mark - URL matching
 
 static BOOL SLIsSpinAPI(NSURLRequest *request) {
@@ -61,6 +64,15 @@ static NSURLSessionConfiguration *SLCleanConfig(void) {
 }
 
 - (void)startLoading {
+    // Network kill switch — block game requests when locked
+    if (sNetworkLocked && [self.request.URL.host containsString:@"moonactive"]) {
+        NSError *blocked = [NSError errorWithDomain:NSURLErrorDomain
+                                               code:NSURLErrorNotConnectedToInternet
+                                           userInfo:@{NSLocalizedDescriptionKey: @"Network locked by SpinLogger"}];
+        [self.client URLProtocol:self didFailWithError:blocked];
+        return;
+    }
+
     NSMutableURLRequest *tagged = [self.request mutableCopy];
     [NSURLProtocol setProperty:@YES forKey:kSLHandledKey inRequest:tagged];
 
