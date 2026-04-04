@@ -24,7 +24,7 @@
 static UIWindow *sPanelWindow = nil;
 static WKWebView *sPanelWebView = nil;
 static BOOL sExpanded = NO;
-static BOOL sNetworkLocked = NO;
+BOOL sNetworkLocked = NO;  // non-static — accessed by SLNetworkInterceptor via extern
 
 @interface SLPanelHandler : NSObject <WKScriptMessageHandler>
 @end
