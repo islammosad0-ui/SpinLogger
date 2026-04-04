@@ -560,10 +560,25 @@ static void SLShowPanel(void) {
                                         configuration:config];
     wv.backgroundColor = [UIColor clearColor];
     wv.opaque = NO;
+    wv.userInteractionEnabled = YES;
+
+    // Fix transparent background (remove shadow/white corners)
+    wv.scrollView.backgroundColor = [UIColor clearColor];
+    for (UIView *sub in wv.scrollView.subviews) {
+        sub.backgroundColor = [UIColor clearColor];
+    }
+
+    // Disable scroll view — prevents gesture recognizers from eating taps
     wv.scrollView.scrollEnabled = NO;
     wv.scrollView.bounces = NO;
-    wv.userInteractionEnabled = YES;
     wv.scrollView.delaysContentTouches = NO;
+    wv.scrollView.canCancelContentTouches = NO;
+
+    // Kill all scrollView gesture recognizers that steal touches
+    for (UIGestureRecognizer *gr in wv.scrollView.gestureRecognizers) {
+        gr.enabled = NO;
+    }
+
     [wv loadHTMLString:SLPanelHTML() baseURL:nil];
     [vc.view addSubview:wv];
     sPanelWebView = wv;
