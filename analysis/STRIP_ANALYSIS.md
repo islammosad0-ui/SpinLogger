@@ -1042,13 +1042,27 @@ The strip is NOT a fixed repeating sequence (autocorrelation found nothing at la
 - **Accum symbol counting**: alternative trigger using r1=30 count (0.965 corr with gap)
 - **Pair sums**: consecutive gaps average 200 total (stable at CV=0.21)
 
+### Data collection plan for next GAE event:
+**All accounts zeroed to LOW list (missions 0-999, target 3,275,611 pts).**
+- 3+ accounts, all starting from mission 1
+- All spins logged at 1x bet — no switching until data collected
+- Each CSV tagged with account ID
+- Note all mission transitions (GAE resets)
+- Target: ~50+ triple accums per account → 150-200+ gaps total
+
+**Key questions this data will answer:**
+1. **Is the target universal?** Does every account at LOW list show mean gap ≈ 100, or does it vary by mission level (e.g., 60 at mission 1)?
+2. **Is the hard floor universal?** Same max(20, 80-debt) across accounts?
+3. **Does the quiet zone hold cross-account?** Validates it's a game mechanic, not dataset noise
+4. **Does target change during mission progression?** Track mean gap at mission 1 vs 5 vs 10
+5. **If target is shorter at low missions** → explains Zoran's 2.3 mb/hit precision
+
 ### What's still open:
-1. **Exact formula refinement** — The hazard function is approximate (MAE=23). More data (200+ gaps) would nail the exact probability curve. Is it truly linear or does it have discrete steps?
-2. **Zoran's remaining edge** — Our best is 5.0 mb/hit, he does 2.3. The last 2x gap may be visual cues.
-3. **Low GAE mission data** — Does the target change at early missions? Does the floor formula shift?
-4. **Build real-time overlay** — Track debt + sa_spins + accum count + quiet zone → alert
-5. **Live validation** — Apply the combined strategy in real-time to confirm out-of-sample performance.
-6. **Triple spins formula** — Debt corr is -0.43, weaker. Needs its own floor/hazard analysis.
+1. **Exact formula refinement** — 49 gaps gives MAE=23. 200+ gaps should cut this to <15 and reveal whether the hazard is linear or discrete-step.
+2. **Zoran's remaining edge** — Our best is 5.0 mb/hit, he does 2.3. Either visual cues or shorter target at low missions.
+3. **Build real-time overlay** — Track debt + sa_spins + accum count + quiet zone → alert when to bet.
+4. **Triple spins formula** — Debt corr is -0.43, weaker. Needs its own floor/hazard analysis with more data.
+5. **Live validation** — Apply the combined strategy in real-time to confirm out-of-sample.
 
 ### User preferences:
 - Wants **high-confidence, low-frequency** strategy — OK skipping 3-4 runs, but when betting wants near-certainty
