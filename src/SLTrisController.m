@@ -4,23 +4,26 @@
 #import "SLConstants.h"
 #import "SLSpinParser.h"
 #import <UIKit/UIKit.h>
-#import <WebKit/WebKit.h>
 
 // ---------------------------------------------------------------------------
-//  SLTrisController — Tris Monitor
+//  SLTrisController — Tris Monitor (native UIKit)
 //
-//  Records the DISTANCE (number of spins) between each 3-of-a-kind.
-//  When counter overlay detects a triple, it calls recordTriple:distance:
-//  which adds the distance to that symbol's column in the tris monitor.
-//
-//  Display: 5 colored columns (attack, steal, accum, shield, goldSack)
-//  Each row = one triple event, showing how many spins it took.
+//  6 independent scrollable columns, one per symbol.
+//  Each column auto-scrolls to bottom on new entry.
+//  No WKWebView — pure UIKit.
 // ---------------------------------------------------------------------------
 
-@interface SLTrisController () <WKScriptMessageHandler>
+static NSString * const kColEmojis[6] = { @"🔨", @"🐷", @"💊", @"🛡", @"⭐", @"🧪" };
+
+@interface SLTrisController ()
 @property (nonatomic, strong) UIWindow *trisWindow;
-@property (nonatomic, strong) WKWebView *trisWebView;
-// Each array stores distances between triples for that symbol
+// Per-column scroll views and content stacks
+@property (nonatomic, strong) NSMutableArray<UIScrollView *> *colScrollViews;
+@property (nonatomic, strong) NSMutableArray<UIStackView  *> *colStacks;
+// Footer
+@property (nonatomic, strong) UIButton *toggleButton;
+@property (nonatomic, strong) UILabel  *spinCountLabel;
+// Data arrays (oldest→newest)
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *histAttack;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *histSteal;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *histSpins;
@@ -28,7 +31,7 @@
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *histAccum;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *histGold;
 @property (nonatomic, assign) NSInteger totalSpins;
-@property (nonatomic, assign) BOOL symbolCountMode;  // NO=spins between triples, YES=symbols between triples
+@property (nonatomic, assign) BOOL symbolCountMode;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *symHistAttack;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *symHistSteal;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *symHistSpins;
@@ -38,6 +41,18 @@
 @end
 
 @implementation SLTrisController
+
+static UIColor *colColor(int c) {
+    switch (c) {
+        case 0: return [UIColor colorWithRed:0.00 green:0.90 blue:1.00 alpha:1]; // attack  #00e5ff
+        case 1: return [UIColor colorWithRed:1.00 green:0.41 blue:0.71 alpha:1]; // steal   #ff69b4
+        case 2: return [UIColor colorWithRed:0.00 green:0.74 blue:0.83 alpha:1]; // spins   #00bcd4
+        case 3: return [UIColor colorWithRed:0.81 green:0.58 blue:0.85 alpha:1]; // shield  #ce93d8
+        case 4: return [UIColor colorWithRed:1.00 green:0.84 blue:0.00 alpha:1]; // accum   #ffd700
+        case 5: return [UIColor colorWithRed:0.30 green:0.69 blue:0.31 alpha:1]; // gold    #4caf50
+        default: return UIColor.whiteColor;
+    }
+}
 
 + (instancetype)shared {
     static SLTrisController *instance;
@@ -51,18 +66,14 @@
     if (self) {
         _lockTarget  = [[NSUserDefaults standardUserDefaults] stringForKey:kSLDefaultsTrisLockTarget];
         _skipEnabled = [[NSUserDefaults standardUserDefaults] boolForKey:@"Speeder_TrisSkip"];
-        _histAttack = [NSMutableArray array];
-        _histSteal  = [NSMutableArray array];
-        _histSpins  = [NSMutableArray array];
-        _histShield = [NSMutableArray array];
-        _histAccum  = [NSMutableArray array];
-        _histGold   = [NSMutableArray array];
-        _symHistAttack = [NSMutableArray array];
-        _symHistSteal  = [NSMutableArray array];
-        _symHistSpins  = [NSMutableArray array];
-        _symHistShield = [NSMutableArray array];
-        _symHistAccum  = [NSMutableArray array];
-        _symHistGold   = [NSMutableArray array];
+        _histAttack = [NSMutableArray array]; _histSteal  = [NSMutableArray array];
+        _histSpins  = [NSMutableArray array]; _histShield = [NSMutableArray array];
+        _histAccum  = [NSMutableArray array]; _histGold   = [NSMutableArray array];
+        _symHistAttack = [NSMutableArray array]; _symHistSteal  = [NSMutableArray array];
+        _symHistSpins  = [NSMutableArray array]; _symHistShield = [NSMutableArray array];
+        _symHistAccum  = [NSMutableArray array]; _symHistGold   = [NSMutableArray array];
+        _colScrollViews = [NSMutableArray array];
+        _colStacks      = [NSMutableArray array];
         _totalSpins = 0;
         _symbolCountMode = NO;
         [self restoreState];
@@ -87,54 +98,37 @@
     NSDictionary *state = [[NSUserDefaults standardUserDefaults] dictionaryForKey:@"Speeder_TrisState"];
     if (!state) return;
     _totalSpins = [state[@"totalSpins"] integerValue];
-    NSArray *keys = @[@"histAttack", @"histSteal", @"histSpins", @"histShield", @"histAccum", @"histGold",
-                      @"symHistAttack", @"symHistSteal", @"symHistSpins", @"symHistShield", @"symHistAccum", @"symHistGold"];
-    NSArray *arrays = @[_histAttack, _histSteal, _histSpins, _histShield, _histAccum, _histGold,
-                        _symHistAttack, _symHistSteal, _symHistSpins, _symHistShield, _symHistAccum, _symHistGold];
+    NSArray *keys   = @[@"histAttack",@"histSteal",@"histSpins",@"histShield",@"histAccum",@"histGold",
+                        @"symHistAttack",@"symHistSteal",@"symHistSpins",@"symHistShield",@"symHistAccum",@"symHistGold"];
+    NSArray *arrays = @[_histAttack,_histSteal,_histSpins,_histShield,_histAccum,_histGold,
+                        _symHistAttack,_symHistSteal,_symHistSpins,_symHistShield,_symHistAccum,_symHistGold];
     for (NSUInteger i = 0; i < keys.count; i++) {
         NSArray *saved = state[keys[i]];
-        if ([saved isKindOfClass:[NSArray class]]) {
-            [arrays[i] addObjectsFromArray:saved];
-        }
+        if ([saved isKindOfClass:[NSArray class]]) [arrays[i] addObjectsFromArray:saved];
     }
 }
 
+#pragma mark - Notifications
+
 - (void)install {
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(onSpinReceived:)
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onSpinReceived:)
                                                  name:SLSpinReceivedNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(onShowTris:)
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onShowTris:)
                                                  name:@"SLShowTrisMonitor" object:nil];
 }
 
 - (void)onSpinReceived:(NSNotification *)note {
     self.totalSpins++;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.spinCountLabel.text = [NSString stringWithFormat:@"SPIN: %ld", (long)self.totalSpins];
+    });
 }
 
 - (void)onShowTris:(NSNotification *)note {
     [self showTrisMonitor];
 }
 
-#pragma mark - Record triple from counter overlay
-
-- (void)recordTriple:(NSString *)symbol distance:(NSInteger)distance {
-    [self recordTriple:symbol distance:distance symbolCount:0];
-}
-
-- (void)recordTriple:(NSString *)symbol distance:(NSInteger)distance symbolCount:(NSInteger)symCount {
-    NSMutableArray *hist = [self historyForSymbol:symbol];
-    if (hist) [hist addObject:@(distance)];
-    NSMutableArray *symHist = [self symbolHistoryForSymbol:symbol];
-    if (symHist) [symHist addObject:@(symCount)];
-
-    [self saveState];
-
-    // Update tris view if visible
-    if (self.trisWindow && !self.trisWindow.hidden) {
-        [self refreshTrisHTML];
-    }
-}
+#pragma mark - Data helpers
 
 - (NSMutableArray *)historyForSymbol:(NSString *)sym {
     if ([sym isEqualToString:kSLSymbolAttack])       return self.histAttack;
@@ -156,15 +150,66 @@
     return nil;
 }
 
-#pragma mark - Tris Monitor UI
+// Column index: 0=attack 1=steal 2=spins 3=shield 4=accum 5=gold
+- (int)columnIndexForSymbol:(NSString *)sym {
+    if ([sym isEqualToString:kSLSymbolAttack])       return 0;
+    if ([sym isEqualToString:kSLSymbolSteal])        return 1;
+    if ([sym isEqualToString:kSLSymbolSpins])        return 2;
+    if ([sym isEqualToString:kSLSymbolShield])       return 3;
+    if ([sym isEqualToString:kSLSymbolAccumulation]) return 4;
+    if ([sym isEqualToString:kSLSymbolGoldSack] || [sym isEqualToString:@"potion"]) return 5;
+    return -1;
+}
+
+- (NSArray *)activeArrayForColumn:(int)c {
+    NSArray *spin[6] = { self.histAttack, self.histSteal, self.histSpins,
+                         self.histShield, self.histAccum, self.histGold };
+    NSArray *sym[6]  = { self.symHistAttack, self.symHistSteal, self.symHistSpins,
+                         self.symHistShield, self.symHistAccum, self.symHistGold };
+    return self.symbolCountMode ? sym[c] : spin[c];
+}
+
+#pragma mark - Record triple
+
+- (void)recordTriple:(NSString *)symbol distance:(NSInteger)distance {
+    [self recordTriple:symbol distance:distance symbolCount:0];
+}
+
+- (void)recordTriple:(NSString *)symbol distance:(NSInteger)distance symbolCount:(NSInteger)symCount {
+    NSMutableArray *hist    = [self historyForSymbol:symbol];
+    NSMutableArray *symHist = [self symbolHistoryForSymbol:symbol];
+    if (hist)    [hist addObject:@(distance)];
+    if (symHist) [symHist addObject:@(symCount)];
+    [self saveState];
+
+    if (self.trisWindow && !self.trisWindow.hidden) {
+        int col = [self columnIndexForSymbol:symbol];
+        if (col >= 0) {
+            NSInteger val = self.symbolCountMode ? symCount : distance;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self appendEntryValue:val toColumn:col];
+            });
+        }
+    }
+}
+
+#pragma mark - Show / Hide
 
 - (void)showTrisMonitor {
     if (self.trisWindow) {
         self.trisWindow.hidden = !self.trisWindow.hidden;
-        if (!self.trisWindow.hidden) [self refreshTrisHTML];
         return;
     }
+    [self buildUI];
+}
 
+- (void)hideTrisMonitor {
+    self.trisWindow.hidden = YES;
+}
+
+#pragma mark - Build native UIKit panel
+
+- (void)buildUI {
     UIWindowScene *scene = nil;
     for (UIScene *s in [UIApplication sharedApplication].connectedScenes) {
         if ([s isKindOfClass:[UIWindowScene class]]) {
@@ -175,41 +220,247 @@
     if (!scene) return;
 
     CGRect screen = scene.coordinateSpace.bounds;
-    CGFloat w = MIN(screen.size.width - 20, 300);
+    CGFloat w = MIN(screen.size.width - 20, 320);
     CGFloat h = screen.size.height * 0.25;
-    CGFloat x = (screen.size.width - w) / 2;
+    CGFloat x = (screen.size.width  - w) / 2;
     CGFloat y = (screen.size.height - h) / 2;
 
     UIWindow *win = [[UIWindow alloc] initWithWindowScene:scene];
     win.frame = CGRectMake(x, y, w, h);
     win.windowLevel = UIWindowLevelAlert + 250;
-    win.backgroundColor = [UIColor clearColor];
+    win.backgroundColor = UIColor.clearColor;
 
     UIViewController *vc = [[UIViewController alloc] init];
-    vc.view.backgroundColor = [UIColor clearColor];
+    vc.view.backgroundColor = UIColor.clearColor;
     win.rootViewController = vc;
 
+    // Drag
     UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragTris:)];
     [vc.view addGestureRecognizer:pan];
 
-    WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
-    [config.userContentController addScriptMessageHandler:self name:@"tris"];
+    // Panel background
+    UIView *panel = [[UIView alloc] initWithFrame:vc.view.bounds];
+    panel.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    panel.backgroundColor = [UIColor colorWithRed:0.06 green:0.08 blue:0.14 alpha:0.96];
+    panel.layer.cornerRadius = 14;
+    panel.layer.masksToBounds = YES;
+    panel.layer.borderColor = [UIColor colorWithWhite:1 alpha:0.08].CGColor;
+    panel.layer.borderWidth = 1;
+    [vc.view addSubview:panel];
 
-    WKWebView *wv = [[WKWebView alloc] initWithFrame:CGRectMake(0, 0, w, h) configuration:config];
-    wv.backgroundColor = [UIColor clearColor];
-    wv.opaque = NO;
-    wv.scrollView.bounces = NO;
-    [vc.view addSubview:wv];
-    self.trisWebView = wv;
+    CGFloat panelW = panel.bounds.size.width;
+    CGFloat panelH = panel.bounds.size.height;
+
+    // Close button
+    UIButton *closeBtn = [UIButton buttonWithType:UIButtonTypeSystem];
+    closeBtn.frame = CGRectMake(panelW - 27, 5, 22, 22);
+    closeBtn.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
+    [closeBtn setTitle:@"✕" forState:UIControlStateNormal];
+    closeBtn.tintColor = [UIColor colorWithWhite:1 alpha:0.7];
+    closeBtn.titleLabel.font = [UIFont systemFontOfSize:11 weight:UIFontWeightMedium];
+    closeBtn.backgroundColor = [UIColor colorWithWhite:1 alpha:0.10];
+    closeBtn.layer.cornerRadius = 11;
+    [closeBtn addTarget:self action:@selector(closeTapped) forControlEvents:UIControlEventTouchUpInside];
+    [panel addSubview:closeBtn];
+
+    // Header row — 6 emoji labels
+    CGFloat hdrH = 28;
+    UIView *hdrView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, panelW, hdrH)];
+    hdrView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    // bottom separator
+    UIView *hdrLine = [[UIView alloc] initWithFrame:CGRectMake(0, hdrH - 1, panelW, 1)];
+    hdrLine.backgroundColor = [UIColor colorWithWhite:1 alpha:0.12];
+    hdrLine.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    [hdrView addSubview:hdrLine];
+    [panel addSubview:hdrView];
+
+    // Footer row
+    CGFloat footH = 26;
+    CGFloat footY = panelH - footH;
+    UIView *footView = [[UIView alloc] initWithFrame:CGRectMake(0, footY, panelW, footH)];
+    footView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
+    UIView *footLine = [[UIView alloc] initWithFrame:CGRectMake(0, 0, panelW, 1)];
+    footLine.backgroundColor = [UIColor colorWithWhite:1 alpha:0.12];
+    footLine.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    [footView addSubview:footLine];
+    [panel addSubview:footView];
+
+    // Columns area
+    CGFloat colsY = hdrH;
+    CGFloat colsH = footY - hdrH;
+    CGFloat colW  = panelW / 6.0;
+
+    [self.colScrollViews removeAllObjects];
+    [self.colStacks      removeAllObjects];
+
+    for (int c = 0; c < 6; c++) {
+        CGFloat colX = c * colW;
+        UIColor *color = colColor(c);
+
+        // Header cell
+        UILabel *emojiLbl = [[UILabel alloc] initWithFrame:CGRectMake(colX, 0, colW, hdrH - 2)];
+        emojiLbl.text = kColEmojis[c];
+        emojiLbl.textAlignment = NSTextAlignmentCenter;
+        emojiLbl.font = [UIFont systemFontOfSize:13];
+        [hdrView addSubview:emojiLbl];
+
+        // Column separator (right edge, skip last)
+        if (c < 5) {
+            UIView *sep = [[UIView alloc] initWithFrame:CGRectMake(colX + colW - 0.5, hdrH, 0.5, colsH)];
+            sep.backgroundColor = [UIColor colorWithWhite:1 alpha:0.18];
+            [panel addSubview:sep];
+        }
+
+        // Scroll view for column entries
+        UIScrollView *sv = [[UIScrollView alloc] initWithFrame:CGRectMake(colX, colsY, colW, colsH)];
+        sv.showsVerticalScrollIndicator = NO;
+        sv.showsHorizontalScrollIndicator = NO;
+        sv.bounces = NO;
+        [panel addSubview:sv];
+        [self.colScrollViews addObject:sv];
+
+        // Vertical stack inside scroll view
+        UIStackView *stack = [[UIStackView alloc] init];
+        stack.axis = UILayoutConstraintAxisVertical;
+        stack.spacing = 0;
+        stack.alignment = UIStackViewAlignmentFill;
+        [sv addSubview:stack];
+        [self.colStacks addObject:stack];
+
+        // Store color tag for entry labels
+        sv.tag = c;
+        stack.tag = (NSInteger)(uintptr_t)((__bridge void *)color); // unused, color via block
+    }
+
+    // Footer buttons
+    UIButton *resetBtn = [UIButton buttonWithType:UIButtonTypeSystem];
+    resetBtn.frame = CGRectMake(8, 1, 50, footH - 2);
+    [resetBtn setTitle:@"RESET" forState:UIControlStateNormal];
+    resetBtn.tintColor = [UIColor colorWithRed:1 green:0.4 blue:0.4 alpha:1];
+    resetBtn.titleLabel.font = [UIFont systemFontOfSize:10 weight:UIFontWeightSemibold];
+    [resetBtn addTarget:self action:@selector(resetTapped) forControlEvents:UIControlEventTouchUpInside];
+    [footView addSubview:resetBtn];
+
+    self.toggleButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    self.toggleButton.frame = CGRectMake(panelW / 2 - 25, 1, 50, footH - 2);
+    self.toggleButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
+    [self.toggleButton setTitle:self.symbolCountMode ? @"[SYM]" : @"[SPIN]" forState:UIControlStateNormal];
+    self.toggleButton.tintColor = [UIColor colorWithWhite:0.7 alpha:1];
+    self.toggleButton.titleLabel.font = [UIFont systemFontOfSize:10 weight:UIFontWeightSemibold];
+    [self.toggleButton addTarget:self action:@selector(toggleModeTapped) forControlEvents:UIControlEventTouchUpInside];
+    [footView addSubview:self.toggleButton];
+
+    self.spinCountLabel = [[UILabel alloc] initWithFrame:CGRectMake(panelW - 70, 1, 65, footH - 2)];
+    self.spinCountLabel.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
+    self.spinCountLabel.text = [NSString stringWithFormat:@"SPIN: %ld", (long)self.totalSpins];
+    self.spinCountLabel.textColor = [UIColor colorWithWhite:0.6 alpha:1];
+    self.spinCountLabel.font = [UIFont systemFontOfSize:10 weight:UIFontWeightSemibold];
+    self.spinCountLabel.textAlignment = NSTextAlignmentRight;
+    [footView addSubview:self.spinCountLabel];
 
     win.hidden = NO;
     self.trisWindow = win;
-    [self refreshTrisHTML];
+
+    // Populate all columns with existing data
+    [self rebuildAllColumns];
 }
 
-- (void)hideTrisMonitor {
+#pragma mark - Column population
+
+// Append a single entry label to a column and scroll to bottom
+- (void)appendEntryValue:(NSInteger)val toColumn:(int)col {
+    if (col < 0 || col >= (int)self.colStacks.count) return;
+    UIStackView *stack = self.colStacks[col];
+    UIScrollView *sv   = self.colScrollViews[col];
+    UIColor *color     = colColor(col);
+
+    UILabel *lbl = [[UILabel alloc] init];
+    lbl.text = [NSString stringWithFormat:@"%ld", (long)val];
+    lbl.textColor = color;
+    lbl.font = [UIFont systemFontOfSize:11 weight:UIFontWeightBold];
+    lbl.textAlignment = NSTextAlignmentCenter;
+    lbl.backgroundColor = UIColor.clearColor;
+
+    // Bottom separator line
+    UIView *row = [[UIView alloc] init];
+    row.backgroundColor = UIColor.clearColor;
+    UIView *line = [[UIView alloc] init];
+    line.backgroundColor = [UIColor colorWithWhite:1 alpha:0.05];
+    [row addSubview:lbl];
+    [row addSubview:line];
+
+    // Layout inside row: label fills, 1pt separator at bottom
+    lbl.translatesAutoresizingMaskIntoConstraints = NO;
+    line.translatesAutoresizingMaskIntoConstraints = NO;
+    row.translatesAutoresizingMaskIntoConstraints = NO;
+    [NSLayoutConstraint activateConstraints:@[
+        [lbl.topAnchor constraintEqualToAnchor:row.topAnchor],
+        [lbl.leadingAnchor constraintEqualToAnchor:row.leadingAnchor],
+        [lbl.trailingAnchor constraintEqualToAnchor:row.trailingAnchor],
+        [lbl.heightAnchor constraintEqualToConstant:22],
+        [line.topAnchor constraintEqualToAnchor:lbl.bottomAnchor],
+        [line.leadingAnchor constraintEqualToAnchor:row.leadingAnchor],
+        [line.trailingAnchor constraintEqualToAnchor:row.trailingAnchor],
+        [line.heightAnchor constraintEqualToConstant:1],
+        [row.bottomAnchor constraintEqualToAnchor:line.bottomAnchor],
+    ]];
+
+    [stack addArrangedSubview:row];
+
+    // Size the stack to fit and scroll to bottom
+    [stack sizeToFit];
+    CGFloat stackW = sv.bounds.size.width;
+    CGFloat stackH = MAX(stack.systemLayoutSizeFittingSize(UILayoutFittingCompressedSize).height, 0);
+    stack.frame = CGRectMake(0, 0, stackW, stackH);
+    sv.contentSize = CGSizeMake(stackW, stackH);
+
+    CGFloat maxY = MAX(0, sv.contentSize.height - sv.bounds.size.height);
+    [sv setContentOffset:CGPointMake(0, maxY) animated:NO];
+}
+
+// Rebuild all 6 columns from scratch (used on first show and mode toggle)
+- (void)rebuildAllColumns {
+    for (int c = 0; c < 6; c++) {
+        UIStackView *stack = self.colStacks[c];
+        // Remove existing entries
+        for (UIView *v in stack.arrangedSubviews) [stack removeArrangedSubview:v];
+        [stack.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
+
+        NSArray *arr = [self activeArrayForColumn:c];
+        for (NSNumber *val in arr) {
+            [self appendEntryValue:val.integerValue toColumn:c];
+        }
+    }
+}
+
+#pragma mark - Actions
+
+- (void)closeTapped {
     self.trisWindow.hidden = YES;
 }
+
+- (void)resetTapped {
+    [self.histAttack removeAllObjects]; [self.histSteal  removeAllObjects];
+    [self.histSpins  removeAllObjects]; [self.histShield removeAllObjects];
+    [self.histAccum  removeAllObjects]; [self.histGold   removeAllObjects];
+    [self.symHistAttack removeAllObjects]; [self.symHistSteal  removeAllObjects];
+    [self.symHistSpins  removeAllObjects]; [self.symHistShield removeAllObjects];
+    [self.symHistAccum  removeAllObjects]; [self.symHistGold   removeAllObjects];
+    self.totalSpins = 0;
+    self.spinCountLabel.text = @"SPIN: 0";
+    [self saveState];
+    [[SLCounterOverlay shared] resetAllCounters];
+    SLSpinStoreRotateCSV();
+    [self rebuildAllColumns];
+}
+
+- (void)toggleModeTapped {
+    self.symbolCountMode = !self.symbolCountMode;
+    [self.toggleButton setTitle:self.symbolCountMode ? @"[SYM]" : @"[SPIN]" forState:UIControlStateNormal];
+    [self rebuildAllColumns];
+}
+
+#pragma mark - Drag
 
 - (void)dragTris:(UIPanGestureRecognizer *)pan {
     if (pan.state == UIGestureRecognizerStateBegan ||
@@ -221,118 +472,6 @@
         self.trisWindow.frame = f;
         [pan setTranslation:CGPointZero inView:pan.view];
     }
-}
-
-- (void)userContentController:(WKUserContentController *)uc didReceiveScriptMessage:(WKScriptMessage *)msg {
-    NSString *body = [msg.body description];
-    if ([body isEqualToString:@"close"]) {
-        self.trisWindow.hidden = YES;
-    } else if ([body isEqualToString:@"toggleMode"]) {
-        self.symbolCountMode = !self.symbolCountMode;
-        [self refreshTrisHTML];
-    } else if ([body isEqualToString:@"reset"]) {
-        [self.histAttack removeAllObjects];
-        [self.histSteal  removeAllObjects];
-        [self.histSpins  removeAllObjects];
-        [self.histShield removeAllObjects];
-        [self.histAccum  removeAllObjects];
-        [self.histGold   removeAllObjects];
-        [self.symHistAttack removeAllObjects];
-        [self.symHistSteal  removeAllObjects];
-        [self.symHistSpins  removeAllObjects];
-        [self.symHistShield removeAllObjects];
-        [self.symHistAccum  removeAllObjects];
-        [self.symHistGold   removeAllObjects];
-        self.totalSpins = 0;
-        [self saveState];
-        // Also reset counter overlay + rotate to new CSV session
-        [[SLCounterOverlay shared] resetAllCounters];
-        SLSpinStoreRotateCSV();
-        [self refreshTrisHTML];
-    }
-}
-
-#pragma mark - Tris HTML — 6 independent scrollable columns
-
-- (void)refreshTrisHTML {
-    NSArray *arrays[6], *symArrays[6];
-    arrays[0] = self.histAttack; arrays[1] = self.histSteal; arrays[2] = self.histSpins;
-    arrays[3] = self.histShield; arrays[4] = self.histAccum; arrays[5] = self.histGold;
-    symArrays[0] = self.symHistAttack; symArrays[1] = self.symHistSteal; symArrays[2] = self.symHistSpins;
-    symArrays[3] = self.symHistShield; symArrays[4] = self.symHistAccum; symArrays[5] = self.symHistGold;
-
-    // Build each column independently — no shared row alignment
-    NSString *emojis[6]  = {@"🔨", @"🐷", @"💊", @"🛡", @"⭐", @"🧪"};
-    NSString *colors[6]  = {@"#00e5ff", @"#ff69b4", @"#00bcd4", @"#ce93d8", @"#ffd700", @"#4caf50"};
-
-    NSMutableString *colHTML = [NSMutableString string];
-    for (int c = 0; c < 6; c++) {
-        NSArray *arr = self.symbolCountMode ? symArrays[c] : arrays[c];
-        NSMutableString *entries = [NSMutableString string];
-        for (NSNumber *val in arr) {
-            [entries appendFormat:@"<div class='e'>%ld</div>", (long)val.integerValue];
-        }
-        [colHTML appendFormat:
-            @"<div class='col'>"
-            "<div class='ch' style='color:%@'>%@<div class='hb' style='background:%@'></div></div>"
-            "<div class='cb' id='b%d'>%@</div>"
-            "</div>",
-            colors[c], emojis[c], colors[c], c, entries];
-    }
-
-    NSString *html = [NSString stringWithFormat:@
-        "<!doctype html><html><head><meta charset='utf-8'>"
-        "<meta name='viewport' content='width=device-width,initial-scale=1,user-scalable=no'>"
-        "<style>"
-        "*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none}"
-        "body,html{height:100%%;background:transparent;font-family:-apple-system,sans-serif}"
-        ".panel{position:relative;background:rgba(15,20,35,0.95);border-radius:14px;overflow:hidden;"
-        "border:1px solid rgba(255,255,255,0.05);height:100%%;display:flex;flex-direction:column}"
-        ".close{position:absolute;right:5px;top:5px;width:22px;height:22px;z-index:10;"
-        "background:rgba(255,255,255,0.10);border-radius:11px;display:flex;"
-        "align-items:center;justify-content:center;font-size:11px;color:#fff;"
-        "cursor:pointer;border:none}"
-        ".cols{display:flex;flex:1;overflow:hidden;min-height:0}"
-        ".col{flex:1;display:flex;flex-direction:column;"
-        "border-right:1px solid rgba(255,255,255,0.18);min-width:0}"
-        ".col:last-child{border-right:none}"
-        ".ch{text-align:center;font-size:12px;padding:3px 0;flex-shrink:0;"
-        "display:flex;flex-direction:column;align-items:center;border-bottom:1px solid rgba(255,255,255,0.18)}"
-        ".hb{height:2px;width:75%%;border-radius:1px;margin-top:1px}"
-        ".cb{flex:1;overflow-y:auto;overflow-x:hidden}"
-        ".cb::-webkit-scrollbar{display:none}"
-        ".e{text-align:center;padding:3px 1px;font-size:11px;font-weight:700;"
-        "border-bottom:1px solid rgba(255,255,255,0.03)}"
-        ".col:nth-child(1) .e{color:#00e5ff}"
-        ".col:nth-child(2) .e{color:#ff69b4}"
-        ".col:nth-child(3) .e{color:#00bcd4}"
-        ".col:nth-child(4) .e{color:#ce93d8}"
-        ".col:nth-child(5) .e{color:#ffd700}"
-        ".col:nth-child(6) .e{color:#4caf50}"
-        ".foot{display:flex;justify-content:space-between;padding:5px 8px;"
-        "color:#aaa;font-size:10px;font-weight:600;flex-shrink:0;"
-        "border-top:1px solid rgba(255,255,255,0.05)}"
-        ".foot span{cursor:pointer}"
-        "</style></head><body>"
-        "<div class='panel'>"
-        "<button class='close' onclick='msg(\"close\")'>X</button>"
-        "<div class='cols'>%@</div>"
-        "<div class='foot'>"
-        "<span onclick='msg(\"reset\")'>RESET</span>"
-        "<span onclick='msg(\"toggleMode\")'>%@</span>"
-        "<span>SPIN: %ld</span>"
-        "</div>"
-        "</div>"
-        "<script>"
-        "function msg(s){window.webkit.messageHandlers.tris.postMessage(s)}"
-        "document.querySelectorAll('.cb').forEach(function(el){el.scrollTop=el.scrollHeight});"
-        "</script>"
-        "</body></html>",
-        colHTML,
-        self.symbolCountMode ? @"[SYM]" : @"[SPIN]",
-        (long)self.totalSpins];
-
-    [self.trisWebView loadHTMLString:html baseURL:nil];
 }
 
 #pragma mark - Setters
