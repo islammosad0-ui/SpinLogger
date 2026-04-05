@@ -410,7 +410,7 @@ static UIColor *colColor(int c) {
     // Size the stack to fit and scroll to bottom
     [stack sizeToFit];
     CGFloat stackW = sv.bounds.size.width;
-    CGFloat stackH = MAX(stack.systemLayoutSizeFittingSize(UILayoutFittingCompressedSize).height, 0);
+    CGFloat stackH = MAX([stack systemLayoutSizeFittingSize:UILayoutFittingCompressedSize].height, 0);
     stack.frame = CGRectMake(0, 0, stackW, stackH);
     sv.contentSize = CGSizeMake(stackW, stackH);
 
