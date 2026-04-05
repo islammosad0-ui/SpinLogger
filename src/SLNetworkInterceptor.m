@@ -77,13 +77,14 @@ static NSURLSessionConfiguration *SLCleanConfig(void) {
     NSMutableURLRequest *tagged = [self.request mutableCopy];
     [NSURLProtocol setProperty:@YES forKey:kSLHandledKey inRequest:tagged];
 
-    // Capture bet value from request body here — HTTPBody may be nil by didCompleteWithError
-    // Unity sometimes sends bodies as HTTPBodyStream (consumed after forwarding)
-    self.capturedBet = 1;
+    // Capture bet value from request body.
+    // HTTPBody is safe to read (it's a copy). If Unity used HTTPBodyStream instead,
+    // we consume the stream, save the bytes, then put a FRESH stream back so the
+    // forwarded request is not corrupted.
+    self.capturedBet = 0;
     if (SLIsSpinAPI(self.request)) {
         NSData *body = self.request.HTTPBody;
         if (!body && self.request.HTTPBodyStream) {
-            // Read stream into data and replace on tagged so forwarding still works
             NSInputStream *stream = self.request.HTTPBodyStream;
             [stream open];
             NSMutableData *streamData = [NSMutableData data];
@@ -94,14 +95,14 @@ static NSURLSessionConfiguration *SLCleanConfig(void) {
             }
             [stream close];
             body = streamData;
-            tagged.HTTPBody = body;
-            tagged.HTTPBodyStream = nil;
+            // Put a FRESH stream back (the original is consumed)
+            tagged.HTTPBodyStream = [[NSInputStream alloc] initWithData:body];
+            // Do NOT set HTTPBody — keep it stream-based as Unity intended
         }
         if (body) {
             NSString *bodyStr = [[NSString alloc] initWithData:body encoding:NSUTF8StringEncoding];
             for (NSString *pair in [bodyStr componentsSeparatedByString:@"&"]) {
                 if ([pair hasPrefix:@"bet="]) {
-                    // bet value IS the actual multiplier (e.g. bet=15 → 15x)
                     self.capturedBet = [[pair substringFromIndex:4] integerValue];
                     break;
                 }
