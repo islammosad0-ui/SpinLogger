@@ -59,7 +59,7 @@
         }
     }
 
-    if (self.targetSpinCount > 0 &&
+    if (self.enabled && self.targetSpinCount > 0 &&
         self.currentSessionSpins >= self.targetSpinCount) {
         [self showTargetReachedAlert];
     }

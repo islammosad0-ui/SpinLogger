@@ -215,7 +215,7 @@ static BOOL sTrisMonitorActive = NO;
     [sTrisContent addSubview:ltLabel];
 
     NSArray *syms = @[@"🔨", @"🐷", @"💊", @"🛡", @"⭐", @"🧪"];
-    NSArray *keys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"goldSack"];
+    NSArray *keys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"potion"];
     CGFloat symSize = 36;
     CGFloat symGap = 4;
     CGFloat symStartX = pad;
@@ -305,7 +305,7 @@ static BOOL sTrisMonitorActive = NO;
 }
 
 + (void)lockTargetTap:(UIButton *)btn {
-    NSArray *keys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"goldSack"];
+    NSArray *keys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"potion"];
     NSUInteger idx = btn.tag - 300;
     if (idx >= keys.count) return;
 
@@ -325,7 +325,7 @@ static BOOL sTrisMonitorActive = NO;
 }
 
 + (void)counterVisibilityTap:(UIButton *)btn {
-    NSArray *keys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"goldSack"];
+    NSArray *keys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"potion"];
     NSUInteger idx = btn.tag - 400;
     if (idx >= keys.count) return;
 
@@ -416,7 +416,7 @@ static BOOL sTargetActive = NO;
     CGFloat symSize = 40;
     CGFloat symGap = 6;
     NSArray *syms = @[@"🔨", @"🐷", @"💊", @"🛡", @"⭐", @"🧪"];
-    NSArray *keys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"goldSack"];
+    NSArray *keys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"potion"];
     CGFloat totalSymW = syms.count * symSize + (syms.count - 1) * symGap;
     CGFloat symStartX = (pw - totalSymW) / 2;
 
@@ -494,7 +494,7 @@ static BOOL sTargetActive = NO;
 }
 
 + (void)targetSymbolTap:(UIButton *)btn {
-    NSArray *keys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"goldSack"];
+    NSArray *keys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"potion"];
     NSUInteger idx = btn.tag - 100;
     if (idx >= keys.count) return;
 
@@ -515,8 +515,11 @@ static BOOL sTargetActive = NO;
 
 + (void)targetPowerTap:(UIButton *)btn {
     sTargetActive = !sTargetActive;
-    [btn setTitleColor:(sTargetActive ? [UIColor greenColor] : [UIColor redColor]) forState:UIControlStateNormal];
-    btn.layer.borderColor = (sTargetActive ? [UIColor greenColor] : [UIColor redColor]).CGColor;
+    [SLSpinTarget shared].enabled = sTargetActive;
+    [SLSpinTarget shared].currentSessionSpins = 0;  // reset counter on toggle
+    UIColor *c = sTargetActive ? [UIColor greenColor] : [UIColor redColor];
+    [btn setTitleColor:c forState:UIControlStateNormal];
+    btn.layer.borderColor = c.CGColor;
 }
 
 + (void)targetBack {
@@ -536,8 +539,10 @@ static BOOL sTargetActive = NO;
 + (void)targetSave {
     if (sTargetSymbol && sTargetMaxSpins > 0) {
         [SLSpinTarget shared].targetSpinCount = sTargetMaxSpins;
+        [SLSpinTarget shared].enabled = sTargetActive;
+        [SLSpinTarget shared].currentSessionSpins = 0;
         [SLTrisController shared].lockTarget = sTargetSymbol;
-        NSLog(@"[SpinLogger] Target: %@ within %ld spins (active=%d)", sTargetSymbol, (long)sTargetMaxSpins, sTargetActive);
+        NSLog(@"[SpinLogger] Target saved: %@ within %ld spins (active=%d)", sTargetSymbol, (long)sTargetMaxSpins, sTargetActive);
         sTargetWindow.hidden = YES;
     }
 }

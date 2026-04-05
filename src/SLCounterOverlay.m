@@ -69,6 +69,9 @@ static const int kSymbolCount = 6;
     for (SLCounterTile *t in self.tiles) {
         state[[t.symbolKey stringByAppendingString:@"_d"]] = @(t.distance);
         state[[t.symbolKey stringByAppendingString:@"_s"]] = @(t.singleCount);
+        // Save position
+        state[[t.symbolKey stringByAppendingString:@"_x"]] = @(t.window.frame.origin.x);
+        state[[t.symbolKey stringByAppendingString:@"_y"]] = @(t.window.frame.origin.y);
     }
     [[NSUserDefaults standardUserDefaults] setObject:state forKey:@"Speeder_CounterState"];
 }
@@ -82,6 +85,15 @@ static const int kSymbolCount = 6;
         t.singleCount = [state[[t.symbolKey stringByAppendingString:@"_s"]] integerValue];
         t.tripleLabel.text = [NSString stringWithFormat:@"%ld", (long)t.distance];
         t.singleLabel.text = [NSString stringWithFormat:@"1X:%ld", (long)t.singleCount];
+        // Restore saved position
+        NSNumber *sx = state[[t.symbolKey stringByAppendingString:@"_x"]];
+        NSNumber *sy = state[[t.symbolKey stringByAppendingString:@"_y"]];
+        if (sx && sy) {
+            CGRect f = t.window.frame;
+            f.origin.x = sx.doubleValue;
+            f.origin.y = sy.doubleValue;
+            t.window.frame = f;
+        }
     }
 }
 
@@ -192,9 +204,9 @@ static const int kSymbolCount = 6;
 }
 
 - (void)handleTilePan:(UIPanGestureRecognizer *)pan {
+    NSInteger idx = pan.view.tag;
     if (pan.state == UIGestureRecognizerStateBegan ||
         pan.state == UIGestureRecognizerStateChanged) {
-        NSInteger idx = pan.view.tag;
         if (idx < (NSInteger)self.tiles.count) {
             CGPoint t = [pan translationInView:pan.view];
             CGRect f = self.tiles[idx].window.frame;
@@ -203,6 +215,9 @@ static const int kSymbolCount = 6;
             self.tiles[idx].window.frame = f;
             [pan setTranslation:CGPointZero inView:pan.view];
         }
+    }
+    if (pan.state == UIGestureRecognizerStateEnded) {
+        [self saveState];
     }
 }
 
