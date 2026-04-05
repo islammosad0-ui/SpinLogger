@@ -124,15 +124,9 @@
 
 - (void)recordTriple:(NSString *)symbol distance:(NSInteger)distance symbolCount:(NSInteger)symCount {
     NSMutableArray *hist = [self historyForSymbol:symbol];
-    if (hist) {
-        [hist addObject:@(distance)];
-        if (hist.count > 50) [hist removeObjectAtIndex:0];
-    }
+    if (hist) [hist addObject:@(distance)];
     NSMutableArray *symHist = [self symbolHistoryForSymbol:symbol];
-    if (symHist) {
-        [symHist addObject:@(symCount)];
-        if (symHist.count > 50) [symHist removeObjectAtIndex:0];
-    }
+    if (symHist) [symHist addObject:@(symCount)];
 
     [self saveState];
 
