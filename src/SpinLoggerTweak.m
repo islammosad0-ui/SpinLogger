@@ -4,6 +4,7 @@
 #import "SLSpinTarget.h"
 #import "SLTrisController.h"
 #import "SLNetworkMonitor.h"
+#import "SLDebtMonitor.h"
 
 extern void SLJailbreakBypassInstall(void);
 extern void SLNetworkInterceptorInstall(void);
@@ -28,6 +29,7 @@ static void SpinLoggerInit(void) {
             [[SLSpinTarget shared] install];
             [[SLTrisController shared] install];
             [[SLNetworkMonitor shared] install];
+            [[SLDebtMonitor shared] install];
             SLMenuOverlayInstall();
 
             NSLog(@"[SpinLogger] UI components initialized");
