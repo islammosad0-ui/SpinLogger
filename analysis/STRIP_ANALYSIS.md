@@ -578,3 +578,35 @@ From 11 downloaded Facebook videos of the player's gameplay:
 | GAE bar resets regenerate the strip | **LIKELY** (based on mid-session reset) |
 | No statistically significant tell exists in current CSV data | **CONFIRMED** (runs test, autocorrelation, all features tested) |
 | The strip may be mappable at low GAE levels with enough data | **HYPOTHESIS** (needs testing) |
+
+---
+
+## 15. Next Session Instructions
+
+**For the AI reading this in a new instance:**
+
+The user has collected a new CSV file with ~5,000 spins at constant 1x bet, single account, single GAE mission (no resets). This is clean data for strip mapping.
+
+### What to do:
+
+1. **Read this entire document first** — it contains all prior findings, the 32 outcome table, gap patterns, strategies, and video analysis
+2. **Read the memory files** at `C:\Users\Islam\.claude\projects\c--Users-Islam-Desktop-Coin-Master-SpinLogger\memory/` for user preferences and project state
+3. **Load the new CSV** (user will provide path, likely `C:\Users\Islam\Desktop\spin_history_YYYY-MM-DD.csv`)
+4. **Run these analyses on the new data:**
+   - Confirm the 32 outcome tuples still hold (or if new ones appeared)
+   - Extract all triple accum gaps and categorize as S/M/L
+   - Test the S/M/L cycle pattern with 50+ gaps (was 15 gaps before, need statistical confirmation)
+   - Run autocorrelation on the full outcome-ID sequence to find the **exact strip cycle length**
+   - If cycle found: map every position on the strip and identify all triple accum/spins positions
+   - Test Strategy A (2+ shorts + double accum confirmation after spin 100) on the new data
+   - Determine: does the strip length match the GAE mission target or some other game parameter?
+5. **Update this document** with the new findings — add sections, update the summary table, revise strategies
+6. **If strip is mapped:** design an overlay counter that tracks current strip position and predicts next triple
+7. **Key open question:** does the strip change per mission, per event, or per account? If the user completed a mission during collection, compare pre/post mission data
+
+### User preferences:
+- Wants **high-confidence, low-frequency** strategy — OK skipping 3-4 runs, but when betting wants near-certainty
+- Prefers deep creative analysis over surface-level stats
+- Push hard on unconventional approaches before concluding "no pattern"
+- Keep the analysis document updated as the single source of truth
+- Commit and push changes to git when done
