@@ -258,78 +258,85 @@
     }
 }
 
-#pragma mark - Tris HTML — 5 columns showing distance history
+#pragma mark - Tris HTML — 6 independent scrollable columns
 
 - (void)refreshTrisHTML {
-    // 6 history arrays: attack, steal, spins, shield, accumulation, goldSack
     NSArray *arrays[6], *symArrays[6];
     arrays[0] = self.histAttack; arrays[1] = self.histSteal; arrays[2] = self.histSpins;
     arrays[3] = self.histShield; arrays[4] = self.histAccum; arrays[5] = self.histGold;
     symArrays[0] = self.symHistAttack; symArrays[1] = self.symHistSteal; symArrays[2] = self.symHistSpins;
     symArrays[3] = self.symHistShield; symArrays[4] = self.symHistAccum; symArrays[5] = self.symHistGold;
 
-    NSInteger maxRows = 0;
+    // Build each column independently — no shared row alignment
+    NSString *emojis[6]  = {@"🔨", @"🐷", @"💊", @"🛡", @"⭐", @"🧪"};
+    NSString *colors[6]  = {@"#00e5ff", @"#ff69b4", @"#00bcd4", @"#ce93d8", @"#ffd700", @"#4caf50"};
+
+    NSMutableString *colHTML = [NSMutableString string];
     for (int c = 0; c < 6; c++) {
         NSArray *arr = self.symbolCountMode ? symArrays[c] : arrays[c];
-        if ((NSInteger)arr.count > maxRows) maxRows = (NSInteger)arr.count;
-    }
-
-    NSMutableString *rows = [NSMutableString string];
-    NSInteger startIdx = (maxRows > 25) ? maxRows - 25 : 0;
-    for (NSInteger i = startIdx; i < maxRows; i++) {
-        for (int c = 0; c < 6; c++) {
-            NSArray *arr = self.symbolCountMode ? symArrays[c] : arrays[c];
-            NSString *val = (i < (NSInteger)arr.count) ? [NSString stringWithFormat:@"%ld", (long)[arr[i] integerValue]] : @"";
-            [rows appendFormat:@"<div class='c c%d'>%@</div>", c, val];
+        NSMutableString *entries = [NSMutableString string];
+        for (NSNumber *val in arr) {
+            [entries appendFormat:@"<div class='e'>%ld</div>", (long)val.integerValue];
         }
+        [colHTML appendFormat:
+            @"<div class='col'>"
+            "<div class='ch' style='color:%@'>%@<div class='hb' style='background:%@'></div></div>"
+            "<div class='cb' id='b%d'>%@</div>"
+            "</div>",
+            colors[c], emojis[c], colors[c], c, entries];
     }
 
     NSString *html = [NSString stringWithFormat:@
-    "<!doctype html><html><head><meta charset='utf-8'>"
-    "<meta name='viewport' content='width=device-width,initial-scale=1,user-scalable=no'>"
-    "<style>"
-    "*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none}"
-    "body{background:transparent;font-family:-apple-system,sans-serif}"
-    ".panel{background:rgba(15,20,35,0.95);border-radius:14px;overflow:hidden;"
-    "border:1px solid rgba(255,255,255,0.05);height:100vh;display:flex;flex-direction:column}"
-    ".hdr{display:flex;height:30px;align-items:center;padding:0 4px;flex-shrink:0}"
-    ".hdr-icon{flex:1;display:flex;flex-direction:column;align-items:center;font-size:12px}"
-    ".hdr-bar{height:2px;width:75%%;border-radius:1px;margin-top:1px}"
-    ".close{width:22px;height:22px;background:rgba(255,255,255,0.10);border-radius:11px;"
-    "display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;"
-    "cursor:pointer;border:none;position:absolute;right:5px;top:5px}"
-    ".grid{display:grid;grid-template-columns:repeat(6,1fr);flex:1;overflow-y:auto;"
-    "align-content:start}"
-    ".c{text-align:center;padding:3px 1px;font-size:11px;font-weight:700;"
-    "border-bottom:1px solid rgba(255,255,255,0.03)}"
-    ".c0{color:#00e5ff}.c1{color:#ff69b4}.c2{color:#00bcd4}.c3{color:#ce93d8}.c4{color:#ffd700}.c5{color:#4caf50}"
-    ".foot{display:flex;justify-content:space-between;padding:5px 8px;"
-    "color:#aaa;font-size:10px;font-weight:600;flex-shrink:0;"
-    "border-top:1px solid rgba(255,255,255,0.05)}"
-    ".foot span{cursor:pointer}"
-    "</style></head><body>"
-    "<div class='panel'>"
-    "<button class='close' onclick='msg(\"close\")'>X</button>"
-    "<div class='hdr'>"
-    "<div class='hdr-icon'>🔨<div class='hdr-bar' style='background:#00e5ff'></div></div>"
-    "<div class='hdr-icon'>🐷<div class='hdr-bar' style='background:#ff69b4'></div></div>"
-    "<div class='hdr-icon'>💊<div class='hdr-bar' style='background:#00bcd4'></div></div>"
-    "<div class='hdr-icon'>🛡<div class='hdr-bar' style='background:#ce93d8'></div></div>"
-    "<div class='hdr-icon'>⭐<div class='hdr-bar' style='background:#ffd700'></div></div>"
-    "<div class='hdr-icon'>🧪<div class='hdr-bar' style='background:#4caf50'></div></div>"
-    "</div>"
-    "<div class='grid'>%@</div>"
-    "<div class='foot'>"
-    "<span onclick='msg(\"reset\")'>RESET</span>"
-    "<span onclick='msg(\"toggleMode\")'>%@</span>"
-    "<span>SPIN: %ld</span>"
-    "</div>"
-    "</div>"
-    "<script>function msg(s){window.webkit.messageHandlers.tris.postMessage(s)}</script>"
-    "</body></html>",
-    rows,
-    self.symbolCountMode ? @"[SYM]" : @"[SPIN]",
-    (long)self.totalSpins];
+        "<!doctype html><html><head><meta charset='utf-8'>"
+        "<meta name='viewport' content='width=device-width,initial-scale=1,user-scalable=no'>"
+        "<style>"
+        "*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none}"
+        "body,html{height:100%%;background:transparent;font-family:-apple-system,sans-serif}"
+        ".panel{position:relative;background:rgba(15,20,35,0.95);border-radius:14px;overflow:hidden;"
+        "border:1px solid rgba(255,255,255,0.05);height:100%%;display:flex;flex-direction:column}"
+        ".close{position:absolute;right:5px;top:5px;width:22px;height:22px;z-index:10;"
+        "background:rgba(255,255,255,0.10);border-radius:11px;display:flex;"
+        "align-items:center;justify-content:center;font-size:11px;color:#fff;"
+        "cursor:pointer;border:none}"
+        ".cols{display:flex;flex:1;overflow:hidden;min-height:0}"
+        ".col{flex:1;display:flex;flex-direction:column;"
+        "border-right:1px solid rgba(255,255,255,0.06);min-width:0}"
+        ".col:last-child{border-right:none}"
+        ".ch{text-align:center;font-size:12px;padding:3px 0;flex-shrink:0;"
+        "display:flex;flex-direction:column;align-items:center;border-bottom:1px solid rgba(255,255,255,0.06)}"
+        ".hb{height:2px;width:75%%;border-radius:1px;margin-top:1px}"
+        ".cb{flex:1;overflow-y:auto;overflow-x:hidden}"
+        ".cb::-webkit-scrollbar{display:none}"
+        ".e{text-align:center;padding:3px 1px;font-size:11px;font-weight:700;"
+        "border-bottom:1px solid rgba(255,255,255,0.03)}"
+        ".col:nth-child(1) .e{color:#00e5ff}"
+        ".col:nth-child(2) .e{color:#ff69b4}"
+        ".col:nth-child(3) .e{color:#00bcd4}"
+        ".col:nth-child(4) .e{color:#ce93d8}"
+        ".col:nth-child(5) .e{color:#ffd700}"
+        ".col:nth-child(6) .e{color:#4caf50}"
+        ".foot{display:flex;justify-content:space-between;padding:5px 8px;"
+        "color:#aaa;font-size:10px;font-weight:600;flex-shrink:0;"
+        "border-top:1px solid rgba(255,255,255,0.05)}"
+        ".foot span{cursor:pointer}"
+        "</style></head><body>"
+        "<div class='panel'>"
+        "<button class='close' onclick='msg(\"close\")'>X</button>"
+        "<div class='cols'>%@</div>"
+        "<div class='foot'>"
+        "<span onclick='msg(\"reset\")'>RESET</span>"
+        "<span onclick='msg(\"toggleMode\")'>%@</span>"
+        "<span>SPIN: %ld</span>"
+        "</div>"
+        "</div>"
+        "<script>"
+        "function msg(s){window.webkit.messageHandlers.tris.postMessage(s)}"
+        "document.querySelectorAll('.cb').forEach(function(el){el.scrollTop=el.scrollHeight});"
+        "</script>"
+        "</body></html>",
+        colHTML,
+        self.symbolCountMode ? @"[SYM]" : @"[SPIN]",
+        (long)self.totalSpins];
 
     [self.trisWebView loadHTMLString:html baseURL:nil];
 }
