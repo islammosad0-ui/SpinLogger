@@ -296,24 +296,7 @@ static UIWindow *sDebtTableWindow = nil;
     [sDebtContent addSubview:showSwitch];
     rowY += rowH + 4;
 
-    // Row 2: LOCK TARGET (keep calibrated values on reset)
-    UILabel *lockLabel = [[UILabel alloc] initWithFrame:CGRectMake(pad, rowY + 4, 180, 20)];
-    lockLabel.text = @"LOCK TARGET";
-    lockLabel.font = [UIFont boldSystemFontOfSize:12];
-    lockLabel.textColor = SLAccent();
-    [sDebtContent addSubview:lockLabel];
-
-    UISwitch *lockSwitch = [[UISwitch alloc] init];
-    lockSwitch.onTintColor = SLAccent();
-    lockSwitch.transform = CGAffineTransformMakeScale(0.78, 0.78);
-    lockSwitch.on = NO;
-    lockSwitch.frame = CGRectMake(pw - pad - 51, rowY, 51, 28);
-    lockSwitch.tag = 501;
-    [lockSwitch addTarget:self action:@selector(debtLockTargetToggle:) forControlEvents:UIControlEventValueChanged];
-    [sDebtContent addSubview:lockSwitch];
-    rowY += rowH + 4;
-
-    // Row 3: ACTIVE MONITOR (gap history table)
+    // Row 2: ACTIVE MONITOR (live stats table)
     UILabel *monLabel = [[UILabel alloc] initWithFrame:CGRectMake(pad, rowY + 4, 180, 20)];
     monLabel.text = @"ACTIVE MONITOR";
     monLabel.font = [UIFont boldSystemFontOfSize:12];
@@ -380,11 +363,7 @@ static UIWindow *sDebtTableWindow = nil;
     else       [[SLDebtMonitor shared] hide];
 }
 
-+ (void)debtLockTargetToggle:(UISwitch *)sw {
-    SLDebtMonitor *dm = [SLDebtMonitor shared];
-    dm.accTracker.config.targetLocked = sw.on;
-    dm.spnTracker.config.targetLocked = sw.on;
-}
+// Lock target removed — formula uses fixed spinThreshold + rateGate
 
 + (void)debtMonitorToggle:(UISwitch *)sw {
     sDebtMonitorActive = sw.on;
@@ -437,7 +416,7 @@ static UIWindow *sDebtTableWindow = nil;
 
         // Title bar
         UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(12, 8, pw - 56, 22)];
-        title.text = @"DEBT HISTORY";
+        title.text = @"LIVE TRACKER";
         title.font = [UIFont boldSystemFontOfSize:13];
         title.textColor = SLAccent();
         [blur.contentView addSubview:title];
@@ -498,75 +477,52 @@ static UIWindow *sDebtTableWindow = nil;
         UILabel *sh = [[UILabel alloc] initWithFrame:CGRectMake(pad, y, pw - pad * 2, 18)];
         sh.font = [UIFont boldSystemFontOfSize:11];
         sh.textColor = SLAccent();
-        if (tr.calibrated) {
-            NSInteger pct = (tr.config.target > 0) ? (tr.saSpins * 100 / tr.config.target) : 0;
-            sh.text = [NSString stringWithFormat:@"%@  target=%ld  %ld%%  debt=%@%ld",
-                headers[t], (long)tr.config.target, (long)pct,
-                (tr.debt >= 0 ? @"+" : @""), (long)tr.debt];
-        } else {
-            sh.text = [NSString stringWithFormat:@"%@  CAL %ld/%ld  (not calibrated)",
-                headers[t], (long)tr.gapHistory.count, (long)tr.calibrationThreshold];
-        }
+        NSString *phaseStr = (tr.phase == SLDebtPhaseBetNow) ? @"BET NOW" :
+                             (tr.phase == SLDebtPhaseWatch)  ? @"WATCH"   : @"WAIT";
+        sh.text = [NSString stringWithFormat:@"%@  %@", headers[t], phaseStr];
         [sv addSubview:sh];
         y += 20;
 
-        // Column headers
-        UILabel *ch = [[UILabel alloc] initWithFrame:CGRectMake(pad, y, pw - pad * 2, 14)];
-        ch.font = [UIFont monospacedSystemFontOfSize:9 weight:UIFontWeightMedium];
-        ch.textColor = [UIColor colorWithWhite:0.5 alpha:1.0];
-        ch.text = @"  #    Gap   Diff   Debt";
-        [sv addSubview:ch];
-        y += 15;
+        // Spin progress
+        NSInteger pct = (tr.config.spinThreshold > 0)
+            ? (tr.saSpins * 100 / tr.config.spinThreshold) : 0;
+        UILabel *spinRow = [[UILabel alloc] initWithFrame:CGRectMake(pad, y, pw - pad * 2, 14)];
+        spinRow.font = [UIFont monospacedSystemFontOfSize:10 weight:UIFontWeightMedium];
+        spinRow.text = [NSString stringWithFormat:@"Spins: %ld / %ld  (%ld%%)",
+                        (long)tr.saSpins, (long)tr.config.spinThreshold, (long)pct];
+        spinRow.textColor = (tr.saSpins >= tr.config.spinThreshold)
+            ? [UIColor colorWithRed:0.3 green:0.9 blue:0.4 alpha:1.0]
+            : [UIColor colorWithWhite:0.6 alpha:1.0];
+        [sv addSubview:spinRow];
+        y += 16;
 
-        // Gap rows
-        NSInteger runDebt = 0;
-        for (NSUInteger i = 0; i < tr.gapHistory.count; i++) {
-            NSInteger gap  = [tr.gapHistory[i] integerValue];
-            NSInteger diff = gap - tr.config.target;
-            runDebt += diff;
-
-            UILabel *row = [[UILabel alloc] initWithFrame:CGRectMake(pad, y, pw - pad * 2, 14)];
-            row.font = [UIFont monospacedSystemFontOfSize:9 weight:UIFontWeightRegular];
-
-            NSString *diffStr = (diff >= 0) ? [NSString stringWithFormat:@"+%ld", (long)diff]
-                                            : [NSString stringWithFormat:@"%ld",  (long)diff];
-            NSString *debtStr = (runDebt >= 0) ? [NSString stringWithFormat:@"+%ld", (long)runDebt]
-                                               : [NSString stringWithFormat:@"%ld",  (long)runDebt];
-            row.text = [NSString stringWithFormat:@"%3lu   %4ld  %5@  %5@",
-                        (unsigned long)(i + 1), (long)gap, diffStr, debtStr];
-
-            // Color code: green = on target, orange = ±30, red = far off
-            NSInteger absDiff = ABS(diff);
-            if (absDiff <= 15)     row.textColor = [UIColor colorWithRed:0.3 green:0.9 blue:0.4 alpha:1.0];
-            else if (absDiff <= 40) row.textColor = [UIColor colorWithRed:1.0 green:0.75 blue:0.2 alpha:1.0];
-            else                   row.textColor = [UIColor colorWithRed:1.0 green:0.35 blue:0.35 alpha:1.0];
-
-            [sv addSubview:row];
-            y += 15;
+        // Accum rate
+        double rate = [tr accumRate];
+        UILabel *rateRow = [[UILabel alloc] initWithFrame:CGRectMake(pad, y, pw - pad * 2, 14)];
+        rateRow.font = [UIFont monospacedSystemFontOfSize:10 weight:UIFontWeightMedium];
+        if (tr.config.rateGate > 0.0) {
+            rateRow.text = [NSString stringWithFormat:@"Rate:  %.3f / %.2f",
+                            rate, tr.config.rateGate];
+            rateRow.textColor = (rate >= tr.config.rateGate)
+                ? [UIColor colorWithRed:0.3 green:0.9 blue:0.4 alpha:1.0]
+                : [UIColor colorWithWhite:0.6 alpha:1.0];
+        } else {
+            rateRow.text = [NSString stringWithFormat:@"Rate:  %.3f  (no gate)", rate];
+            rateRow.textColor = [UIColor colorWithWhite:0.5 alpha:1.0];
         }
+        [sv addSubview:rateRow];
+        y += 16;
 
-        if (tr.gapHistory.count == 0) {
-            UILabel *empty = [[UILabel alloc] initWithFrame:CGRectMake(pad, y, pw - pad * 2, 14)];
-            empty.font = [UIFont italicSystemFontOfSize:10];
-            empty.textColor = [UIColor colorWithWhite:0.35 alpha:1.0];
-            empty.text = @"  no gaps yet";
-            [sv addSubview:empty];
-            y += 15;
-        }
+        // Symbols counted
+        UILabel *symRow = [[UILabel alloc] initWithFrame:CGRectMake(pad, y, pw - pad * 2, 14)];
+        symRow.font = [UIFont monospacedSystemFontOfSize:9 weight:UIFontWeightRegular];
+        symRow.textColor = [UIColor colorWithWhite:0.4 alpha:1.0];
+        symRow.text = [NSString stringWithFormat:@"Symbols: %ld in %ld spins",
+                       (long)tr.saSymbols, (long)tr.saSpins];
+        [sv addSubview:symRow];
+        y += 18;
 
-        // Current in-progress spin count
-        if (tr.calibrated) {
-            UILabel *cur = [[UILabel alloc] initWithFrame:CGRectMake(pad, y, pw - pad * 2, 14)];
-            cur.font = [UIFont monospacedSystemFontOfSize:9 weight:UIFontWeightMedium];
-            cur.textColor = [UIColor colorWithWhite:0.45 alpha:1.0];
-            NSInteger curPct = (tr.config.target > 0) ? (tr.saSpins * 100 / tr.config.target) : 0;
-            cur.text = [NSString stringWithFormat:@"  \u2192 current: %ld/%ld spins (%ld%%)",
-                        (long)tr.saSpins, (long)tr.config.target, (long)curPct];
-            [sv addSubview:cur];
-            y += 15;
-        }
-
-        y += 10; // spacing between sections
+        y += 8; // spacing between sections
     }
 
     sv.contentSize = CGSizeMake(pw, y + 8);
