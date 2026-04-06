@@ -85,13 +85,20 @@ static const int kSymbolCount = 6;
         t.singleCount = [state[[t.symbolKey stringByAppendingString:@"_s"]] integerValue];
         t.tripleLabel.text = [NSString stringWithFormat:@"%ld", (long)t.distance];
         t.singleLabel.text = [NSString stringWithFormat:@"1X:%ld", (long)t.singleCount];
-        // Restore saved position
+        // Restore saved position (clamp to screen bounds)
         NSNumber *sx = state[[t.symbolKey stringByAppendingString:@"_x"]];
         NSNumber *sy = state[[t.symbolKey stringByAppendingString:@"_y"]];
         if (sx && sy) {
             CGRect f = t.window.frame;
             f.origin.x = sx.doubleValue;
             f.origin.y = sy.doubleValue;
+            CGRect screen = t.window.windowScene.coordinateSpace.bounds;
+            if (screen.size.width > 0) {
+                if (f.origin.x < -10) f.origin.x = 0;
+                if (f.origin.y < -10) f.origin.y = 0;
+                if (f.origin.x > screen.size.width - 10)  f.origin.x = screen.size.width - f.size.width;
+                if (f.origin.y > screen.size.height - 10)  f.origin.y = screen.size.height - f.size.height;
+            }
             t.window.frame = f;
         }
     }
@@ -355,6 +362,22 @@ static const int kSymbolCount = 6;
 
 - (void)show {
     for (SLCounterTile *t in self.tiles) { t.window.hidden = NO; t.visible = YES; }
+}
+
+- (void)resetPositions {
+    UIWindowScene *scene = self.tiles.firstObject.window.windowScene;
+    if (!scene) return;
+    CGRect screen = scene.coordinateSpace.bounds;
+    CGFloat tileW = 50, tileH = 56, tileGap = 4;
+    CGFloat startX = (screen.size.width - (self.tiles.count * (tileW + tileGap))) / 2;
+    CGFloat startY = screen.size.height - tileH - 80;
+    for (NSUInteger i = 0; i < self.tiles.count; i++) {
+        SLCounterTile *t = self.tiles[i];
+        t.window.frame = CGRectMake(startX + i * (tileW + tileGap), startY, tileW, tileH);
+        t.window.hidden = NO;
+        t.visible = YES;
+    }
+    [self saveState];
 }
 
 - (void)hide {

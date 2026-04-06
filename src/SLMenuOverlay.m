@@ -272,6 +272,13 @@ static UIWindow *sDebtTableWindow = nil;
         [sCounterContent addSubview:sb];
     }
 
+    // Reset positions button
+    UIButton *resetPosBtn = SLMakeBtn(@"RESET POSITIONS", pw - pad * 2, 30,
+        [UIColor colorWithWhite:0.15 alpha:1], SLAccent(), 11);
+    resetPosBtn.frame = CGRectMake(pad, 82, pw - pad * 2, 30);
+    [resetPosBtn addTarget:self action:@selector(counterResetPositions) forControlEvents:UIControlEventTouchUpInside];
+    [sCounterContent addSubview:resetPosBtn];
+
     // === DEBT TRACKER content (hidden by default) ===
     sDebtContent = [[UIView alloc] initWithFrame:CGRectMake(0, 42, pw, ph - 42)];
     sDebtContent.hidden = YES;
@@ -607,6 +614,10 @@ static UIWindow *sDebtTableWindow = nil;
     [[NSNotificationCenter defaultCenter] postNotificationName:@"SLToggleCounters" object:nil];
     sRefreshBtn.backgroundColor = sCountersVisible ? SLBtnActive() : SLBtnBg();
     [sRefreshBtn setTitleColor:sCountersVisible ? [UIColor whiteColor] : SLMuted() forState:UIControlStateNormal];
+}
+
++ (void)counterResetPositions {
+    [[SLCounterOverlay shared] resetPositions];
 }
 
 + (void)targetSpin {
