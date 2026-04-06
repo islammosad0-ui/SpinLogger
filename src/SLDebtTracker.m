@@ -74,22 +74,25 @@ static const CGFloat kFloorRatio = 1.33;
             self.debt += (gap - self.config.target);
         }
 
-        // Auto-calibrate: use MEDIAN (immune to startup outliers)
-        if (!self.calibrated && !self.config.targetLocked &&
+        // Running median calibration: recalculate target on every gap
+        if (!self.config.targetLocked &&
             (NSInteger)self.gapHistory.count >= self.calibrationThreshold) {
             NSArray *sorted = [self.gapHistory sortedArrayUsingSelector:@selector(compare:)];
             NSUInteger mid = sorted.count / 2;
+            NSInteger newTarget;
             if (sorted.count % 2 == 0) {
-                self.config.target = ([sorted[mid - 1] integerValue] + [sorted[mid] integerValue]) / 2;
+                newTarget = ([sorted[mid - 1] integerValue] + [sorted[mid] integerValue]) / 2;
             } else {
-                self.config.target = [sorted[mid] integerValue];
+                newTarget = [sorted[mid] integerValue];
             }
-            self.config.floorBase = (NSInteger)(self.config.target * kFloorRatio);
-            self.calibrated = YES;
-            self.debt = 0;
-            NSLog(@"[DebtTracker] Calibrated (median): target=%ld floorBase=%ld from %ld gaps",
-                  (long)self.config.target, (long)self.config.floorBase,
-                  (long)self.gapHistory.count);
+            self.config.target = newTarget;
+            self.config.floorBase = (NSInteger)(newTarget * kFloorRatio);
+            if (!self.calibrated) {
+                self.calibrated = YES;
+                self.debt = 0;
+                NSLog(@"[DebtTracker] Initial calibration (median): target=%ld from %ld gaps",
+                      (long)newTarget, (long)self.gapHistory.count);
+            }
         }
 
         // Reset per-gap state
