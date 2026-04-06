@@ -171,13 +171,64 @@ All in `analysis/`:
 | `refine_formula.py` | Non-linear shifts, multi-gap memory, EWMA |
 | `fit_hazard.py` / `fit_hazard_fast.py` | MLE hazard model fitting |
 | `simulate_debt.py` / `simulate_debt_v2.py` | Debt strategy simulation |
+| `symbol_combo_sweep.py` | All 31 symbol combos for rate gate — acc alone is best |
+| `why_38_8.py` | Why 27/31 combos give identical results (rate gate is useless for non-acc) |
+| `pure_count_sweep.py` | Pure symbol count (no rate) — max 2.5x, far below 6.0x |
+| `triple_count_sweep.py` | Counting triples between targets — dead end, too rare |
+| `dynamic_threshold.py` | 8 dynamic threshold strategies (shift, S/M/L, EWMA, debt, streak, rate slope) |
+| `dynamic_plus_pulse.py` | Top dynamic strategies combined with pulse skip 5 |
+| `sml_boundary_sweep.py` | Sweep S/M/L boundary definitions (S<X, L>=Y) and thresholds |
+| `sml_catch_short.py` | Can we predict and catch short gaps? Cost analysis |
+| `sml_full_sweep.py` | Full S/M/L with SKIP option, 2-gap lookback |
+| `sml_window.py` | Betting windows (start AND stop), predicted per gap size |
+| `sml_mega_sweep.py` | 204K config mega sweep: windows, boundaries, rate gates, Pareto frontier |
 
 ---
 
-## 7. Next Steps
+## 7. Dynamic Threshold Analysis
+
+### Can we make the 130 threshold dynamic?
+
+Tested 8 strategies + S/M/L + windows + mega sweep (204K configs):
+
+**Gap transition matrix confirms mean reversion:**
+- After L(>130) → S(<80): 55% of the time
+- After S(<80) → L(>130): 39% of the time
+
+**Results:**
+1. **Shift base=140 shift=0.2**: 7.0x lift (25/178), threshold = 140 - 0.2*(prev_gap-100)
+2. **S/M/L 150/140/100**: 6.5x lift (29/178)
+3. **All dynamic strategies** trade caught for efficiency — none catch MORE at equal or better lift
+4. **Catching short gaps is not viable**: prediction is only 55% accurate, wrong predictions burn 100+ spins
+5. **Betting windows** (start+stop): just adding stop=170 to current formula → 7.0x (from 6.0x)
+
+### Rate gate 0.32 discovery (mega sweep)
+
+The Pareto frontier revealed that **gate=0.32** (instead of 0.30) is a massive efficiency lever:
+
+| Config | Caught | Bet% | MB/Hit | Lift |
+|--------|--------|------|--------|------|
+| 130+/0.30 (current) | 31/178 | 2.9% | 17.1 | 6.0x |
+| 40+/0.32 | 132/178 | 11.4% | 15.8 | 6.5x |
+| 80+/0.32 | 96/178 | 4.5% | 8.6 | 11.9x |
+| 130+/0.32 | 52/178 | 0.8% | 2.9 | 34.9x |
+
+**Note:** Mega sweep catch numbers need verification — the precomputation checked if rate was EVER >= gate during the gap, not just at the final spin. The qualitative ranking and Pareto shape are correct, but exact caught counts may be slightly inflated. The fixed-window Phase 1 results are the most reliable.
+
+### Conclusion
+
+The flat 130/0.30 formula is near-optimal for its class. Minor improvements possible:
+- Add stop cap at 170 → 7.0x (free improvement, no complexity)
+- Shift strategy after previous gap → 7.0x (requires tracking prev gap)
+- Rate gate 0.32 → dramatically better efficiency (needs live validation)
+
+---
+
+## 8. Next Steps
 
 - [ ] Collect more live data with the new formula running to validate in production
 - [ ] Re-run analysis when ~500+ new gaps are collected (current: 178 ACC, 213 SPN)
-- [ ] Investigate if SPN has a similar rate gate sweet spot with more data
+- [ ] **Validate gate=0.32 live** — if confirmed, this is the single biggest improvement available
+- [ ] Test adding stop cap (130-170 window) as a preset
 - [ ] Consider tracking actual coins won/lost per BET NOW zone for ROI calculation
 - [ ] Event type (standard vs mix) may affect pity timer parameters — test separately
