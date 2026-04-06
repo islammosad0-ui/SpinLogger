@@ -12,7 +12,7 @@
 + (instancetype)spnDefaults {
     SLDebtTrackerConfig *c = [[self alloc] init];
     c.spinThreshold = 87;
-    c.rateGate = 0.0;  // not validated yet — spin-only for SPN
+    c.rateGate = 0.25;
     return c;
 }
 
