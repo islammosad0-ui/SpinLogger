@@ -247,6 +247,16 @@
     BOOL isAccTriple = isTriple && [result.reel1 isEqualToString:kSLSymbolAccumulation];
     BOOL isSpnTriple = isTriple && [result.reel1 isEqualToString:kSLSymbolSpins];
 
+    // Real non-target triple (attack/steal/shield/spins — not coin/goldSack)
+    BOOL isRealOtherTriple = isTriple && !isAccTriple && !isSpnTriple &&
+        ([result.reel1 isEqualToString:kSLSymbolAttack] ||
+         [result.reel1 isEqualToString:kSLSymbolSteal] ||
+         [result.reel1 isEqualToString:kSLSymbolShield]);
+    // For ACC tracker: any real non-ACC triple is "other"
+    BOOL isOtherForAcc = isRealOtherTriple || isSpnTriple;
+    // For SPN tracker: any real non-SPN triple is "other"
+    BOOL isOtherForSpn = isRealOtherTriple || isAccTriple;
+
     // --- Count symbols per reel ---
     NSArray *reels = @[result.reel1 ?: @"", result.reel2 ?: @"", result.reel3 ?: @""];
     NSInteger accSymbols = 0;
@@ -258,10 +268,10 @@
 
     // --- Feed trackers ---
     SLDebtPhase prevAccPhase = self.accTile.tracker.phase;
-    [self.accTile.tracker onSpinWithTargetHit:isAccTriple symbolCount:accSymbols];
+    [self.accTile.tracker onSpinWithTargetHit:isAccTriple otherTriple:isOtherForAcc symbolCount:accSymbols];
 
     SLDebtPhase prevSpnPhase = self.spnTile.tracker.phase;
-    [self.spnTile.tracker onSpinWithTargetHit:isSpnTriple symbolCount:spnSymbols];
+    [self.spnTile.tracker onSpinWithTargetHit:isSpnTriple otherTriple:isOtherForSpn symbolCount:spnSymbols];
 
     // --- Update UI ---
     [self updateTileUI:self.accTile];
@@ -317,8 +327,13 @@
             tile.container.layer.borderWidth = 1.0;
             break;
         case SLDebtPhaseWatch:
-            tile.phaseLabel.text = @"ALERT";
-            tile.phaseLabel.textColor = [UIColor colorWithRed:1.0 green:0.75 blue:0.0 alpha:1.0];
+            if (t.pulseRemaining > 0) {
+                tile.phaseLabel.text = [NSString stringWithFormat:@"SKIP %ld", (long)t.pulseRemaining];
+                tile.phaseLabel.textColor = [UIColor colorWithRed:1.0 green:0.5 blue:0.2 alpha:1.0];
+            } else {
+                tile.phaseLabel.text = @"ALERT";
+                tile.phaseLabel.textColor = [UIColor colorWithRed:1.0 green:0.75 blue:0.0 alpha:1.0];
+            }
             tile.container.layer.borderColor = tile.watchBorderColor.CGColor;
             tile.container.layer.borderWidth = 1.5;
             break;
@@ -437,9 +452,10 @@
     return self.settingsWindow;
 }
 
-- (void)applyPresetToTile:(SLDebtTile *)tile threshold:(NSInteger)thresh gate:(double)gate {
+- (void)applyPresetToTile:(SLDebtTile *)tile threshold:(NSInteger)thresh gate:(double)gate pulse:(NSInteger)pulse {
     tile.tracker.config.spinThreshold = thresh;
     tile.tracker.config.rateGate = gate;
+    tile.tracker.config.pulseSkip = pulse;
     [tile.tracker reset];
     [self stopGlow:tile];
     tile.glowing = NO;
@@ -454,13 +470,15 @@
     NSString *title = isAcc ? @"ACC Tracker" : @"SPN Tracker";
 
     double rate = [t accumRate];
+    NSString *pulseStr = cfg.pulseSkip > 0
+        ? [NSString stringWithFormat:@"  pulse=%ld", (long)cfg.pulseSkip] : @"";
     NSString *stats = [NSString stringWithFormat:
-        @"Spins: %ld / %ld\nRate: %.3f / %.2f\nPhase: %@\n\nCurrent: thresh=%ld gate=%.2f",
+        @"Spins: %ld / %ld\nRate: %.3f / %.2f\nPhase: %@\n\nCurrent: thresh=%ld gate=%.2f%@",
         (long)t.saSpins, (long)cfg.spinThreshold,
         rate, cfg.rateGate,
         (t.phase == SLDebtPhaseBetNow ? @"BET NOW" :
-         t.phase == SLDebtPhaseWatch ? @"WATCH" : @"WAIT"),
-        (long)cfg.spinThreshold, cfg.rateGate];
+         t.phase == SLDebtPhaseWatch ? (t.pulseRemaining > 0 ? @"SKIP" : @"WATCH") : @"WAIT"),
+        (long)cfg.spinThreshold, cfg.rateGate, pulseStr];
 
     UIAlertController *sheet = [UIAlertController alertControllerWithTitle:title
                                                                    message:stats
@@ -477,19 +495,25 @@
         [sheet addAction:[UIAlertAction actionWithTitle:@"Balanced: 130 / 0.30  (6.0x)"
                                                  style:UIAlertActionStyleDefault
                                                handler:^(UIAlertAction *a) {
-            [self applyPresetToTile:tile threshold:130 gate:0.30];
+            [self applyPresetToTile:tile threshold:130 gate:0.30 pulse:0];
+            dismiss();
+        }]];
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Balanced+Pulse5: 130 / 0.30  (11.4 mb/h)"
+                                                 style:UIAlertActionStyleDefault
+                                               handler:^(UIAlertAction *a) {
+            [self applyPresetToTile:tile threshold:130 gate:0.30 pulse:5];
             dismiss();
         }]];
         [sheet addAction:[UIAlertAction actionWithTitle:@"Conservative: 120 / 0.28  (3.5x)"
                                                  style:UIAlertActionStyleDefault
                                                handler:^(UIAlertAction *a) {
-            [self applyPresetToTile:tile threshold:120 gate:0.28];
+            [self applyPresetToTile:tile threshold:120 gate:0.28 pulse:0];
             dismiss();
         }]];
         [sheet addAction:[UIAlertAction actionWithTitle:@"Aggressive: 130 / 0.32  (8.2x)"
                                                  style:UIAlertActionStyleDefault
                                                handler:^(UIAlertAction *a) {
-            [self applyPresetToTile:tile threshold:130 gate:0.32];
+            [self applyPresetToTile:tile threshold:130 gate:0.32 pulse:0];
             dismiss();
         }]];
     } else {
@@ -497,31 +521,31 @@
         [sheet addAction:[UIAlertAction actionWithTitle:@"Conservative: 87 / 0.25  (1.5x)"
                                                  style:UIAlertActionStyleDefault
                                                handler:^(UIAlertAction *a) {
-            [self applyPresetToTile:tile threshold:87 gate:0.25];
+            [self applyPresetToTile:tile threshold:87 gate:0.25 pulse:0];
             dismiss();
         }]];
         [sheet addAction:[UIAlertAction actionWithTitle:@"Balanced: 87 / 0.30  (3.3x)"
                                                  style:UIAlertActionStyleDefault
                                                handler:^(UIAlertAction *a) {
-            [self applyPresetToTile:tile threshold:87 gate:0.30];
+            [self applyPresetToTile:tile threshold:87 gate:0.30 pulse:0];
             dismiss();
         }]];
         [sheet addAction:[UIAlertAction actionWithTitle:@"Wide: 60 / 0.25  (1.5x)"
                                                  style:UIAlertActionStyleDefault
                                                handler:^(UIAlertAction *a) {
-            [self applyPresetToTile:tile threshold:60 gate:0.25];
+            [self applyPresetToTile:tile threshold:60 gate:0.25 pulse:0];
             dismiss();
         }]];
         [sheet addAction:[UIAlertAction actionWithTitle:@"Aggressive: 60 / 0.30  (2.6x)"
                                                  style:UIAlertActionStyleDefault
                                                handler:^(UIAlertAction *a) {
-            [self applyPresetToTile:tile threshold:60 gate:0.30];
+            [self applyPresetToTile:tile threshold:60 gate:0.30 pulse:0];
             dismiss();
         }]];
         [sheet addAction:[UIAlertAction actionWithTitle:@"Spin-only: 87 / off  (1.1x)"
                                                  style:UIAlertActionStyleDefault
                                                handler:^(UIAlertAction *a) {
-            [self applyPresetToTile:tile threshold:87 gate:0.0];
+            [self applyPresetToTile:tile threshold:87 gate:0.0 pulse:0];
             dismiss();
         }]];
     }
@@ -561,7 +585,7 @@
     NSString *title = (tile == self.accTile) ? @"ACC Thresholds" : @"SPN Thresholds";
 
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:title
-                                                                  message:@"Spin threshold + rate gate"
+                                                                  message:@"Spin threshold + rate gate + pulse skip"
                                                            preferredStyle:UIAlertControllerStyleAlert];
 
     [alert addTextFieldWithConfigurationHandler:^(UITextField *tf) {
@@ -574,6 +598,11 @@
         tf.text = [NSString stringWithFormat:@"%.2f", cfg.rateGate];
         tf.keyboardType = UIKeyboardTypeDecimalPad;
     }];
+    [alert addTextFieldWithConfigurationHandler:^(UITextField *tf) {
+        tf.placeholder = @"Pulse Skip (0=off)";
+        tf.text = [NSString stringWithFormat:@"%ld", (long)cfg.pulseSkip];
+        tf.keyboardType = UIKeyboardTypeNumberPad;
+    }];
 
     UIWindow *presWin = [self settingsPresentationWindowForScene:
                          (UIWindowScene *)tile.window.windowScene];
@@ -583,6 +612,7 @@
     [alert addAction:[UIAlertAction actionWithTitle:@"Save" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a) {
         cfg.spinThreshold = [alert.textFields[0].text integerValue];
         cfg.rateGate      = [alert.textFields[1].text doubleValue];
+        cfg.pulseSkip     = [alert.textFields[2].text integerValue];
         [self updateTileUI:tile];
         [self saveState];
         dismiss();
