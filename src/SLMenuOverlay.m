@@ -7,6 +7,7 @@
 #import "SLPresetManager.h"
 #import "SLCounterOverlay.h"
 #import "SLNetworkMonitor.h"
+#import "SLDebtMonitor.h"
 #import <UIKit/UIKit.h>
 
 // ---------------------------------------------------------------------------
@@ -126,9 +127,13 @@ static UIButton *SLMakeBtn(NSString *title, CGFloat w, CGFloat h, UIColor *bg, U
 static UIWindow *sSettingsWindow = nil;
 static UIView *sTrisContent = nil;
 static UIView *sCounterContent = nil;
+static UIView *sDebtContent = nil;
 static UIButton *sTabTris = nil;
 static UIButton *sTabCounter = nil;
+static UIButton *sTabDebt = nil;
 static BOOL sTrisMonitorActive = NO;
+static BOOL sDebtMonitorActive = NO;
+static UIWindow *sDebtTableWindow = nil;
 
 + (void)gearTap {
     [self showSettingsOverlay];
@@ -144,7 +149,7 @@ static BOOL sTrisMonitorActive = NO;
 
     CGRect screen = scene.coordinateSpace.bounds;
     CGFloat pw = MIN(screen.size.width * 0.78, 300);
-    CGFloat ph = 180;
+    CGFloat ph = 220;
     CGFloat x = (screen.size.width - pw) / 2;
     CGFloat y = (screen.size.height - ph) / 2;
 
@@ -170,22 +175,27 @@ static BOOL sTrisMonitorActive = NO;
 
     CGFloat pad = 12;
 
-    // Tab bar
-    CGFloat tabW = (pw - pad * 2 - 40) / 2;
-    sTabTris = SLMakeBtn(@"TRIS MONITOR", tabW, 30, SLAccent(), [UIColor blackColor], 11);
+    // Tab bar — 3 tabs with shorter labels at font 9
+    CGFloat tabW = (pw - pad * 2 - 36) / 3;
+    sTabTris = SLMakeBtn(@"TRIS", tabW, 30, SLAccent(), [UIColor blackColor], 9);
     sTabTris.frame = CGRectMake(pad, 8, tabW, 30);
     [sTabTris addTarget:self action:@selector(switchToTrisTab) forControlEvents:UIControlEventTouchUpInside];
     [content addSubview:sTabTris];
 
-    sTabCounter = SLMakeBtn(@"SPIN COUNTER", tabW, 30, SLBtnBg(), SLMuted(), 11);
+    sTabCounter = SLMakeBtn(@"COUNTER", tabW, 30, SLBtnBg(), SLMuted(), 9);
     sTabCounter.frame = CGRectMake(pad + tabW + 4, 8, tabW, 30);
     [sTabCounter addTarget:self action:@selector(switchToCounterTab) forControlEvents:UIControlEventTouchUpInside];
     [content addSubview:sTabCounter];
 
+    sTabDebt = SLMakeBtn(@"DEBT", tabW, 30, SLBtnBg(), SLMuted(), 9);
+    sTabDebt.frame = CGRectMake(pad + 2 * (tabW + 4), 8, tabW, 30);
+    [sTabDebt addTarget:self action:@selector(switchToDebtTab) forControlEvents:UIControlEventTouchUpInside];
+    [content addSubview:sTabDebt];
+
     // Close X
-    UIButton *closeBtn = SLMakeBtn(@"✕", 32, 30, [UIColor colorWithWhite:1 alpha:0.12], [UIColor whiteColor], 14);
-    closeBtn.frame = CGRectMake(pw - pad - 32, 8, 32, 30);
-    closeBtn.layer.cornerRadius = 15;
+    UIButton *closeBtn = SLMakeBtn(@"✕", 28, 30, [UIColor colorWithWhite:1 alpha:0.12], [UIColor whiteColor], 13);
+    closeBtn.frame = CGRectMake(pw - pad - 28, 8, 28, 30);
+    closeBtn.layer.cornerRadius = 14;
     [closeBtn addTarget:self action:@selector(settingsClose) forControlEvents:UIControlEventTouchUpInside];
     [content addSubview:closeBtn];
 
@@ -262,26 +272,323 @@ static BOOL sTrisMonitorActive = NO;
         [sCounterContent addSubview:sb];
     }
 
+    // === DEBT TRACKER content (hidden by default) ===
+    sDebtContent = [[UIView alloc] initWithFrame:CGRectMake(0, 42, pw, ph - 42)];
+    sDebtContent.hidden = YES;
+    [content addSubview:sDebtContent];
+
+    CGFloat rowH = 28, rowY = 4;
+
+    // Row 1: SHOW / HIDE tiles
+    UILabel *showLabel = [[UILabel alloc] initWithFrame:CGRectMake(pad, rowY + 4, 180, 20)];
+    showLabel.text = @"SHOW / HIDE TILES";
+    showLabel.font = [UIFont boldSystemFontOfSize:12];
+    showLabel.textColor = SLAccent();
+    [sDebtContent addSubview:showLabel];
+
+    UISwitch *showSwitch = [[UISwitch alloc] init];
+    showSwitch.onTintColor = SLAccent();
+    showSwitch.transform = CGAffineTransformMakeScale(0.78, 0.78);
+    showSwitch.on = YES;
+    showSwitch.frame = CGRectMake(pw - pad - 51, rowY, 51, 28);
+    showSwitch.tag = 500;
+    [showSwitch addTarget:self action:@selector(debtShowToggle:) forControlEvents:UIControlEventValueChanged];
+    [sDebtContent addSubview:showSwitch];
+    rowY += rowH + 4;
+
+    // Row 2: LOCK TARGET (keep calibrated values on reset)
+    UILabel *lockLabel = [[UILabel alloc] initWithFrame:CGRectMake(pad, rowY + 4, 180, 20)];
+    lockLabel.text = @"LOCK TARGET";
+    lockLabel.font = [UIFont boldSystemFontOfSize:12];
+    lockLabel.textColor = SLAccent();
+    [sDebtContent addSubview:lockLabel];
+
+    UISwitch *lockSwitch = [[UISwitch alloc] init];
+    lockSwitch.onTintColor = SLAccent();
+    lockSwitch.transform = CGAffineTransformMakeScale(0.78, 0.78);
+    lockSwitch.on = NO;
+    lockSwitch.frame = CGRectMake(pw - pad - 51, rowY, 51, 28);
+    lockSwitch.tag = 501;
+    [lockSwitch addTarget:self action:@selector(debtLockTargetToggle:) forControlEvents:UIControlEventValueChanged];
+    [sDebtContent addSubview:lockSwitch];
+    rowY += rowH + 4;
+
+    // Row 3: ACTIVE MONITOR (gap history table)
+    UILabel *monLabel = [[UILabel alloc] initWithFrame:CGRectMake(pad, rowY + 4, 180, 20)];
+    monLabel.text = @"ACTIVE MONITOR";
+    monLabel.font = [UIFont boldSystemFontOfSize:12];
+    monLabel.textColor = SLAccent();
+    [sDebtContent addSubview:monLabel];
+
+    UISwitch *monSwitch = [[UISwitch alloc] init];
+    monSwitch.onTintColor = SLAccent();
+    monSwitch.transform = CGAffineTransformMakeScale(0.78, 0.78);
+    monSwitch.on = sDebtMonitorActive;
+    monSwitch.frame = CGRectMake(pw - pad - 51, rowY, 51, 28);
+    monSwitch.tag = 502;
+    [monSwitch addTarget:self action:@selector(debtMonitorToggle:) forControlEvents:UIControlEventValueChanged];
+    [sDebtContent addSubview:monSwitch];
+    rowY += rowH + 8;
+
+    // Divider
+    UIView *div = [[UIView alloc] initWithFrame:CGRectMake(pad, rowY, pw - pad * 2, 1)];
+    div.backgroundColor = [UIColor colorWithWhite:1 alpha:0.08];
+    [sDebtContent addSubview:div];
+    rowY += 6;
+
+    // Row 4: Reset buttons
+    CGFloat btnW = (pw - pad * 2 - 8) / 2;
+    UIButton *resetAcc = SLMakeBtn(@"RESET ⭐", btnW, 32, [UIColor colorWithRed:0.7 green:0.1 blue:0.1 alpha:0.7], [UIColor whiteColor], 11);
+    resetAcc.frame = CGRectMake(pad, rowY, btnW, 32);
+    [resetAcc addTarget:self action:@selector(debtResetAcc) forControlEvents:UIControlEventTouchUpInside];
+    [sDebtContent addSubview:resetAcc];
+
+    UIButton *resetSpn = SLMakeBtn(@"RESET 💊", btnW, 32, [UIColor colorWithRed:0.7 green:0.1 blue:0.1 alpha:0.7], [UIColor whiteColor], 11);
+    resetSpn.frame = CGRectMake(pad + btnW + 8, rowY, btnW, 32);
+    [resetSpn addTarget:self action:@selector(debtResetSpn) forControlEvents:UIControlEventTouchUpInside];
+    [sDebtContent addSubview:resetSpn];
+
     win.hidden = NO;
     sSettingsWindow = win;
 }
 
 + (void)switchToTrisTab {
-    sTabTris.backgroundColor = SLAccent();
-    [sTabTris setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-    sTabCounter.backgroundColor = SLBtnBg();
-    [sTabCounter setTitleColor:SLMuted() forState:UIControlStateNormal];
-    sTrisContent.hidden = NO;
-    sCounterContent.hidden = YES;
+    sTabTris.backgroundColor    = SLAccent();  [sTabTris    setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    sTabCounter.backgroundColor = SLBtnBg();   [sTabCounter setTitleColor:SLMuted()            forState:UIControlStateNormal];
+    sTabDebt.backgroundColor    = SLBtnBg();   [sTabDebt    setTitleColor:SLMuted()            forState:UIControlStateNormal];
+    sTrisContent.hidden = NO; sCounterContent.hidden = YES; sDebtContent.hidden = YES;
 }
 
 + (void)switchToCounterTab {
-    sTabCounter.backgroundColor = SLAccent();
-    [sTabCounter setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-    sTabTris.backgroundColor = SLBtnBg();
-    [sTabTris setTitleColor:SLMuted() forState:UIControlStateNormal];
-    sCounterContent.hidden = NO;
-    sTrisContent.hidden = YES;
+    sTabCounter.backgroundColor = SLAccent();  [sTabCounter setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    sTabTris.backgroundColor    = SLBtnBg();   [sTabTris    setTitleColor:SLMuted()            forState:UIControlStateNormal];
+    sTabDebt.backgroundColor    = SLBtnBg();   [sTabDebt    setTitleColor:SLMuted()            forState:UIControlStateNormal];
+    sCounterContent.hidden = NO; sTrisContent.hidden = YES; sDebtContent.hidden = YES;
+}
+
++ (void)switchToDebtTab {
+    sTabDebt.backgroundColor    = SLAccent();  [sTabDebt    setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    sTabTris.backgroundColor    = SLBtnBg();   [sTabTris    setTitleColor:SLMuted()            forState:UIControlStateNormal];
+    sTabCounter.backgroundColor = SLBtnBg();   [sTabCounter setTitleColor:SLMuted()            forState:UIControlStateNormal];
+    sDebtContent.hidden = NO; sTrisContent.hidden = YES; sCounterContent.hidden = YES;
+}
+
+// ── Debt tab actions ──────────────────────────────────────────────────────────
+
++ (void)debtShowToggle:(UISwitch *)sw {
+    if (sw.on) [[SLDebtMonitor shared] show];
+    else       [[SLDebtMonitor shared] hide];
+}
+
++ (void)debtLockTargetToggle:(UISwitch *)sw {
+    SLDebtMonitor *dm = [SLDebtMonitor shared];
+    dm.accTracker.config.targetLocked = sw.on;
+    dm.spnTracker.config.targetLocked = sw.on;
+}
+
++ (void)debtMonitorToggle:(UISwitch *)sw {
+    sDebtMonitorActive = sw.on;
+    if (sw.on) [self showDebtTableWindow];
+    else {
+        sDebtTableWindow.hidden = YES;
+    }
+}
+
++ (void)debtResetAcc {
+    [[SLDebtMonitor shared] resetAccTracker];
+}
+
++ (void)debtResetSpn {
+    [[SLDebtMonitor shared] resetSpnTracker];
+}
+
+// ── Debt gap-history table window ─────────────────────────────────────────────
+
++ (void)showDebtTableWindow {
+    UIWindowScene *scene = nil;
+    for (UIScene *s in UIApplication.sharedApplication.connectedScenes)
+        if ([s isKindOfClass:[UIWindowScene class]]) { scene = (UIWindowScene *)s; break; }
+    if (!scene) return;
+
+    CGRect screen = scene.coordinateSpace.bounds;
+    CGFloat pw = MIN(screen.size.width * 0.82, 310);
+    CGFloat ph = 360;
+    CGFloat x  = (screen.size.width - pw) / 2;
+    CGFloat y  = MAX(60, (screen.size.height - ph) / 2);
+
+    if (!sDebtTableWindow) {
+        UIWindow *win = [[UIWindow alloc] initWithWindowScene:scene];
+        win.frame = CGRectMake(x, y, pw, ph);
+        win.windowLevel = UIWindowLevelAlert + 460;
+        win.backgroundColor = [UIColor clearColor];
+        UIViewController *vc = [[UIViewController alloc] init];
+        vc.view.backgroundColor = [UIColor clearColor];
+        win.rootViewController = vc;
+
+        UIVisualEffectView *blur = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleDark]];
+        blur.frame = CGRectMake(0, 0, pw, ph);
+        blur.layer.cornerRadius = 16;
+        blur.clipsToBounds = YES;
+        blur.alpha = 0.97;
+        blur.userInteractionEnabled = YES;
+        UIPanGestureRecognizer *dpan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragDebtTable:)];
+        [blur addGestureRecognizer:dpan];
+        [vc.view addSubview:blur];
+
+        // Title bar
+        UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(12, 8, pw - 56, 22)];
+        title.text = @"DEBT HISTORY";
+        title.font = [UIFont boldSystemFontOfSize:13];
+        title.textColor = SLAccent();
+        [blur.contentView addSubview:title];
+
+        UIButton *closeX = SLMakeBtn(@"✕", 28, 24, [UIColor colorWithWhite:1 alpha:0.12], [UIColor whiteColor], 12);
+        closeX.frame = CGRectMake(pw - 36, 6, 28, 24);
+        closeX.layer.cornerRadius = 12;
+        [closeX addTarget:self action:@selector(closeDebtTable) forControlEvents:UIControlEventTouchUpInside];
+        [blur.contentView addSubview:closeX];
+
+        // Divider
+        UIView *hdiv = [[UIView alloc] initWithFrame:CGRectMake(0, 34, pw, 1)];
+        hdiv.backgroundColor = [UIColor colorWithWhite:1 alpha:0.1];
+        [blur.contentView addSubview:hdiv];
+
+        // Scroll view (tag 600 for easy lookup)
+        UIScrollView *sv = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 36, pw, ph - 36)];
+        sv.tag = 600;
+        sv.showsVerticalScrollIndicator = YES;
+        sv.backgroundColor = [UIColor clearColor];
+        [blur.contentView addSubview:sv];
+
+        sDebtTableWindow = win;
+
+        // Refresh table on every spin
+        [[NSNotificationCenter defaultCenter] addObserverForName:@"SLDebtSpinDidProcess"
+                                                          object:nil
+                                                           queue:[NSOperationQueue mainQueue]
+                                                      usingBlock:^(NSNotification *_) {
+            [SLActions refreshDebtTable];
+        }];
+    }
+
+    sDebtTableWindow.hidden = NO;
+    [self refreshDebtTable];
+}
+
++ (void)refreshDebtTable {
+    if (!sDebtTableWindow || sDebtTableWindow.hidden) return;
+    UIVisualEffectView *blur = (UIVisualEffectView *)[sDebtTableWindow.rootViewController.view.subviews firstObject];
+    UIScrollView *sv = (UIScrollView *)[blur.contentView viewWithTag:600];
+    if (!sv) return;
+
+    for (UIView *v in sv.subviews) [v removeFromSuperview];
+
+    CGFloat pw = sDebtTableWindow.bounds.size.width;
+    CGFloat pad = 10;
+    CGFloat y = 4;
+
+    SLDebtMonitor *dm = [SLDebtMonitor shared];
+    SLDebtTracker *trackers[2] = { dm.accTracker, dm.spnTracker };
+    NSString *headers[2]       = { @"\u2B50 ACC", @"\U0001F48A SPN" };
+
+    for (int t = 0; t < 2; t++) {
+        SLDebtTracker *tr = trackers[t];
+
+        // Section header
+        UILabel *sh = [[UILabel alloc] initWithFrame:CGRectMake(pad, y, pw - pad * 2, 18)];
+        sh.font = [UIFont boldSystemFontOfSize:11];
+        sh.textColor = SLAccent();
+        NSInteger wpVal = [tr watchPoint];
+        if (tr.calibrated) {
+            sh.text = [NSString stringWithFormat:@"%@  target=%ld  floor=%ld  debt=%@%ld",
+                headers[t], (long)tr.config.target, (long)wpVal,
+                (tr.debt >= 0 ? @"+" : @""), (long)tr.debt];
+        } else {
+            sh.text = [NSString stringWithFormat:@"%@  CAL %ld/%ld  (not calibrated)",
+                headers[t], (long)tr.gapHistory.count, (long)tr.calibrationThreshold];
+        }
+        [sv addSubview:sh];
+        y += 20;
+
+        // Column headers
+        UILabel *ch = [[UILabel alloc] initWithFrame:CGRectMake(pad, y, pw - pad * 2, 14)];
+        ch.font = [UIFont monospacedSystemFontOfSize:9 weight:UIFontWeightMedium];
+        ch.textColor = [UIColor colorWithWhite:0.5 alpha:1.0];
+        ch.text = @"  #    Gap   Diff   Debt";
+        [sv addSubview:ch];
+        y += 15;
+
+        // Gap rows
+        NSInteger runDebt = 0;
+        for (NSUInteger i = 0; i < tr.gapHistory.count; i++) {
+            NSInteger gap  = [tr.gapHistory[i] integerValue];
+            NSInteger diff = gap - tr.config.target;
+            runDebt += diff;
+
+            UILabel *row = [[UILabel alloc] initWithFrame:CGRectMake(pad, y, pw - pad * 2, 14)];
+            row.font = [UIFont monospacedSystemFontOfSize:9 weight:UIFontWeightRegular];
+
+            NSString *diffStr = (diff >= 0) ? [NSString stringWithFormat:@"+%ld", (long)diff]
+                                            : [NSString stringWithFormat:@"%ld",  (long)diff];
+            NSString *debtStr = (runDebt >= 0) ? [NSString stringWithFormat:@"+%ld", (long)runDebt]
+                                               : [NSString stringWithFormat:@"%ld",  (long)runDebt];
+            row.text = [NSString stringWithFormat:@"%3lu   %4ld  %5@  %5@",
+                        (unsigned long)(i + 1), (long)gap, diffStr, debtStr];
+
+            // Color code: green = on target, orange = ±30, red = far off
+            NSInteger absDiff = ABS(diff);
+            if (absDiff <= 15)     row.textColor = [UIColor colorWithRed:0.3 green:0.9 blue:0.4 alpha:1.0];
+            else if (absDiff <= 40) row.textColor = [UIColor colorWithRed:1.0 green:0.75 blue:0.2 alpha:1.0];
+            else                   row.textColor = [UIColor colorWithRed:1.0 green:0.35 blue:0.35 alpha:1.0];
+
+            [sv addSubview:row];
+            y += 15;
+        }
+
+        if (tr.gapHistory.count == 0) {
+            UILabel *empty = [[UILabel alloc] initWithFrame:CGRectMake(pad, y, pw - pad * 2, 14)];
+            empty.font = [UIFont italicSystemFontOfSize:10];
+            empty.textColor = [UIColor colorWithWhite:0.35 alpha:1.0];
+            empty.text = @"  no gaps yet";
+            [sv addSubview:empty];
+            y += 15;
+        }
+
+        // Current in-progress spin count
+        if (tr.calibrated) {
+            UILabel *cur = [[UILabel alloc] initWithFrame:CGRectMake(pad, y, pw - pad * 2, 14)];
+            cur.font = [UIFont monospacedSystemFontOfSize:9 weight:UIFontWeightMedium];
+            cur.textColor = [UIColor colorWithWhite:0.45 alpha:1.0];
+            cur.text = [NSString stringWithFormat:@"  → current: %ld spins  (floor=%ld)",
+                        (long)tr.saSpins, (long)wpVal];
+            [sv addSubview:cur];
+            y += 15;
+        }
+
+        y += 10; // spacing between sections
+    }
+
+    sv.contentSize = CGSizeMake(pw, y + 8);
+}
+
++ (void)closeDebtTable {
+    sDebtTableWindow.hidden = YES;
+    sDebtMonitorActive = NO;
+    // Turn off the monitor switch in settings if it's visible
+    UIVisualEffectView *blur = (UIVisualEffectView *)
+        [sSettingsWindow.rootViewController.view.subviews firstObject];
+    UISwitch *sw = (UISwitch *)[blur.contentView viewWithTag:502];
+    sw.on = NO;
+}
+
++ (void)dragDebtTable:(UIPanGestureRecognizer *)pan {
+    if (pan.state == UIGestureRecognizerStateBegan || pan.state == UIGestureRecognizerStateChanged) {
+        CGPoint t = [pan translationInView:pan.view];
+        CGRect f = sDebtTableWindow.frame;
+        f.origin.x += t.x; f.origin.y += t.y;
+        sDebtTableWindow.frame = f;
+        [pan setTranslation:CGPointZero inView:pan.view];
+    }
 }
 
 + (void)settingsClose {

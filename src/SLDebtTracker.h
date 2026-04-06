@@ -10,11 +10,12 @@ typedef NS_ENUM(NSInteger, SLDebtPhase) {
 
 @interface SLDebtTrackerConfig : NSObject
 @property (nonatomic, assign) NSInteger target;      // expected gap (ACC=100, SPN=87)
-@property (nonatomic, assign) NSInteger floorBase;   // base floor (ACC=80, SPN=65)
+@property (nonatomic, assign) NSInteger floorBase;   // base floor (ACC=133, SPN=116)
 @property (nonatomic, assign) NSInteger floorMin;    // absolute min floor (20)
 @property (nonatomic, assign) NSInteger quietMin;    // min silence spins (3)
 @property (nonatomic, assign) NSInteger quietMax;    // max silence spins (7)
 @property (nonatomic, assign) NSInteger betWindow;   // max bet spins (8)
+@property (nonatomic, assign) BOOL      targetLocked; // when YES: skip auto-calibration
 + (instancetype)accDefaults;
 + (instancetype)spnDefaults;
 @end

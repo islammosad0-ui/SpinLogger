@@ -292,6 +292,9 @@
     [self updateGlow:self.spnTile];
 
     [self saveState];
+
+    // Refresh debt table if it's open
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"SLDebtSpinDidProcess" object:nil];
 }
 
 #pragma mark - UI Update
@@ -545,6 +548,25 @@
 - (void)hide {
     self.accTile.window.hidden = YES;
     self.spnTile.window.hidden = YES;
+}
+
+- (SLDebtTracker *)accTracker { return self.accTile.tracker; }
+- (SLDebtTracker *)spnTracker { return self.spnTile.tracker; }
+
+- (void)resetAccTracker {
+    [self.accTile.tracker reset];
+    [self stopGlow:self.accTile];
+    self.accTile.glowing = NO;
+    [self updateTileUI:self.accTile];
+    [self saveState];
+}
+
+- (void)resetSpnTracker {
+    [self.spnTile.tracker reset];
+    [self stopGlow:self.spnTile];
+    self.spnTile.glowing = NO;
+    [self updateTileUI:self.spnTile];
+    [self saveState];
 }
 
 - (void)dealloc {

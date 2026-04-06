@@ -74,8 +74,9 @@ static const CGFloat kFloorRatio = 1.33;
             self.debt += (gap - self.config.target);
         }
 
-        // Auto-calibrate: after enough gaps, lock the target
-        if (!self.calibrated && (NSInteger)self.gapHistory.count >= self.calibrationThreshold) {
+        // Auto-calibrate: after enough gaps, lock the target (skip if user locked it manually)
+        if (!self.calibrated && !self.config.targetLocked &&
+            (NSInteger)self.gapHistory.count >= self.calibrationThreshold) {
             NSInteger sum = 0;
             for (NSNumber *g in self.gapHistory) sum += g.integerValue;
             self.config.target = sum / (NSInteger)self.gapHistory.count;
