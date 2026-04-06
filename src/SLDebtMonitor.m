@@ -199,20 +199,7 @@
     [vc.view addGestureRecognizer:longPress];
 
     // Tag: 0 = ACC, 1 = SPN
-    NSInteger tileTag = [emoji isEqualToString:@"\u2B50"] ? 0 : 1;
-    vc.view.tag = tileTag;
-
-    // ⚙ settings button — top-right corner, always tappable
-    UIButton *settingsBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-    settingsBtn.frame = CGRectMake(tileW - 20, 0, 20, 20);
-    [settingsBtn setTitle:@"\u2699" forState:UIControlStateNormal];
-    settingsBtn.titleLabel.font = [UIFont systemFontOfSize:11];
-    [settingsBtn setTitleColor:[UIColor colorWithWhite:0.55 alpha:1.0] forState:UIControlStateNormal];
-    [settingsBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateHighlighted];
-    settingsBtn.tag = tileTag;
-    [settingsBtn addTarget:self action:@selector(handleSettingsTap:)
-          forControlEvents:UIControlEventTouchUpInside];
-    [container addSubview:settingsBtn];
+    vc.view.tag = [emoji isEqualToString:@"\u2B50"] ? 0 : 1;
 
     win.hidden = NO;
     tile.window = win;
@@ -435,10 +422,6 @@
     [self showConfigMenuForTile:tile];
 }
 
-- (void)handleSettingsTap:(UIButton *)btn {
-    SLDebtTile *tile = (btn.tag == 0) ? self.accTile : self.spnTile;
-    [self showConfigMenuForTile:tile];
-}
 
 #pragma mark - Config Menu
 
