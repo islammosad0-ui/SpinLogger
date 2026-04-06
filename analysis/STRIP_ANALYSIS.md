@@ -967,6 +967,24 @@ The strip is NOT a fixed repeating sequence (autocorrelation found nothing at la
 - **Quiet zone signal** — after any non-ACC triple + 3-7 quiet spins, the next triple is 3xACC at elevated probability
 - **Accum symbols track gap proportionally** — r1=30 count has 0.965 correlation with gap
 
+### Cross-Account Validation (2026-04-06)
+
+Tested the debt model on a second account (mission 37, 1,392 spins, 14 gaps):
+
+| | Account 1 (mission 66/70) | Account 2 (mission 37) |
+|---|---|---|
+| Target (mean gap) | **99** | **92** |
+| Debt correlation | -0.593 | -0.679 |
+| L->L (at 150+) | 0/12 (never) | 0/3 (never) |
+| Pair sum mean | ~200 | ~182 |
+
+**Key findings:**
+- Targets differ by account/mission (99 vs 92) — tool MUST auto-calibrate
+- Using target=100 on Account 2 caused debt to drift to -112 → all predictions wrong
+- L->L rule holds on BOTH accounts (zero violations at absolute threshold 150+)
+- The debt autocorrection mechanism is the SAME — just the target shifts
+- Tool fix: observe first 5 triple accums → compute target = mean(gaps) → then predict
+
 ### Still Needed
 
 1. **More data at current mission** — 49 gaps is enough for the macro pattern but noisy for the exact formula. 200+ gaps would nail the hazard curve precisely.
