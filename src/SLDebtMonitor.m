@@ -36,6 +36,7 @@
 @property (nonatomic, copy)   NSString *lastEventID;
 @property (nonatomic, copy)   NSString *lastMission;
 @property (nonatomic, strong) UIImpactFeedbackGenerator *haptic;
+@property (nonatomic, strong) UIWindow *settingsWindow; // full-screen window for presenting alerts
 @end
 
 @implementation SLDebtMonitor
@@ -192,13 +193,26 @@
         initWithTarget:self action:@selector(handleTap:)];
     [vc.view addGestureRecognizer:tap];
 
-    // Long press — config menu
+    // Long press — config menu (backup gesture)
     UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc]
         initWithTarget:self action:@selector(handleLongPress:)];
     [vc.view addGestureRecognizer:longPress];
 
     // Tag: 0 = ACC, 1 = SPN
-    vc.view.tag = [emoji isEqualToString:@"\u2B50"] ? 0 : 1;
+    NSInteger tileTag = [emoji isEqualToString:@"\u2B50"] ? 0 : 1;
+    vc.view.tag = tileTag;
+
+    // ⚙ settings button — top-right corner, always tappable
+    UIButton *settingsBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    settingsBtn.frame = CGRectMake(tileW - 20, 0, 20, 20);
+    [settingsBtn setTitle:@"\u2699" forState:UIControlStateNormal];
+    settingsBtn.titleLabel.font = [UIFont systemFontOfSize:11];
+    [settingsBtn setTitleColor:[UIColor colorWithWhite:0.55 alpha:1.0] forState:UIControlStateNormal];
+    [settingsBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateHighlighted];
+    settingsBtn.tag = tileTag;
+    [settingsBtn addTarget:self action:@selector(handleSettingsTap:)
+          forControlEvents:UIControlEventTouchUpInside];
+    [container addSubview:settingsBtn];
 
     win.hidden = NO;
     tile.window = win;
@@ -418,57 +432,87 @@
     [self showConfigMenuForTile:tile];
 }
 
+- (void)handleSettingsTap:(UIButton *)btn {
+    SLDebtTile *tile = (btn.tag == 0) ? self.accTile : self.spnTile;
+    [self showConfigMenuForTile:tile];
+}
+
 #pragma mark - Config Menu
+
+- (UIWindow *)settingsPresentationWindowForScene:(UIWindowScene *)scene {
+    if (!self.settingsWindow || self.settingsWindow.windowScene != scene) {
+        UIWindow *sw = [[UIWindow alloc] initWithWindowScene:scene];
+        sw.frame = scene.coordinateSpace.bounds;
+        sw.windowLevel = UIWindowLevelAlert + 350;
+        sw.backgroundColor = [UIColor clearColor];
+        UIViewController *vc = [[UIViewController alloc] init];
+        vc.view.backgroundColor = [UIColor clearColor];
+        sw.rootViewController = vc;
+        self.settingsWindow = sw;
+    }
+    self.settingsWindow.hidden = NO;
+    return self.settingsWindow;
+}
 
 - (void)showConfigMenuForTile:(SLDebtTile *)tile {
     SLDebtTracker *t = tile.tracker;
     SLDebtTrackerConfig *cfg = t.config;
     NSString *title = (tile == self.accTile) ? @"ACC Tracker" : @"SPN Tracker";
 
+    NSString *calStr = t.calibrated
+        ? [NSString stringWithFormat:@"YES (target=%ld, floor=%ld)", (long)cfg.target, (long)cfg.floorBase]
+        : [NSString stringWithFormat:@"NO  (%ld/%ld gaps seen)", (long)t.gapHistory.count, (long)t.calibrationThreshold];
+
     NSString *stats = [NSString stringWithFormat:
-        @"Target: %ld  Floor: %ld  Debt: %@%ld\n"
-        @"Quiet: %ld-%ld  Window: %ld\n"
-        @"Gaps seen: %ld  Calibrated: %@\n"
-        @"Catches: %ld  Misses: %ld\n"
-        @"Last gap: %ld",
-        (long)cfg.target, (long)cfg.floorBase, (t.debt >= 0 ? @"+" : @""), (long)t.debt,
+        @"Debt: %@%ld   Last gap: %ld\n"
+        @"Quiet: %ld–%ld   Window: %ld\n"
+        @"Calibrated: %@\n"
+        @"Catches: %ld   Misses: %ld",
+        (t.debt >= 0 ? @"+" : @""), (long)t.debt, (long)t.lastGap,
         (long)cfg.quietMin, (long)cfg.quietMax, (long)cfg.betWindow,
-        (long)t.gapHistory.count, t.calibrated ? @"YES" : @"NO",
-        (long)t.catches, (long)t.misses,
-        (long)t.lastGap];
+        calStr,
+        (long)t.catches, (long)t.misses];
 
     UIAlertController *sheet = [UIAlertController alertControllerWithTitle:title
-                                                                  message:stats
-                                                           preferredStyle:UIAlertControllerStyleActionSheet];
+                                                                   message:stats
+                                                            preferredStyle:UIAlertControllerStyleActionSheet];
+
+    UIWindow *presWin = [self settingsPresentationWindowForScene:
+                         (UIWindowScene *)tile.window.windowScene];
+
+    void (^dismiss)(void) = ^{ self.settingsWindow.hidden = YES; };
 
     [sheet addAction:[UIAlertAction actionWithTitle:@"Reset Tracker (re-calibrate)"
-                                              style:UIAlertActionStyleDestructive
-                                            handler:^(UIAlertAction *a) {
+                                             style:UIAlertActionStyleDestructive
+                                           handler:^(UIAlertAction *a) {
         [t reset];
         [self stopGlow:tile];
         tile.glowing = NO;
         [self updateTileUI:tile];
         [self saveState];
+        dismiss();
     }]];
 
     [sheet addAction:[UIAlertAction actionWithTitle:@"Reset Stats Only"
-                                              style:UIAlertActionStyleDefault
-                                            handler:^(UIAlertAction *a) {
+                                             style:UIAlertActionStyleDefault
+                                           handler:^(UIAlertAction *a) {
         t.catches = 0;
         t.misses = 0;
         [self updateTileUI:tile];
         [self saveState];
+        dismiss();
     }]];
 
     [sheet addAction:[UIAlertAction actionWithTitle:@"Cancel"
-                                              style:UIAlertActionStyleCancel
-                                            handler:nil]];
+                                             style:UIAlertActionStyleCancel
+                                           handler:^(UIAlertAction *a) { dismiss(); }]];
 
-    // iPad popover anchor
-    sheet.popoverPresentationController.sourceView = tile.container;
-    sheet.popoverPresentationController.sourceRect = tile.container.bounds;
+    // Anchor for iPad popover
+    sheet.popoverPresentationController.sourceView = presWin.rootViewController.view;
+    sheet.popoverPresentationController.sourceRect = CGRectMake(
+        presWin.bounds.size.width / 2, presWin.bounds.size.height - 40, 1, 1);
 
-    [tile.window.rootViewController presentViewController:sheet animated:YES completion:nil];
+    [presWin.rootViewController presentViewController:sheet animated:YES completion:nil];
 }
 
 #pragma mark - Persistence
