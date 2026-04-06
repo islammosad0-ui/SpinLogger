@@ -437,18 +437,30 @@
     return self.settingsWindow;
 }
 
+- (void)applyPresetToTile:(SLDebtTile *)tile threshold:(NSInteger)thresh gate:(double)gate {
+    tile.tracker.config.spinThreshold = thresh;
+    tile.tracker.config.rateGate = gate;
+    [tile.tracker reset];
+    [self stopGlow:tile];
+    tile.glowing = NO;
+    [self updateTileUI:tile];
+    [self saveState];
+}
+
 - (void)showConfigMenuForTile:(SLDebtTile *)tile {
     SLDebtTracker *t = tile.tracker;
     SLDebtTrackerConfig *cfg = t.config;
-    NSString *title = (tile == self.accTile) ? @"ACC Tracker" : @"SPN Tracker";
+    BOOL isAcc = (tile == self.accTile);
+    NSString *title = isAcc ? @"ACC Tracker" : @"SPN Tracker";
 
     double rate = [t accumRate];
     NSString *stats = [NSString stringWithFormat:
-        @"Spins: %ld / %ld\nRate: %.3f / %.2f\nPhase: %@",
+        @"Spins: %ld / %ld\nRate: %.3f / %.2f\nPhase: %@\n\nCurrent: thresh=%ld gate=%.2f",
         (long)t.saSpins, (long)cfg.spinThreshold,
         rate, cfg.rateGate,
         (t.phase == SLDebtPhaseBetNow ? @"BET NOW" :
-         t.phase == SLDebtPhaseWatch ? @"WATCH" : @"WAIT")];
+         t.phase == SLDebtPhaseWatch ? @"WATCH" : @"WAIT"),
+        (long)cfg.spinThreshold, cfg.rateGate];
 
     UIAlertController *sheet = [UIAlertController alertControllerWithTitle:title
                                                                    message:stats
@@ -459,14 +471,70 @@
 
     void (^dismiss)(void) = ^{ self.settingsWindow.hidden = YES; };
 
-    [sheet addAction:[UIAlertAction actionWithTitle:@"Edit Thresholds"
+    // --- Presets ---
+    if (isAcc) {
+        // ACC presets (validated on 178 gaps across 3 accounts)
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Balanced: 130 / 0.30  (6.0x)"
+                                                 style:UIAlertActionStyleDefault
+                                               handler:^(UIAlertAction *a) {
+            [self applyPresetToTile:tile threshold:130 gate:0.30];
+            dismiss();
+        }]];
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Conservative: 120 / 0.28  (3.5x)"
+                                                 style:UIAlertActionStyleDefault
+                                               handler:^(UIAlertAction *a) {
+            [self applyPresetToTile:tile threshold:120 gate:0.28];
+            dismiss();
+        }]];
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Aggressive: 130 / 0.32  (8.2x)"
+                                                 style:UIAlertActionStyleDefault
+                                               handler:^(UIAlertAction *a) {
+            [self applyPresetToTile:tile threshold:130 gate:0.32];
+            dismiss();
+        }]];
+    } else {
+        // SPN presets (validated on 213 gaps across 3 accounts)
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Conservative: 87 / 0.25  (1.5x)"
+                                                 style:UIAlertActionStyleDefault
+                                               handler:^(UIAlertAction *a) {
+            [self applyPresetToTile:tile threshold:87 gate:0.25];
+            dismiss();
+        }]];
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Balanced: 87 / 0.30  (3.3x)"
+                                                 style:UIAlertActionStyleDefault
+                                               handler:^(UIAlertAction *a) {
+            [self applyPresetToTile:tile threshold:87 gate:0.30];
+            dismiss();
+        }]];
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Wide: 60 / 0.25  (1.5x)"
+                                                 style:UIAlertActionStyleDefault
+                                               handler:^(UIAlertAction *a) {
+            [self applyPresetToTile:tile threshold:60 gate:0.25];
+            dismiss();
+        }]];
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Aggressive: 60 / 0.30  (2.6x)"
+                                                 style:UIAlertActionStyleDefault
+                                               handler:^(UIAlertAction *a) {
+            [self applyPresetToTile:tile threshold:60 gate:0.30];
+            dismiss();
+        }]];
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Spin-only: 87 / off  (1.1x)"
+                                                 style:UIAlertActionStyleDefault
+                                               handler:^(UIAlertAction *a) {
+            [self applyPresetToTile:tile threshold:87 gate:0.0];
+            dismiss();
+        }]];
+    }
+
+    // --- Custom + Reset ---
+    [sheet addAction:[UIAlertAction actionWithTitle:@"Custom..."
                                              style:UIAlertActionStyleDefault
                                            handler:^(UIAlertAction *a) {
         dismiss();
         [self showThresholdEditorForTile:tile];
     }]];
 
-    [sheet addAction:[UIAlertAction actionWithTitle:@"Reset Tracker"
+    [sheet addAction:[UIAlertAction actionWithTitle:@"Reset Counter"
                                              style:UIAlertActionStyleDestructive
                                            handler:^(UIAlertAction *a) {
         [t reset];
