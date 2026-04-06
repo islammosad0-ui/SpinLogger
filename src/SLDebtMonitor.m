@@ -34,6 +34,7 @@
 @property (nonatomic, strong) SLDebtTile *accTile;
 @property (nonatomic, strong) SLDebtTile *spnTile;
 @property (nonatomic, copy)   NSString *lastEventID;
+@property (nonatomic, copy)   NSString *lastMission;
 @property (nonatomic, strong) UIImpactFeedbackGenerator *haptic;
 @end
 
@@ -51,6 +52,7 @@
     if (self) {
         _haptic = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleHeavy];
         _lastEventID = [[NSUserDefaults standardUserDefaults] stringForKey:@"Speeder_DebtEventID"];
+        _lastMission = [[NSUserDefaults standardUserDefaults] stringForKey:@"Speeder_DebtMission"];
     }
     return self;
 }
@@ -222,6 +224,19 @@
         [[NSUserDefaults standardUserDefaults] setObject:eventID forKey:@"Speeder_DebtEventID"];
     }
 
+    // --- Mission change detection (GAE level reset) ---
+    NSString *mission = [NSString stringWithFormat:@"%ld", (long)result.accumMissionIndex];
+    if (mission.length > 0 && self.lastMission.length > 0 &&
+        ![mission isEqualToString:self.lastMission]) {
+        [self.accTile.tracker reset];
+        [self.spnTile.tracker reset];
+        NSLog(@"[DebtMonitor] Mission changed: %@ -> %@, reset trackers", self.lastMission, mission);
+    }
+    if (mission.length > 0) {
+        self.lastMission = mission;
+        [[NSUserDefaults standardUserDefaults] setObject:mission forKey:@"Speeder_DebtMission"];
+    }
+
     // --- Detect triples ---
     BOOL isTriple = (result.reel1 && [result.reel1 isEqualToString:result.reel2] &&
                      [result.reel2 isEqualToString:result.reel3]);
@@ -271,13 +286,31 @@
     SLDebtTracker *t = tile.tracker;
     NSInteger wp = [t watchPoint];
 
-    NSString *debtSign = (t.debt >= 0) ? @"+" : @"";
-    tile.debtLabel.text = [NSString stringWithFormat:@"%@ %@%ld", tile.emoji, debtSign, (long)t.debt];
+    // Show calibration progress or debt
+    if (!t.calibrated) {
+        tile.debtLabel.text = [NSString stringWithFormat:@"%@ CAL %ld/%ld",
+                               tile.emoji, (long)t.gapHistory.count, (long)t.calibrationThreshold];
+    } else {
+        NSString *debtSign = (t.debt >= 0) ? @"+" : @"";
+        tile.debtLabel.text = [NSString stringWithFormat:@"%@ %@%ld", tile.emoji, debtSign, (long)t.debt];
+    }
 
-    tile.progressLabel.text = [NSString stringWithFormat:@"%ld / %ld", (long)t.saSpins, (long)wp];
+    // Show spins/watchpoint + catch stats
+    if (t.calibrated) {
+        tile.progressLabel.text = [NSString stringWithFormat:@"%ld/%ld  %ld\u2713%ld\u2717",
+                                   (long)t.saSpins, (long)wp, (long)t.catches, (long)t.misses];
+    } else {
+        tile.progressLabel.text = [NSString stringWithFormat:@"%ld spins", (long)t.saSpins];
+    }
     tile.progressLabel.hidden = tile.compact;
 
-    switch (t.phase) {
+    // Calibrating state
+    if (!t.calibrated) {
+        tile.phaseLabel.text = @"LEARNING";
+        tile.phaseLabel.textColor = [UIColor colorWithRed:0.5 green:0.7 blue:1.0 alpha:1.0];
+        tile.container.layer.borderColor = [UIColor colorWithRed:0.3 green:0.5 blue:0.8 alpha:0.5].CGColor;
+        tile.container.layer.borderWidth = 1.0;
+    } else switch (t.phase) {
         case SLDebtPhaseWaiting:
             tile.phaseLabel.text = @"WAIT";
             tile.phaseLabel.textColor = [UIColor colorWithWhite:0.4 alpha:1.0];
@@ -388,66 +421,54 @@
 #pragma mark - Config Menu
 
 - (void)showConfigMenuForTile:(SLDebtTile *)tile {
-    SLDebtTrackerConfig *cfg = tile.tracker.config;
-    NSString *title = (tile == self.accTile) ? @"ACC Config" : @"SPN Config";
+    SLDebtTracker *t = tile.tracker;
+    SLDebtTrackerConfig *cfg = t.config;
+    NSString *title = (tile == self.accTile) ? @"ACC Tracker" : @"SPN Tracker";
 
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:title
-                                                                  message:nil
-                                                           preferredStyle:UIAlertControllerStyleAlert];
+    NSString *stats = [NSString stringWithFormat:
+        @"Target: %ld  Floor: %ld  Debt: %@%ld\n"
+        @"Quiet: %ld-%ld  Window: %ld\n"
+        @"Gaps seen: %ld  Calibrated: %@\n"
+        @"Catches: %ld  Misses: %ld\n"
+        @"Last gap: %ld",
+        (long)cfg.target, (long)cfg.floorBase, (t.debt >= 0 ? @"+" : @""), (long)t.debt,
+        (long)cfg.quietMin, (long)cfg.quietMax, (long)cfg.betWindow,
+        (long)t.gapHistory.count, t.calibrated ? @"YES" : @"NO",
+        (long)t.catches, (long)t.misses,
+        (long)t.lastGap];
 
-    [alert addTextFieldWithConfigurationHandler:^(UITextField *tf) {
-        tf.placeholder = @"Target (gap)";
-        tf.text = [NSString stringWithFormat:@"%ld", (long)cfg.target];
-        tf.keyboardType = UIKeyboardTypeNumberPad;
-    }];
-    [alert addTextFieldWithConfigurationHandler:^(UITextField *tf) {
-        tf.placeholder = @"Floor Base";
-        tf.text = [NSString stringWithFormat:@"%ld", (long)cfg.floorBase];
-        tf.keyboardType = UIKeyboardTypeNumberPad;
-    }];
-    [alert addTextFieldWithConfigurationHandler:^(UITextField *tf) {
-        tf.placeholder = @"Floor Min";
-        tf.text = [NSString stringWithFormat:@"%ld", (long)cfg.floorMin];
-        tf.keyboardType = UIKeyboardTypeNumberPad;
-    }];
-    [alert addTextFieldWithConfigurationHandler:^(UITextField *tf) {
-        tf.placeholder = @"Quiet Min";
-        tf.text = [NSString stringWithFormat:@"%ld", (long)cfg.quietMin];
-        tf.keyboardType = UIKeyboardTypeNumberPad;
-    }];
-    [alert addTextFieldWithConfigurationHandler:^(UITextField *tf) {
-        tf.placeholder = @"Quiet Max";
-        tf.text = [NSString stringWithFormat:@"%ld", (long)cfg.quietMax];
-        tf.keyboardType = UIKeyboardTypeNumberPad;
-    }];
-    [alert addTextFieldWithConfigurationHandler:^(UITextField *tf) {
-        tf.placeholder = @"Bet Window";
-        tf.text = [NSString stringWithFormat:@"%ld", (long)cfg.betWindow];
-        tf.keyboardType = UIKeyboardTypeNumberPad;
-    }];
+    UIAlertController *sheet = [UIAlertController alertControllerWithTitle:title
+                                                                  message:stats
+                                                           preferredStyle:UIAlertControllerStyleActionSheet];
 
-    [alert addAction:[UIAlertAction actionWithTitle:@"Save" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a) {
-        cfg.target    = [alert.textFields[0].text integerValue];
-        cfg.floorBase = [alert.textFields[1].text integerValue];
-        cfg.floorMin  = [alert.textFields[2].text integerValue];
-        cfg.quietMin  = [alert.textFields[3].text integerValue];
-        cfg.quietMax  = [alert.textFields[4].text integerValue];
-        cfg.betWindow = [alert.textFields[5].text integerValue];
-        [self updateTileUI:tile];
-        [self saveState];
-    }]];
-
-    [alert addAction:[UIAlertAction actionWithTitle:@"Reset Tracker" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *a) {
-        [tile.tracker reset];
+    [sheet addAction:[UIAlertAction actionWithTitle:@"Reset Tracker (re-calibrate)"
+                                              style:UIAlertActionStyleDestructive
+                                            handler:^(UIAlertAction *a) {
+        [t reset];
         [self stopGlow:tile];
         tile.glowing = NO;
         [self updateTileUI:tile];
         [self saveState];
     }]];
 
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [sheet addAction:[UIAlertAction actionWithTitle:@"Reset Stats Only"
+                                              style:UIAlertActionStyleDefault
+                                            handler:^(UIAlertAction *a) {
+        t.catches = 0;
+        t.misses = 0;
+        [self updateTileUI:tile];
+        [self saveState];
+    }]];
 
-    [tile.window.rootViewController presentViewController:alert animated:YES completion:nil];
+    [sheet addAction:[UIAlertAction actionWithTitle:@"Cancel"
+                                              style:UIAlertActionStyleCancel
+                                            handler:nil]];
+
+    // iPad popover anchor
+    sheet.popoverPresentationController.sourceView = tile.container;
+    sheet.popoverPresentationController.sourceRect = tile.container.bounds;
+
+    [tile.window.rootViewController presentViewController:sheet animated:YES completion:nil];
 }
 
 #pragma mark - Persistence

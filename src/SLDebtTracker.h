@@ -28,6 +28,12 @@ typedef NS_ENUM(NSInteger, SLDebtPhase) {
 @property (nonatomic, assign, readonly) BOOL quietTriggered;
 @property (nonatomic, assign, readonly) NSInteger betSpinsUsed;
 @property (nonatomic, assign, readonly) SLDebtPhase phase;
+@property (nonatomic, strong, readonly) NSMutableArray<NSNumber *> *gapHistory;
+@property (nonatomic, assign, readonly) BOOL calibrated;
+@property (nonatomic, assign) NSInteger calibrationThreshold; // gaps needed (default 5)
+@property (nonatomic, assign, readonly) NSInteger lastGap;
+@property (nonatomic, assign) NSInteger catches;   // BET NOW when triple hit
+@property (nonatomic, assign) NSInteger misses;    // triple hit outside BET NOW
 - (instancetype)initWithConfig:(SLDebtTrackerConfig *)config;
 - (void)onSpin:(SLSpinResult *)spin isTargetTriple:(BOOL)isTarget isOtherTriple:(BOOL)isOther;
 - (NSInteger)watchPoint;
