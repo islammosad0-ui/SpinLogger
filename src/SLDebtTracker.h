@@ -3,9 +3,9 @@
 @class SLSpinResult;
 
 typedef NS_ENUM(NSInteger, SLDebtPhase) {
-    SLDebtPhaseWaiting,   // below floor — no action
-    SLDebtPhaseWatch,     // above floor — paying attention
-    SLDebtPhaseBetNow     // above floor + quiet zone — MAX BET
+    SLDebtPhaseWaiting,   // below 70% of target — relax
+    SLDebtPhaseWatch,     // 70-110% of target OR armed waiting for trigger
+    SLDebtPhaseBetNow     // >= 110% + triggered by non-ACC triple — MAX BET
 };
 
 @interface SLDebtTrackerConfig : NSObject

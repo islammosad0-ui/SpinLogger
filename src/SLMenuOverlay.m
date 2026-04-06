@@ -498,10 +498,10 @@ static UIWindow *sDebtTableWindow = nil;
         UILabel *sh = [[UILabel alloc] initWithFrame:CGRectMake(pad, y, pw - pad * 2, 18)];
         sh.font = [UIFont boldSystemFontOfSize:11];
         sh.textColor = SLAccent();
-        NSInteger wpVal = [tr watchPoint];
         if (tr.calibrated) {
-            sh.text = [NSString stringWithFormat:@"%@  target=%ld  floor=%ld  debt=%@%ld",
-                headers[t], (long)tr.config.target, (long)wpVal,
+            NSInteger pct = (tr.config.target > 0) ? (tr.saSpins * 100 / tr.config.target) : 0;
+            sh.text = [NSString stringWithFormat:@"%@  target=%ld  %ld%%  debt=%@%ld",
+                headers[t], (long)tr.config.target, (long)pct,
                 (tr.debt >= 0 ? @"+" : @""), (long)tr.debt];
         } else {
             sh.text = [NSString stringWithFormat:@"%@  CAL %ld/%ld  (not calibrated)",
@@ -559,8 +559,9 @@ static UIWindow *sDebtTableWindow = nil;
             UILabel *cur = [[UILabel alloc] initWithFrame:CGRectMake(pad, y, pw - pad * 2, 14)];
             cur.font = [UIFont monospacedSystemFontOfSize:9 weight:UIFontWeightMedium];
             cur.textColor = [UIColor colorWithWhite:0.45 alpha:1.0];
-            cur.text = [NSString stringWithFormat:@"  → current: %ld spins  (floor=%ld)",
-                        (long)tr.saSpins, (long)wpVal];
+            NSInteger curPct = (tr.config.target > 0) ? (tr.saSpins * 100 / tr.config.target) : 0;
+            cur.text = [NSString stringWithFormat:@"  \u2192 current: %ld/%ld spins (%ld%%)",
+                        (long)tr.saSpins, (long)tr.config.target, (long)curPct];
             [sv addSubview:cur];
             y += 15;
         }

@@ -111,36 +111,27 @@ static const CGFloat kFloorRatio = 1.33;
         return;
     }
 
-    // --- Handle non-target triple (combat/spins/gold) ---
-    if (isOther) {
-        self.quietTriggered = YES;
-        self.quietSpins = 0;
-        self.inQuietZone = NO;
-    }
+    // --- Hazard-based phase computation (110% threshold + oneshot gate) ---
+    // Confirmed with 11K spins across 2 accounts: hazard rate rises past median.
+    // Once past 110% of target AND a non-ACC triple triggers the gate → BET.
+    // Gate stays open until ACC triple resets everything.
+    NSInteger threshold = (NSInteger)(self.config.target * 1.1); // 110% of median
+    NSInteger alertPoint = (NSInteger)(self.config.target * 0.7); // 70% of median
 
-    // --- Quiet zone tracking ---
-    if (self.quietTriggered) {
-        if (!isOther) {
-            self.quietSpins++;
+    if (self.saSpins >= threshold) {
+        // Past threshold — check oneshot gate
+        if (isOther) {
+            self.quietTriggered = YES; // reuse as "gate triggered" flag
         }
-        self.inQuietZone = (self.quietSpins >= self.config.quietMin &&
-                            self.quietSpins <= self.config.quietMax);
-    }
-
-    // --- Phase computation ---
-    NSInteger wp = [self watchPoint];
-
-    if (self.saSpins < wp) {
-        self.phase = SLDebtPhaseWaiting;
-        self.betSpinsUsed = 0;
-    } else if (self.inQuietZone && self.betSpinsUsed < self.config.betWindow) {
-        if (self.phase != SLDebtPhaseBetNow) {
-            self.betSpinsUsed = 0;
+        if (self.quietTriggered) {
+            self.phase = SLDebtPhaseBetNow; // gate open — stay in BET
+        } else {
+            self.phase = SLDebtPhaseWatch;  // armed, waiting for trigger
         }
-        self.phase = SLDebtPhaseBetNow;
-        self.betSpinsUsed++;
-    } else {
+    } else if (self.saSpins >= alertPoint) {
         self.phase = SLDebtPhaseWatch;
+    } else {
+        self.phase = SLDebtPhaseWaiting;
     }
 }
 

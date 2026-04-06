@@ -288,7 +288,6 @@
 
 - (void)updateTileUI:(SLDebtTile *)tile {
     SLDebtTracker *t = tile.tracker;
-    NSInteger wp = [t watchPoint];
 
     // Show calibration progress or debt
     if (!t.calibrated) {
@@ -299,10 +298,12 @@
         tile.debtLabel.text = [NSString stringWithFormat:@"%@ %@%ld", tile.emoji, debtSign, (long)t.debt];
     }
 
-    // Show spins/watchpoint + catch stats
+    // Show spins / target + percentage + catch stats
     if (t.calibrated) {
-        tile.progressLabel.text = [NSString stringWithFormat:@"%ld/%ld  %ld\u2713%ld\u2717",
-                                   (long)t.saSpins, (long)wp, (long)t.catches, (long)t.misses];
+        NSInteger pct = (t.config.target > 0) ? (t.saSpins * 100 / t.config.target) : 0;
+        tile.progressLabel.text = [NSString stringWithFormat:@"%ld/%ld %ld%%  %ld\u2713%ld\u2717",
+                                   (long)t.saSpins, (long)t.config.target, (long)pct,
+                                   (long)t.catches, (long)t.misses];
     } else {
         tile.progressLabel.text = [NSString stringWithFormat:@"%ld spins", (long)t.saSpins];
     }
@@ -317,12 +318,12 @@
     } else switch (t.phase) {
         case SLDebtPhaseWaiting:
             tile.phaseLabel.text = @"WAIT";
-            tile.phaseLabel.textColor = [UIColor colorWithWhite:0.4 alpha:1.0];
+            tile.phaseLabel.textColor = [UIColor colorWithRed:0.3 green:0.7 blue:0.3 alpha:1.0];
             tile.container.layer.borderColor = [UIColor colorWithWhite:1 alpha:0.06].CGColor;
             tile.container.layer.borderWidth = 1.0;
             break;
         case SLDebtPhaseWatch:
-            tile.phaseLabel.text = @"WATCH";
+            tile.phaseLabel.text = @"ALERT";
             tile.phaseLabel.textColor = [UIColor colorWithRed:1.0 green:0.75 blue:0.0 alpha:1.0];
             tile.container.layer.borderColor = tile.watchBorderColor.CGColor;
             tile.container.layer.borderWidth = 1.5;
@@ -445,17 +446,20 @@
     SLDebtTrackerConfig *cfg = t.config;
     NSString *title = (tile == self.accTile) ? @"ACC Tracker" : @"SPN Tracker";
 
+    NSInteger threshold110 = (NSInteger)(cfg.target * 1.1);
     NSString *calStr = t.calibrated
-        ? [NSString stringWithFormat:@"YES (target=%ld, floor=%ld)", (long)cfg.target, (long)cfg.floorBase]
+        ? [NSString stringWithFormat:@"YES (target=%ld, bet@%ld)", (long)cfg.target, (long)threshold110]
         : [NSString stringWithFormat:@"NO  (%ld/%ld gaps seen)", (long)t.gapHistory.count, (long)t.calibrationThreshold];
 
+    NSInteger pct = (cfg.target > 0) ? (t.saSpins * 100 / cfg.target) : 0;
     NSString *stats = [NSString stringWithFormat:
         @"Debt: %@%ld   Last gap: %ld\n"
-        @"Quiet: %ld–%ld   Window: %ld\n"
+        @"Position: %ld/%ld (%ld%%)\n"
         @"Calibrated: %@\n"
-        @"Catches: %ld   Misses: %ld",
+        @"Catches: %ld   Misses: %ld\n"
+        @"Strategy: 110%% threshold + oneshot gate",
         (t.debt >= 0 ? @"+" : @""), (long)t.debt, (long)t.lastGap,
-        (long)cfg.quietMin, (long)cfg.quietMax, (long)cfg.betWindow,
+        (long)t.saSpins, (long)cfg.target, (long)pct,
         calStr,
         (long)t.catches, (long)t.misses];
 
