@@ -228,13 +228,13 @@
         [[NSUserDefaults standardUserDefaults] setObject:eventID forKey:@"Speeder_DebtEventID"];
     }
 
-    // --- Mission change detection (GAE level reset) ---
+    // --- Mission change detection (log only, do NOT reset trackers) ---
+    // The game's pity timer does NOT reset on mission level-up,
+    // only on ACC/SPN triple. Resetting here caused false resets.
     NSString *mission = [NSString stringWithFormat:@"%ld", (long)result.accumMissionIndex];
     if (mission.length > 0 && self.lastMission.length > 0 &&
         ![mission isEqualToString:self.lastMission]) {
-        [self.accTile.tracker reset];
-        [self.spnTile.tracker reset];
-        NSLog(@"[DebtMonitor] Mission changed: %@ -> %@, reset trackers", self.lastMission, mission);
+        NSLog(@"[DebtMonitor] Mission changed: %@ -> %@ (no reset)", self.lastMission, mission);
     }
     if (mission.length > 0) {
         self.lastMission = mission;
