@@ -74,16 +74,20 @@ static const CGFloat kFloorRatio = 1.33;
             self.debt += (gap - self.config.target);
         }
 
-        // Auto-calibrate: after enough gaps, lock the target (skip if user locked it manually)
+        // Auto-calibrate: use MEDIAN (immune to startup outliers)
         if (!self.calibrated && !self.config.targetLocked &&
             (NSInteger)self.gapHistory.count >= self.calibrationThreshold) {
-            NSInteger sum = 0;
-            for (NSNumber *g in self.gapHistory) sum += g.integerValue;
-            self.config.target = sum / (NSInteger)self.gapHistory.count;
+            NSArray *sorted = [self.gapHistory sortedArrayUsingSelector:@selector(compare:)];
+            NSUInteger mid = sorted.count / 2;
+            if (sorted.count % 2 == 0) {
+                self.config.target = ([sorted[mid - 1] integerValue] + [sorted[mid] integerValue]) / 2;
+            } else {
+                self.config.target = [sorted[mid] integerValue];
+            }
             self.config.floorBase = (NSInteger)(self.config.target * kFloorRatio);
             self.calibrated = YES;
             self.debt = 0;
-            NSLog(@"[DebtTracker] Calibrated: target=%ld floorBase=%ld from %ld gaps",
+            NSLog(@"[DebtTracker] Calibrated (median): target=%ld floorBase=%ld from %ld gaps",
                   (long)self.config.target, (long)self.config.floorBase,
                   (long)self.gapHistory.count);
         }
