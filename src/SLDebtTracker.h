@@ -4,17 +4,17 @@
 
 typedef NS_ENUM(NSInteger, SLDebtPhase) {
     SLDebtPhaseWaiting,   // below 70% of target — relax
-    SLDebtPhaseWatch,     // 70-110% of target OR armed waiting for trigger
-    SLDebtPhaseBetNow     // >= 110% + triggered by non-ACC triple — MAX BET
+    SLDebtPhaseWatch,     // 70-110% of target OR armed/pulsing
+    SLDebtPhaseBetNow     // pulse window active — MAX BET
 };
 
 @interface SLDebtTrackerConfig : NSObject
 @property (nonatomic, assign) NSInteger target;      // expected gap (ACC=100, SPN=87)
 @property (nonatomic, assign) NSInteger floorBase;   // base floor (ACC=133, SPN=116)
 @property (nonatomic, assign) NSInteger floorMin;    // absolute min floor (20)
-@property (nonatomic, assign) NSInteger quietMin;    // min silence spins (3)
-@property (nonatomic, assign) NSInteger quietMax;    // max silence spins (7)
-@property (nonatomic, assign) NSInteger betWindow;   // max bet spins (8)
+@property (nonatomic, assign) NSInteger quietMin;    // pulse: skip spins after triple (3)
+@property (nonatomic, assign) NSInteger quietMax;    // pulse: bet spins after skip (3)
+@property (nonatomic, assign) NSInteger betWindow;   // (legacy, unused)
 @property (nonatomic, assign) BOOL      targetLocked; // when YES: skip auto-calibration
 + (instancetype)accDefaults;
 + (instancetype)spnDefaults;

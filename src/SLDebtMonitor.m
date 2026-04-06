@@ -457,11 +457,12 @@
         @"Position: %ld/%ld (%ld%%)\n"
         @"Calibrated: %@\n"
         @"Catches: %ld   Misses: %ld\n"
-        @"Strategy: 110%% threshold + oneshot gate",
+        @"Strategy: 110%% + pulse (skip %ld, bet %ld)",
         (t.debt >= 0 ? @"+" : @""), (long)t.debt, (long)t.lastGap,
         (long)t.saSpins, (long)cfg.target, (long)pct,
         calStr,
-        (long)t.catches, (long)t.misses];
+        (long)t.catches, (long)t.misses,
+        (long)cfg.quietMin, (long)cfg.quietMax];
 
     UIAlertController *sheet = [UIAlertController alertControllerWithTitle:title
                                                                    message:stats

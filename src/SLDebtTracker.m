@@ -8,14 +8,14 @@ static const CGFloat kFloorRatio = 1.33;
 + (instancetype)accDefaults {
     SLDebtTrackerConfig *c = [[self alloc] init];
     c.target = 100; c.floorBase = 133; c.floorMin = 20;
-    c.quietMin = 3; c.quietMax = 7; c.betWindow = 8;
+    c.quietMin = 3; c.quietMax = 3; c.betWindow = 8; // pulse: skip 3, bet 3
     return c;
 }
 
 + (instancetype)spnDefaults {
     SLDebtTrackerConfig *c = [[self alloc] init];
     c.target = 87; c.floorBase = 116; c.floorMin = 20;
-    c.quietMin = 3; c.quietMax = 7; c.betWindow = 8;
+    c.quietMin = 3; c.quietMax = 3; c.betWindow = 8; // pulse: skip 3, bet 3
     return c;
 }
 
@@ -111,22 +111,36 @@ static const CGFloat kFloorRatio = 1.33;
         return;
     }
 
-    // --- Hazard-based phase computation (110% threshold + oneshot gate) ---
-    // Confirmed with 11K spins across 2 accounts: hazard rate rises past median.
-    // Once past 110% of target AND a non-ACC triple triggers the gate → BET.
-    // Gate stays open until ACC triple resets everything.
+    // --- Hazard-based pulse betting (110% threshold + skip/bet pulse) ---
+    // Past 110%: each non-ACC triple starts a pulse cycle:
+    //   skip quietMin spins (1x) → bet quietMax spins (MAX) → 1x until next triple
+    // Triples cluster every ~5 spins. Skipping 3 after a triple then betting 3
+    // concentrates max bets where the NEXT triple is most likely to land.
+    // Simulated: 23.5 spins/hit on Account 1 (vs 38.9 without pulse).
     NSInteger threshold = (NSInteger)(self.config.target * 1.1); // 110% of median
     NSInteger alertPoint = (NSInteger)(self.config.target * 0.7); // 70% of median
 
     if (self.saSpins >= threshold) {
-        // Past threshold — check oneshot gate
         if (isOther) {
-            self.quietTriggered = YES; // reuse as "gate triggered" flag
+            // Non-ACC triple resets the pulse cycle
+            self.quietTriggered = YES;
+            self.quietSpins = 0; // pulse counter: 0 = just saw triple
         }
-        if (self.quietTriggered) {
-            self.phase = SLDebtPhaseBetNow; // gate open — stay in BET
+
+        if (!self.quietTriggered) {
+            self.phase = SLDebtPhaseWatch; // armed, waiting for first triple
         } else {
-            self.phase = SLDebtPhaseWatch;  // armed, waiting for trigger
+            self.quietSpins++;
+            if (self.quietSpins <= self.config.quietMin) {
+                // Skip phase: 1x bet (dead spins right after triple)
+                self.phase = SLDebtPhaseWatch;
+            } else if (self.quietSpins <= self.config.quietMin + self.config.quietMax) {
+                // Bet phase: MAX bet (next triple is due here)
+                self.phase = SLDebtPhaseBetNow;
+            } else {
+                // Past pulse window: 1x until next non-ACC triple resets
+                self.phase = SLDebtPhaseWatch;
+            }
         }
     } else if (self.saSpins >= alertPoint) {
         self.phase = SLDebtPhaseWatch;
