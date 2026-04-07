@@ -1,0 +1,57 @@
+==============================================================================================================
+CHUNK 13: PHANTOM CATCH AUDIT — Which catches are REAL vs PHANTOM
+==============================================================================================================
+
+PHANTOM = rule fired ONLY at the triple spin (sa_spins = gap_length).
+          In live play, user sees BET NOW after the triple — too late.
+REAL    = rule was firing at sa_spins = gap_length - 1 (the spin BEFORE the triple).
+          User saw BET NOW and bet high for the triple spin — real catch.
+
+rule                                         old-sim   REAL  phantom  phantom %  per-account REAL (I/A/N)
+--------------------------------------------------------------------------------------------------------------
+1. COMBO w10 t110 a0.28 p0.20 s0.010              42      9       33      78.6%  2/6/1
+2. Ideal RA w8 t110 r0.30 s0.006                  39      6       33      84.6%  1/4/1
+3. RA t130 r0.28 s0.010                           31      6       25      80.6%  2/3/1
+4. FLAT 150/0.32                                   7      4        3      42.9%  1/2/1
+5. SML L>=120 tL=130 g=0.32                        5      1        4      80.0%  0/1/0
+6. SML L>=120 tL=130 g=0.30                       10      5        5      50.0%  2/2/1
+7. SML S100 L120 tM=180 tL=130                    12      5        7      58.3%  1/3/1
+8. SML S100 L120 tM=110 tL=130                    13      5        8      61.5%  1/3/1
+9. SML S100 L130 tM=130 tL=100                    16      7        9      56.2%  2/4/1
+10. SML S50 L130 tM=150 tL=100                    17      7       10      58.8%  2/4/1
+11. SML S50 L130 tS=80 tM=150 tL=100              19      7       12      63.2%  2/4/1
+12. SHIELD-cond 110/0.32                           9      2        7      77.8%  0/1/1
+13. SHIELD-cond 120/0.32                           6      1        5      83.3%  0/0/1
+14. SHIELD-cond 130/0.32                           6      1        5      83.3%  0/0/1
+15. SHIELD-cond 140/0.32                           4      1        3      75.0%  0/0/1
+16. FLAT 150/0.37                                  3      0        3     100.0%  0/0/0
+--------------------------------------------------------------------------------------------------------------
+TOTAL (sum across all rules — not dedup)         239     67      172      72.0%
+
+==============================================================================================================
+ENSEMBLE UNION — REAL CATCHES ONLY
+==============================================================================================================
+
+Union of REAL catches across all 16 rules (dedup):
+A gap is REAL-caught by the union iff AT LEAST ONE rule was firing at sa_spins = L-1.
+
+  Old ensemble union (fires at triple spin):     63/178
+  REAL ensemble catches (fires at L-1 AND L):    19/178
+  PHANTOM-ONLY gaps (no rule fired at L-1):      44/178
+
+  REAL per-account:
+    Islam: 6/83 (7.2%)
+    Ahmed: 11/77 (14.3%)
+    Nick: 2/18 (11.1%)
+
+==============================================================================================================
+IMPLICATION
+==============================================================================================================
+
+If the REAL catch count is significantly lower than 63:
+  - The entire analysis (10_ensemble.py, 09_sml_crossval.py, 08_cross_validate.py,
+    03-07 sweeps) has been measuring the wrong thing.
+  - All 'validated' formulas need re-measurement.
+  - The live tracker's behavior is CORRECT (it computes state each spin,
+    user acts on previous state) — but the EXPECTED catch count is wrong.
+  - We need to re-run the entire pipeline with the L-1 fix.

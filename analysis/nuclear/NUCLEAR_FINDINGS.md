@@ -1,8 +1,32 @@
-# Nuclear Analysis Findings v3
+# Nuclear Analysis Findings v4 — POST-PHANTOM-BUG RE-ANALYSIS
 
-> 9 sweep chunks, 18,297 spins, 178 ACC gaps, 213 SPN gaps across Islam/Ahmed/Nick
-> Every config below is **cross-validated on all 3 accounts independently**.
-> Last updated: 2026-04-06
+> **2026-04-07 CRITICAL UPDATE**: The entire previous analysis was based on a
+> phantom catch bug. The simulator counted catches at the triple spin itself,
+> when `sa_spins = gap_length` includes the triple's own 3 acc symbols. Rules
+> that were nowhere near firing appeared to "catch" the triple because the
+> rate jumped to the gate only because of the triple landing. **70% of the
+> counted catches were phantom.** See chunk 13.
+>
+> The live tracker is correct (it evaluates state each spin, user acts on
+> previous state's display). Only the simulator was broken. All chunks 3-11
+> need re-running with the causal simulator (`simulate_causal()` in `02_eval.py`).
+>
+> **New dataset**: 28,923 spins, 271 ACC gaps, 333 SPN gaps (added 10,626
+> new spins on 2026-04-07 including live `bet_decisions.csv` for ground truth).
+>
+> **Real causal results**:
+>   - Best ensemble union: **44/271 (16.2%)** at **46.1 mb/hit** (vs fake 63/178 @ 10.49)
+>   - Best single rule: SHIELD-cond 140/0.32 at **28.6 mb/hit** (only 5 catches)
+>   - Live tracker ground truth (49 in-range triples): **20.4% REAL catches**
+>   - Every rule from the old list is above 28 mb/hit on real data
+>
+> The 20% catch rate at <10 mb/hit goal was NEVER achievable. The realistic
+> target is 20-25% catch rate at 30-40 mb/hit, or ultra-precise rules at
+> 15-25 mb/hit with low catch counts.
+>
+> Last updated: 2026-04-07 (post phantom bug discovery)
+
+---
 
 ---
 

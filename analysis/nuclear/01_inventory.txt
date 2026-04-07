@@ -2,26 +2,32 @@
 NUCLEAR LOADER - gap inventory
 ======================================================================
 
-Islam: 8378 spins
-  accumulation :   83 gaps (sa_spins)  mean=  99.8  min=   3  max= 394
-  spins        :   95 gaps (ss_spins)  mean=  89.1  min=   1  max= 267
-  attack       :  570 gaps (idx)       mean=  14.6  min=   1  max=  95
-  steal        :  258 gaps (idx)       mean=  32.3  min=   1  max= 136
-  shield       :  366 gaps (idx)       mean=  22.8  min=   1  max= 109
+Islam: 12891 spins across 2 session(s)
+  - Islam Account spin_history_2026-04-04.csv: 8378 spins, 83 ACC gaps, 95 SPN gaps
+  - Islam_spin_history.csv: 4513 spins, 36 ACC gaps, 52 SPN gaps
+  accumulation :  119 gaps (sa_spins)  mean= 106.6  min=   3  max= 443
+  spins        :  147 gaps (ss_spins)  mean=  88.1  min=   1  max= 267
+  attack       :  880 gaps (idx)       mean=  14.6  min=   1  max=  95
+  steal        :  387 gaps (idx)       mean=  33.0  min=   1  max= 136
+  shield       :  576 gaps (idx)       mean=  22.1  min=   1  max= 109
 
-Nick: 2316 spins
-  accumulation :   18 gaps (sa_spins)  mean= 129.9  min=  18  max= 340
-  spins        :   32 gaps (ss_spins)  mean=  71.1  min=   7  max= 173
-  attack       :  169 gaps (idx)       mean=  13.6  min=   1  max=  53
-  steal        :   67 gaps (idx)       mean=  33.5  min=   1  max= 132
-  shield       :  103 gaps (idx)       mean=  22.3  min=   1  max=  86
+Nick: 3104 spins across 2 session(s)
+  - Nick Account spin_history_2026-04-04 (1).csv: 2316 spins, 18 ACC gaps, 32 SPN gaps
+  - Nick_spin_history.csv: 788 spins, 7 ACC gaps, 8 SPN gaps
+  accumulation :   25 gaps (sa_spins)  mean= 122.4  min=  18  max= 340
+  spins        :   40 gaps (ss_spins)  mean=  74.9  min=   7  max= 173
+  attack       :  221 gaps (idx)       mean=  13.9  min=   1  max=  57
+  steal        :   90 gaps (idx)       mean=  33.4  min=   1  max= 132
+  shield       :  135 gaps (idx)       mean=  22.8  min=   1  max=  86
 
-Ahmed: 7603 spins
-  accumulation :   77 gaps (sa_spins)  mean=  98.3  min=  10  max= 250
-  spins        :   86 gaps (ss_spins)  mean=  85.6  min=   6  max= 310
-  attack       :  514 gaps (idx)       mean=  14.8  min=   1  max=  88
-  steal        :  241 gaps (idx)       mean=  31.2  min=   1  max= 119
-  shield       :  330 gaps (idx)       mean=  22.9  min=   1  max= 128
+Ahmed: 12928 spins across 2 session(s)
+  - Ahmed Account spin_history_2026-04-05.csv: 7603 spins, 77 ACC gaps, 86 SPN gaps
+  - Ahmed_spin_history.csv: 5325 spins, 50 ACC gaps, 60 SPN gaps
+  accumulation :  127 gaps (sa_spins)  mean= 101.5  min=  10  max= 260
+  spins        :  146 gaps (ss_spins)  mean=  86.0  min=   5  max= 324
+  attack       :  881 gaps (idx)       mean=  14.6  min=   1  max=  88
+  steal        :  395 gaps (idx)       mean=  32.5  min=   1  max= 119
+  shield       :  562 gaps (idx)       mean=  22.9  min=   1  max= 128
 
 --- DEDUP SIGNATURE CHECK (first 50 reels) ---
   Islam vs Nick: different
@@ -29,8 +35,8 @@ Ahmed: 7603 spins
   Nick vs Ahmed: different
 
 --- TOTAL GAPS ACROSS ALL 3 ACCOUNTS ---
-  accumulation : 178 gaps
-  spins        : 213 gaps
-  attack       : 1253 gaps
-  steal        : 566 gaps
-  shield       : 799 gaps
+  accumulation : 271 gaps
+  spins        : 333 gaps
+  attack       : 1982 gaps
+  steal        : 872 gaps
+  shield       : 1273 gaps

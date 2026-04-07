@@ -1,0 +1,107 @@
+==============================================================================================================
+CHUNK 14: LIVE TRACKER GROUND TRUTH — from bet_decisions.csv
+==============================================================================================================
+
+Reads each account's spin_history.csv + bet_decisions.csv and checks, for every
+ACC triple, whether the live tracker was actually in BET phase on the PREVIOUS spin.
+
+  REAL    = prev spin had rules_count > 0 AND phase == BET (user bet high, triple hit)
+  PHANTOM = prev spin had 0 rules firing, but rules fired ON the triple spin itself
+  MISSED  = no rules fired on prev or this spin (tracker missed it entirely)
+
+--- Ahmed ---
+  Spin history:        5325 rows
+  bet_decisions range: seq 55072..59307  (4236 spins)
+  ACC triples total:   50
+  ACC triples in range: 39  (only these have ground truth)
+  REAL catches: 6  (15.4% of in-range triples)
+  PHANTOM:      10  (25.6%)
+  MISSED:       23  (59.0%)
+  Outside range:11  (logger not active for those)
+
+  All 39 in-range triples:
+        seq  sa_spins  prev_rules  prev_phase  this_rules  verdict     
+      55096        25           0        WAIT           0  MISSED      
+      55229       133           0       ALERT           2  PHANTOM     
+      55315        86           0        SOON           0  MISSED      
+      55575       260           0       ALERT           3  PHANTOM     
+      55650        75           0        WAIT           0  MISSED      
+      55767       117           0       ALERT           1  PHANTOM     
+      55846        79           0        WAIT           0  MISSED      
+      55943        97           0        SOON           0  MISSED      
+      56046       103           0        SOON           0  MISSED      
+      56209       163           5         BET           5  REAL        
+      56402       193          12         BET          15  REAL        
+      56523       121           1         BET           2  REAL        
+      56672       149           0       ALERT           4  PHANTOM     
+      56795       123           0       ALERT           2  PHANTOM     
+      56889        94           0        SOON           0  MISSED      
+      57031       142           0       ALERT           0  MISSED      
+      57084        53           0        WAIT           0  MISSED      
+      57247       163           0       ALERT           3  PHANTOM     
+      57344        97           0        SOON           0  MISSED      
+      57390        46           0        WAIT           0  MISSED      
+      57571       181           0       ALERT           7  PHANTOM     
+      57587        16           0        WAIT           0  MISSED      
+      57688       101           0        REST           2  PHANTOM     
+      57789       101           0        SOON           0  MISSED      
+      57942       153           1         BET           8  REAL        
+      58011        69           0        WAIT           0  MISSED      
+      58080        69           0        WAIT           0  MISSED      
+      58242       162           3         BET          13  REAL        
+      58286        44           0        WAIT           0  MISSED      
+      58404       118           2         BET           4  REAL        
+      58553       149           0       ALERT           2  PHANTOM     
+      58663       110           0        REST           0  MISSED      
+      58747        84           0        WAIT           0  MISSED      
+      58787        40           0        WAIT           0  MISSED      
+      58945       158           0        REST           9  PHANTOM     
+      58997        52           0        WAIT           0  MISSED      
+      59111       114           0       ALERT           0  MISSED      
+      59197        86           0        SOON           0  MISSED      
+      59296        99           0        WAIT           0  MISSED      
+
+--- Islam ---
+  Spin history:        4513 rows
+  bet_decisions range: seq 79074..80989  (1916 spins)
+  ACC triples total:   36
+  ACC triples in range: 10  (only these have ground truth)
+  REAL catches: 4  (40.0% of in-range triples)
+  PHANTOM:      1  (10.0%)
+  MISSED:       5  (50.0%)
+  Outside range:26  (logger not active for those)
+
+  All 10 in-range triples:
+        seq  sa_spins  prev_rules  prev_phase  this_rules  verdict     
+      79113        55           0        WAIT           0  MISSED      
+      79286       173           2         BET           3  REAL        
+      79412       126           0       ALERT           2  PHANTOM     
+      79489        77           0        SOON           0  MISSED      
+      79626       137           6         BET           6  REAL        
+      79906       280           0       ALERT           0  MISSED      
+      80198       292           1         BET           8  REAL        
+      80641       443           0        WAIT           0  MISSED      
+      80711        70           0        WAIT           0  MISSED      
+      80877       166          10         BET          11  REAL        
+
+--- Nick ---
+  Spin history:        788 rows
+  bet_decisions range: seq 64000..64046  (47 spins)
+  ACC triples total:   7
+  ACC triples in range: 0  (only these have ground truth)
+  REAL catches: 0  (0.0% of in-range triples)
+  PHANTOM:      0  (0.0%)
+  MISSED:       0  (0.0%)
+  Outside range:7  (logger not active for those)
+
+
+==============================================================================================================
+TOTAL (in-range only — ground truth subset)
+==============================================================================================================
+  In-range ACC triples:  49
+  REAL catches: 10  (20.4%)
+  PHANTOM:      11  (22.4%)
+  MISSED:       28  (57.1%)
+
+Compare to causal simulator projection on all 271 gaps: 44 catches (16.2%).
+If live REAL % is close to 16%, the causal simulator is validated.

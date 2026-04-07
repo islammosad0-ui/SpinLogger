@@ -93,13 +93,15 @@ def simulate(strategy_fn, gaps, ending_must_be_bet=True):
 
 def simulate_fast(decision_at_end_of_gap, gaps):
     """
-    OPTIMIZED simulate for memoryless strategies that only depend on the
-    counter values at each spin (not the full trajectory).
+    *** DEPRECATED — CONTAINS A PHANTOM CATCH BUG ***
+    See 13_phantom_audit.py. This simulator counts a catch when the rule fires
+    at i == len(traj) - 1, which is the triple spin itself — with its 3 acc
+    symbols already added to the counter. In live play, the user bets for spin
+    N based on tile state at sa_spins = N-1 (the state BEFORE the spin). So
+    catches measured here are 70%+ phantom.
 
-    decision_at_end_of_gap: callable(spin_record) -> bool
-
-    This evaluates the predicate directly on each spin record, no slicing.
-    Returns same metrics dict.
+    Kept only for historical comparison with old chunks. New code MUST use
+    simulate_causal() below.
     """
     caught = 0
     bet_spins = 0
@@ -115,6 +117,65 @@ def simulate_fast(decision_at_end_of_gap, gaps):
                 bet_spins += 1
                 if i == len(traj) - 1:
                     gap_caught = True
+        if gap_caught:
+            caught += 1
+
+    bet_pct = (bet_spins / total_spins) if total_spins else 0.0
+    catch_rate = (caught / total_gaps) if total_gaps else 0.0
+    base_rate = (total_gaps / total_spins) if total_spins else 0.0
+    bet_hit_rate = (caught / bet_spins) if bet_spins else 0.0
+    mb_per_hit = (bet_spins / caught) if caught else float('inf')
+    lift = (bet_hit_rate / base_rate) if base_rate > 0 else 0.0
+
+    return {
+        'caught': caught,
+        'total_gaps': total_gaps,
+        'bet_spins': bet_spins,
+        'total_spins': total_spins,
+        'bet_pct': bet_pct,
+        'catch_rate': catch_rate,
+        'mb_per_hit': mb_per_hit,
+        'lift': lift,
+    }
+
+
+def simulate_causal(decision_at_end_of_gap, gaps):
+    """
+    CAUSAL simulator — matches live tracker semantics.
+
+    User places a bet for spin N+1 based on tile state at spin N. The rule
+    evaluates the tile state AFTER spin N has been processed, and the result
+    determines whether the bet for spin N+1 is high.
+
+    So for gap of length L:
+      - Rule fires at iteration i (0 <= i <= L-2)  =>  user bet high for
+        the NEXT spin (iteration i+1). Count this as 1 bet spin.
+      - If the next spin is the triple (i+1 == L-1), count as a catch.
+      - Iteration i = L-1 (the triple itself) is NEVER evaluated for bets,
+        because there's no subsequent spin in this gap. Any bet made "at"
+        the triple spin would be post-hoc.
+
+    decision_at_end_of_gap: callable(spin_record) -> bool
+    """
+    caught = 0
+    bet_spins = 0
+    total_spins = 0
+    total_gaps = len(gaps)
+
+    for gap in gaps:
+        traj = gap['trajectory']
+        total_spins += len(traj)
+        L = len(traj)
+        if L < 2:
+            continue  # no state before the triple, can't predict it
+        gap_caught = False
+        # Walk indices 0..L-2 (skip the triple at L-1)
+        for i in range(L - 1):
+            spin = traj[i]
+            if decision_at_end_of_gap(spin):
+                bet_spins += 1  # user bet high for spin i+1
+                if i + 1 == L - 1:
+                    gap_caught = True  # that next spin IS the triple
         if gap_caught:
             caught += 1
 

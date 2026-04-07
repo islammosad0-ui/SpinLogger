@@ -216,9 +216,14 @@ CONFIGS = [
 
 def simulate_with_catch_flags(fn, gaps):
     """
+    CAUSAL: rule fires at state i (after spin i) determines the bet for spin i+1.
+    A gap is caught iff the rule fired at i = L-2 (the spin BEFORE the triple),
+    because the user acts on the tile state after that spin to bet on the triple
+    at L-1. This matches live tracker semantics.
+
     Returns:
-      - caught_set: set of gap indices caught
-      - bet_spins: total spins we bet on
+      - caught_set: set of gap indices where the rule fired at L-2
+      - bet_spins: count of (i, i+1) pairs where rule fired at i (0 <= i <= L-2)
       - total_spins: total spins seen
     """
     caught_set = set()
@@ -227,9 +232,13 @@ def simulate_with_catch_flags(fn, gaps):
     for gap_idx, gap in enumerate(gaps):
         prev = gap.get('prev_gap_length')
         traj = gap['trajectory']
-        total_spins += len(traj)
-        for i, spin in enumerate(traj):
-            # Inject trajectory reference for RA/COMBO functions
+        L = len(traj)
+        total_spins += L
+        if L < 2:
+            continue
+        # Walk 0..L-2: rule firing at i means user bets high for spin i+1
+        for i in range(L - 1):
+            spin = traj[i]
             spin['_traj_ref'] = traj
             spin['_traj_idx'] = i
             spin['_prev_triple_type'] = gap.get('prev_real_triple')
@@ -237,9 +246,9 @@ def simulate_with_catch_flags(fn, gaps):
             if decision is None:
                 continue
             if decision:
-                bet_spins += 1
-                if i == len(traj) - 1:
-                    caught_set.add(gap_idx)
+                bet_spins += 1  # user bet high for spin i+1
+                if i + 1 == L - 1:
+                    caught_set.add(gap_idx)  # that's the triple
     return caught_set, bet_spins, total_spins
 
 
@@ -317,8 +326,8 @@ def run():
                        f"{union_bet_spins:>10d}  {mb:8.1f}")
 
     # ---- True union simulation ----
-    results.append(f"\n--- TRUE union simulation (bet if ANY sub-10mb config says bet) ---")
-    results.append("(deduplicates bet spins — one spin counted once even if multiple configs fire)")
+    results.append(f"\n--- TRUE union simulation (bet if ANY config says bet) — CAUSAL ---")
+    results.append("(rule firing at i determines bet for spin i+1; catch iff i+1 == triple)")
 
     all_fns = [fn for _, fn, _ in CONFIGS]
     union_caught_true = set()
@@ -328,8 +337,11 @@ def run():
     for gap_idx, gap in enumerate(gaps):
         prev = gap.get('prev_gap_length')
         traj = gap['trajectory']
-        union_total += len(traj)
-        for i, spin in enumerate(traj):
+        L = len(traj)
+        union_total += L
+        if L < 2: continue
+        for i in range(L - 1):
+            spin = traj[i]
             spin['_traj_ref'] = traj
             spin['_traj_idx'] = i
             spin['_prev_triple_type'] = gap.get('prev_real_triple')
@@ -341,7 +353,7 @@ def run():
                     break
             if any_bet:
                 union_bet_true += 1
-                if i == len(traj) - 1:
+                if i + 1 == L - 1:
                     union_caught_true.add(gap_idx)
 
     n_u = len(union_caught_true)

@@ -19,10 +19,24 @@ import csv
 import pickle
 from pathlib import Path
 
+# Per-account sources. Multiple files per account are loaded as separate
+# SESSIONS — their counters start fresh at sa_spins=1 for each file. The
+# loader computes gaps within each session and concatenates the gap lists
+# per account. Session boundaries are preserved via a `session_idx` field
+# on each spin record.
 DATA_FILES = {
-    'Islam': r'C:\Users\Islam\Downloads\Islam Account spin_history_2026-04-04.csv',
-    'Nick':  r'C:\Users\Islam\Downloads\Nick Account spin_history_2026-04-04 (1).csv',
-    'Ahmed': r'C:\Users\Islam\Downloads\Ahmed Account spin_history_2026-04-05.csv',
+    'Islam': [
+        r'C:\Users\Islam\Downloads\Islam Account spin_history_2026-04-04.csv',
+        r'C:\Users\Islam\Desktop\Coin Master\SpinLogger\analysis\nuclear\data_2026-04-07\Islam_spin_history.csv',
+    ],
+    'Nick': [
+        r'C:\Users\Islam\Downloads\Nick Account spin_history_2026-04-04 (1).csv',
+        r'C:\Users\Islam\Desktop\Coin Master\SpinLogger\analysis\nuclear\data_2026-04-07\Nick_spin_history.csv',
+    ],
+    'Ahmed': [
+        r'C:\Users\Islam\Downloads\Ahmed Account spin_history_2026-04-05.csv',
+        r'C:\Users\Islam\Desktop\Coin Master\SpinLogger\analysis\nuclear\data_2026-04-07\Ahmed_spin_history.csv',
+    ],
 }
 
 REAL_TRIPLES = ['accumulation', 'spins', 'attack', 'steal', 'shield']
@@ -184,53 +198,98 @@ def main():
     all_data = {}
     summary = ["=" * 70, "NUCLEAR LOADER - gap inventory", "=" * 70]
 
-    for account, path in DATA_FILES.items():
-        rows = load_csv(path)
-        spins = build_spin_records(rows)
-        acct = {'spins': spins, 'gaps': {}}
-        line = f"\n{account}: {len(spins)} spins"
+    for account, paths in DATA_FILES.items():
+        # Backwards compat: allow a single string path
+        if isinstance(paths, str):
+            paths = [paths]
+
+        # Load each CSV as a separate session
+        all_spins = []       # concatenated with session_idx stamped
+        all_acc_gaps = []
+        all_spn_gaps = []
+        all_atk_gaps = []
+        all_stl_gaps = []
+        all_shd_gaps = []
+        session_summaries = []
+
+        for sess_idx, path in enumerate(paths):
+            rows = load_csv(path)
+            spins = build_spin_records(rows)
+            # Tag each spin with its session index and filename
+            for s in spins:
+                s['session_idx'] = sess_idx
+                s['session_file'] = Path(path).name
+            all_spins.extend(spins)
+
+            # Compute gaps within THIS session (counters don't cross sessions)
+            acc_gaps = build_counter_gaps(spins, 'accumulation', 'sa_spins')
+            spn_gaps = build_counter_gaps(spins, 'spins', 'ss_spins')
+            atk_gaps = build_index_gaps(spins, 'attack')
+            stl_gaps = build_index_gaps(spins, 'steal')
+            shd_gaps = build_index_gaps(spins, 'shield')
+
+            # Tag each gap with its session too
+            for g in acc_gaps + spn_gaps + atk_gaps + stl_gaps + shd_gaps:
+                g['session_idx'] = sess_idx
+                g['session_file'] = Path(path).name
+
+            all_acc_gaps.extend(acc_gaps)
+            all_spn_gaps.extend(spn_gaps)
+            all_atk_gaps.extend(atk_gaps)
+            all_stl_gaps.extend(stl_gaps)
+            all_shd_gaps.extend(shd_gaps)
+
+            session_summaries.append({
+                'file': Path(path).name,
+                'spins': len(spins),
+                'acc_gaps': len(acc_gaps),
+                'spn_gaps': len(spn_gaps),
+            })
+
+        acct = {'spins': all_spins, 'gaps': {
+            'accumulation': all_acc_gaps,
+            'spins': all_spn_gaps,
+            'attack': all_atk_gaps,
+            'steal': all_stl_gaps,
+            'shield': all_shd_gaps,
+        }}
+
+        line = f"\n{account}: {len(all_spins)} spins across {len(paths)} session(s)"
         summary.append(line)
         print(line)
+        for ss in session_summaries:
+            line = f"  - {ss['file']}: {ss['spins']} spins, {ss['acc_gaps']} ACC gaps, {ss['spn_gaps']} SPN gaps"
+            summary.append(line)
+            print(line)
 
-        # ACC uses sa_spins (resets on ACC triple)
-        acc_gaps = build_counter_gaps(spins, 'accumulation', 'sa_spins')
-        acct['gaps']['accumulation'] = acc_gaps
-        if acc_gaps:
-            lengths = [g['length'] for g in acc_gaps]
-            line = (f"  accumulation : {len(acc_gaps):4d} gaps (sa_spins)  "
+        if all_acc_gaps:
+            lengths = [g['length'] for g in all_acc_gaps]
+            line = (f"  accumulation : {len(all_acc_gaps):4d} gaps (sa_spins)  "
                     f"mean={sum(lengths)/len(lengths):6.1f}  "
                     f"min={min(lengths):4d}  max={max(lengths):4d}")
         else:
             line = "  accumulation : 0 gaps"
-        summary.append(line)
-        print(line)
+        summary.append(line); print(line)
 
-        # SPN uses ss_spins (resets on SPN triple)
-        spn_gaps = build_counter_gaps(spins, 'spins', 'ss_spins')
-        acct['gaps']['spins'] = spn_gaps
-        if spn_gaps:
-            lengths = [g['length'] for g in spn_gaps]
-            line = (f"  spins        : {len(spn_gaps):4d} gaps (ss_spins)  "
+        if all_spn_gaps:
+            lengths = [g['length'] for g in all_spn_gaps]
+            line = (f"  spins        : {len(all_spn_gaps):4d} gaps (ss_spins)  "
                     f"mean={sum(lengths)/len(lengths):6.1f}  "
                     f"min={min(lengths):4d}  max={max(lengths):4d}")
         else:
             line = "  spins        : 0 gaps"
-        summary.append(line)
-        print(line)
+        summary.append(line); print(line)
 
-        # Other triples use index gaps (no dedicated counter)
         for target in ['attack', 'steal', 'shield']:
-            gaps = build_index_gaps(spins, target)
-            acct['gaps'][target] = gaps
-            if gaps:
-                lengths = [g['length'] for g in gaps]
-                line = (f"  {target:13s}: {len(gaps):4d} gaps (idx)       "
+            g_list = acct['gaps'][target]
+            if g_list:
+                lengths = [g['length'] for g in g_list]
+                line = (f"  {target:13s}: {len(g_list):4d} gaps (idx)       "
                         f"mean={sum(lengths)/len(lengths):6.1f}  "
                         f"min={min(lengths):4d}  max={max(lengths):4d}")
             else:
                 line = f"  {target:13s}: 0 gaps"
-            summary.append(line)
-            print(line)
+            summary.append(line); print(line)
 
         all_data[account] = acct
 
