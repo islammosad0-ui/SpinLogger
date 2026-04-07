@@ -243,6 +243,8 @@
 @property (nonatomic, assign, readwrite) SLDebtPhase phase;
 @property (nonatomic, assign, readwrite) NSInteger firingRuleCount;
 @property (nonatomic, assign, readwrite) NSUInteger firingRuleBitmask;
+@property (nonatomic, assign, readwrite) NSInteger priorFiringRuleCount;
+@property (nonatomic, assign, readwrite) NSUInteger priorFiringRuleBitmask;
 @property (nonatomic, assign, readwrite) NSInteger consecBets;
 @property (nonatomic, assign, readwrite) NSInteger cooldownRemaining;
 @property (nonatomic, assign, readwrite) NSInteger gapBetCount;
@@ -378,6 +380,14 @@
         primary:(NSInteger)primary
       secondary:(NSInteger)secondary {
 
+    // ---- CAUSAL snapshot ----
+    // Capture the firing state AS OF the end of the previous spin — BEFORE any counter
+    // updates for this spin. This is the honest answer to "was the tracker telling the
+    // user to bet on the spin that just happened?" Used for target_caught and per-rule
+    // CSV logging so analysis reflects real predictive power, not post-triple rate spikes.
+    self.priorFiringRuleCount   = self.firingRuleCount;
+    self.priorFiringRuleBitmask = self.firingRuleBitmask;
+
     self.saSpins++;
     self.saSymbols    += primary;
     self.saSpnSymbols += secondary;
@@ -443,9 +453,11 @@
         self.consecBets       = 0;
         self.cooldownRemaining = 0;
         self.gapBetCount      = 0;
-        // Note: firingRuleCount and firingRuleBitmask are NOT reset here.
-        // They reflect what fired on the catch spin (so the CSV logger records the catch correctly).
-        // They'll be recomputed on the next spin.
+        // Clear firing state so the NEXT spin's prior-snapshot starts fresh.
+        // (The CSV logger already captured priorFiring* for THIS row before the reset,
+        //  which is what matters for target_caught.)
+        self.firingRuleCount   = 0;
+        self.firingRuleBitmask = 0;
         memset(_rateHistory, 0, sizeof(_rateHistory));
         return;
     }

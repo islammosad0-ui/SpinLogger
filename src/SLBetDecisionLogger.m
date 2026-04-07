@@ -130,7 +130,10 @@ void SLBetDecisionLoggerAppend(SLSpinResult *result,
     NSString *ts = result.timestamp ? [fmt stringFromDate:result.timestamp] : @"";
 
     // ---- Decode bitmask into per-rule binary columns ----
-    NSUInteger bm = t.firingRuleBitmask;
+    // CAUSAL: use the prior-snapshot bitmask (state going INTO this spin), not the
+    // post-spin bitmask. Otherwise the triple's own 3 acc symbols bump the rate past
+    // the gate and we log a phantom catch on the spin we were trying to predict.
+    NSUInteger bm = t.priorFiringRuleBitmask;
     int r[16];
     for (int i = 0; i < 16; i++) r[i] = (bm >> i) & 1;
 
@@ -145,7 +148,10 @@ void SLBetDecisionLoggerAppend(SLSpinResult *result,
         else if ([result.reel1 isEqualToString:kSLSymbolShield])       tripleType = @"shield";
     }
     BOOL isAcc = isTriple && [result.reel1 isEqualToString:kSLSymbolAccumulation];
-    BOOL targetCaught = (isAcc && t.firingRuleCount > 0);  // bet was active on the catch spin
+    // CAUSAL: target_caught means "tracker was telling us to bet on the spin that just
+    // landed the triple" — i.e. firing state going INTO this spin, not after the triple's
+    // own symbols inflated the rate.
+    BOOL targetCaught = (isAcc && t.priorFiringRuleCount > 0);
 
     // ---- accum_pct + delta from result ----
     double accumPct = 0.0;
@@ -175,7 +181,7 @@ void SLBetDecisionLoggerAppend(SLSpinResult *result,
         [t accumRate], [t spnRate], [t slopeForWindow:8], [t slopeForWindow:10],
         r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],
         r[8],r[9],r[10],r[11],r[12],r[13],r[14],r[15],
-        (long)t.firingRuleCount, (unsigned long)t.firingRuleBitmask,
+        (long)t.priorFiringRuleCount, (unsigned long)t.priorFiringRuleBitmask,
         phase, (long)t.cooldownRemaining, (long)t.consecBets, (long)t.gapBetCount,
         isTriple ? 1 : 0, tripleType, targetCaught ? 1 : 0,
         result.gaeSegment ?: @"", (long)result.gaeGrandPrize, (long)result.gaeLastMission,
