@@ -1,6 +1,7 @@
 #import "SLMenuOverlay.h"
 #import "SLConstants.h"
 #import "SLSpinStore.h"
+#import "SLBetDecisionLogger.h"
 #import "SLSpeedController.h"
 #import "SLSpinTarget.h"
 #import "SLTrisController.h"
@@ -278,6 +279,18 @@ static UIWindow *sDebtTableWindow = nil;
     resetPosBtn.frame = CGRectMake(pad, 82, pw - pad * 2, 30);
     [resetPosBtn addTarget:self action:@selector(counterResetPositions) forControlEvents:UIControlEventTouchUpInside];
     [sCounterContent addSubview:resetPosBtn];
+
+    // Account name button — tags log files (spin_history & bet_decisions) per account
+    NSString *curAcct = [[NSUserDefaults standardUserDefaults] stringForKey:@"Speeder_AccountName"];
+    NSString *acctTitle = (curAcct.length > 0)
+        ? [NSString stringWithFormat:@"ACCOUNT: %@", curAcct]
+        : @"SET ACCOUNT NAME";
+    UIButton *acctBtn = SLMakeBtn(acctTitle, pw - pad * 2, 30,
+        [UIColor colorWithWhite:0.15 alpha:1], SLAccent(), 11);
+    acctBtn.frame = CGRectMake(pad, 120, pw - pad * 2, 30);
+    acctBtn.tag = 410;
+    [acctBtn addTarget:self action:@selector(accountNameTap) forControlEvents:UIControlEventTouchUpInside];
+    [sCounterContent addSubview:acctBtn];
 
     // === DEBT TRACKER content (hidden by default) ===
     sDebtContent = [[UIView alloc] initWithFrame:CGRectMake(0, 42, pw, ph - 42)];
@@ -636,6 +649,42 @@ static UIWindow *sDebtTableWindow = nil;
 
 + (void)counterResetPositions {
     [[SLCounterOverlay shared] resetPositions];
+}
+
++ (void)accountNameTap {
+    NSString *cur = [[NSUserDefaults standardUserDefaults] stringForKey:@"Speeder_AccountName"];
+    UIAlertController *a = [UIAlertController
+        alertControllerWithTitle:@"Account Name"
+                         message:@"Tags log filenames per account.\nMax 12 chars: A-Z 0-9 _ -\nLeave blank to clear."
+                  preferredStyle:UIAlertControllerStyleAlert];
+    [a addTextFieldWithConfigurationHandler:^(UITextField *tf) {
+        tf.placeholder = @"e.g. iphone_main";
+        tf.text = cur ?: @"";
+        tf.autocapitalizationType = UITextAutocapitalizationTypeNone;
+        tf.autocorrectionType = UITextAutocorrectionTypeNo;
+    }];
+    [a addAction:[UIAlertAction actionWithTitle:@"Save" style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) {
+        NSString *raw = a.textFields.firstObject.text ?: @"";
+        NSString *trimmed = [raw stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+        if (trimmed.length == 0) {
+            [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"Speeder_AccountName"];
+        } else {
+            [[NSUserDefaults standardUserDefaults] setObject:trimmed forKey:@"Speeder_AccountName"];
+        }
+        SLSpinStoreInvalidateHeader();
+        SLBetDecisionLoggerInvalidateHeader();
+
+        // Refresh the button title
+        UIButton *btn = (UIButton *)[sCounterContent viewWithTag:410];
+        NSString *newTitle = (trimmed.length > 0)
+            ? [NSString stringWithFormat:@"ACCOUNT: %@", trimmed]
+            : @"SET ACCOUNT NAME";
+        [btn setTitle:newTitle forState:UIControlStateNormal];
+
+        NSLog(@"[SpinLogger] Account name set to '%@' — next CSV writes will use the new filename", trimmed);
+    }]];
+    [a addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [[self topVC] presentViewController:a animated:YES completion:nil];
 }
 
 + (void)targetSpin {

@@ -39,11 +39,32 @@ static NSString *SLBetSessionDate(void) {
     return sSessionDate;
 }
 
+// Returns "_<sanitized>" if Speeder_AccountName is set, else "".
+// Allows [A-Za-z0-9_-], replaces anything else with '_', caps at 12 chars.
+static NSString *SLBetAccountSuffix(void) {
+    NSString *name = [[NSUserDefaults standardUserDefaults] stringForKey:@"Speeder_AccountName"];
+    if (name.length == 0) return @"";
+    NSMutableString *clean = [NSMutableString string];
+    for (NSUInteger i = 0; i < name.length && clean.length < 12; i++) {
+        unichar c = [name characterAtIndex:i];
+        BOOL ok = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+                  (c >= '0' && c <= '9') || c == '-' || c == '_';
+        [clean appendFormat:@"%C", ok ? c : '_'];
+    }
+    if (clean.length == 0) return @"";
+    return [NSString stringWithFormat:@"_%@", clean];
+}
+
 static NSString *SLBetCSVPath(void) {
     NSString *docs = NSSearchPathForDirectoriesInDomains(
         NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
-    NSString *filename = [NSString stringWithFormat:@"bet_decisions_%@.csv", SLBetSessionDate()];
+    NSString *filename = [NSString stringWithFormat:@"bet_decisions%@_%@.csv",
+        SLBetAccountSuffix(), SLBetSessionDate()];
     return [docs stringByAppendingPathComponent:filename];
+}
+
+void SLBetDecisionLoggerInvalidateHeader(void) {
+    sHeaderEnsured = NO;
 }
 
 static void SLBetEnsureHeader(void) {
