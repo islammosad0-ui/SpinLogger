@@ -1,0 +1,428 @@
+==================================================================================================================================
+CHUNK 11: PER-GAP DETAIL — Which configs catch which gaps
+==================================================================================================================================
+Total ACC gaps: 178
+Configs tested: 11
+
+Legend:
+  CAUGHT = config bet on the FINAL spin of the gap (= caught the triple)
+  bets    = total spins this config wasted/spent within this gap (across all spins)
+  PREV    = length of the gap immediately before this one (key for SML L bucket)
+  L=YES   = previous gap was >=120 spins (L bucket — strongest signal)
+
+==================================================================================================================================
+ALL 178 GAPS — ranked by account, then index
+==================================================================================================================================
+   #   Acct  len  prev  L  Caught? #bets  configs that caught it                                      
+----------------------------------------------------------------------------------------------------------------------------------
+   0  Islam   82     —                 0                                                              
+   1  Islam  146    82                 5                                                              
+   2  Islam   21   146  Y              0                                                              
+   3  Islam   59    21                 0                                                              
+   4  Islam  149    59                10                                                              
+   5  Islam   46   149  Y              0                                                              
+   6  Islam   87    46         YES     1  SML-S50L130-80                                              
+   7  Islam  151    87         YES    11  COMBO,RA-t130                                               
+   8  Islam   93   151  Y              0                                                              
+   9  Islam   49    93                 0                                                              
+  10  Islam  129    49         YES     3  COMBO                                                       
+  11  Islam  136   129  Y      YES    22  SML-L120/.32,SML-L120/.30,SML-S100L120-180,SML-S100L120-110,
+  12  Islam   19   136  Y              0                                                              
+  13  Islam  132    19         YES     2  COMBO,RA-t130                                               
+  14  Islam   71   132  Y              0                                                              
+  15  Islam  136    71                 0                                                              
+  16  Islam   68   136  Y              0                                                              
+  17  Islam   65    68                 0                                                              
+  18  Islam   55    65                 0                                                              
+  19  Islam   28    55                 0                                                              
+  20  Islam  100    28                 0                                                              
+  21  Islam   30   100                 0                                                              
+  22  Islam   39    30                 0                                                              
+  23  Islam   12    39                 0                                                              
+  24  Islam   34    12                 0                                                              
+  25  Islam  394    34         YES    71  Ideal-RA                                                    
+  26  Islam    3   394  Y              0                                                              
+  27  Islam  185     3         YES    27  COMBO,Ideal-RA,RA-t130                                      
+  28  Islam   35   185  Y              0                                                              
+  29  Islam  123    35         YES    18  COMBO,Ideal-RA,SML-S50L130-150,SML-S50L130-80               
+  30  Islam   73   123  Y              0                                                              
+  31  Islam  177    73         YES     2  COMBO,RA-t130                                               
+  32  Islam    7   177  Y              0                                                              
+  33  Islam  127     7         YES     5  Ideal-RA                                                    
+  34  Islam   64   127  Y              0                                                              
+  35  Islam   58    64                 0                                                              
+  36  Islam  191    58         YES    27  Ideal-RA                                                    
+  37  Islam   74   191  Y              0                                                              
+  38  Islam   62    74                 0                                                              
+  39  Islam  107    62                 0                                                              
+  40  Islam  125   107                 0                                                              
+  41  Islam  144   125  Y      YES    20  COMBO,Ideal-RA,RA-t130,SML-L120/.32,SML-L120/.30,SML-S100L12
+  42  Islam   44   144  Y              0                                                              
+  43  Islam  169    44         YES    63  COMBO,Ideal-RA,RA-t130,F150/.32,SML-S100L120-180,SML-S100L12
+  44  Islam  101   169  Y      YES     6  SML-S100L130,SML-S50L130-150,SML-S50L130-80                 
+  45  Islam  107   101                 0                                                              
+  46  Islam  131   107         YES     3  COMBO,RA-t130                                               
+  47  Islam   24   131  Y              0                                                              
+  48  Islam   33    24                 0                                                              
+  49  Islam   80    33                 0                                                              
+  50  Islam  156    80         YES    79  Ideal-RA,RA-t130,F150/.32,SML-S100L120-180,SML-S100L120-110,
+  51  Islam   44   156  Y              0                                                              
+  52  Islam  163    44                 0                                                              
+  53  Islam   53   163  Y              0                                                              
+  54  Islam  245    53                 0                                                              
+  55  Islam   69   245  Y              0                                                              
+  56  Islam   65    69                 0                                                              
+  57  Islam    5    65                 0                                                              
+  58  Islam   89     5         YES     6  SML-S50L130-80                                              
+  59  Islam  184    89         YES    52  Ideal-RA                                                    
+  60  Islam  114   184  Y      YES    35  COMBO,Ideal-RA,SML-S100L130,SML-S50L130-150,SML-S50L130-80  
+  61  Islam   37   114                 0                                                              
+  62  Islam  113    37         YES     1  COMBO                                                       
+  63  Islam  227   113         YES   159  F150/.32,SML-S100L120-180,SML-S100L120-110,SML-S100L130,SML-
+  64  Islam  101   227  Y      YES     3  SML-S100L130,SML-S50L130-150,SML-S50L130-80                 
+  65  Islam  233   101         YES    59  Ideal-RA                                                    
+  66  Islam   49   233  Y              0                                                              
+  67  Islam  136    49         YES    47  COMBO,Ideal-RA,RA-t130,SML-S50L130-150,SML-S50L130-80       
+  68  Islam  150   136  Y      YES    16  COMBO,Ideal-RA,RA-t130,SML-L120/.30                         
+  69  Islam  163   150  Y      YES    18  COMBO,Ideal-RA,RA-t130,SML-L120/.30                         
+  70  Islam   28   163  Y              0                                                              
+  71  Islam  163    28                30                                                              
+  72  Islam   66   163  Y              0                                                              
+  73  Islam  133    66         YES     9  COMBO,Ideal-RA,RA-t130                                      
+  74  Islam   56   133  Y              0                                                              
+  75  Islam   62    56                 0                                                              
+  76  Islam  114    62         YES     1  COMBO                                                       
+  77  Islam  105   114                 0                                                              
+  78  Islam   28   105                 0                                                              
+  79  Islam   85    28                 0                                                              
+  80  Islam  226    85         YES    30  COMBO,RA-t130                                               
+  81  Islam   88   226  Y              0                                                              
+  82  Islam  161    88         YES     2  COMBO,RA-t130                                               
+  83  Ahmed  147     —                 0                                                              
+  84  Ahmed  132   147  Y      YES    10  COMBO,Ideal-RA,RA-t130,SML-L120/.30                         
+  85  Ahmed   29   132  Y              0                                                              
+  86  Ahmed   11    29                 0                                                              
+  87  Ahmed   55    11                 0                                                              
+  88  Ahmed  120    55         YES     1  Ideal-RA                                                    
+  89  Ahmed  135   120  Y      YES    57  COMBO,Ideal-RA,RA-t130,SML-L120/.32,SML-L120/.30,SML-S100L12
+  90  Ahmed  125   135  Y              0                                                              
+  91  Ahmed   10   125  Y              0                                                              
+  92  Ahmed  250    10         YES    31  Ideal-RA                                                    
+  93  Ahmed   57   250  Y              0                                                              
+  94  Ahmed   13    57                 0                                                              
+  95  Ahmed  127    13         YES    11  COMBO,Ideal-RA                                              
+  96  Ahmed   78   127  Y              0                                                              
+  97  Ahmed   59    78                 0                                                              
+  98  Ahmed  153    59         YES    49  Ideal-RA,F150/.32,SML-S100L120-180,SML-S100L120-110,SML-S100
+  99  Ahmed   90   153  Y              0                                                              
+ 100  Ahmed  154    90         YES    32  COMBO,Ideal-RA,RA-t130,F150/.32,SML-S100L120-180,SML-S100L12
+ 101  Ahmed   54   154  Y              0                                                              
+ 102  Ahmed  133    54         YES     4  Ideal-RA                                                    
+ 103  Ahmed   90   133  Y              0                                                              
+ 104  Ahmed  119    90         YES     1  COMBO                                                       
+ 105  Ahmed  110   119         YES     3  COMBO,Ideal-RA,SML-S100L120-110                             
+ 106  Ahmed   37   110                 0                                                              
+ 107  Ahmed  158    37         YES     6  COMBO,RA-t130                                               
+ 108  Ahmed  102   158  Y              0                                                              
+ 109  Ahmed  111   102         YES     3  COMBO,Ideal-RA                                              
+ 110  Ahmed   59   111                 0                                                              
+ 111  Ahmed  147    59         YES     6  COMBO,RA-t130                                               
+ 112  Ahmed   69   147  Y              0                                                              
+ 113  Ahmed  127    69                 0                                                              
+ 114  Ahmed   49   127  Y              0                                                              
+ 115  Ahmed  117    49         YES    12  COMBO,Ideal-RA,SML-S50L130-150,SML-S50L130-80               
+ 116  Ahmed   48   117                 0                                                              
+ 117  Ahmed  151    48         YES    85  COMBO,Ideal-RA,RA-t130,F150/.32,SML-S100L120-180,SML-S100L12
+ 118  Ahmed  128   151  Y              0                                                              
+ 119  Ahmed   42   128  Y              0                                                              
+ 120  Ahmed  170    42         YES    21  COMBO,Ideal-RA,RA-t130                                      
+ 121  Ahmed   49   170  Y              0                                                              
+ 122  Ahmed  101    49         YES    21  SML-S50L130-150,SML-S50L130-80                              
+ 123  Ahmed  123   101         YES     8  COMBO,Ideal-RA                                              
+ 124  Ahmed   40   123  Y              0                                                              
+ 125  Ahmed  108    40                 0                                                              
+ 126  Ahmed  141   108         YES    12  COMBO,Ideal-RA,RA-t130                                      
+ 127  Ahmed  137   141  Y      YES    32  SML-L120/.30                                                
+ 128  Ahmed   86   137  Y              0                                                              
+ 129  Ahmed   29    86                 0                                                              
+ 130  Ahmed  141    29                 0                                                              
+ 131  Ahmed  132   141  Y      YES    29  COMBO,Ideal-RA,RA-t130,SML-L120/.32,SML-L120/.30,SML-S100L12
+ 132  Ahmed   84   132  Y              0                                                              
+ 133  Ahmed   83    84                 0                                                              
+ 134  Ahmed   72    83                 0                                                              
+ 135  Ahmed  135    72         YES     7  COMBO,Ideal-RA,RA-t130                                      
+ 136  Ahmed   81   135  Y              0                                                              
+ 137  Ahmed  117    81                 0                                                              
+ 138  Ahmed  140   117         YES     2  COMBO,RA-t130                                               
+ 139  Ahmed   27   140  Y              0                                                              
+ 140  Ahmed   78    27                 0                                                              
+ 141  Ahmed  104    78                 0                                                              
+ 142  Ahmed  130   104         YES     5  COMBO,Ideal-RA,RA-t130                                      
+ 143  Ahmed  148   130  Y              3                                                              
+ 144  Ahmed   58   148  Y              0                                                              
+ 145  Ahmed  153    58         YES    20  COMBO,Ideal-RA,RA-t130                                      
+ 146  Ahmed   44   153  Y              0                                                              
+ 147  Ahmed   78    44                 0                                                              
+ 148  Ahmed  140    78                 5                                                              
+ 149  Ahmed  101   140  Y      YES     6  SML-S100L130,SML-S50L130-150,SML-S50L130-80                 
+ 150  Ahmed  140   101                 0                                                              
+ 151  Ahmed   37   140  Y              0                                                              
+ 152  Ahmed   89    37                 0                                                              
+ 153  Ahmed  134    89                 2                                                              
+ 154  Ahmed   54   134  Y              0                                                              
+ 155  Ahmed  139    54                 1                                                              
+ 156  Ahmed   79   139  Y              0                                                              
+ 157  Ahmed  123    79                 0                                                              
+ 158  Ahmed  120   123  Y      YES     3  Ideal-RA                                                    
+ 159  Ahmed   30   120  Y              0                                                              
+ 160   Nick   84     —                 0                                                              
+ 161   Nick   85    84                 0                                                              
+ 162   Nick  197    85                 4                                                              
+ 163   Nick  219   197  Y             12                                                              
+ 164   Nick  136   219  Y      YES    52  COMBO,Ideal-RA,RA-t130,SML-L120/.32,SML-L120/.30,SML-S100L12
+ 165   Nick  116   136  Y              0                                                              
+ 166   Nick  139   116                 0                                                              
+ 167   Nick   19   139  Y              0                                                              
+ 168   Nick  110    19         YES     2  COMBO,Ideal-RA                                              
+ 169   Nick  163   110         YES     2  COMBO,RA-t130                                               
+ 170   Nick   19   163  Y              0                                                              
+ 171   Nick  250    19                21                                                              
+ 172   Nick  154   250  Y      YES    13  COMBO,Ideal-RA,RA-t130,SML-L120/.30                         
+ 173   Nick   18   154  Y              0                                                              
+ 174   Nick   40    18                 0                                                              
+ 175   Nick  340    40                18                                                              
+ 176   Nick   90   340  Y              0                                                              
+ 177   Nick  159    90         YES   134  COMBO,Ideal-RA,RA-t130,F150/.32,SML-S100L120-180,SML-S100L12
+
+Total in ensemble union: 62 / 178
+
+==================================================================================================================================
+ONLY THE CAUGHT GAPS (62 expected)
+==================================================================================================================================
+   #   Acct  len  prev  L  Caught? #bets  configs that caught it                                      
+----------------------------------------------------------------------------------------------------------------------------------
+   6  Islam   87    46         YES     1  SML-S50L130-80                                              
+   7  Islam  151    87         YES    11  COMBO,RA-t130                                               
+  10  Islam  129    49         YES     3  COMBO                                                       
+  11  Islam  136   129  Y      YES    22  SML-L120/.32,SML-L120/.30,SML-S100L120-180,SML-S100L120-110,
+  13  Islam  132    19         YES     2  COMBO,RA-t130                                               
+  25  Islam  394    34         YES    71  Ideal-RA                                                    
+  27  Islam  185     3         YES    27  COMBO,Ideal-RA,RA-t130                                      
+  29  Islam  123    35         YES    18  COMBO,Ideal-RA,SML-S50L130-150,SML-S50L130-80               
+  31  Islam  177    73         YES     2  COMBO,RA-t130                                               
+  33  Islam  127     7         YES     5  Ideal-RA                                                    
+  36  Islam  191    58         YES    27  Ideal-RA                                                    
+  41  Islam  144   125  Y      YES    20  COMBO,Ideal-RA,RA-t130,SML-L120/.32,SML-L120/.30,SML-S100L12
+  43  Islam  169    44         YES    63  COMBO,Ideal-RA,RA-t130,F150/.32,SML-S100L120-180,SML-S100L12
+  44  Islam  101   169  Y      YES     6  SML-S100L130,SML-S50L130-150,SML-S50L130-80                 
+  46  Islam  131   107         YES     3  COMBO,RA-t130                                               
+  50  Islam  156    80         YES    79  Ideal-RA,RA-t130,F150/.32,SML-S100L120-180,SML-S100L120-110,
+  58  Islam   89     5         YES     6  SML-S50L130-80                                              
+  59  Islam  184    89         YES    52  Ideal-RA                                                    
+  60  Islam  114   184  Y      YES    35  COMBO,Ideal-RA,SML-S100L130,SML-S50L130-150,SML-S50L130-80  
+  62  Islam  113    37         YES     1  COMBO                                                       
+  63  Islam  227   113         YES   159  F150/.32,SML-S100L120-180,SML-S100L120-110,SML-S100L130,SML-
+  64  Islam  101   227  Y      YES     3  SML-S100L130,SML-S50L130-150,SML-S50L130-80                 
+  65  Islam  233   101         YES    59  Ideal-RA                                                    
+  67  Islam  136    49         YES    47  COMBO,Ideal-RA,RA-t130,SML-S50L130-150,SML-S50L130-80       
+  68  Islam  150   136  Y      YES    16  COMBO,Ideal-RA,RA-t130,SML-L120/.30                         
+  69  Islam  163   150  Y      YES    18  COMBO,Ideal-RA,RA-t130,SML-L120/.30                         
+  73  Islam  133    66         YES     9  COMBO,Ideal-RA,RA-t130                                      
+  76  Islam  114    62         YES     1  COMBO                                                       
+  80  Islam  226    85         YES    30  COMBO,RA-t130                                               
+  82  Islam  161    88         YES     2  COMBO,RA-t130                                               
+  84  Ahmed  132   147  Y      YES    10  COMBO,Ideal-RA,RA-t130,SML-L120/.30                         
+  88  Ahmed  120    55         YES     1  Ideal-RA                                                    
+  89  Ahmed  135   120  Y      YES    57  COMBO,Ideal-RA,RA-t130,SML-L120/.32,SML-L120/.30,SML-S100L12
+  92  Ahmed  250    10         YES    31  Ideal-RA                                                    
+  95  Ahmed  127    13         YES    11  COMBO,Ideal-RA                                              
+  98  Ahmed  153    59         YES    49  Ideal-RA,F150/.32,SML-S100L120-180,SML-S100L120-110,SML-S100
+ 100  Ahmed  154    90         YES    32  COMBO,Ideal-RA,RA-t130,F150/.32,SML-S100L120-180,SML-S100L12
+ 102  Ahmed  133    54         YES     4  Ideal-RA                                                    
+ 104  Ahmed  119    90         YES     1  COMBO                                                       
+ 105  Ahmed  110   119         YES     3  COMBO,Ideal-RA,SML-S100L120-110                             
+ 107  Ahmed  158    37         YES     6  COMBO,RA-t130                                               
+ 109  Ahmed  111   102         YES     3  COMBO,Ideal-RA                                              
+ 111  Ahmed  147    59         YES     6  COMBO,RA-t130                                               
+ 115  Ahmed  117    49         YES    12  COMBO,Ideal-RA,SML-S50L130-150,SML-S50L130-80               
+ 117  Ahmed  151    48         YES    85  COMBO,Ideal-RA,RA-t130,F150/.32,SML-S100L120-180,SML-S100L12
+ 120  Ahmed  170    42         YES    21  COMBO,Ideal-RA,RA-t130                                      
+ 122  Ahmed  101    49         YES    21  SML-S50L130-150,SML-S50L130-80                              
+ 123  Ahmed  123   101         YES     8  COMBO,Ideal-RA                                              
+ 126  Ahmed  141   108         YES    12  COMBO,Ideal-RA,RA-t130                                      
+ 127  Ahmed  137   141  Y      YES    32  SML-L120/.30                                                
+ 131  Ahmed  132   141  Y      YES    29  COMBO,Ideal-RA,RA-t130,SML-L120/.32,SML-L120/.30,SML-S100L12
+ 135  Ahmed  135    72         YES     7  COMBO,Ideal-RA,RA-t130                                      
+ 138  Ahmed  140   117         YES     2  COMBO,RA-t130                                               
+ 142  Ahmed  130   104         YES     5  COMBO,Ideal-RA,RA-t130                                      
+ 145  Ahmed  153    58         YES    20  COMBO,Ideal-RA,RA-t130                                      
+ 149  Ahmed  101   140  Y      YES     6  SML-S100L130,SML-S50L130-150,SML-S50L130-80                 
+ 158  Ahmed  120   123  Y      YES     3  Ideal-RA                                                    
+ 164   Nick  136   219  Y      YES    52  COMBO,Ideal-RA,RA-t130,SML-L120/.32,SML-L120/.30,SML-S100L12
+ 168   Nick  110    19         YES     2  COMBO,Ideal-RA                                              
+ 169   Nick  163   110         YES     2  COMBO,RA-t130                                               
+ 172   Nick  154   250  Y      YES    13  COMBO,Ideal-RA,RA-t130,SML-L120/.30                         
+ 177   Nick  159    90         YES   134  COMBO,Ideal-RA,RA-t130,F150/.32,SML-S100L120-180,SML-S100L12
+
+==================================================================================================================================
+ONLY THE MISSED GAPS (gaps no config caught)
+==================================================================================================================================
+   #   Acct  len  prev  L
+------------------------------
+   0  Islam   82     —   
+   1  Islam  146    82   
+   2  Islam   21   146  Y
+   3  Islam   59    21   
+   4  Islam  149    59   
+   5  Islam   46   149  Y
+   8  Islam   93   151  Y
+   9  Islam   49    93   
+  12  Islam   19   136  Y
+  14  Islam   71   132  Y
+  15  Islam  136    71   
+  16  Islam   68   136  Y
+  17  Islam   65    68   
+  18  Islam   55    65   
+  19  Islam   28    55   
+  20  Islam  100    28   
+  21  Islam   30   100   
+  22  Islam   39    30   
+  23  Islam   12    39   
+  24  Islam   34    12   
+  26  Islam    3   394  Y
+  28  Islam   35   185  Y
+  30  Islam   73   123  Y
+  32  Islam    7   177  Y
+  34  Islam   64   127  Y
+  35  Islam   58    64   
+  37  Islam   74   191  Y
+  38  Islam   62    74   
+  39  Islam  107    62   
+  40  Islam  125   107   
+  42  Islam   44   144  Y
+  45  Islam  107   101   
+  47  Islam   24   131  Y
+  48  Islam   33    24   
+  49  Islam   80    33   
+  51  Islam   44   156  Y
+  52  Islam  163    44   
+  53  Islam   53   163  Y
+  54  Islam  245    53   
+  55  Islam   69   245  Y
+  56  Islam   65    69   
+  57  Islam    5    65   
+  61  Islam   37   114   
+  66  Islam   49   233  Y
+  70  Islam   28   163  Y
+  71  Islam  163    28   
+  72  Islam   66   163  Y
+  74  Islam   56   133  Y
+  75  Islam   62    56   
+  77  Islam  105   114   
+  78  Islam   28   105   
+  79  Islam   85    28   
+  81  Islam   88   226  Y
+  83  Ahmed  147     —   
+  85  Ahmed   29   132  Y
+  86  Ahmed   11    29   
+  87  Ahmed   55    11   
+  90  Ahmed  125   135  Y
+  91  Ahmed   10   125  Y
+  93  Ahmed   57   250  Y
+  94  Ahmed   13    57   
+  96  Ahmed   78   127  Y
+  97  Ahmed   59    78   
+  99  Ahmed   90   153  Y
+ 101  Ahmed   54   154  Y
+ 103  Ahmed   90   133  Y
+ 106  Ahmed   37   110   
+ 108  Ahmed  102   158  Y
+ 110  Ahmed   59   111   
+ 112  Ahmed   69   147  Y
+ 113  Ahmed  127    69   
+ 114  Ahmed   49   127  Y
+ 116  Ahmed   48   117   
+ 118  Ahmed  128   151  Y
+ 119  Ahmed   42   128  Y
+ 121  Ahmed   49   170  Y
+ 124  Ahmed   40   123  Y
+ 125  Ahmed  108    40   
+ 128  Ahmed   86   137  Y
+ 129  Ahmed   29    86   
+ 130  Ahmed  141    29   
+ 132  Ahmed   84   132  Y
+ 133  Ahmed   83    84   
+ 134  Ahmed   72    83   
+ 136  Ahmed   81   135  Y
+ 137  Ahmed  117    81   
+ 139  Ahmed   27   140  Y
+ 140  Ahmed   78    27   
+ 141  Ahmed  104    78   
+ 143  Ahmed  148   130  Y
+ 144  Ahmed   58   148  Y
+ 146  Ahmed   44   153  Y
+ 147  Ahmed   78    44   
+ 148  Ahmed  140    78   
+ 150  Ahmed  140   101   
+ 151  Ahmed   37   140  Y
+ 152  Ahmed   89    37   
+ 153  Ahmed  134    89   
+ 154  Ahmed   54   134  Y
+ 155  Ahmed  139    54   
+ 156  Ahmed   79   139  Y
+ 157  Ahmed  123    79   
+ 159  Ahmed   30   120  Y
+ 160   Nick   84     —   
+ 161   Nick   85    84   
+ 162   Nick  197    85   
+ 163   Nick  219   197  Y
+ 165   Nick  116   136  Y
+ 166   Nick  139   116   
+ 167   Nick   19   139  Y
+ 170   Nick   19   163  Y
+ 171   Nick  250    19   
+ 173   Nick   18   154  Y
+ 174   Nick   40    18   
+ 175   Nick  340    40   
+ 176   Nick   90   340  Y
+
+Total missed: 116
+
+==================================================================================================================================
+PER-ACCOUNT SUMMARY
+==================================================================================================================================
+  Islam:  83 gaps, mean_len=99.8, L-bucket=29, caught=30/83 (36.1%), L-bucket caught=7/29
+  Ahmed:  77 gaps, mean_len=98.3, L-bucket=32, caught=27/77 (35.1%), L-bucket caught=6/32
+  Nick:  18 gaps, mean_len=129.9, L-bucket=8, caught=5/18 (27.8%), L-bucket caught=2/8
+
+==================================================================================================================================
+PER-CONFIG CONTRIBUTION TO ENSEMBLE
+==================================================================================================================================
+              config   catches   exclusive   bet_spins    mb/hit
+----------------------------------------------------------------------
+               COMBO        42           4         389       9.3
+            Ideal-RA        39           9         314       8.1
+             RA-t130        31           0         266       8.6
+            F150/.32         7           0          47       6.7
+        SML-L120/.32         5           0          12       2.4
+        SML-L120/.30        10           1          42       4.2
+    SML-S100L120-180        12           0          46       3.8
+    SML-S100L120-110        13           0          63       4.8
+        SML-S100L130        16           0          95       5.9
+     SML-S50L130-150        17           0         133       7.8
+      SML-S50L130-80        19           2         182       9.6
+
+==================================================================================================================================
+WHICH SPECIFIC GAPS WOULD BE LOST IF WE REMOVED EACH CONFIG
+==================================================================================================================================
+                   COMBO: 4 gap(s) lost: #10(Islam,len129,prev49), #62(Islam,len113,prev37), #76(Islam,len114,prev62), #104(Ahmed,len119,prev90)
+                Ideal-RA: 9 gap(s) lost: #25(Islam,len394,prev34), #33(Islam,len127,prev7), #36(Islam,len191,prev58), #59(Islam,len184,prev89), #65(Islam,len233,prev101), #88(Ahmed,len120,prev55), #92(Ahmed,len250,prev10), #102(Ahmed,len133,prev54), #158(Ahmed,len120,prev123)
+                 RA-t130: 0 gaps lost (all its catches are also covered by another config)
+                F150/.32: 0 gaps lost (all its catches are also covered by another config)
+            SML-L120/.32: 0 gaps lost (all its catches are also covered by another config)
+            SML-L120/.30: 1 gap(s) lost: #127(Ahmed,len137,prev141)
+        SML-S100L120-180: 0 gaps lost (all its catches are also covered by another config)
+        SML-S100L120-110: 0 gaps lost (all its catches are also covered by another config)
+            SML-S100L130: 0 gaps lost (all its catches are also covered by another config)
+         SML-S50L130-150: 0 gaps lost (all its catches are also covered by another config)
+          SML-S50L130-80: 2 gap(s) lost: #6(Islam,len87,prev46), #58(Islam,len89,prev5)

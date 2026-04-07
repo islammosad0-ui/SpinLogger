@@ -1,0 +1,433 @@
+================================================================================
+CHUNK 5: CREATIVE ANGLES
+================================================================================
+ACC gaps: 178
+Overall acc symbol rate: 0.3107
+
+--- A. Rate acceleration (slope of ratio over last N spins) ---
+
+  Window=10
+    t=100 slope>=-0.005:  74/178  mb=22.1  lift=4.58x
+    t=100 slope>=0.000:  70/178  mb=19.2  lift=5.30x
+    t=100 slope>=0.002:  69/178  mb=15.2  lift=6.69x
+    t=100 slope>=0.005:  66/178  mb=14.8  lift=6.84x
+    t=100 slope>=0.010:  51/178  mb=12.2  lift=8.35x
+    t=120 slope>=-0.005:  55/178  mb=18.7  lift=5.42x
+    t=120 slope>=0.000:  52/178  mb=16.0  lift=6.33x
+    t=120 slope>=0.002:  51/178  mb=12.8  lift=7.94x
+    t=120 slope>=0.005:  49/178  mb=12.3  lift=8.22x
+    t=120 slope>=0.010:  35/178  mb=9.8  lift=10.35x
+    t=130 slope>=-0.005:  47/178  mb=16.9  lift=5.99x
+    t=130 slope>=0.000:  44/178  mb=14.5  lift=7.02x
+    t=130 slope>=0.002:  43/178  mb=11.6  lift=8.78x
+    t=130 slope>=0.005:  41/178  mb=11.1  lift=9.14x
+    t=130 slope>=0.010:  31/178  mb=8.6  lift=11.83x
+    t=140 slope>=-0.005:  33/178  mb=19.4  lift=5.24x
+    t=140 slope>=0.000:  32/178  mb=15.6  lift=6.49x
+    t=140 slope>=0.002:  31/178  mb=12.6  lift=8.04x
+    t=140 slope>=0.005:  29/178  mb=12.1  lift=8.36x
+    t=140 slope>=0.010:  21/178  mb=10.0  lift=10.10x
+
+  Window=20
+    t=100 slope>=-0.005:  65/178  mb=24.6  lift=4.13x
+    t=100 slope>=0.000:  63/178  mb=21.5  lift=4.72x
+    t=100 slope>=0.002:  60/178  mb=20.8  lift=4.89x
+    t=100 slope>=0.005:  58/178  mb=18.7  lift=5.44x
+    t=100 slope>=0.010:  53/178  mb=16.3  lift=6.23x
+    t=120 slope>=-0.005:  47/178  mb=20.6  lift=4.93x
+    t=120 slope>=0.000:  45/178  mb=17.8  lift=5.70x
+    t=120 slope>=0.002:  44/178  mb=16.4  lift=6.19x
+    t=120 slope>=0.005:  42/178  mb=15.0  lift=6.79x
+    t=120 slope>=0.010:  38/178  mb=12.2  lift=8.33x
+    t=130 slope>=-0.005:  40/178  mb=19.0  lift=5.33x
+    t=130 slope>=0.000:  38/178  mb=16.7  lift=6.08x
+    t=130 slope>=0.002:  38/178  mb=14.9  lift=6.79x
+    t=130 slope>=0.005:  36/178  mb=13.9  lift=7.28x
+    t=130 slope>=0.010:  32/178  mb=11.6  lift=8.73x
+    t=140 slope>=-0.005:  30/178  mb=20.7  lift=4.90x
+    t=140 slope>=0.000:  28/178  mb=18.0  lift=5.64x
+    t=140 slope>=0.002:  28/178  mb=16.0  lift=6.33x
+    t=140 slope>=0.005:  26/178  mb=15.0  lift=6.76x
+    t=140 slope>=0.010:  24/178  mb=12.1  lift=8.40x
+
+  Window=30
+    t=100 slope>=-0.005:  65/178  mb=24.6  lift=4.13x
+    t=100 slope>=0.000:  59/178  mb=23.3  lift=4.36x
+    t=100 slope>=0.002:  55/178  mb=23.5  lift=4.33x
+    t=100 slope>=0.005:  53/178  mb=21.3  lift=4.77x
+    t=100 slope>=0.010:  49/178  mb=19.4  lift=5.23x
+    t=120 slope>=-0.005:  48/178  mb=20.1  lift=5.04x
+    t=120 slope>=0.000:  42/178  mb=18.8  lift=5.39x
+    t=120 slope>=0.002:  39/178  mb=18.9  lift=5.35x
+    t=120 slope>=0.005:  37/178  mb=17.2  lift=5.88x
+    t=120 slope>=0.010:  33/178  mb=15.6  lift=6.49x
+    t=130 slope>=-0.005:  40/178  mb=18.6  lift=5.46x
+    t=130 slope>=0.000:  35/178  mb=17.6  lift=5.76x
+    t=130 slope>=0.002:  33/178  mb=17.5  lift=5.80x
+    t=130 slope>=0.005:  32/178  mb=15.7  lift=6.48x
+    t=130 slope>=0.010:  28/178  mb=14.5  lift=6.98x
+    t=140 slope>=-0.005:  28/178  mb=21.6  lift=4.70x
+    t=140 slope>=0.000:  24/178  mb=21.1  lift=4.81x
+    t=140 slope>=0.002:  23/178  mb=20.5  lift=4.95x
+    t=140 slope>=0.005:  23/178  mb=18.0  lift=5.65x
+    t=140 slope>=0.010:  21/178  mb=16.1  lift=6.30x
+
+  Window=50
+    t=100 slope>=-0.005:  64/178  mb=24.5  lift=4.15x
+    t=100 slope>=0.000:  62/178  mb=21.8  lift=4.66x
+    t=100 slope>=0.002:  62/178  mb=20.9  lift=4.86x
+    t=100 slope>=0.005:  61/178  mb=19.7  lift=5.16x
+    t=100 slope>=0.010:  53/178  mb=18.8  lift=5.39x
+    t=120 slope>=-0.005:  48/178  mb=21.1  lift=4.81x
+    t=120 slope>=0.000:  46/178  mb=18.5  lift=5.48x
+    t=120 slope>=0.002:  46/178  mb=17.5  lift=5.78x
+    t=120 slope>=0.005:  45/178  mb=16.4  lift=6.20x
+    t=120 slope>=0.010:  38/178  mb=15.1  lift=6.73x
+    t=130 slope>=-0.005:  41/178  mb=19.3  lift=5.26x
+    t=130 slope>=0.000:  39/178  mb=16.7  lift=6.08x
+    t=130 slope>=0.002:  39/178  mb=15.8  lift=6.43x
+    t=130 slope>=0.005:  38/178  mb=14.7  lift=6.92x
+    t=130 slope>=0.010:  31/178  mb=13.8  lift=7.33x
+    t=140 slope>=-0.005:  30/178  mb=21.2  lift=4.79x
+    t=140 slope>=0.000:  28/178  mb=18.5  lift=5.47x
+    t=140 slope>=0.002:  28/178  mb=17.5  lift=5.80x
+    t=140 slope>=0.005:  28/178  mb=15.8  lift=6.43x
+    t=140 slope>=0.010:  22/178  mb=15.0  lift=6.76x
+
+--- B. Symbol deficit: observed sa_acc - expected ---
+  t=100 deficit>=-15: caught= 91/178  bet=24.76%  mb/hit=  49.1  lift= 2.06x
+  t=100 deficit>=-12: caught= 90/178  bet=23.91%  mb/hit=  48.0  lift= 2.11x
+  t=100 deficit>=-9: caught= 88/178  bet=21.94%  mb/hit=  45.0  lift= 2.25x
+  t=100 deficit>=-6: caught= 79/178  bet=17.14%  mb/hit=  39.2  lift= 2.59x
+  t=100 deficit>=-3: caught= 63/178  bet=10.40%  mb/hit=  29.8  lift= 3.40x
+  t=100 deficit>=+0: caught= 32/178  bet= 4.10%  mb/hit=  23.2  lift= 4.38x
+  t=100 deficit>=+3: caught= 13/178  bet= 1.32%  mb/hit=  18.4  lift= 5.52x
+  t=100 deficit>=+6: caught=  6/178  bet= 0.56%  mb/hit=  16.8  lift= 6.03x
+  t=120 deficit>=-15: caught= 70/178  bet=15.82%  mb/hit=  40.8  lift= 2.49x
+  t=120 deficit>=-12: caught= 69/178  bet=15.04%  mb/hit=  39.4  lift= 2.58x
+  t=120 deficit>=-9: caught= 67/178  bet=13.43%  mb/hit=  36.2  lift= 2.80x
+  t=120 deficit>=-6: caught= 59/178  bet=10.15%  mb/hit=  31.1  lift= 3.26x
+  t=120 deficit>=-3: caught= 44/178  bet= 5.48%  mb/hit=  22.5  lift= 4.51x
+  t=120 deficit>=+0: caught= 23/178  bet= 2.14%  mb/hit=  16.8  lift= 6.03x
+  t=120 deficit>=+3: caught=  7/178  bet= 0.63%  mb/hit=  16.3  lift= 6.23x
+  t=120 deficit>=+6: caught=  5/178  bet= 0.36%  mb/hit=  13.0  lift= 7.81x
+  t=130 deficit>=-15: caught= 58/178  bet=12.21%  mb/hit=  38.0  lift= 2.67x
+  t=130 deficit>=-12: caught= 57/178  bet=11.45%  mb/hit=  36.3  lift= 2.80x
+  t=130 deficit>=-9: caught= 55/178  bet=10.12%  mb/hit=  33.2  lift= 3.05x
+  t=130 deficit>=-6: caught= 50/178  bet= 7.46%  mb/hit=  26.9  lift= 3.77x
+  t=130 deficit>=-3: caught= 37/178  bet= 3.74%  mb/hit=  18.3  lift= 5.55x
+  t=130 deficit>=+0: caught= 19/178  bet= 1.49%  mb/hit=  14.2  lift= 7.17x
+  t=130 deficit>=+3: caught=  6/178  bet= 0.50%  mb/hit=  15.0  lift= 6.76x
+  t=140 deficit>=-15: caught= 41/178  bet= 9.38%  mb/hit=  41.3  lift= 2.45x
+  t=140 deficit>=-12: caught= 40/178  bet= 8.67%  mb/hit=  39.1  lift= 2.59x
+  t=140 deficit>=-9: caught= 38/178  bet= 7.45%  mb/hit=  35.4  lift= 2.86x
+  t=140 deficit>=-6: caught= 35/178  bet= 5.49%  mb/hit=  28.3  lift= 3.58x
+  t=140 deficit>=-3: caught= 23/178  bet= 2.65%  mb/hit=  20.8  lift= 4.87x
+  t=140 deficit>=+0: caught= 11/178  bet= 0.97%  mb/hit=  15.9  lift= 6.38x
+
+--- C. Bivariate gates (threshold=130) ---
+acc_gate    other max_rate   caught    mb/hit    lift
+    0.28   sa_spn <= 0.23    9/178      47.4    2.14x
+    0.28   sa_spn <= 0.26   30/178      28.1    3.61x
+    0.28   sa_spn <= 0.29   42/178      25.5    3.98x
+    0.28   sa_spn <= 0.32   47/178      23.8    4.26x
+    0.28   sa_stl <= 0.32   12/178      23.2    4.38x
+    0.28   sa_shd <= 0.17    6/178      18.8    5.39x
+    0.28   sa_shd <= 0.20   19/178      23.4    4.34x
+    0.28   sa_shd <= 0.23   40/178      19.2    5.28x
+    0.28   sa_shd <= 0.26   46/178      21.2    4.79x
+    0.28   sa_shd <= 0.29   47/178      23.1    4.39x
+    0.28   sa_shd <= 0.32   47/178      23.8    4.26x
+    0.30   sa_spn <= 0.23    7/178      43.3    2.34x
+    0.30   sa_spn <= 0.26   22/178      20.7    4.90x
+    0.30   sa_spn <= 0.29   29/178      18.1    5.62x
+    0.30   sa_spn <= 0.32   31/178      17.1    5.93x
+    0.30   sa_stl <= 0.32    7/178      20.4    4.97x
+    0.30   sa_shd <= 0.17    5/178      11.6    8.75x
+    0.30   sa_shd <= 0.20   14/178      15.9    6.37x
+    0.30   sa_shd <= 0.23   27/178      12.5    8.13x
+    0.30   sa_shd <= 0.26   30/178      16.3    6.24x
+    0.30   sa_shd <= 0.29   31/178      17.1    5.93x
+    0.30   sa_shd <= 0.32   31/178      17.1    5.93x
+    0.32   sa_spn <= 0.23    5/178      19.6    5.18x
+    0.32   sa_spn <= 0.26   12/178      10.2    9.98x
+    0.32   sa_spn <= 0.29   14/178      10.9    9.28x
+    0.32   sa_spn <= 0.32   14/178      10.9    9.28x
+    0.32   sa_stl <= 0.32    5/178      14.8    6.86x
+    0.32   sa_shd <= 0.20    7/178      11.6    8.77x
+    0.32   sa_shd <= 0.23   11/178      10.5    9.71x
+    0.32   sa_shd <= 0.26   13/178      11.2    9.10x
+    0.32   sa_shd <= 0.29   14/178      10.9    9.28x
+    0.32   sa_shd <= 0.32   14/178      10.9    9.28x
+
+acc_gate    other min_rate   caught    mb/hit    lift
+    0.28   sa_spn >= 0.10   47/178      23.8    4.26x
+    0.28   sa_spn >= 0.13   47/178      23.8    4.26x
+    0.28   sa_spn >= 0.16   47/178      23.3    4.35x
+    0.28   sa_spn >= 0.19   44/178      23.9    4.25x
+    0.28   sa_spn >= 0.22   41/178      20.2    5.03x
+    0.28   sa_spn >= 0.25   25/178      18.0    5.62x
+    0.28   sa_spn >= 0.28    6/178      17.8    5.69x
+    0.28   sa_atk >= 0.10   47/178      23.8    4.26x
+    0.28   sa_atk >= 0.13   47/178      23.8    4.26x
+    0.28   sa_atk >= 0.16   47/178      23.8    4.26x
+    0.28   sa_atk >= 0.19   47/178      23.8    4.26x
+    0.28   sa_atk >= 0.22   47/178      23.8    4.26x
+    0.28   sa_atk >= 0.25   47/178      23.8    4.26x
+    0.28   sa_atk >= 0.28   47/178      23.8    4.26x
+    0.28   sa_atk >= 0.31   47/178      23.8    4.26x
+    0.28   sa_atk >= 0.34   47/178      23.8    4.26x
+    0.28   sa_atk >= 0.37   47/178      23.8    4.27x
+    0.28   sa_stl >= 0.10   47/178      23.8    4.26x
+    0.28   sa_stl >= 0.13   47/178      23.8    4.26x
+    0.28   sa_stl >= 0.16   47/178      23.8    4.26x
+    0.28   sa_stl >= 0.19   47/178      23.8    4.26x
+    0.28   sa_stl >= 0.22   47/178      23.8    4.26x
+    0.28   sa_stl >= 0.25   46/178      24.2    4.20x
+    0.28   sa_stl >= 0.28   45/178      24.5    4.14x
+    0.28   sa_stl >= 0.31   40/178      23.9    4.25x
+    0.28   sa_stl >= 0.34   18/178      29.4    3.45x
+    0.28   sa_stl >= 0.37    6/178      24.5    4.14x
+    0.28   sa_shd >= 0.10   47/178      23.8    4.26x
+    0.28   sa_shd >= 0.13   46/178      24.0    4.22x
+    0.28   sa_shd >= 0.16   44/178      24.6    4.12x
+    0.28   sa_shd >= 0.19   31/178      25.4    3.99x
+    0.28   sa_shd >= 0.22   15/178      30.9    3.28x
+    0.30   sa_spn >= 0.10   31/178      17.1    5.93x
+    0.30   sa_spn >= 0.13   31/178      17.1    5.93x
+    0.30   sa_spn >= 0.16   31/178      16.4    6.20x
+    0.30   sa_spn >= 0.19   28/178      16.6    6.11x
+    0.30   sa_spn >= 0.22   27/178      11.2    9.07x
+    0.30   sa_spn >= 0.25   15/178       8.7   11.62x
+    0.30   sa_atk >= 0.10   31/178      17.1    5.93x
+    0.30   sa_atk >= 0.13   31/178      17.1    5.93x
+    0.30   sa_atk >= 0.16   31/178      17.1    5.93x
+    0.30   sa_atk >= 0.19   31/178      17.1    5.93x
+    0.30   sa_atk >= 0.22   31/178      17.1    5.93x
+    0.30   sa_atk >= 0.25   31/178      17.1    5.93x
+    0.30   sa_atk >= 0.28   31/178      17.1    5.93x
+    0.30   sa_atk >= 0.31   31/178      17.1    5.93x
+    0.30   sa_atk >= 0.34   31/178      17.1    5.93x
+    0.30   sa_atk >= 0.37   31/178      17.1    5.93x
+    0.30   sa_stl >= 0.10   31/178      17.1    5.93x
+    0.30   sa_stl >= 0.13   31/178      17.1    5.93x
+    0.30   sa_stl >= 0.16   31/178      17.1    5.93x
+    0.30   sa_stl >= 0.19   31/178      17.1    5.93x
+    0.30   sa_stl >= 0.22   31/178      17.1    5.93x
+    0.30   sa_stl >= 0.25   31/178      17.1    5.93x
+    0.30   sa_stl >= 0.28   30/178      17.3    5.85x
+    0.30   sa_stl >= 0.31   26/178      16.9    6.01x
+    0.30   sa_stl >= 0.34   10/178      20.9    4.85x
+    0.30   sa_shd >= 0.10   31/178      17.1    5.93x
+    0.30   sa_shd >= 0.13   30/178      17.4    5.82x
+    0.30   sa_shd >= 0.16   28/178      18.5    5.48x
+    0.30   sa_shd >= 0.19   19/178      18.4    5.51x
+    0.30   sa_shd >= 0.22    9/178      26.3    3.85x
+    0.32   sa_spn >= 0.10   14/178      10.9    9.28x
+    0.32   sa_spn >= 0.13   14/178      10.9    9.28x
+    0.32   sa_spn >= 0.16   14/178       9.3   10.93x
+    0.32   sa_spn >= 0.19   11/178       9.6   10.53x
+    0.32   sa_spn >= 0.22   10/178       6.1   16.63x
+    0.32   sa_spn >= 0.25    5/178       8.2   12.37x
+    0.32   sa_atk >= 0.10   14/178      10.9    9.28x
+    0.32   sa_atk >= 0.13   14/178      10.9    9.28x
+    0.32   sa_atk >= 0.16   14/178      10.9    9.28x
+    0.32   sa_atk >= 0.19   14/178      10.9    9.28x
+    0.32   sa_atk >= 0.22   14/178      10.9    9.28x
+    0.32   sa_atk >= 0.25   14/178      10.9    9.28x
+    0.32   sa_atk >= 0.28   14/178      10.9    9.28x
+    0.32   sa_atk >= 0.31   14/178      10.9    9.28x
+    0.32   sa_atk >= 0.34   14/178      10.9    9.28x
+    0.32   sa_atk >= 0.37   14/178      10.9    9.28x
+    0.32   sa_stl >= 0.10   14/178      10.9    9.28x
+    0.32   sa_stl >= 0.13   14/178      10.9    9.28x
+    0.32   sa_stl >= 0.16   14/178      10.9    9.28x
+    0.32   sa_stl >= 0.19   14/178      10.9    9.28x
+    0.32   sa_stl >= 0.22   14/178      10.9    9.28x
+    0.32   sa_stl >= 0.25   14/178      10.9    9.28x
+    0.32   sa_stl >= 0.28   13/178      11.1    9.16x
+    0.32   sa_stl >= 0.31   10/178      11.4    8.90x
+    0.32   sa_shd >= 0.10   14/178      10.9    9.28x
+    0.32   sa_shd >= 0.13   13/178      11.5    8.79x
+    0.32   sa_shd >= 0.16   13/178      11.5    8.85x
+    0.32   sa_shd >= 0.19    9/178       9.6   10.62x
+    0.32   sa_shd >= 0.22    5/178       8.4   12.08x
+
+--- D. Recent acc_count density (rolling window) ---
+  win= 5 density>=0.20:  92/178  mb=35.0  lift=2.90x
+  win= 5 density>=0.30:  56/178  mb=24.6  lift=4.12x
+  win= 5 density>=0.40:  56/178  mb=24.6  lift=4.12x
+  win= 5 density>=0.50:  20/178  mb=18.4  lift=5.53x
+  win= 5 density>=0.60:  20/178  mb=18.4  lift=5.53x
+  win=10 density>=0.20:  84/178  mb=36.8  lift=2.76x
+  win=10 density>=0.30:  56/178  mb=31.4  lift=3.23x
+  win=10 density>=0.40:  24/178  mb=29.8  lift=3.40x
+  win=10 density>=0.50:   9/178  mb=27.3  lift=3.71x
+  win=15 density>=0.20:  78/178  mb=40.1  lift=2.53x
+  win=15 density>=0.30:  37/178  mb=26.5  lift=3.82x
+  win=15 density>=0.40:  18/178  mb=24.4  lift=4.15x
+  win=20 density>=0.20:  79/178  mb=39.4  lift=2.57x
+  win=20 density>=0.30:  43/178  mb=28.5  lift=3.56x
+  win=20 density>=0.40:  10/178  mb=23.0  lift=4.41x
+  win=30 density>=0.20:  75/178  mb=41.5  lift=2.44x
+  win=30 density>=0.30:  29/178  mb=29.1  lift=3.49x
+
+--- E. Predecessor patterns (N spins before ACC triple) ---
+  Top 20 predecessor tuples (5 spins before ACC triple):
+    ('accumulation', 'goldSack', 'goldSack'): 138
+    ('goldSack', 'goldSack', 'goldSack'): 79
+    ('coin', 'coin', 'coin'): 74
+    ('attack', 'attack', 'attack'): 57
+    ('attack', 'spins', 'goldSack'): 50
+    ('steal', 'spins', 'goldSack'): 49
+    ('accumulation', 'accumulation', 'coin'): 40
+    ('coin', 'coin', 'steal'): 39
+    ('shield', 'shield', 'shield'): 34
+    ('attack', 'steal', 'goldSack'): 34
+    ('coin', 'steal', 'steal'): 31
+    ('attack', 'coin', 'coin'): 30
+    ('attack', 'attack', 'goldSack'): 26
+    ('coin', 'steal', 'spins'): 26
+    ('attack', 'coin', 'shield'): 24
+    ('attack', 'attack', 'coin'): 23
+    ('coin', 'spins', 'spins'): 22
+    ('steal', 'steal', 'steal'): 20
+    ('spins', 'spins', 'spins'): 16
+    ('coin', 'coin', 'spins'): 15
+
+--- F. accum_pct at ACC triple ---
+  accum_pct at ACC triple: mean=44.6  min=0.2  max=97.9
+  accum_pct >= 30: caught= 26/178  bet= 2.72%  mb/hit=  18.9  lift= 5.36x
+  accum_pct >= 50: caught= 19/178  bet= 1.41%  mb/hit=  13.4  lift= 7.59x
+  accum_pct >= 60: caught= 19/178  bet= 1.39%  mb/hit=  13.2  lift= 7.68x
+  accum_pct >= 70: caught=  5/178  bet= 0.58%  mb/hit=  20.8  lift= 4.88x
+  accum_pct >= 80: caught=  3/178  bet= 0.08%  mb/hit=   4.7  lift=21.74x
+
+--- G. Non-ACC triple as trigger in BET zone ---
+  trigger=attack:   7/178  mb=44.6  lift=2.28x
+  trigger=steal:   5/178  mb=30.6  lift=3.32x
+  trigger=shield:  10/178  mb=28.9  lift=3.51x
+  trigger=spins:   3/178  mb=35.7  lift=2.84x
+  trigger=attack+steal:   8/178  mb=42.0  lift=2.42x
+  trigger=attack+steal+shield:  11/178  mb=34.5  lift=2.94x
+  trigger=attack+steal+shield+spins:  11/178  mb=35.2  lift=2.88x
+
+--- H. EWMA gap prediction ---
+  alpha=0.1:  40/178  mb=23.1  lift=4.38x
+  alpha=0.2:  40/178  mb=25.3  lift=4.01x
+  alpha=0.3:  42/178  mb=26.5  lift=3.83x
+  alpha=0.5:  47/178  mb=27.4  lift=3.71x
+  alpha=0.7:  45/178  mb=32.9  lift=3.09x
+
+--- I. Streak detection: consecutive S or L gaps ---
+  streak=2xS thresh=150 (cons):   4/178  mb=65.8  lift=1.54x
+  streak=2xL thresh=80 (aggr):   3/178  mb=23.3  lift=4.35x
+
+--- J. Double gate: sa_acc AND sa_spn both above threshold ---
+  t=100 acc>=0.26 spn>=0.15: caught= 84/178  bet=19.40%  mb/hit=  41.7  lift= 2.43x
+  t=110 acc>=0.26 spn>=0.15: caught= 73/178  bet=15.85%  mb/hit=  39.2  lift= 2.59x
+  t=120 acc>=0.26 spn>=0.15: caught= 64/178  bet=12.73%  mb/hit=  35.9  lift= 2.82x
+  t=130 acc>=0.26 spn>=0.15: caught= 55/178  bet=10.00%  mb/hit=  32.9  lift= 3.09x
+  t=140 acc>=0.26 spn>=0.15: caught= 39/178  bet= 7.88%  mb/hit=  36.5  lift= 2.78x
+  t=100 acc>=0.26 spn>=0.18: caught= 81/178  bet=19.12%  mb/hit=  42.6  lift= 2.38x
+  t=110 acc>=0.26 spn>=0.18: caught= 71/178  bet=15.61%  mb/hit=  39.7  lift= 2.56x
+  t=120 acc>=0.26 spn>=0.18: caught= 62/178  bet=12.56%  mb/hit=  36.6  lift= 2.77x
+  t=130 acc>=0.26 spn>=0.18: caught= 53/178  bet= 9.87%  mb/hit=  33.6  lift= 3.02x
+  t=140 acc>=0.26 spn>=0.18: caught= 37/178  bet= 7.75%  mb/hit=  37.8  lift= 2.68x
+  t=100 acc>=0.26 spn>=0.20: caught= 80/178  bet=18.37%  mb/hit=  41.5  lift= 2.45x
+  t=110 acc>=0.26 spn>=0.20: caught= 70/178  bet=15.00%  mb/hit=  38.7  lift= 2.62x
+  t=120 acc>=0.26 spn>=0.20: caught= 61/178  bet=12.05%  mb/hit=  35.7  lift= 2.84x
+  t=130 acc>=0.26 spn>=0.20: caught= 52/178  bet= 9.43%  mb/hit=  32.8  lift= 3.10x
+  t=140 acc>=0.26 spn>=0.20: caught= 36/178  bet= 7.40%  mb/hit=  37.1  lift= 2.73x
+  t=100 acc>=0.26 spn>=0.22: caught= 74/178  bet=16.18%  mb/hit=  39.5  lift= 2.57x
+  t=110 acc>=0.26 spn>=0.22: caught= 65/178  bet=13.21%  mb/hit=  36.7  lift= 2.77x
+  t=120 acc>=0.26 spn>=0.22: caught= 57/178  bet=10.66%  mb/hit=  33.8  lift= 3.00x
+  t=130 acc>=0.26 spn>=0.22: caught= 49/178  bet= 8.32%  mb/hit=  30.7  lift= 3.31x
+  t=140 acc>=0.26 spn>=0.22: caught= 33/178  bet= 6.57%  mb/hit=  36.0  lift= 2.82x
+  t=100 acc>=0.26 spn>=0.25: caught= 44/178  bet=10.20%  mb/hit=  41.9  lift= 2.42x
+  t=110 acc>=0.26 spn>=0.25: caught= 40/178  bet= 8.50%  mb/hit=  38.4  lift= 2.64x
+  t=120 acc>=0.26 spn>=0.25: caught= 34/178  bet= 6.90%  mb/hit=  36.6  lift= 2.77x
+  t=130 acc>=0.26 spn>=0.25: caught= 28/178  bet= 5.27%  mb/hit=  34.0  lift= 2.99x
+  t=140 acc>=0.26 spn>=0.25: caught= 19/178  bet= 4.03%  mb/hit=  38.3  lift= 2.65x
+  t=100 acc>=0.26 spn>=0.28: caught= 12/178  bet= 2.77%  mb/hit=  41.8  lift= 2.43x
+  t=110 acc>=0.26 spn>=0.28: caught=  9/178  bet= 2.35%  mb/hit=  47.1  lift= 2.15x
+  t=120 acc>=0.26 spn>=0.28: caught=  8/178  bet= 1.85%  mb/hit=  41.8  lift= 2.43x
+  t=130 acc>=0.26 spn>=0.28: caught=  7/178  bet= 1.30%  mb/hit=  33.6  lift= 3.02x
+  t=100 acc>=0.28 spn>=0.15: caught= 74/178  bet=13.31%  mb/hit=  32.5  lift= 3.12x
+  t=110 acc>=0.28 spn>=0.15: caught= 64/178  bet=10.51%  mb/hit=  29.7  lift= 3.42x
+  t=120 acc>=0.28 spn>=0.15: caught= 55/178  bet= 8.11%  mb/hit=  26.6  lift= 3.81x
+  t=130 acc>=0.28 spn>=0.15: caught= 47/178  bet= 6.09%  mb/hit=  23.4  lift= 4.34x
+  t=140 acc>=0.28 spn>=0.15: caught= 33/178  bet= 4.71%  mb/hit=  25.8  lift= 3.93x
+  t=100 acc>=0.28 spn>=0.18: caught= 72/178  bet=13.04%  mb/hit=  32.7  lift= 3.10x
+  t=110 acc>=0.28 spn>=0.18: caught= 62/178  bet=10.27%  mb/hit=  29.9  lift= 3.39x
+  t=120 acc>=0.28 spn>=0.18: caught= 53/178  bet= 7.93%  mb/hit=  27.0  lift= 3.76x
+  t=130 acc>=0.28 spn>=0.18: caught= 45/178  bet= 5.95%  mb/hit=  23.9  lift= 4.25x
+  t=140 acc>=0.28 spn>=0.18: caught= 31/178  bet= 4.58%  mb/hit=  26.7  lift= 3.80x
+  t=100 acc>=0.28 spn>=0.20: caught= 71/178  bet=12.30%  mb/hit=  31.3  lift= 3.24x
+  t=110 acc>=0.28 spn>=0.20: caught= 61/178  bet= 9.68%  mb/hit=  28.7  lift= 3.54x
+  t=120 acc>=0.28 spn>=0.20: caught= 52/178  bet= 7.44%  mb/hit=  25.8  lift= 3.93x
+  t=130 acc>=0.28 spn>=0.20: caught= 44/178  bet= 5.54%  mb/hit=  22.7  lift= 4.46x
+  t=140 acc>=0.28 spn>=0.20: caught= 30/178  bet= 4.22%  mb/hit=  25.4  lift= 3.99x
+  t=100 acc>=0.28 spn>=0.22: caught= 65/178  bet=10.33%  mb/hit=  28.7  lift= 3.54x
+  t=110 acc>=0.28 spn>=0.22: caught= 56/178  bet= 8.06%  mb/hit=  26.0  lift= 3.91x
+  t=120 acc>=0.28 spn>=0.22: caught= 48/178  bet= 6.22%  mb/hit=  23.4  lift= 4.33x
+  t=130 acc>=0.28 spn>=0.22: caught= 41/178  bet= 4.58%  mb/hit=  20.2  lift= 5.03x
+  t=140 acc>=0.28 spn>=0.22: caught= 27/178  bet= 3.51%  mb/hit=  23.5  lift= 4.32x
+  t=100 acc>=0.28 spn>=0.25: caught= 40/178  bet= 6.00%  mb/hit=  27.1  lift= 3.74x
+  t=110 acc>=0.28 spn>=0.25: caught= 36/178  bet= 4.68%  mb/hit=  23.5  lift= 4.32x
+  t=120 acc>=0.28 spn>=0.25: caught= 30/178  bet= 3.59%  mb/hit=  21.6  lift= 4.70x
+  t=130 acc>=0.28 spn>=0.25: caught= 25/178  bet= 2.50%  mb/hit=  18.0  lift= 5.62x
+  t=140 acc>=0.28 spn>=0.25: caught= 16/178  bet= 1.80%  mb/hit=  20.3  lift= 5.00x
+  t=100 acc>=0.28 spn>=0.28: caught= 11/178  bet= 1.68%  mb/hit=  27.6  lift= 3.67x
+  t=110 acc>=0.28 spn>=0.28: caught=  8/178  bet= 1.35%  mb/hit=  30.5  lift= 3.33x
+  t=120 acc>=0.28 spn>=0.28: caught=  7/178  bet= 0.98%  mb/hit=  25.3  lift= 4.01x
+  t=130 acc>=0.28 spn>=0.28: caught=  6/178  bet= 0.59%  mb/hit=  17.8  lift= 5.69x
+  t=100 acc>=0.30 spn>=0.15: caught= 52/178  bet= 6.83%  mb/hit=  23.7  lift= 4.28x
+  t=110 acc>=0.30 spn>=0.15: caught= 43/178  bet= 5.32%  mb/hit=  22.3  lift= 4.54x
+  t=120 acc>=0.30 spn>=0.15: caught= 37/178  bet= 3.99%  mb/hit=  19.5  lift= 5.21x
+  t=130 acc>=0.30 spn>=0.15: caught= 31/178  bet= 2.83%  mb/hit=  16.5  lift= 6.16x
+  t=140 acc>=0.30 spn>=0.15: caught= 20/178  bet= 2.13%  mb/hit=  19.2  lift= 5.28x
+  t=100 acc>=0.30 spn>=0.18: caught= 50/178  bet= 6.56%  mb/hit=  23.7  lift= 4.28x
+  t=110 acc>=0.30 spn>=0.18: caught= 41/178  bet= 5.08%  mb/hit=  22.4  lift= 4.54x
+  t=120 acc>=0.30 spn>=0.18: caught= 35/178  bet= 3.81%  mb/hit=  19.7  lift= 5.16x
+  t=130 acc>=0.30 spn>=0.18: caught= 29/178  bet= 2.69%  mb/hit=  16.8  lift= 6.05x
+  t=140 acc>=0.30 spn>=0.18: caught= 18/178  bet= 1.99%  mb/hit=  20.0  lift= 5.07x
+  t=100 acc>=0.30 spn>=0.20: caught= 49/178  bet= 5.88%  mb/hit=  21.7  lift= 4.68x
+  t=110 acc>=0.30 spn>=0.20: caught= 40/178  bet= 4.55%  mb/hit=  20.6  lift= 4.94x
+  t=120 acc>=0.30 spn>=0.20: caught= 34/178  bet= 3.39%  mb/hit=  18.0  lift= 5.64x
+  t=130 acc>=0.30 spn>=0.20: caught= 28/178  bet= 2.34%  mb/hit=  15.1  lift= 6.72x
+  t=140 acc>=0.30 spn>=0.20: caught= 17/178  bet= 1.71%  mb/hit=  18.1  lift= 5.60x
+  t=100 acc>=0.30 spn>=0.22: caught= 45/178  bet= 4.34%  mb/hit=  17.4  lift= 5.82x
+  t=110 acc>=0.30 spn>=0.22: caught= 37/178  bet= 3.29%  mb/hit=  16.1  lift= 6.31x
+  t=120 acc>=0.30 spn>=0.22: caught= 32/178  bet= 2.52%  mb/hit=  14.2  lift= 7.14x
+  t=130 acc>=0.30 spn>=0.22: caught= 27/178  bet= 1.67%  mb/hit=  11.2  lift= 9.07x
+  t=140 acc>=0.30 spn>=0.22: caught= 16/178  bet= 1.13%  mb/hit=  12.8  lift= 7.96x
+  t=100 acc>=0.30 spn>=0.25: caught= 25/178  bet= 2.39%  mb/hit=  17.3  lift= 5.87x
+  t=110 acc>=0.30 spn>=0.25: caught= 21/178  bet= 1.77%  mb/hit=  15.2  lift= 6.66x
+  t=120 acc>=0.30 spn>=0.25: caught= 18/178  bet= 1.26%  mb/hit=  12.7  lift= 8.01x
+  t=130 acc>=0.30 spn>=0.25: caught= 15/178  bet= 0.73%  mb/hit=   8.7  lift=11.62x
+  t=140 acc>=0.30 spn>=0.25: caught=  8/178  bet= 0.43%  mb/hit=   9.8  lift=10.41x
+  t=100 acc>=0.30 spn>=0.28: caught=  6/178  bet= 0.56%  mb/hit=  16.8  lift= 6.03x
+  t=100 acc>=0.32 spn>=0.15: caught= 24/178  bet= 2.47%  mb/hit=  18.6  lift= 5.46x
+  t=110 acc>=0.32 spn>=0.15: caught= 20/178  bet= 1.66%  mb/hit=  15.0  lift= 6.76x
+  t=120 acc>=0.32 spn>=0.15: caught= 16/178  bet= 1.13%  mb/hit=  12.8  lift= 7.96x
+  t=130 acc>=0.32 spn>=0.15: caught= 14/178  bet= 0.74%  mb/hit=   9.6  lift=10.60x
+  t=140 acc>=0.32 spn>=0.15: caught=  8/178  bet= 0.46%  mb/hit=  10.4  lift= 9.78x
+  t=100 acc>=0.32 spn>=0.18: caught= 22/178  bet= 2.27%  mb/hit=  18.6  lift= 5.44x
+  t=110 acc>=0.32 spn>=0.18: caught= 18/178  bet= 1.49%  mb/hit=  15.0  lift= 6.76x
+  t=120 acc>=0.32 spn>=0.18: caught= 14/178  bet= 1.00%  mb/hit=  12.9  lift= 7.85x
+  t=130 acc>=0.32 spn>=0.18: caught= 12/178  bet= 0.65%  mb/hit=   9.8  lift=10.32x
+  t=140 acc>=0.32 spn>=0.18: caught=  6/178  bet= 0.38%  mb/hit=  11.3  lift= 8.95x
+  t=100 acc>=0.32 spn>=0.20: caught= 21/178  bet= 1.75%  mb/hit=  15.0  lift= 6.74x
+  t=110 acc>=0.32 spn>=0.20: caught= 17/178  bet= 1.11%  mb/hit=  11.8  lift= 8.62x
+  t=120 acc>=0.32 spn>=0.20: caught= 13/178  bet= 0.72%  mb/hit=  10.0  lift=10.15x
+  t=130 acc>=0.32 spn>=0.20: caught= 11/178  bet= 0.44%  mb/hit=   7.2  lift=14.13x
+  t=140 acc>=0.32 spn>=0.20: caught=  5/178  bet= 0.22%  mb/hit=   8.0  lift=12.68x
+  t=100 acc>=0.32 spn>=0.22: caught= 18/178  bet= 1.28%  mb/hit=  12.8  lift= 7.91x
+  t=110 acc>=0.32 spn>=0.22: caught= 14/178  bet= 0.79%  mb/hit=  10.1  lift=10.00x
+  t=120 acc>=0.32 spn>=0.22: caught= 11/178  bet= 0.53%  mb/hit=   8.7  lift=11.63x
+  t=130 acc>=0.32 spn>=0.22: caught= 10/178  bet= 0.34%  mb/hit=   6.1  lift=16.63x
+  t=100 acc>=0.32 spn>=0.25: caught= 10/178  bet= 0.79%  mb/hit=  14.3  lift= 7.10x
+  t=110 acc>=0.32 spn>=0.25: caught=  7/178  bet= 0.46%  mb/hit=  11.9  lift= 8.56x
+  t=120 acc>=0.32 spn>=0.25: caught=  5/178  bet= 0.32%  mb/hit=  11.4  lift= 8.90x
+  t=130 acc>=0.32 spn>=0.25: caught=  5/178  bet= 0.23%  mb/hit=   8.2  lift=12.37x

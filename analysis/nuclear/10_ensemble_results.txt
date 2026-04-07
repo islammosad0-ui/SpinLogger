@@ -1,0 +1,196 @@
+====================================================================================================
+CHUNK 10: ENSEMBLE ANALYSIS — Sub-10mb Configs
+====================================================================================================
+Total gaps: 178 (178 total, 175 with known prev)
+
+                                       config    caught    bet%   mb/hit     lift
+-------------------------------------------------------------------------------------
+            COMBO w10 t110 a0.28 p0.20 s0.010   42/178    2.15%      9.3     11.0x
+             Ideal RA w8 t110 rate0.30 s0.006   39/178    1.74%      8.1     12.6x
+                      RA t130 rate0.28 s0.010   31/178    1.47%      8.6     11.8x
+                                FLAT 150/0.32    7/178    0.26%      6.7     15.1x
+            SML L>=120 tL=130 g=0.32 (L-only)    5/178    0.07%      2.4     42.3x
+            SML L>=120 tL=130 g=0.30 (L-only)   10/178    0.23%      4.2     24.2x
+           SML S100 L120 tM=180 tL=130 g=0.32   12/178    0.25%      3.8     26.5x
+           SML S100 L120 tM=110 tL=130 g=0.32   13/178    0.35%      4.8     20.9x
+           SML S100 L130 tM=130 tL=100 g=0.32   16/178    0.53%      5.9     17.1x
+           SML S50  L130 tM=150 tL=100 g=0.32   17/178    0.74%      7.8     13.0x
+     SML S50  L130 tS=80 tM=150 tL=100 g=0.32   19/178    1.01%      9.6     10.6x
+             DG t130 acc0.32 spn0.22 (Sniper)   10/178    0.34%      6.1     16.6x
+                      DG t130 acc0.32 spn0.20   11/178    0.44%      7.2     14.1x
+                      DG t120 acc0.32 spn0.22   11/178    0.53%      8.7     11.6x
+                      DG t130 acc0.30 spn0.25   15/178    0.73%      8.7     11.6x
+                                FLAT 130/0.33   10/178    0.54%      9.8     10.4x
+                      RA t120 rate0.28 s0.010   35/178    1.90%      9.8     10.4x
+           SML S100 L150 tM=130 tL=100 g=0.32   15/178    0.48%      5.7     17.7x
+           SML S100 L170 tM=130 tL=100 g=0.32   14/178    0.47%      6.0     16.9x
+      SML L>=100 tL=130 g=0.32 (L-only loose)    6/178    0.19%      5.7     17.9x
+    SML S50 L120 tS=SKIP tM=150 tL=130 g=0.32   10/178    0.31%      5.6     18.1x
+   SML S50 L120 tS=SKIP tM=SKIP tL=130 g=0.32    5/178    0.07%      2.4     42.3x
+           SML S100 L120 tM=150 tL=130 g=0.32   12/178    0.33%      4.9     20.6x
+     SML S50 L130 tS=100 tM=160 tL=100 g=0.34    5/178    0.04%      1.6     63.4x
+                                FLAT 130/0.37    3/178    0.12%      7.0     14.5x
+                                FLAT 110/0.37    4/178    0.21%      9.5     10.7x
+                                FLAT 150/0.37    3/178    0.02%      1.3     76.1x
+                                FLAT 130/0.36    4/178    0.21%      9.5     10.7x
+                                FLAT 130/0.34    5/178    0.40%     14.4      7.0x
+                         SHIELD-cond 110/0.32    9/178    0.47%      9.4     10.7x
+                         SHIELD-cond 120/0.32    6/178    0.28%      8.5     11.9x
+                         SHIELD-cond 130/0.32    6/178    0.21%      6.3     16.0x
+                         SHIELD-cond 140/0.32    4/178    0.13%      6.0     16.9x
+                         ATTACK-cond 130/0.32    2/178    0.26%     23.5      4.3x
+                         ATTACK-cond 110/0.32    4/178    0.45%     20.2      5.0x
+
+--- Overlap matrix (how many gaps caught by BOTH row and col) ---
+                           C:w10 t1  I:R:w8 t  R:t130 r  F:150/0.  S:L>=120  S:L>=120  S:S100 L  S:S100 L  S:S100 L  S:S50  L  S:S50  L  DG t130   DG t130   DG t120   DG t130   F:130/0.  R:t120 r  S:S100 L  S:S100 L  S:L>=100  S:S50 L1  S:S50 L1  S:S100 L  S:S50 L1  F:130/0.  F:110/0.  F:150/0.  F:130/0.  F:130/0.  SHIELD-c  SHIELD-c  SHIELD-c  SHIELD-c  ATTACK-c  ATTACK-c
+     C:w10 t110 a0.28 p0.        42        28        30         4         4         8         8         9         9        10        10         8         9         9        12         6        34         9         9         4         6         4         8         2         1         1         1         2         3         8         6         6         4         0         1
+     I:R:w8 t110 rate0.30        28        39        21         6         4         8        10        11        11        12        12         9        10        10        14         9        24        11        11         4         8         4        10         2         3         4         3         4         5         8         6         6         4         1         3
+     R:t130 rate0.28 s0.0        30        21        31         5         4         8         9         9         9         8         8         8         9         8        12         7        31         9         9         4         7         4         9         1         2         2         2         3         4         6         6         6         4         0         0
+               F:150/0.32         4         6         5         7         0         0         7         7         7         7         7         3         4         3         2         4         5         7         7         1         5         0         7         1         3         3         3         3         4         3         3         3         3         2         2
+     S:L>=120 tL=130 g=0.         4         4         4         0         5         5         5         5         5         2         2         5         5         5         3         4         4         5         5         5         5         5         5         0         0         0         0         1         1         2         2         2         1         0         0
+     S:L>=120 tL=130 g=0.         8         8         8         0         5        10         5         5         5         2         2         5         5         5         6         4         8         5         5         5         5         5         5         0         0         0         0         1         1         2         2         2         1         0         0
+     S:S100 L120 tM=180 t         8        10         9         7         5         5        12        12        12         9         9         8         9         8         5         8         9        12        12         6        10         5        12         1         3         3         3         4         5         5         5         5         4         2         2
+     S:S100 L120 tM=110 t         9        11         9         7         5         5        12        13        12         9         9         8         9         8         5         8         9        12        12         6        10         5        12         1         3         3         3         4         5         6         5         5         4         2         2
+     S:S100 L130 tM=130 t         9        11         9         7         5         5        12        12        16        13        13         8         9         8         5         8         9        15        14         6        10         5        12         4         3         3         3         4         5         5         5         5         4         2         3
+     S:S50  L130 tM=150 t        10        12         8         7         2         2         9         9        13        17        17         6         7         7         3         7         9        12        11         3         7         2         9         5         3         3         3         3         4         6         5         5         3         2         3
+     S:S50  L130 tS=80 tM        10        12         8         7         2         2         9         9        13        17        19         6         7         7         3         7         9        12        11         3         7         2         9         5         3         3         3         3         4         6         5         5         3         2         3
+     DG t130 acc0.32 spn0         8         9         8         3         5         5         8         8         8         6         6        10        10        10         5         7         8         8         8         5         7         5         8         0         1         1         1         2         2         6         6         6         4         0         0
+     DG t130 acc0.32 spn0         9        10         9         4         5         5         9         9         9         7         7        10        11        10         5         8         9         9         9         5         7         5         9         1         1         1         1         2         3         6         6         6         4         0         0
+     DG t120 acc0.32 spn0         9        10         8         3         5         5         8         8         8         7         7        10        10        11         5         7         9         8         8         5         7         5         8         0         1         1         1         2         2         6         6         6         4         0         0
+     DG t130 acc0.30 spn0        12        14        12         2         3         6         5         5         5         3         3         5         5         5        15         3        12         5         5         3         5         3         5         0         1         1         1         2         2         3         3         3         3         0         0
+               F:130/0.33         6         9         7         4         4         4         8         8         8         7         7         7         8         7         3        10         7         8         8         4         7         4         8         1         3         3         3         4         5         3         3         3         1         1         1
+     R:t120 rate0.28 s0.0        34        24        31         5         4         8         9         9         9         9         9         8         9         9        12         7        35         9         9         4         7         4         9         1         2         2         2         3         4         6         6         6         4         0         0
+     S:S100 L150 tM=130 t         9        11         9         7         5         5        12        12        15        12        12         8         9         8         5         8         9        15        14         6        10         5        12         3         3         3         3         4         5         5         5         5         4         2         3
+     S:S100 L170 tM=130 t         9        11         9         7         5         5        12        12        14        11        11         8         9         8         5         8         9        14        14         6        10         5        12         2         3         3         3         4         5         5         5         5         4         2         3
+     S:L>=100 tL=130 g=0.         4         4         4         1         5         5         6         6         6         3         3         5         5         5         3         4         4         6         6         6         6         5         6         0         0         0         0         1         1         2         2         2         1         1         1
+     S:S50 L120 tS=SKIP t         6         8         7         5         5         5        10        10        10         7         7         7         7         7         5         7         7        10        10         6        10         5        10         0         3         3         3         4         4         4         4         4         3         2         2
+     S:S50 L120 tS=SKIP t         4         4         4         0         5         5         5         5         5         2         2         5         5         5         3         4         4         5         5         5         5         5         5         0         0         0         0         1         1         2         2         2         1         0         0
+     S:S100 L120 tM=150 t         8        10         9         7         5         5        12        12        12         9         9         8         9         8         5         8         9        12        12         6        10         5        12         1         3         3         3         4         5         5         5         5         4         2         2
+     S:S50 L130 tS=100 tM         2         2         1         1         0         0         1         1         4         5         5         0         1         0         0         1         1         3         2         0         0         0         1         5         0         0         0         0         1         0         0         0         0         0         1
+               F:130/0.37         1         3         2         3         0         0         3         3         3         3         3         1         1         1         1         3         2         3         3         0         3         0         3         0         3         3         3         3         3         1         1         1         1         1         1
+               F:110/0.37         1         4         2         3         0         0         3         3         3         3         3         1         1         1         1         3         2         3         3         0         3         0         3         0         3         4         3         3         3         1         1         1         1         1         2
+               F:150/0.37         1         3         2         3         0         0         3         3         3         3         3         1         1         1         1         3         2         3         3         0         3         0         3         0         3         3         3         3         3         1         1         1         1         1         1
+               F:130/0.36         2         4         3         3         1         1         4         4         4         3         3         2         2         2         2         4         3         4         4         1         4         1         4         0         3         3         3         4         4         1         1         1         1         1         1
+               F:130/0.34         3         5         4         4         1         1         5         5         5         4         4         2         3         2         2         5         4         5         5         1         4         1         5         1         3         3         3         4         5         1         1         1         1         1         1
+     SHIELD-cond 110/0.32         8         8         6         3         2         2         5         6         5         6         6         6         6         6         3         3         6         5         5         2         4         2         5         0         1         1         1         1         1         9         6         6         4         0         0
+     SHIELD-cond 120/0.32         6         6         6         3         2         2         5         5         5         5         5         6         6         6         3         3         6         5         5         2         4         2         5         0         1         1         1         1         1         6         6         6         4         0         0
+     SHIELD-cond 130/0.32         6         6         6         3         2         2         5         5         5         5         5         6         6         6         3         3         6         5         5         2         4         2         5         0         1         1         1         1         1         6         6         6         4         0         0
+     SHIELD-cond 140/0.32         4         4         4         3         1         1         4         4         4         3         3         4         4         4         3         1         4         4         4         1         3         1         4         0         1         1         1         1         1         4         4         4         4         0         0
+     ATTACK-cond 130/0.32         0         1         0         2         0         0         2         2         2         2         2         0         0         0         0         1         0         2         2         1         2         0         2         0         1         1         1         1         1         0         0         0         0         2         2
+     ATTACK-cond 110/0.32         1         3         0         2         0         0         2         2         3         3         3         0         0         0         0         1         0         3         3         1         2         0         2         1         1         2         1         1         1         0         0         0         0         2         4
+
+--- Union build-up: adding configs sorted by mb/hit ---
+                                  configs included   unique catches   bet_spins    mb/hit
+------------------------------------------------------------------------------------------
++        SML S50 L130 tS=100 tM=160 tL=100 g=0.34    5/178 (+ 5)           8       1.6
++               SML L>=120 tL=130 g=0.32 (L-only)   10/178 (+ 5)          20       2.0
++      SML S50 L120 tS=SKIP tM=SKIP tL=130 g=0.32   10/178 (+ 0)          32       3.2
++              SML S100 L120 tM=180 tL=130 g=0.32   16/178 (+ 6)          78       4.9
++               SML L>=120 tL=130 g=0.30 (L-only)   21/178 (+ 5)         120       5.7
++              SML S100 L120 tM=110 tL=130 g=0.32   22/178 (+ 1)         183       8.3
++              SML S100 L120 tM=150 tL=130 g=0.32   22/178 (+ 0)         242      11.0
++       SML S50 L120 tS=SKIP tM=150 tL=130 g=0.32   22/178 (+ 0)         298      13.5
++              SML S100 L150 tM=130 tL=100 g=0.32   23/178 (+ 1)         384      16.7
++         SML L>=100 tL=130 g=0.32 (L-only loose)   23/178 (+ 0)         418      18.2
++              SML S100 L130 tM=130 tL=100 g=0.32   23/178 (+ 0)         513      22.3
++              SML S100 L170 tM=130 tL=100 g=0.32   23/178 (+ 0)         597      26.0
++                            SHIELD-cond 140/0.32   23/178 (+ 0)         621      27.0
++                DG t130 acc0.32 spn0.22 (Sniper)   25/178 (+ 2)         682      27.3
++                            SHIELD-cond 130/0.32   25/178 (+ 0)         720      28.8
++                                   FLAT 150/0.32   25/178 (+ 0)         767      30.7
++                                   FLAT 130/0.37   25/178 (+ 0)         788      31.5
++                                   FLAT 110/0.37   26/178 (+ 1)         826      31.8
++                                   FLAT 150/0.37   26/178 (+ 0)         830      31.9
++                                   FLAT 130/0.34   26/178 (+ 0)         902      34.7
++                         DG t130 acc0.32 spn0.20   26/178 (+ 0)         981      37.7
++              SML S50  L130 tM=150 tL=100 g=0.32   28/178 (+ 2)        1114      39.8
++                Ideal RA w8 t110 rate0.30 s0.006   46/178 (+18)        1428      31.0
++                            SHIELD-cond 120/0.32   46/178 (+ 0)        1479      32.2
++                         RA t130 rate0.28 s0.010   56/178 (+10)        1745      31.2
++                         DG t120 acc0.32 spn0.22   56/178 (+ 0)        1841      32.9
++                         DG t130 acc0.30 spn0.25   56/178 (+ 0)        1972      35.2
++                            ATTACK-cond 130/0.32   56/178 (+ 0)        2019      36.1
++                            ATTACK-cond 110/0.32   56/178 (+ 0)        2100      37.5
++               COMBO w10 t110 a0.28 p0.20 s0.010   60/178 (+ 4)        2489      41.5
++                            SHIELD-cond 110/0.32   61/178 (+ 1)        2574      42.2
++                                   FLAT 130/0.36   61/178 (+ 0)        2612      42.8
++        SML S50  L130 tS=80 tM=150 tL=100 g=0.32   63/178 (+ 2)        2794      44.3
++                                   FLAT 130/0.33   63/178 (+ 0)        2892      45.9
++                         RA t120 rate0.28 s0.010   63/178 (+ 0)        3235      51.3
+
+--- TRUE union simulation (bet if ANY sub-10mb config says bet) ---
+(deduplicates bet spins — one spin counted once even if multiple configs fire)
+  Unique catches:  63/178 (35.4%)
+  Bet spins:       828 / 18,061 (4.58%)
+  mb/hit:          13.1
+  lift:            7.7x
+
+  Per-account union:
+    Islam: 30/83
+    Ahmed: 28/77
+    Nick: 5/18
+
+--- Exclusive catches (not caught by COMBO flat) ---
+               Ideal RA w8 t110 rate0.30 s0.006: 11 exclusive catches (gaps [25, 33, 36, 50, 59, 65, 88, 92, 98, 102, 158])
+                        RA t130 rate0.28 s0.010: 1 exclusive catches (gaps [50])
+                                  FLAT 150/0.32: 3 exclusive catches (gaps [50, 63, 98])
+              SML L>=120 tL=130 g=0.32 (L-only): 1 exclusive catches (gaps [11])
+              SML L>=120 tL=130 g=0.30 (L-only): 2 exclusive catches (gaps [11, 127])
+             SML S100 L120 tM=180 tL=130 g=0.32: 4 exclusive catches (gaps [11, 50, 63, 98])
+             SML S100 L120 tM=110 tL=130 g=0.32: 4 exclusive catches (gaps [11, 50, 63, 98])
+             SML S100 L130 tM=130 tL=100 g=0.32: 7 exclusive catches (gaps [11, 44, 50, 63, 64, 98, 149])
+             SML S50  L130 tM=150 tL=100 g=0.32: 7 exclusive catches (gaps [44, 50, 63, 64, 98, 122, 149])
+       SML S50  L130 tS=80 tM=150 tL=100 g=0.32: 9 exclusive catches (gaps [6, 44, 50, 58, 63, 64, 98, 122, 149])
+               DG t130 acc0.32 spn0.22 (Sniper): 2 exclusive catches (gaps [11, 102])
+                        DG t130 acc0.32 spn0.20: 2 exclusive catches (gaps [11, 102])
+                        DG t120 acc0.32 spn0.22: 2 exclusive catches (gaps [11, 102])
+                        DG t130 acc0.30 spn0.25: 3 exclusive catches (gaps [59, 65, 127])
+                                  FLAT 130/0.33: 4 exclusive catches (gaps [11, 50, 98, 102])
+                        RA t120 rate0.28 s0.010: 1 exclusive catches (gaps [50])
+             SML S100 L150 tM=130 tL=100 g=0.32: 6 exclusive catches (gaps [11, 44, 50, 63, 64, 98])
+             SML S100 L170 tM=130 tL=100 g=0.32: 5 exclusive catches (gaps [11, 50, 63, 64, 98])
+        SML L>=100 tL=130 g=0.32 (L-only loose): 2 exclusive catches (gaps [11, 63])
+      SML S50 L120 tS=SKIP tM=150 tL=130 g=0.32: 4 exclusive catches (gaps [11, 50, 63, 98])
+     SML S50 L120 tS=SKIP tM=SKIP tL=130 g=0.32: 1 exclusive catches (gaps [11])
+             SML S100 L120 tM=150 tL=130 g=0.32: 4 exclusive catches (gaps [11, 50, 63, 98])
+       SML S50 L130 tS=100 tM=160 tL=100 g=0.34: 3 exclusive catches (gaps [44, 122, 149])
+                                  FLAT 130/0.37: 2 exclusive catches (gaps [50, 98])
+                                  FLAT 110/0.37: 3 exclusive catches (gaps [50, 88, 98])
+                                  FLAT 150/0.37: 2 exclusive catches (gaps [50, 98])
+                                  FLAT 130/0.36: 2 exclusive catches (gaps [50, 98])
+                                  FLAT 130/0.34: 2 exclusive catches (gaps [50, 98])
+                           SHIELD-cond 110/0.32: 1 exclusive catches (gaps [137])
+                           SHIELD-cond 120/0.32: 0 exclusive (all subsumed by COMBO)
+                           SHIELD-cond 130/0.32: 0 exclusive (all subsumed by COMBO)
+                           SHIELD-cond 140/0.32: 0 exclusive (all subsumed by COMBO)
+                           ATTACK-cond 130/0.32: 2 exclusive catches (gaps [63, 98])
+                           ATTACK-cond 110/0.32: 3 exclusive catches (gaps [63, 88, 98])
+
+--- Targeted union: COMBO + SML L-only L>=120 tL=130 g=0.32 ---
+  COMBO alone:           42/178  mb=9.3
+  SML L-only alone:      5/178  mb=2.4
+  COMBO | SML L-only:    43/178  mb=9.1  lift=11.1x
+  Extra catches vs COMBO: +1
+
+--- MINIMUM COVER ANALYSIS ---
+Goal: smallest config subset that catches all 62 union gaps with FEWEST bet spins
+
+  Greedy chosen subset (11 configs):
+    + FLAT 150/0.37  (+3 new catches)
+    + SML S50 L130 tS=100 tM=160 tL=100 g=0.34  (+5 new catches)
+    + SML L>=120 tL=130 g=0.32 (L-only)  (+5 new catches)
+    + SML L>=120 tL=130 g=0.30 (L-only)  (+5 new catches)
+    + SHIELD-cond 140/0.32  (+2 new catches)
+    + Ideal RA w8 t110 rate0.30 s0.006  (+24 new catches)
+    + RA t130 rate0.28 s0.010  (+10 new catches)
+    + SML L>=100 tL=130 g=0.32 (L-only loose)  (+1 new catches)
+    + SML S50  L130 tS=80 tM=150 tL=100 g=0.32  (+3 new catches)
+    + SHIELD-cond 110/0.32  (+1 new catches)
+    + COMBO w10 t110 a0.28 p0.20 s0.010  (+4 new catches)
+
+  TRUE simulation of greedy subset:
+    catches:    63/178
+    bet spins:  709 / 18061  (3.93%)
+    mb/hit:     11.25
+    vs full union: 63 catches at 13.1 mb/hit
+    vs COMBO alone: 42 catches at 9.3 mb/hit

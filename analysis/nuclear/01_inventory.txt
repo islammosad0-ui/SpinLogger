@@ -1,0 +1,36 @@
+======================================================================
+NUCLEAR LOADER - gap inventory
+======================================================================
+
+Islam: 8378 spins
+  accumulation :   83 gaps (sa_spins)  mean=  99.8  min=   3  max= 394
+  spins        :   95 gaps (ss_spins)  mean=  89.1  min=   1  max= 267
+  attack       :  570 gaps (idx)       mean=  14.6  min=   1  max=  95
+  steal        :  258 gaps (idx)       mean=  32.3  min=   1  max= 136
+  shield       :  366 gaps (idx)       mean=  22.8  min=   1  max= 109
+
+Nick: 2316 spins
+  accumulation :   18 gaps (sa_spins)  mean= 129.9  min=  18  max= 340
+  spins        :   32 gaps (ss_spins)  mean=  71.1  min=   7  max= 173
+  attack       :  169 gaps (idx)       mean=  13.6  min=   1  max=  53
+  steal        :   67 gaps (idx)       mean=  33.5  min=   1  max= 132
+  shield       :  103 gaps (idx)       mean=  22.3  min=   1  max=  86
+
+Ahmed: 7603 spins
+  accumulation :   77 gaps (sa_spins)  mean=  98.3  min=  10  max= 250
+  spins        :   86 gaps (ss_spins)  mean=  85.6  min=   6  max= 310
+  attack       :  514 gaps (idx)       mean=  14.8  min=   1  max=  88
+  steal        :  241 gaps (idx)       mean=  31.2  min=   1  max= 119
+  shield       :  330 gaps (idx)       mean=  22.9  min=   1  max= 128
+
+--- DEDUP SIGNATURE CHECK (first 50 reels) ---
+  Islam vs Nick: different
+  Islam vs Ahmed: different
+  Nick vs Ahmed: different
+
+--- TOTAL GAPS ACROSS ALL 3 ACCOUNTS ---
+  accumulation : 178 gaps
+  spins        : 213 gaps
+  attack       : 1253 gaps
+  steal        : 566 gaps
+  shield       : 799 gaps
