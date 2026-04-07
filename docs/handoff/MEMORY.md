@@ -1,0 +1,5 @@
+- [User Profile](user_profile.md) — Islam is reverse-engineering Coin Master slot mechanics, prefers high-confidence strategies
+- [16-Rule Ensemble Status](project_ensemble_status.md) — Nuclear analysis done, 63/178 ceiling proven, 16-rule ensemble defined, implementation paused for fine-tuning
+- [Strip Research Status](project_strip_research.md) — Running median calibration works but quiet zone gives only 1.6x lift; need fresh approach with 5K Account 2 data
+- [Next Session Brief](project_next_session_brief.md) — Go nuclear: 12-axis exhaustive analysis, every CSV column, every pattern, crack why Zoran gets 2.3 MB/hit vs our 60
+- [Analysis Feedback](feedback_analysis.md) — Push harder on creative analysis, don't settle for surface-level stats
