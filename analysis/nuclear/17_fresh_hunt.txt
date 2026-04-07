@@ -1,0 +1,229 @@
+========================================================================================================================
+CHUNK 17: FRESH HUNT — NEW signals post-phantom-bug
+========================================================================================================================
+Dataset: 271 ACC gaps / 28,923 spins
+Hypotheses tested: 577 configs
+With >= 3 catches: 466
+
+TOP 50 BY MB/HIT (min 5 catches)
+----------------------------------------------------------------------------------------------------
+rule                                                     catches   bets   mb/hit    lift
+H1:STEAL t150 g0.30                                      5/271     31      6.2   17.0x
+H1:STEAL t150 g0.28                                      5/271     57     11.4    9.2x
+H4:acc/atk>=0.8 t100                                     5/271     69     13.8    7.6x
+H1:STEAL t140 g0.30                                      6/271     85     14.2    7.4x
+H14:steal+L>=100 t130 g0.26                              5/271     76     15.2    6.9x
+H14:steal+L>=120 t130 g0.26                              5/271     76     15.2    6.9x
+H1:STEAL t130 g0.28                                     14/271    234     16.7    6.3x
+H1:STEAL t130 g0.30                                      9/271    153     17.0    6.2x
+H14:steal+L>=100 t130 g0.22                              7/271    129     18.4    5.7x
+H1:STEAL t140 g0.28                                      7/271    133     19.0    5.5x
+H9:L>=120 SHIELD t130 g0.28                              5/271     97     19.4    5.4x
+H14:steal+L>=120 t130 g0.22                              6/271    120     20.0    5.3x
+H14:shield+L>=120 t130 g0.26                             5/271    107     21.4    4.9x
+H9:L>=120 SHIELD t130 g0.24                              5/271    123     24.6    4.3x
+H14:shield+L>=120 t130 g0.22                             5/271    123     24.6    4.3x
+H1:STEAL t120 g0.28                                     15/271    383     25.5    4.1x
+H6:gap_start_pct>=60 t130                               43/271   1179     27.4    3.8x
+H1:STEAL t130 g0.26                                     18/271    500     27.8    3.8x
+H6:gap_start_pct>=80 t130                               13/271    365     28.1    3.7x
+H1:STEAL t130 g0.20                                     20/271    562     28.1    3.7x
+H1:STEAL t130 g0.22                                     20/271    562     28.1    3.7x
+H1:STEAL t130 g0.24                                     20/271    562     28.1    3.7x
+H1:STEAL t120 g0.30                                      9/271    258     28.7    3.7x
+H14:steal+L>=100 t110 g0.22                             10/271    298     29.8    3.5x
+H15:mission_remaining<=10000 t130                       20/271    611     30.6    3.4x
+H15:mission_remaining<=5000 t130                        16/271    490     30.6    3.4x
+H14:shield+L>=100 t130 g0.22                             9/271    276     30.7    3.4x
+H14:shield+L>=100 t130 g0.26                             8/271    251     31.4    3.4x
+H9:SHIELD+acc0.22+shd<0.20 t150                          6/271    190     31.7    3.3x
+H9:SHIELD+acc0.26+shd<0.20 t150                          6/271    190     31.7    3.3x
+H6:gap_start_pct>=50 t130                               49/271   1562     31.9    3.3x
+H3:inv shd<=0.18 t150                                   10/271    319     31.9    3.3x
+H14:steal+L>=120 t110 g0.22                              8/271    256     32.0    3.3x
+H6:gap_start_pct>=60 t120                               51/271   1649     32.3    3.3x
+H14:steal+L>=100 t110 g0.26                              7/271    229     32.7    3.2x
+H6:gap_start_pct>=40 t130                               56/271   1841     32.9    3.2x
+H9:SHIELD+acc0.30+shd<0.20 t130                          5/271    169     33.8    3.1x
+H14:shield+L>=120 t110 g0.26                             6/271    204     34.0    3.1x
+H14:shield+L>=140 t110 g0.26                             5/271    170     34.0    3.1x
+H14:steal+L>=120 t110 g0.26                              6/271    206     34.3    3.1x
+H6:gap_start_pct>=70 t130                               19/271    655     34.5    3.1x
+H1:STEAL t110 g0.28                                     16/271    553     34.6    3.0x
+H3:inv shd<=0.20 t130                                   37/271   1301     35.2    3.0x
+H3+:acc>=0.22 shd<=0.20 t130                            37/271   1301     35.2    3.0x
+H16:recur3+ window=±0                                    6/271    214     35.7    2.9x
+H15:mission_remaining<=20000 t130                       24/271    857     35.7    2.9x
+H6:gap_start_pct>=80 t120                               14/271    501     35.8    2.9x
+H5:rec20 acc>=0.50 t150                                  5/271    179     35.8    2.9x
+H3+:acc>=0.24 shd<=0.20 t130                            36/271   1290     35.8    2.9x
+H3:inv shd<=0.20 t150                                   19/271    687     36.2    2.9x
+
+TOP 30 BY CATCH COUNT (min mb/hit <= 50)
+----------------------------------------------------------------------------------------------------
+rule                                                     catches   bets   mb/hit    lift
+H2:streak atk>=1 t100                                  142/271   7055     49.7    2.1x
+H2:streak stl>=1 t100                                  142/271   7055     49.7    2.1x
+H2:streak shd>=1 t100                                  142/271   7055     49.7    2.1x
+H2:streak atk>=2 t100                                  142/271   7044     49.6    2.1x
+H2:streak shd>=2 t100                                  142/271   7042     49.6    2.1x
+H2:streak atk>=3 t100                                  142/271   7043     49.6    2.1x
+H2:streak shd>=3 t100                                  142/271   7006     49.3    2.1x
+H2:streak atk>=4 t100                                  142/271   7032     49.5    2.1x
+H2:tot_streak>=2 t100                                  142/271   7055     49.7    2.1x
+H2:tot_streak>=3 t100                                  142/271   7055     49.7    2.1x
+H2:tot_streak>=4 t100                                  142/271   7055     49.7    2.1x
+H2:tot_streak>=5 t100                                  142/271   7055     49.7    2.1x
+H12:sigs>=2 t100                                       141/271   7040     49.9    2.1x
+H2:streak shd>=4 t100                                  139/271   6628     47.7    2.2x
+H12:sigs>=3 t100                                       137/271   6816     49.8    2.1x
+H4:acc/shd>=1.0 t100                                   133/271   6482     48.7    2.2x
+H12:sigs>=4 t80                                        113/271   5583     49.4    2.1x
+H12:sigs>=4 t100                                       113/271   5583     49.4    2.1x
+H4:acc/shd>=1.2 t100                                   111/271   5196     46.8    2.2x
+H8+:ss_spn<=0.25 t100                                  111/271   5350     48.2    2.2x
+H2:streak atk>=1 t120                                  105/271   4620     44.0    2.4x
+H2:streak stl>=1 t120                                  105/271   4620     44.0    2.4x
+H2:streak shd>=1 t120                                  105/271   4620     44.0    2.4x
+H2:streak atk>=2 t120                                  105/271   4620     44.0    2.4x
+H2:streak shd>=2 t120                                  105/271   4620     44.0    2.4x
+H2:streak atk>=3 t120                                  105/271   4620     44.0    2.4x
+H2:streak shd>=3 t120                                  105/271   4620     44.0    2.4x
+H2:streak atk>=4 t120                                  105/271   4617     44.0    2.4x
+H2:tot_streak>=2 t120                                  105/271   4620     44.0    2.4x
+H2:tot_streak>=3 t120                                  105/271   4620     44.0    2.4x
+
+========================================================================================================================
+BEST RULE PER HYPOTHESIS (sorted by mb/hit within each)
+========================================================================================================================
+
+H1:
+  H1:STEAL t150 g0.30                                        5/271  bets=  31  mb=   6.2  lift=17.0x
+  H1:STEAL t150 g0.28                                        5/271  bets=  57  mb=  11.4  lift=9.2x
+  H1:STEAL t140 g0.30                                        6/271  bets=  85  mb=  14.2  lift=7.4x
+  H1:STEAL t130 g0.28                                       14/271  bets= 234  mb=  16.7  lift=6.3x
+  H1:STEAL t130 g0.30                                        9/271  bets= 153  mb=  17.0  lift=6.2x
+
+H11:
+  H11:bet_sum>=100                                         184/271  bets=10567  mb=  57.4  lift=1.8x
+  H11:bet_sum>=1000                                        109/271  bets=6651  mb=  61.0  lift=1.7x
+  H11:bet_sum>=5000                                         73/271  bets=4536  mb=  62.1  lift=1.7x
+  H11:bet_sum>=2000                                         93/271  bets=5818  mb=  62.6  lift=1.7x
+  H11:bet_sum>=500                                         112/271  bets=7075  mb=  63.2  lift=1.7x
+
+H12:
+  H12:sigs>=3 t120                                         105/271  bets=4616  mb=  44.0  lift=2.4x
+  H12:sigs>=2 t120                                         105/271  bets=4620  mb=  44.0  lift=2.4x
+  H12:sigs>=4 t120                                          93/271  bets=4228  mb=  45.5  lift=2.3x
+  H12:sigs>=4 t80                                          113/271  bets=5583  mb=  49.4  lift=2.1x
+  H12:sigs>=4 t100                                         113/271  bets=5583  mb=  49.4  lift=2.1x
+
+H14:
+  H14:spins+L>=100 t130 g0.22                                3/271  bets=  26  mb=   8.7  lift=12.1x
+  H14:spins+L>=100 t130 g0.26                                3/271  bets=  26  mb=   8.7  lift=12.1x
+  H14:steal+L>=100 t130 g0.26                                5/271  bets=  76  mb=  15.2  lift=6.9x
+  H14:steal+L>=120 t130 g0.26                                5/271  bets=  76  mb=  15.2  lift=6.9x
+  H14:steal+L>=140 t130 g0.26                                3/271  bets=  52  mb=  17.3  lift=6.1x
+
+H15:
+  H15:mission_remaining<=10000 t130                         20/271  bets= 611  mb=  30.6  lift=3.4x
+  H15:mission_remaining<=5000 t130                          16/271  bets= 490  mb=  30.6  lift=3.4x
+  H15:mission_remaining<=20000 t130                         24/271  bets= 857  mb=  35.7  lift=2.9x
+  H15:mission_remaining<=50000 t130                         36/271  bets=1376  mb=  38.2  lift=2.8x
+  H15:mission_remaining<=10000 t100                         34/271  bets=1377  mb=  40.5  lift=2.6x
+
+H16:
+  H16:recur3+ window=±0                                      6/271  bets= 214  mb=  35.7  lift=2.9x
+  H16:bucket10 recur>=2 t120                                56/271  bets=2429  mb=  43.4  lift=2.4x
+  H16:bucket10 recur>=2 t100                                82/271  bets=4014  mb=  49.0  lift=2.1x
+  H16:recurrence window=±0                                  19/271  bets=1286  mb=  67.7  lift=1.6x
+  H16:recur3+ window=±1                                      9/271  bets= 636  mb=  70.7  lift=1.5x
+
+H2:
+  H2:streak atk>=1 t130                                     89/271  bets=3647  mb=  41.0  lift=2.6x
+  H2:streak stl>=1 t130                                     89/271  bets=3647  mb=  41.0  lift=2.6x
+  H2:streak shd>=1 t130                                     89/271  bets=3647  mb=  41.0  lift=2.6x
+  H2:streak atk>=2 t130                                     89/271  bets=3647  mb=  41.0  lift=2.6x
+  H2:streak stl>=2 t130                                     89/271  bets=3647  mb=  41.0  lift=2.6x
+
+H3:
+  H3:inv shd<=0.15 t130                                      3/271  bets=  84  mb=  28.0  lift=3.8x
+  H3:inv shd<=0.18 t150                                     10/271  bets= 319  mb=  31.9  lift=3.3x
+  H3:inv shd<=0.20 t130                                     37/271  bets=1301  mb=  35.2  lift=3.0x
+  H3:inv shd<=0.20 t150                                     19/271  bets= 687  mb=  36.2  lift=2.9x
+  H3:inv shd<=0.22 t130                                     59/271  bets=2252  mb=  38.2  lift=2.8x
+
+H3+:
+  H3+:acc>=0.26 shd<=0.15 t130                               3/271  bets=  71  mb=  23.7  lift=4.4x
+  H3+:acc>=0.22 shd<=0.15 t130                               3/271  bets=  84  mb=  28.0  lift=3.8x
+  H3+:acc>=0.24 shd<=0.15 t130                               3/271  bets=  84  mb=  28.0  lift=3.8x
+  H3+:acc>=0.22 shd<=0.20 t130                              37/271  bets=1301  mb=  35.2  lift=3.0x
+  H3+:acc>=0.24 shd<=0.20 t130                              36/271  bets=1290  mb=  35.8  lift=2.9x
+
+H4:
+  H4:acc/atk>=0.8 t100                                       5/271  bets=  69  mb=  13.8  lift=7.6x
+  H4:acc/shd>=2.0 t150                                       3/271  bets= 103  mb=  34.3  lift=3.1x
+  H4:acc/shd>=1.2 t130                                      73/271  bets=2694  mb=  36.9  lift=2.8x
+  H4:acc/shd>=2.0 t130                                       5/271  bets= 196  mb=  39.2  lift=2.7x
+  H4:acc/shd>=1.2 t150                                      42/271  bets=1659  mb=  39.5  lift=2.7x
+
+H5:
+  H5:rec20 acc>=0.50 t150                                    5/271  bets= 179  mb=  35.8  lift=2.9x
+  H5:rec5 acc>=0.45 t150                                    12/271  bets= 435  mb=  36.2  lift=2.9x
+  H5:rec5 acc>=0.50 t150                                    12/271  bets= 435  mb=  36.2  lift=2.9x
+  H5:rec5 acc>=0.45 t130                                    19/271  bets= 735  mb=  38.7  lift=2.7x
+  H5:rec5 acc>=0.50 t130                                    19/271  bets= 735  mb=  38.7  lift=2.7x
+
+H5+:
+  H5+:rec10 shd<=0.20 t130                                  54/271  bets=2191  mb=  40.6  lift=2.6x
+  H5+:rec10 shd<=0.10 t130                                  45/271  bets=1877  mb=  41.7  lift=2.5x
+  H5+:rec10 shd<=0.15 t130                                  45/271  bets=1877  mb=  41.7  lift=2.5x
+  H5+:rec20 shd<=0.10 t130                                  27/271  bets=1178  mb=  43.6  lift=2.4x
+  H5+:rec10 shd<=0.20 t120                                  61/271  bets=2763  mb=  45.3  lift=2.3x
+
+H6:
+  H6:gap_start_pct>=60 t130                                 43/271  bets=1179  mb=  27.4  lift=3.8x
+  H6:gap_start_pct>=80 t130                                 13/271  bets= 365  mb=  28.1  lift=3.7x
+  H6:gap_start_pct>=50 t130                                 49/271  bets=1562  mb=  31.9  lift=3.3x
+  H6:gap_start_pct>=60 t120                                 51/271  bets=1649  mb=  32.3  lift=3.3x
+  H6:gap_start_pct>=40 t130                                 56/271  bets=1841  mb=  32.9  lift=3.2x
+
+H7:
+  H7:delta>=20 t130                                          4/271  bets= 234  mb=  58.5  lift=1.8x
+  H7:delta>=30 t130                                          4/271  bets= 234  mb=  58.5  lift=1.8x
+  H7:delta>=10 t130                                          4/271  bets= 236  mb=  59.0  lift=1.8x
+  H7:delta>=5 t130                                           4/271  bets= 238  mb=  59.5  lift=1.8x
+  H7:delta>=20 t120                                          4/271  bets= 273  mb=  68.2  lift=1.5x
+
+H8:
+  H8:ss_acc/ss_spins>=0.28 t130                             58/271  bets=2347  mb=  40.5  lift=2.6x
+  H8:ss_acc/ss_spins>=0.30 t130                             46/271  bets=1875  mb=  40.8  lift=2.6x
+  H8:ss_acc/ss_spins>=0.32 t130                             31/271  bets=1312  mb=  42.3  lift=2.5x
+  H8:ss_acc/ss_spins>=0.30 t120                             54/271  bets=2345  mb=  43.4  lift=2.4x
+  H8:ss_acc/ss_spins>=0.32 t120                             38/271  bets=1658  mb=  43.6  lift=2.4x
+
+H8+:
+  H8+:ss_spn<=0.25 t130                                     75/271  bets=2808  mb=  37.4  lift=2.8x
+  H8+:ss_spn<=0.20 t130                                     32/271  bets=1277  mb=  39.9  lift=2.6x
+  H8+:ss_spn<=0.20 t120                                     39/271  bets=1601  mb=  41.1  lift=2.6x
+  H8+:ss_spn<=0.30 t130                                     79/271  bets=3262  mb=  41.3  lift=2.5x
+  H8+:ss_spn<=0.25 t120                                     85/271  bets=3519  mb=  41.4  lift=2.5x
+
+H9:
+  H9:SHIELD+acc0.30+shd<0.20 t150                            4/271  bets=  53  mb=  13.2  lift=7.9x
+  H9:L>=120 SHIELD t130 g0.28                                5/271  bets=  97  mb=  19.4  lift=5.4x
+  H9:L>=120 SHIELD t130 g0.24                                5/271  bets= 123  mb=  24.6  lift=4.3x
+  H9:SHIELD+acc0.30+shd<0.20 t140                            4/271  bets= 105  mb=  26.2  lift=4.0x
+  H9:L>=120 SHIELD t130 g0.30                                3/271  bets=  82  mb=  27.3  lift=3.8x
+
+========================================================================================================================
+REFERENCE: current best from chunk 16 (for comparison)
+========================================================================================================================
+  SHIELD t150 g0.30:    8 catches @ 18.4 mb/hit  (5.7x lift)
+  SHIELD t150 g0.28:   14 catches @ 22.1 mb/hit
+  SHIELD t130 g0.22:   27 catches @ 31.4 mb/hit
+  DG t130 acc0.28 spn0.24: 36 catches @ 34.9 mb/hit
+  7-rule greedy cover: 93 catches @ 41.06 mb/hit
+
+A new rule is 'interesting' if it beats SHIELD t150 g0.30 (18.4 mb)
+OR adds unique catches not covered by the chunk 16 ensemble.

@@ -1,0 +1,86 @@
+========================================================================================================================
+CHUNK 19: GAP SIGNATURE MATCHING
+========================================================================================================================
+
+Hypothesis: early-gap symbol signature (rate buckets or raw counts)
+predicts final gap length via nearest-neighbor matching.
+
+========================================================================================================================
+TEST A: Exact bucketed signature (rate 5% buckets) — prediction accuracy
+========================================================================================================================
+
+Checkpoint sa_spins=30:
+  Islam: 0 predictable, ±5: 0/0 (0%), ±10: 0/0 (0%)
+  Ahmed: 1 predictable, ±5: 0/1 (0%), ±10: 0/1 (0%)
+  Nick: 0 predictable, ±5: 0/0 (0%), ±10: 0/0 (0%)
+
+Checkpoint sa_spins=50:
+  Islam: 1 predictable, ±5: 0/1 (0%), ±10: 0/1 (0%)
+  Ahmed: 1 predictable, ±5: 1/1 (100%), ±10: 1/1 (100%)
+  Nick: 0 predictable, ±5: 0/0 (0%), ±10: 0/0 (0%)
+
+Checkpoint sa_spins=70:
+  Islam: 7 predictable, ±5: 0/7 (0%), ±10: 0/7 (0%)
+  Ahmed: 5 predictable, ±5: 0/5 (0%), ±10: 1/5 (20%)
+  Nick: 0 predictable, ±5: 0/0 (0%), ±10: 0/0 (0%)
+
+Checkpoint sa_spins=100:
+  Islam: 6 predictable, ±5: 1/6 (17%), ±10: 1/6 (17%)
+  Ahmed: 11 predictable, ±5: 0/11 (0%), ±10: 3/11 (27%)
+  Nick: 0 predictable, ±5: 0/0 (0%), ±10: 0/0 (0%)
+
+========================================================================================================================
+TEST B: Cosine similarity on symbol counts (threshold=0.98)
+========================================================================================================================
+
+Checkpoint sa_spins=30, cosine >= 0.98:
+  Islam: 87 predictable, ±5: 2/87, ±10: 10/87
+  Ahmed: 97 predictable, ±5: 8/97, ±10: 14/97
+  Nick: 12 predictable, ±5: 2/12, ±10: 3/12
+
+Checkpoint sa_spins=50, cosine >= 0.98:
+  Islam: 86 predictable, ±5: 4/86, ±10: 11/86
+  Ahmed: 100 predictable, ±5: 8/100, ±10: 14/100
+  Nick: 18 predictable, ±5: 3/18, ±10: 4/18
+
+Checkpoint sa_spins=70, cosine >= 0.98:
+  Islam: 73 predictable, ±5: 1/73, ±10: 8/73
+  Ahmed: 89 predictable, ±5: 11/89, ±10: 19/89
+  Nick: 16 predictable, ±5: 2/16, ±10: 2/16
+
+Checkpoint sa_spins=100, cosine >= 0.98:
+  Islam: 55 predictable, ±5: 6/55, ±10: 12/55
+  Ahmed: 67 predictable, ±5: 14/67, ±10: 20/67
+  Nick: 13 predictable, ±5: 0/13, ±10: 1/13
+
+========================================================================================================================
+BASELINE: random prediction using mean gap length of history
+========================================================================================================================
+(If signature matching beats this, we have real signal)
+  Islam: 117 predictable, ±5: 6/117 (5%), ±10: 11/117 (9%)
+  Ahmed: 125 predictable, ±5: 9/125 (7%), ±10: 16/125 (13%)
+  Nick: 23 predictable, ±5: 3/23 (13%), ±10: 3/23 (13%)
+
+========================================================================================================================
+TEST D: Exact symbol-count match (rare but strong if it works)
+========================================================================================================================
+
+Checkpoint sa_spins=30:
+  Islam: 0 exact-match, ±5: 0, ±10: 0
+  Ahmed: 0 exact-match, ±5: 0, ±10: 0
+  Nick: 0 exact-match, ±5: 0, ±10: 0
+
+Checkpoint sa_spins=50:
+  Islam: 0 exact-match, ±5: 0, ±10: 0
+  Ahmed: 0 exact-match, ±5: 0, ±10: 0
+  Nick: 0 exact-match, ±5: 0, ±10: 0
+
+Checkpoint sa_spins=70:
+  Islam: 0 exact-match, ±5: 0, ±10: 0
+  Ahmed: 0 exact-match, ±5: 0, ±10: 0
+  Nick: 0 exact-match, ±5: 0, ±10: 0
+
+Checkpoint sa_spins=100:
+  Islam: 0 exact-match, ±5: 0, ±10: 0
+  Ahmed: 0 exact-match, ±5: 0, ±10: 0
+  Nick: 0 exact-match, ±5: 0, ±10: 0
