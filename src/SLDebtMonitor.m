@@ -3,6 +3,7 @@
 #import "SLDebtTracker.h"
 #import "SLConstants.h"
 #import "SLSpinParser.h"
+#import "SLBetDecisionLogger.h"
 
 // ---------------------------------------------------------------------------
 //  SLDebtTile — one draggable UIWindow for a single tracker (ACC or SPN)
@@ -10,12 +11,14 @@
 @interface SLDebtTile : NSObject
 @property (nonatomic, strong) UIWindow *window;
 @property (nonatomic, strong) UIView *container;
+@property (nonatomic, strong) UIView *progressBar;        // accum_pct background bar (under rateLabel)
 @property (nonatomic, strong) UILabel *spinLabel;
 @property (nonatomic, strong) UILabel *rateLabel;
 @property (nonatomic, strong) UILabel *phaseLabel;
+@property (nonatomic, strong) UILabel *missionBadge;      // top-right "M37" badge
 @property (nonatomic, strong) SLDebtTracker *tracker;
 @property (nonatomic, copy)   NSString *emoji;
-@property (nonatomic, copy)   NSString *symbolName;  // which symbol to count (accumulation/spins)
+@property (nonatomic, copy)   NSString *symbolName;       // which symbol to count
 @property (nonatomic, copy)   NSString *defaultsKey;
 @property (nonatomic, copy)   NSString *posXKey;
 @property (nonatomic, copy)   NSString *posYKey;
@@ -23,6 +26,9 @@
 @property (nonatomic, assign) BOOL glowing;
 @property (nonatomic, strong) UIColor *glowColor;
 @property (nonatomic, strong) UIColor *watchBorderColor;
+// Latest GAE state from spin (for display, not used in rules)
+@property (nonatomic, assign) NSInteger latestMission;
+@property (nonatomic, assign) double    latestAccumPct;
 @end
 
 @implementation SLDebtTile
@@ -38,6 +44,9 @@
 @property (nonatomic, copy)   NSString *lastMission;
 @property (nonatomic, strong) UIImpactFeedbackGenerator *haptic;
 @property (nonatomic, strong) UIWindow *settingsWindow; // full-screen window for presenting alerts
+// Bet decision logging counters
+@property (nonatomic, assign) NSInteger accGapIdx;        // increments on each ACC triple (per session)
+@property (nonatomic, assign) NSInteger accSpinInGap;     // resets on each ACC triple
 @end
 
 @implementation SLDebtMonitor
@@ -78,7 +87,7 @@
                                symbolName:kSLSymbolAccumulation
                                 glowColor:[UIColor colorWithRed:0.2 green:1.0 blue:0.3 alpha:1.0]
                          watchBorderColor:[UIColor colorWithRed:1.0 green:0.75 blue:0.0 alpha:0.8]
-                                  tracker:[[SLDebtTracker alloc] initWithConfig:[SLDebtTrackerConfig accDefaults]]
+                                  tracker:[[SLDebtTracker alloc] initWithConfig:[SLDebtTrackerConfig accEnsembleDefaults]]
                               defaultsKey:@"Speeder_DebtACC"
                                   posXKey:@"Speeder_DebtACCX"
                                   posYKey:@"Speeder_DebtACCY"
@@ -105,11 +114,9 @@
                                              selector:@selector(onSpinReceived:)
                                                  name:SLSpinReceivedNotification object:nil];
 
-    NSLog(@"[SpinLogger] DebtMonitor installed (ACC thresh=%ld gate=%.2f, SPN thresh=%ld gate=%.2f)",
-          (long)self.accTile.tracker.config.spinThreshold,
-          self.accTile.tracker.config.rateGate,
-          (long)self.spnTile.tracker.config.spinThreshold,
-          self.spnTile.tracker.config.rateGate);
+    NSLog(@"[SpinLogger] DebtMonitor installed — ACC: %lu rules ensemble, SPN: %lu rule(s)",
+          (unsigned long)self.accTile.tracker.config.rules.count,
+          (unsigned long)self.spnTile.tracker.config.rules.count);
 }
 
 #pragma mark - Build Tile
@@ -159,11 +166,18 @@
     container.layer.cornerRadius = 12;
     container.layer.borderWidth = 1.0;
     container.layer.borderColor = [UIColor colorWithWhite:1 alpha:0.06].CGColor;
-    container.clipsToBounds = NO;
+    container.clipsToBounds = YES;  // clip the progress bar to rounded corners
     [vc.view addSubview:container];
     tile.container = container;
 
-    // Spin label (top) — emoji + spin count / threshold
+    // accum_pct progress bar (under rate label, layered behind it)
+    UIView *progressBar = [[UIView alloc] initWithFrame:CGRectMake(4, 20, 0, 16)];
+    progressBar.backgroundColor = [UIColor colorWithRed:0.2 green:0.5 blue:0.3 alpha:0.20];
+    progressBar.layer.cornerRadius = 2;
+    [container addSubview:progressBar];
+    tile.progressBar = progressBar;
+
+    // Spin label (top) — emoji + spin count / MIN threshold
     UILabel *spinLabel = [[UILabel alloc] initWithFrame:CGRectMake(4, 2, tileW - 8, 18)];
     spinLabel.font = [UIFont boldSystemFontOfSize:13];
     spinLabel.textColor = [UIColor whiteColor];
@@ -171,15 +185,25 @@
     [container addSubview:spinLabel];
     tile.spinLabel = spinLabel;
 
-    // Rate label (middle) — accum rate / gate
+    // Mission badge (top-right corner, tiny)
+    UILabel *missionBadge = [[UILabel alloc] initWithFrame:CGRectMake(tileW - 28, 1, 26, 10)];
+    missionBadge.font = [UIFont monospacedDigitSystemFontOfSize:8 weight:UIFontWeightMedium];
+    missionBadge.textColor = [UIColor colorWithWhite:0.55 alpha:1.0];
+    missionBadge.textAlignment = NSTextAlignmentRight;
+    missionBadge.hidden = YES;
+    [container addSubview:missionBadge];
+    tile.missionBadge = missionBadge;
+
+    // Rate label (middle) — acc rate (and spn rate if COMBO)
     UILabel *rateLabel = [[UILabel alloc] initWithFrame:CGRectMake(4, 20, tileW - 8, 16)];
     rateLabel.font = [UIFont monospacedDigitSystemFontOfSize:11 weight:UIFontWeightMedium];
     rateLabel.textColor = [UIColor colorWithWhite:0.7 alpha:1.0];
     rateLabel.textAlignment = NSTextAlignmentCenter;
+    rateLabel.backgroundColor = [UIColor clearColor];
     [container addSubview:rateLabel];
     tile.rateLabel = rateLabel;
 
-    // Phase label (bottom) — WAIT / WATCH / BET NOW
+    // Phase label (bottom)
     UILabel *phaseLabel = [[UILabel alloc] initWithFrame:CGRectMake(4, 38, tileW - 8, 18)];
     phaseLabel.font = [UIFont boldSystemFontOfSize:12];
     phaseLabel.textAlignment = NSTextAlignmentCenter;
@@ -221,6 +245,10 @@
         ![eventID isEqualToString:self.lastEventID]) {
         [self.accTile.tracker reset];
         [self.spnTile.tracker reset];
+        // Reset bet decision counters too
+        self.accGapIdx = 0;
+        self.accSpinInGap = 0;
+        SLBetDecisionLoggerRotate();
         NSLog(@"[DebtMonitor] Event changed: %@ -> %@, reset trackers", self.lastEventID, eventID);
     }
     if (eventID.length > 0) {
@@ -241,21 +269,25 @@
         [[NSUserDefaults standardUserDefaults] setObject:mission forKey:@"Speeder_DebtMission"];
     }
 
-    // --- Detect triples ---
+    // --- Detect triples and classify type ---
     BOOL isTriple = (result.reel1 && [result.reel1 isEqualToString:result.reel2] &&
                      [result.reel2 isEqualToString:result.reel3]);
     BOOL isAccTriple = isTriple && [result.reel1 isEqualToString:kSLSymbolAccumulation];
     BOOL isSpnTriple = isTriple && [result.reel1 isEqualToString:kSLSymbolSpins];
 
-    // Real non-target triple (attack/steal/shield/spins — not coin/goldSack)
-    BOOL isRealOtherTriple = isTriple && !isAccTriple && !isSpnTriple &&
-        ([result.reel1 isEqualToString:kSLSymbolAttack] ||
-         [result.reel1 isEqualToString:kSLSymbolSteal] ||
-         [result.reel1 isEqualToString:kSLSymbolShield]);
-    // For ACC tracker: any real non-ACC triple is "other"
-    BOOL isOtherForAcc = isRealOtherTriple || isSpnTriple;
-    // For SPN tracker: any real non-SPN triple is "other"
-    BOOL isOtherForSpn = isRealOtherTriple || isAccTriple;
+    // Determine the real triple type string for prev_real_triple tracking.
+    // Only "real" triples count: attack/steal/shield/spins/accumulation (not coin/goldSack).
+    NSString *realTripleType = nil;
+    if (isTriple) {
+        NSString *r1 = result.reel1;
+        if ([r1 isEqualToString:kSLSymbolAccumulation] ||
+            [r1 isEqualToString:kSLSymbolSpins]        ||
+            [r1 isEqualToString:kSLSymbolAttack]       ||
+            [r1 isEqualToString:kSLSymbolSteal]        ||
+            [r1 isEqualToString:kSLSymbolShield]) {
+            realTripleType = r1;
+        }
+    }
 
     // --- Count symbols per reel ---
     NSArray *reels = @[result.reel1 ?: @"", result.reel2 ?: @"", result.reel3 ?: @""];
@@ -266,12 +298,41 @@
         if ([r isEqualToString:kSLSymbolSpins])        spnSymbols++;
     }
 
-    // --- Feed trackers ---
-    SLDebtPhase prevAccPhase = self.accTile.tracker.phase;
-    [self.accTile.tracker onSpinWithTargetHit:isAccTriple otherTriple:isOtherForAcc symbolCount:accSymbols];
+    // --- Latest GAE state for tile display ---
+    self.accTile.latestMission = result.accumMissionIndex;
+    self.spnTile.latestMission = result.accumMissionIndex;
+    double accumPct = 0.0;
+    if (result.accumTotal > 0) {
+        accumPct = (double)result.accumCurrent / (double)result.accumTotal * 100.0;
+    }
+    self.accTile.latestAccumPct = accumPct;
+    self.spnTile.latestAccumPct = accumPct;
 
+    // --- Feed trackers ---
+    // ACC: primary=accSymbols (sa_acc), secondary=spnSymbols (sa_spn for COMBO second gate)
+    SLDebtPhase prevAccPhase = self.accTile.tracker.phase;
+    self.accSpinInGap++;
+    [self.accTile.tracker onSpin:isAccTriple
+                  realTripleType:realTripleType
+                         primary:accSymbols
+                       secondary:spnSymbols];
+
+    // --- Log this spin's bet decision (BEFORE the gap_idx increments on triple) ---
+    // The CSV row reflects the state AFTER the spin was processed (including catch detection).
+    SLBetDecisionLoggerAppend(result, self.accTile.tracker, self.accGapIdx, self.accSpinInGap);
+
+    // If this spin was the ACC triple, advance gap counter and reset spin-in-gap
+    if (isAccTriple) {
+        self.accGapIdx++;
+        self.accSpinInGap = 0;
+    }
+
+    // SPN: primary=spnSymbols (ss_spn), no secondary gate
     SLDebtPhase prevSpnPhase = self.spnTile.tracker.phase;
-    [self.spnTile.tracker onSpinWithTargetHit:isSpnTriple otherTriple:isOtherForSpn symbolCount:spnSymbols];
+    [self.spnTile.tracker onSpin:isSpnTriple
+                  realTripleType:realTripleType
+                         primary:spnSymbols
+                       secondary:0];
 
     // --- Update UI ---
     [self updateTileUI:self.accTile];
@@ -297,59 +358,122 @@
 
 - (void)updateTileUI:(SLDebtTile *)tile {
     SLDebtTracker *t = tile.tracker;
-    NSInteger thresh = t.config.spinThreshold;
+    NSInteger ruleCount = (NSInteger)t.config.rules.count;
 
-    // Top: emoji + spins / threshold
+    // Top row: emoji + sa_spins / MIN effective threshold
+    NSInteger minThresh = [t minEffectiveThreshold];
+    if (minThresh <= 0) minThresh = 110;  // fallback if no eligible rules
     tile.spinLabel.text = [NSString stringWithFormat:@"%@ %ld/%ld",
-                           tile.emoji, (long)t.saSpins, (long)thresh];
+                           tile.emoji, (long)t.saSpins, (long)minThresh];
 
-    // Middle: accum rate / gate
-    double rate = [t accumRate];
-    if (t.config.rateGate > 0.0) {
-        tile.rateLabel.text = [NSString stringWithFormat:@"%.2f / %.2f", rate, t.config.rateGate];
-        if (rate >= t.config.rateGate) {
-            tile.rateLabel.textColor = [UIColor colorWithRed:0.3 green:0.9 blue:0.3 alpha:1.0];
-        } else {
-            tile.rateLabel.textColor = [UIColor colorWithWhite:0.5 alpha:1.0];
-        }
+    // Mission badge (top-right, tiny)
+    if (tile.latestMission > 0) {
+        tile.missionBadge.text = [NSString stringWithFormat:@"M%ld", (long)tile.latestMission];
+        tile.missionBadge.hidden = tile.compact;
     } else {
-        tile.rateLabel.text = [NSString stringWithFormat:@"rate: %.2f", rate];
-        tile.rateLabel.textColor = [UIColor colorWithWhite:0.5 alpha:1.0];
+        tile.missionBadge.hidden = YES;
+    }
+
+    // Middle row: rate display — acc | spn for ACC ensemble (if any rule uses spn gate),
+    // or just acc rate for SPN tracker
+    double accRate = [t accumRate];
+    double spnRate = [t spnRate];
+
+    BOOL anyRuleUsesSpn = NO;
+    for (SLDebtRule *r in t.config.rules) {
+        if (r.spnRateGate > 0.0) { anyRuleUsesSpn = YES; break; }
+    }
+
+    if (anyRuleUsesSpn) {
+        tile.rateLabel.text = [NSString stringWithFormat:@"%.2f|%.2f", accRate, spnRate];
+    } else {
+        // SPN tile or non-COMBO ACC: show single rate
+        tile.rateLabel.text = [NSString stringWithFormat:@"%.2f", accRate];
     }
     tile.rateLabel.hidden = tile.compact;
 
-    // Bottom: phase
+    // Rate label color: green if any rule's primary gate is met (signal of "rate is hot enough")
+    BOOL rateIsHot = NO;
+    for (SLDebtRule *r in t.config.rules) {
+        if (r.rateGate > 0.0 && accRate >= r.rateGate) { rateIsHot = YES; break; }
+    }
+    tile.rateLabel.textColor = rateIsHot
+        ? [UIColor colorWithRed:0.3 green:0.9 blue:0.3 alpha:1.0]
+        : [UIColor colorWithWhite:0.55 alpha:1.0];
+
+    // Background bar: accum_pct fill behind the rate row, color shifts at 60%/80%
+    [self updateProgressBar:tile];
+
+    // Phase label
+    NSInteger nFiring = t.firingRuleCount;
     switch (t.phase) {
         case SLDebtPhaseWaiting:
             tile.phaseLabel.text = @"WAIT";
-            tile.phaseLabel.textColor = [UIColor colorWithRed:0.3 green:0.7 blue:0.3 alpha:1.0];
+            tile.phaseLabel.textColor = [UIColor colorWithRed:0.4 green:0.4 blue:0.4 alpha:1.0];
             tile.container.layer.borderColor = [UIColor colorWithWhite:1 alpha:0.06].CGColor;
             tile.container.layer.borderWidth = 1.0;
             break;
+        case SLDebtPhaseSoon:
+            tile.phaseLabel.text = @"SOON";
+            tile.phaseLabel.textColor = [UIColor colorWithRed:1.0 green:0.55 blue:0.0 alpha:1.0];
+            tile.container.layer.borderColor = [UIColor colorWithRed:1.0 green:0.55 blue:0.0 alpha:0.85].CGColor;
+            tile.container.layer.borderWidth = 1.5;
+            break;
         case SLDebtPhaseWatch:
-            if (t.pulseRemaining > 0) {
-                tile.phaseLabel.text = [NSString stringWithFormat:@"SKIP %ld", (long)t.pulseRemaining];
-                tile.phaseLabel.textColor = [UIColor colorWithRed:1.0 green:0.5 blue:0.2 alpha:1.0];
-            } else {
-                tile.phaseLabel.text = @"ALERT";
-                tile.phaseLabel.textColor = [UIColor colorWithRed:1.0 green:0.75 blue:0.0 alpha:1.0];
-            }
+            tile.phaseLabel.text = @"ALERT";
+            tile.phaseLabel.textColor = [UIColor colorWithRed:1.0 green:0.78 blue:0.0 alpha:1.0];
             tile.container.layer.borderColor = tile.watchBorderColor.CGColor;
             tile.container.layer.borderWidth = 1.5;
             break;
-        case SLDebtPhaseBetNow:
-            tile.phaseLabel.text = @"BET NOW";
-            tile.phaseLabel.textColor = tile.glowColor;
-            tile.container.layer.borderColor = tile.glowColor.CGColor;
+        case SLDebtPhaseBetNow: {
+            tile.phaseLabel.text = (ruleCount > 1)
+                ? [NSString stringWithFormat:@"BET (%ld/%ld)", (long)nFiring, (long)ruleCount]
+                : @"BET";
+            // Intensity scales with firing rule count
+            UIColor *betColor = tile.glowColor;
+            if (nFiring >= 8) {
+                // Brighter for high confidence
+                betColor = [UIColor colorWithRed:0.4 green:1.0 blue:0.5 alpha:1.0];
+            }
+            tile.phaseLabel.textColor = betColor;
+            tile.container.layer.borderColor = betColor.CGColor;
             tile.container.layer.borderWidth = 2.0;
+            break;
+        }
+        case SLDebtPhaseRest:
+            tile.phaseLabel.text = [NSString stringWithFormat:@"REST %ld", (long)t.cooldownRemaining];
+            tile.phaseLabel.textColor = [UIColor colorWithRed:0.7 green:0.5 blue:0.3 alpha:1.0];
+            tile.container.layer.borderColor = [UIColor colorWithRed:0.7 green:0.5 blue:0.3 alpha:0.7].CGColor;
+            tile.container.layer.borderWidth = 1.5;
             break;
     }
 
+    // Tile sizing (compact/expanded)
     CGRect f = tile.window.frame;
     f.size.height = tile.compact ? 30 : 60;
     f.size.width  = tile.compact ? 56 : 90;
     tile.window.frame = f;
     tile.container.frame = CGRectMake(0, 0, f.size.width, f.size.height);
+}
+
+- (void)updateProgressBar:(SLDebtTile *)tile {
+    if (!tile.progressBar) return;
+    double pct = MAX(0, MIN(100, tile.latestAccumPct));
+    CGFloat fillWidth = (tile.container.frame.size.width - 8) * (pct / 100.0);
+    CGRect rateFrame = tile.rateLabel.frame;
+    tile.progressBar.frame = CGRectMake(rateFrame.origin.x, rateFrame.origin.y, fillWidth, rateFrame.size.height);
+    tile.progressBar.hidden = (tile.compact || pct <= 0);
+
+    // Color: green/yellow/red based on the "gets harder" finding
+    UIColor *barColor;
+    if (pct >= 80.0) {
+        barColor = [UIColor colorWithRed:0.7 green:0.15 blue:0.15 alpha:0.30]; // red — late mission, gaps 40% longer
+    } else if (pct >= 60.0) {
+        barColor = [UIColor colorWithRed:0.8 green:0.6 blue:0.1 alpha:0.25];   // amber
+    } else {
+        barColor = [UIColor colorWithRed:0.2 green:0.5 blue:0.3 alpha:0.20];   // green
+    }
+    tile.progressBar.backgroundColor = barColor;
 }
 
 #pragma mark - Glow Animation
@@ -452,10 +576,8 @@
     return self.settingsWindow;
 }
 
-- (void)applyPresetToTile:(SLDebtTile *)tile threshold:(NSInteger)thresh gate:(double)gate pulse:(NSInteger)pulse {
-    tile.tracker.config.spinThreshold = thresh;
-    tile.tracker.config.rateGate = gate;
-    tile.tracker.config.pulseSkip = pulse;
+- (void)applyConfigToTile:(SLDebtTile *)tile config:(SLDebtTrackerConfig *)newConfig {
+    tile.tracker.config = newConfig;
     [tile.tracker reset];
     [self stopGlow:tile];
     tile.glowing = NO;
@@ -465,20 +587,29 @@
 
 - (void)showConfigMenuForTile:(SLDebtTile *)tile {
     SLDebtTracker *t = tile.tracker;
-    SLDebtTrackerConfig *cfg = t.config;
     BOOL isAcc = (tile == self.accTile);
-    NSString *title = isAcc ? @"ACC Tracker" : @"SPN Tracker";
+    NSString *title = isAcc ? @"ACC Tracker (16-rule)" : @"SPN Tracker";
 
-    double rate = [t accumRate];
-    NSString *pulseStr = cfg.pulseSkip > 0
-        ? [NSString stringWithFormat:@"  pulse=%ld", (long)cfg.pulseSkip] : @"";
+    // Build status string with current state
+    double accR = [t accumRate];
+    double spnR = [t spnRate];
+    NSString *phaseStr = @"WAIT";
+    switch (t.phase) {
+        case SLDebtPhaseWaiting: phaseStr = @"WAIT"; break;
+        case SLDebtPhaseSoon:    phaseStr = @"SOON"; break;
+        case SLDebtPhaseWatch:   phaseStr = @"ALERT"; break;
+        case SLDebtPhaseBetNow:  phaseStr = [NSString stringWithFormat:@"BET (%ld/%lu)",
+                                              (long)t.firingRuleCount, (unsigned long)t.config.rules.count]; break;
+        case SLDebtPhaseRest:    phaseStr = [NSString stringWithFormat:@"REST %ld", (long)t.cooldownRemaining]; break;
+    }
     NSString *stats = [NSString stringWithFormat:
-        @"Spins: %ld / %ld\nRate: %.3f / %.2f\nPhase: %@\n\nCurrent: thresh=%ld gate=%.2f%@",
-        (long)t.saSpins, (long)cfg.spinThreshold,
-        rate, cfg.rateGate,
-        (t.phase == SLDebtPhaseBetNow ? @"BET NOW" :
-         t.phase == SLDebtPhaseWatch ? (t.pulseRemaining > 0 ? @"SKIP" : @"WATCH") : @"WAIT"),
-        (long)cfg.spinThreshold, cfg.rateGate, pulseStr];
+        @"sa_spins: %ld\nacc_rate: %.3f\nspn_rate: %.3f\nslope_8:  %+.4f\nslope_10: %+.4f\nprev_gap: %ld\nprev_triple: %@\nphase: %@\nrules: %lu",
+        (long)t.saSpins, accR, spnR,
+        [t slopeForWindow:8], [t slopeForWindow:10],
+        (long)t.prevGapLength,
+        t.prevRealTriple ?: @"(unknown)",
+        phaseStr,
+        (unsigned long)t.config.rules.count];
 
     UIAlertController *sheet = [UIAlertController alertControllerWithTitle:title
                                                                    message:stats
@@ -491,73 +622,34 @@
 
     // --- Presets ---
     if (isAcc) {
-        // ACC presets (validated on 178 gaps across 3 accounts)
-        [sheet addAction:[UIAlertAction actionWithTitle:@"Balanced: 130 / 0.30  (6.0x)"
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Ensemble (16 rules) — 62/178 @ 10.95mb [DEFAULT]"
                                                  style:UIAlertActionStyleDefault
                                                handler:^(UIAlertAction *a) {
-            [self applyPresetToTile:tile threshold:130 gate:0.30 pulse:0];
+            [self applyConfigToTile:tile config:[SLDebtTrackerConfig accEnsembleDefaults]];
             dismiss();
         }]];
-        [sheet addAction:[UIAlertAction actionWithTitle:@"Balanced+Pulse5: 130 / 0.30  (11.4 mb/h)"
+        [sheet addAction:[UIAlertAction actionWithTitle:@"COMBO only — 42/178 @ 9.3mb"
                                                  style:UIAlertActionStyleDefault
                                                handler:^(UIAlertAction *a) {
-            [self applyPresetToTile:tile threshold:130 gate:0.30 pulse:5];
+            [self applyConfigToTile:tile config:[SLDebtTrackerConfig accComboOnlyDefaults]];
             dismiss();
         }]];
-        [sheet addAction:[UIAlertAction actionWithTitle:@"Conservative: 120 / 0.28  (3.5x)"
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Baseline 130/0.30 — 31/178 @ 17.1mb"
                                                  style:UIAlertActionStyleDefault
                                                handler:^(UIAlertAction *a) {
-            [self applyPresetToTile:tile threshold:120 gate:0.28 pulse:0];
-            dismiss();
-        }]];
-        [sheet addAction:[UIAlertAction actionWithTitle:@"Aggressive: 130 / 0.32  (8.2x)"
-                                                 style:UIAlertActionStyleDefault
-                                               handler:^(UIAlertAction *a) {
-            [self applyPresetToTile:tile threshold:130 gate:0.32 pulse:0];
+            [self applyConfigToTile:tile config:[SLDebtTrackerConfig accBaselineDefaults]];
             dismiss();
         }]];
     } else {
-        // SPN presets (validated on 213 gaps across 3 accounts)
-        [sheet addAction:[UIAlertAction actionWithTitle:@"Conservative: 87 / 0.25  (1.5x)"
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Sniper 120/0.25 — 22/213 @ 9.5mb [DEFAULT]"
                                                  style:UIAlertActionStyleDefault
                                                handler:^(UIAlertAction *a) {
-            [self applyPresetToTile:tile threshold:87 gate:0.25 pulse:0];
-            dismiss();
-        }]];
-        [sheet addAction:[UIAlertAction actionWithTitle:@"Balanced: 87 / 0.30  (3.3x)"
-                                                 style:UIAlertActionStyleDefault
-                                               handler:^(UIAlertAction *a) {
-            [self applyPresetToTile:tile threshold:87 gate:0.30 pulse:0];
-            dismiss();
-        }]];
-        [sheet addAction:[UIAlertAction actionWithTitle:@"Wide: 60 / 0.25  (1.5x)"
-                                                 style:UIAlertActionStyleDefault
-                                               handler:^(UIAlertAction *a) {
-            [self applyPresetToTile:tile threshold:60 gate:0.25 pulse:0];
-            dismiss();
-        }]];
-        [sheet addAction:[UIAlertAction actionWithTitle:@"Aggressive: 60 / 0.30  (2.6x)"
-                                                 style:UIAlertActionStyleDefault
-                                               handler:^(UIAlertAction *a) {
-            [self applyPresetToTile:tile threshold:60 gate:0.30 pulse:0];
-            dismiss();
-        }]];
-        [sheet addAction:[UIAlertAction actionWithTitle:@"Spin-only: 87 / off  (1.1x)"
-                                                 style:UIAlertActionStyleDefault
-                                               handler:^(UIAlertAction *a) {
-            [self applyPresetToTile:tile threshold:87 gate:0.0 pulse:0];
+            [self applyConfigToTile:tile config:[SLDebtTrackerConfig spnDefaults]];
             dismiss();
         }]];
     }
 
-    // --- Custom + Reset ---
-    [sheet addAction:[UIAlertAction actionWithTitle:@"Custom..."
-                                             style:UIAlertActionStyleDefault
-                                           handler:^(UIAlertAction *a) {
-        dismiss();
-        [self showThresholdEditorForTile:tile];
-    }]];
-
+    // --- Reset ---
     [sheet addAction:[UIAlertAction actionWithTitle:@"Reset Counter"
                                              style:UIAlertActionStyleDestructive
                                            handler:^(UIAlertAction *a) {
@@ -580,50 +672,8 @@
     [presWin.rootViewController presentViewController:sheet animated:YES completion:nil];
 }
 
-- (void)showThresholdEditorForTile:(SLDebtTile *)tile {
-    SLDebtTrackerConfig *cfg = tile.tracker.config;
-    NSString *title = (tile == self.accTile) ? @"ACC Thresholds" : @"SPN Thresholds";
-
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:title
-                                                                  message:@"Spin threshold + rate gate + pulse skip"
-                                                           preferredStyle:UIAlertControllerStyleAlert];
-
-    [alert addTextFieldWithConfigurationHandler:^(UITextField *tf) {
-        tf.placeholder = @"Spin Threshold";
-        tf.text = [NSString stringWithFormat:@"%ld", (long)cfg.spinThreshold];
-        tf.keyboardType = UIKeyboardTypeNumberPad;
-    }];
-    [alert addTextFieldWithConfigurationHandler:^(UITextField *tf) {
-        tf.placeholder = @"Rate Gate (0.30)";
-        tf.text = [NSString stringWithFormat:@"%.2f", cfg.rateGate];
-        tf.keyboardType = UIKeyboardTypeDecimalPad;
-    }];
-    [alert addTextFieldWithConfigurationHandler:^(UITextField *tf) {
-        tf.placeholder = @"Pulse Skip (0=off)";
-        tf.text = [NSString stringWithFormat:@"%ld", (long)cfg.pulseSkip];
-        tf.keyboardType = UIKeyboardTypeNumberPad;
-    }];
-
-    UIWindow *presWin = [self settingsPresentationWindowForScene:
-                         (UIWindowScene *)tile.window.windowScene];
-
-    void (^dismiss)(void) = ^{ self.settingsWindow.hidden = YES; };
-
-    [alert addAction:[UIAlertAction actionWithTitle:@"Save" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a) {
-        cfg.spinThreshold = [alert.textFields[0].text integerValue];
-        cfg.rateGate      = [alert.textFields[1].text doubleValue];
-        cfg.pulseSkip     = [alert.textFields[2].text integerValue];
-        [self updateTileUI:tile];
-        [self saveState];
-        dismiss();
-    }]];
-
-    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction *a) {
-        dismiss();
-    }]];
-
-    [presWin.rootViewController presentViewController:alert animated:YES completion:nil];
-}
+// showThresholdEditorForTile removed: 16-rule ensemble doesn't have a single threshold to edit.
+// Future: implement a per-rule editor or "tap-to-expand panel" with rule details.
 
 #pragma mark - Persistence
 
