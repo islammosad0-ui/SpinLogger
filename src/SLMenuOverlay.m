@@ -484,48 +484,66 @@ static UIWindow *sDebtTableWindow = nil;
         UILabel *sh = [[UILabel alloc] initWithFrame:CGRectMake(pad, y, pw - pad * 2, 18)];
         sh.font = [UIFont boldSystemFontOfSize:11];
         sh.textColor = SLAccent();
-        NSString *phaseStr = (tr.phase == SLDebtPhaseBetNow) ? @"BET NOW" :
-                             (tr.phase == SLDebtPhaseWatch)  ? @"WATCH"   : @"WAIT";
+        NSString *phaseStr;
+        switch (tr.phase) {
+            case SLDebtPhaseBetNow: phaseStr = [NSString stringWithFormat:@"BET (%ld/%lu)",
+                                                  (long)tr.firingRuleCount, (unsigned long)tr.config.rules.count]; break;
+            case SLDebtPhaseSoon:   phaseStr = @"SOON"; break;
+            case SLDebtPhaseWatch:  phaseStr = @"ALERT"; break;
+            case SLDebtPhaseRest:   phaseStr = [NSString stringWithFormat:@"REST %ld", (long)tr.cooldownRemaining]; break;
+            case SLDebtPhaseWaiting:
+            default:                phaseStr = @"WAIT"; break;
+        }
         sh.text = [NSString stringWithFormat:@"%@  %@", headers[t], phaseStr];
         [sv addSubview:sh];
         y += 20;
 
-        // Spin progress
-        NSInteger pct = (tr.config.spinThreshold > 0)
-            ? (tr.saSpins * 100 / tr.config.spinThreshold) : 0;
+        // Spin progress vs MIN effective threshold across all rules
+        NSInteger minThresh = [tr minEffectiveThreshold];
+        if (minThresh <= 0) minThresh = 110;
+        NSInteger pct = (tr.saSpins * 100 / minThresh);
         UILabel *spinRow = [[UILabel alloc] initWithFrame:CGRectMake(pad, y, pw - pad * 2, 14)];
         spinRow.font = [UIFont monospacedSystemFontOfSize:10 weight:UIFontWeightMedium];
         spinRow.text = [NSString stringWithFormat:@"Spins: %ld / %ld  (%ld%%)",
-                        (long)tr.saSpins, (long)tr.config.spinThreshold, (long)pct];
-        spinRow.textColor = (tr.saSpins >= tr.config.spinThreshold)
+                        (long)tr.saSpins, (long)minThresh, (long)pct];
+        spinRow.textColor = (tr.saSpins >= minThresh)
             ? [UIColor colorWithRed:0.3 green:0.9 blue:0.4 alpha:1.0]
             : [UIColor colorWithWhite:0.6 alpha:1.0];
         [sv addSubview:spinRow];
         y += 16;
 
-        // Accum rate
-        double rate = [tr accumRate];
+        // Acc rate (and spn rate if any rule uses spn gate)
+        double accRate = [tr accumRate];
+        double spnRate = [tr spnRate];
+        BOOL anyRuleUsesSpn = NO;
+        for (SLDebtRule *r in tr.config.rules) {
+            if (r.spnRateGate > 0.0) { anyRuleUsesSpn = YES; break; }
+        }
         UILabel *rateRow = [[UILabel alloc] initWithFrame:CGRectMake(pad, y, pw - pad * 2, 14)];
         rateRow.font = [UIFont monospacedSystemFontOfSize:10 weight:UIFontWeightMedium];
-        if (tr.config.rateGate > 0.0) {
-            rateRow.text = [NSString stringWithFormat:@"Rate:  %.3f / %.2f",
-                            rate, tr.config.rateGate];
-            rateRow.textColor = (rate >= tr.config.rateGate)
-                ? [UIColor colorWithRed:0.3 green:0.9 blue:0.4 alpha:1.0]
-                : [UIColor colorWithWhite:0.6 alpha:1.0];
+        if (anyRuleUsesSpn) {
+            rateRow.text = [NSString stringWithFormat:@"acc: %.3f  spn: %.3f", accRate, spnRate];
         } else {
-            rateRow.text = [NSString stringWithFormat:@"Rate:  %.3f  (no gate)", rate];
-            rateRow.textColor = [UIColor colorWithWhite:0.5 alpha:1.0];
+            rateRow.text = [NSString stringWithFormat:@"Rate:  %.3f", accRate];
         }
+        // Color green if any rule's primary rate gate is satisfied
+        BOOL rateHot = NO;
+        for (SLDebtRule *r in tr.config.rules) {
+            if (r.rateGate > 0.0 && accRate >= r.rateGate) { rateHot = YES; break; }
+        }
+        rateRow.textColor = rateHot
+            ? [UIColor colorWithRed:0.3 green:0.9 blue:0.4 alpha:1.0]
+            : [UIColor colorWithWhite:0.6 alpha:1.0];
         [sv addSubview:rateRow];
         y += 16;
 
-        // Symbols counted
+        // Symbols counted + slope info
         UILabel *symRow = [[UILabel alloc] initWithFrame:CGRectMake(pad, y, pw - pad * 2, 14)];
         symRow.font = [UIFont monospacedSystemFontOfSize:9 weight:UIFontWeightRegular];
         symRow.textColor = [UIColor colorWithWhite:0.4 alpha:1.0];
-        symRow.text = [NSString stringWithFormat:@"Symbols: %ld in %ld spins",
-                       (long)tr.saSymbols, (long)tr.saSpins];
+        symRow.text = [NSString stringWithFormat:@"sym: %ld in %ld  slp10: %+.4f  prev: %ld",
+                       (long)tr.saSymbols, (long)tr.saSpins,
+                       [tr slopeForWindow:10], (long)tr.prevGapLength];
         [sv addSubview:symRow];
         y += 18;
 
