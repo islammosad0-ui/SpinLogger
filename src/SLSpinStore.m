@@ -110,6 +110,10 @@ static NSString *SLCSVPath(void) {
     return [docs stringByAppendingPathComponent:filename];
 }
 
+void SLSpinStoreInvalidateHeader(void) {
+    sHeaderEnsured = NO;
+}
+
 static void SLEnsureCSVHeader(void) {
     if (sHeaderEnsured) return;
     sHeaderEnsured = YES;

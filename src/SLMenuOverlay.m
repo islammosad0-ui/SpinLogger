@@ -1,6 +1,8 @@
 #import "SLMenuOverlay.h"
 #import "SLConstants.h"
 #import "SLSpinStore.h"
+#import "SLBetDecisionLogger.h"
+#import "SLAccountID.h"
 #import "SLSpeedController.h"
 #import "SLSpinTarget.h"
 #import "SLTrisController.h"
@@ -278,6 +280,16 @@ static UIWindow *sDebtTableWindow = nil;
     resetPosBtn.frame = CGRectMake(pad, 82, pw - pad * 2, 30);
     [resetPosBtn addTarget:self action:@selector(counterResetPositions) forControlEvents:UIControlEventTouchUpInside];
     [sCounterContent addSubview:resetPosBtn];
+
+    // Account name button — tags log files (spin_history & bet_decisions) per account
+    NSString *curAcct = SLAccountLabel();
+    NSString *acctTitle = [NSString stringWithFormat:@"ACCOUNT: %@", curAcct];
+    UIButton *acctBtn = SLMakeBtn(acctTitle, pw - pad * 2, 30,
+        [UIColor colorWithWhite:0.15 alpha:1], SLAccent(), 11);
+    acctBtn.frame = CGRectMake(pad, 120, pw - pad * 2, 30);
+    acctBtn.tag = 410;
+    [acctBtn addTarget:self action:@selector(accountNameTap) forControlEvents:UIControlEventTouchUpInside];
+    [sCounterContent addSubview:acctBtn];
 
     // === DEBT TRACKER content (hidden by default) ===
     sDebtContent = [[UIView alloc] initWithFrame:CGRectMake(0, 42, pw, ph - 42)];
@@ -636,6 +648,34 @@ static UIWindow *sDebtTableWindow = nil;
 
 + (void)counterResetPositions {
     [[SLCounterOverlay shared] resetPositions];
+}
+
++ (void)accountNameTap {
+    UIAlertController *a = [UIAlertController
+        alertControllerWithTitle:@"Account Name"
+                         message:@"Tags log filenames per account.\nLetters, digits, underscores only.\nMax 32 chars."
+                  preferredStyle:UIAlertControllerStyleAlert];
+    [a addTextFieldWithConfigurationHandler:^(UITextField *tf) {
+        tf.placeholder = @"e.g. islam, ahmed, nick";
+        tf.text = SLAccountLabel();
+        tf.autocapitalizationType = UITextAutocapitalizationTypeNone;
+        tf.autocorrectionType = UITextAutocorrectionTypeNo;
+    }];
+    [a addAction:[UIAlertAction actionWithTitle:@"Save" style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) {
+        NSString *raw = a.textFields.firstObject.text ?: @"";
+        SLSetAccountLabel(raw);
+        SLSpinStoreInvalidateHeader();
+        SLBetDecisionLoggerInvalidateHeader();
+
+        // Refresh the button title with the sanitized label
+        UIButton *btn = (UIButton *)[sCounterContent viewWithTag:410];
+        [btn setTitle:[NSString stringWithFormat:@"ACCOUNT: %@", SLAccountLabel()]
+             forState:UIControlStateNormal];
+
+        NSLog(@"[SpinLogger] Account label set to '%@' — next CSV writes use the new filename", SLAccountLabel());
+    }]];
+    [a addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [[self topVC] presentViewController:a animated:YES completion:nil];
 }
 
 + (void)targetSpin {

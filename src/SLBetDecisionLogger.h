@@ -23,3 +23,8 @@ NSString *SLBetDecisionLoggerCSVPath(void);
 
 // Rotate to a new bet_decisions CSV file (called on reset / new session).
 void SLBetDecisionLoggerRotate(void);
+
+// Call after changing the account label so the next append opens / creates
+// the correctly-named file with a fresh header check (cheaper than Rotate —
+// keeps the same session date).
+void SLBetDecisionLoggerInvalidateHeader(void);

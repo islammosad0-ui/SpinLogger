@@ -123,8 +123,15 @@ typedef NS_ENUM(NSInteger, SLGapClass) {
 
 // Phase state
 @property (nonatomic, assign, readonly) SLDebtPhase phase;
-@property (nonatomic, assign, readonly) NSInteger firingRuleCount;   // how many rules fire NOW
-@property (nonatomic, assign, readonly) NSUInteger firingRuleBitmask; // bitmask for CSV logging
+@property (nonatomic, assign, readonly) NSInteger firingRuleCount;   // how many rules fire NOW (post-spin, forward-looking display)
+@property (nonatomic, assign, readonly) NSUInteger firingRuleBitmask; // bitmask for display
+
+// CAUSAL firing state — snapshot of firingRuleCount/Bitmask AS OF the START of the current
+// onSpin: call (i.e. end of the previous spin). This is the honest answer to "was the tracker
+// in BET state going INTO this spin?", used for target_caught and per-rule CSV logging.
+// The non-causal (post-spin) firingRuleCount is kept for UI display purposes only.
+@property (nonatomic, assign, readonly) NSInteger priorFiringRuleCount;
+@property (nonatomic, assign, readonly) NSUInteger priorFiringRuleBitmask;
 
 // Cooldown state
 @property (nonatomic, assign, readonly) NSInteger consecBets;        // current consecutive-bet streak
