@@ -1,6 +1,6 @@
 # Nuclear Analysis Findings v5 — FINAL CAUSAL FINDINGS + HUNT DISCOVERIES
 
-> **Status: 2026-04-08**
+> **Status: 2026-04-08 — three causal variants shipped (v5 7-rule default, v5.1 6r capped, v5 6r uncapped)**
 >
 > The full analysis pipeline has been rebuilt after discovering the phantom
 > bug on 2026-04-07. All results below use the **causal simulator**
@@ -49,33 +49,57 @@
 >
 > ---
 >
-> ## 🎯 SHIPPED ENSEMBLE v5.1 (verified causal KPI)
+> ## 🎯 CAUSAL ENSEMBLE VARIANTS (all verified, all shipped as presets)
 >
-> Six rules, causally validated, combined as OR:
+> Three variants live in the dylib — switchable from the ACC tile long-press menu.
+> All share the same r1–r5 backbone (STEAL/SHIELD-conditioned + quiet-zone). The
+> only differences are r6 (DG cap on/off) and r7 (early-S predict on/off).
 >
-> 1. **STEAL t=65 g=0.34 (cap 105)**     — 4/271 @ 16.5 mb (S-window precision)
-> 2. **STEAL t=130 g=0.28**              — 14/271 @ 16.7 mb (volume workhorse)
-> 3. **STEAL t=150 g=0.30**              — 5/271 @ 6.2 mb (L-window gem, 17x lift)
-> 4. **SHIELD t=150 g=0.30**             — 8/271 @ 18.4 mb (SHIELD complement)
-> 5. **Quiet-zone last_10<=10 t>=130**   — 7/271 @ 19.4 mb (quiet-zone trigger)
-> 6. **DG t=130 cap=155 acc>=0.28 spn>=0.24** — 18/271 @ 32.5 mb (capped volume)
+> | Variant                        | Rules | Catches      | mb/hit | Lift  | When to use |
+> |--------------------------------|-------|--------------|--------|-------|-------------|
+> | **v5 7-rule** (DEFAULT)        | 7     | 45/271 16.6% | ~28.0  | 3.7x  | Balanced — adds r7 early-S predict (prev=M/L → fire S window) |
+> | **v5.1 6-rule capped**         | 6     | 41/271 15.1% | **24.4** | **4.3x** | Best efficiency — drops noisier r7, keeps DG cap155 |
+> | **v5 6-rule uncapped**         | 6     | **53/271 19.6%** | 30.0 | 3.5x  | Best volume — r6 fires above 155 too, more hits but worse precision |
 >
-> **Verified union (causal simulator, 271 gaps):**
->   - **Catches: 41/271 (15.1%)**
->   - Bet spins: 1000 / 28,497 (3.51%)
->   - **mb/hit: 24.39**
->   - **Lift: 4.31x** over random betting
+> ### Rule backbone (r1–r5, identical across all three variants)
 >
-> **Per-account:**
+> 1. **STEAL t=65 g=0.34 (cap 105)**     — 4/271 @ 16.5 mb (S-window precision, prev=steal)
+> 2. **STEAL t=130 g=0.28**              — 14/271 @ 16.7 mb (volume workhorse, prev=steal)
+> 3. **STEAL t=150 g=0.30**              — 5/271 @ 6.2 mb (L-window gem, 17x lift, prev=steal)
+> 4. **SHIELD t=150 g=0.30**             — 8/271 @ 18.4 mb (SHIELD complement, prev=shield)
+> 5. **Quiet-zone last_10<=10 t>=130**   — 7/271 @ 19.4 mb (sum of last-10 reel symbols ≤ 10)
+>
+> ### r6 — Double Gate (the cap toggle)
+>
+> - **v5.1 / v5 7-rule**: `DG t=130 **cap=155** acc>=0.28 spn>=0.24` — 18/271 @ 32.5 mb
+> - **v5 uncapped**:      `DG t=130 acc>=0.28 spn>=0.24`            — 36/271 @ ~50 mb
+>
+> Capping r6 at 155 catches only 18 instead of 36, but drops the union mb/hit
+> from 30.0 → 24.4 by avoiding the long-gap bleed. Uncapped wins on raw catch
+> count; capped wins on efficiency.
+>
+> ### r7 — early-S predict (the 7th rule, only in v5 7-rule default)
+>
+> `prev_gap_class ∈ {M, L} AND sa_spins ∈ [60..105] AND last-10 ≤ 10` — 4/271 @ 24.8 mb.
+> Adds 4 unique catches over the 6-rule capped variant by predicting that the next
+> gap will be S (50–55% probability after M or L). Per-account: Nick 1 @ 12 mb,
+> Ahmed 2 @ 22 mb, Islam 1 @ 44 mb.
+>
+> Adding r7 to the 6-rule capped (41 catches) gives the 7-rule default (45 catches)
+> at the cost of bumping mb/hit from 24.4 → ~28. The v5 7-rule is the chosen
+> default because the extra 4 catches bring overall coverage closer to the
+> uncapped 6-rule variant without paying its full mb/hit penalty.
+>
+> ### Per-account, v5.1 6-rule capped (the most efficient variant)
+>
 >   - Islam: 15/119 (12.6%) at 27.0 mb/hit
 >   - Ahmed: 19/127 (15.0%) at **23.4 mb/hit**
 >   - Nick:   7/25 (**28.0%**) at **21.4 mb/hit**
 >
-> DG rule is capped at 155 (not uncapped) — catches only 18 instead of 36 but
-> drops union mb/hit from 30.0 → 24.4 (avoiding the long-gap bleed).
+> ### Sub-variants (not shipped — for reference)
 >
-> The precision-only variant (5 rules, no DG) delivers 32/271 (11.8%) @ 18.0
-> mb/hit if you want even tighter efficiency at the cost of 9 catches.
+> - **5-rule precision-only** (no DG, no r7): 32/271 (11.8%) @ 18.0 mb/hit — tightest efficiency
+> - **r6 cap at 140 / 170 / 200**: tested in 21_capped_dg_sweep.py — 155 was the sweet spot
 >
 > ---
 >
