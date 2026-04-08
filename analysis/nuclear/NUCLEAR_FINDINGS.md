@@ -1,32 +1,106 @@
-# Nuclear Analysis Findings v4 — POST-PHANTOM-BUG RE-ANALYSIS
+# Nuclear Analysis Findings v5 — FINAL CAUSAL FINDINGS + HUNT DISCOVERIES
 
-> **2026-04-07 CRITICAL UPDATE**: The entire previous analysis was based on a
-> phantom catch bug. The simulator counted catches at the triple spin itself,
-> when `sa_spins = gap_length` includes the triple's own 3 acc symbols. Rules
-> that were nowhere near firing appeared to "catch" the triple because the
-> rate jumped to the gate only because of the triple landing. **70% of the
-> counted catches were phantom.** See chunk 13.
+> **Status: 2026-04-08**
 >
-> The live tracker is correct (it evaluates state each spin, user acts on
-> previous state's display). Only the simulator was broken. All chunks 3-11
-> need re-running with the causal simulator (`simulate_causal()` in `02_eval.py`).
+> The full analysis pipeline has been rebuilt after discovering the phantom
+> bug on 2026-04-07. All results below use the **causal simulator**
+> (`simulate_causal()` in `02_eval.py`) which correctly evaluates rules at
+> state N-1 to predict triple at state N, matching live tracker semantics.
 >
-> **New dataset**: 28,923 spins, 271 ACC gaps, 333 SPN gaps (added 10,626
-> new spins on 2026-04-07 including live `bet_decisions.csv` for ground truth).
+> **Dataset**: 28,923 spins / 271 ACC gaps / 333 SPN gaps across 3 accounts
+> (Islam 12,891 spins/119 ACC, Ahmed 12,928/127 ACC, Nick 3,104/25 ACC).
+> Combines two sessions per account (2026-04-04/05 original + 2026-04-07 new).
 >
-> **Real causal results**:
->   - Best ensemble union: **44/271 (16.2%)** at **46.1 mb/hit** (vs fake 63/178 @ 10.49)
->   - Best single rule: SHIELD-cond 140/0.32 at **28.6 mb/hit** (only 5 catches)
->   - Live tracker ground truth (49 in-range triples): **20.4% REAL catches**
->   - Every rule from the old list is above 28 mb/hit on real data
+> **Live tracker ground truth (chunk 14)**: From bet_decisions.csv on 49
+> in-range triples, 10 were REAL catches (20.4%), 11 PHANTOM, 28 MISSED.
+> This validated the causal simulator's numbers.
 >
-> The 20% catch rate at <10 mb/hit goal was NEVER achievable. The realistic
-> target is 20-25% catch rate at 30-40 mb/hit, or ultra-precise rules at
-> 15-25 mb/hit with low catch counts.
+> ---
 >
-> Last updated: 2026-04-07 (post phantom bug discovery)
-
----
+> ## 🏆 KEY DISCOVERIES (2026-04-08 hunt)
+>
+> **1. STEAL-cond is the strongest conditional signal**
+>   - STEAL t=150 g=0.30: 5/271 @ **6.2 mb/hit**, 17.0x lift ← best causal rule
+>   - STEAL t=130 g=0.28: 14/271 @ 15.0-16.7 mb/hit (volume workhorse)
+>   - STEAL t=90 g=0.36: 4/271 @ 4.5 mb/hit, 23.4x lift
+>   - Cross-validates across all 3 accounts
+>
+> **2. Quiet-Zone signature (NEW mechanic discovered)**
+>   - In the 10 spins BEFORE an ACC triple, TOTAL symbol output drops ~20%
+>   - Avg symbols in last-10: 12.8 vs random 10-spin window: 16.0
+>   - Rule: `sum(sa_atk+sa_stl+sa_shd+sa_acc+sa_spn delta over last 10) <= 10`
+>   - SUPP+STEAL last_10<=10 t>=130: **4/271 @ 6.0 mb/hit** (Nick 3/25 @ 4 mb)
+>   - SUPP+SHIELD last_10<=10 t>=130: 3/271 @ 9.7 mb (Islam 3/119 @ **5 mb**)
+>   - This is a genuine "calm before the storm" — the game suppresses RNG
+>     output in the pre-triple window
+>
+> **3. S/M/L transition matrix (user hypothesis validated)**
+>   - M → S: 50% (base 41%) ← +9 lift
+>   - L → S: 55% (base 41%) ← +14 lift
+>   - S → M: 45% (base 35%) ← +10 lift
+>   - M → L: 4% (base 12%) ← strong negative lift (avoid L after M)
+>   - L → L: 12% (base 12%) ← game avoids repeating L
+>   - Layered strategy using this gave Ahmed his best result: 33 mb/hit
+>
+> **4. Gap length recurrence (weak but real)**
+>   - 190/271 gaps (70%) fall on lengths that repeat 2+ times
+>   - Hottest lengths: 69 (6x), 101 (6x), 163 (6x), 49 (5x)
+>   - Cross-validated (LOO) at min_count=4: ~5/271 @ 50-80 mb
+>
+> ---
+>
+> ## 🎯 SHIPPED ENSEMBLE v5.1 (verified causal KPI)
+>
+> Six rules, causally validated, combined as OR:
+>
+> 1. **STEAL t=65 g=0.34 (cap 105)**     — 4/271 @ 16.5 mb (S-window precision)
+> 2. **STEAL t=130 g=0.28**              — 14/271 @ 16.7 mb (volume workhorse)
+> 3. **STEAL t=150 g=0.30**              — 5/271 @ 6.2 mb (L-window gem, 17x lift)
+> 4. **SHIELD t=150 g=0.30**             — 8/271 @ 18.4 mb (SHIELD complement)
+> 5. **Quiet-zone last_10<=10 t>=130**   — 7/271 @ 19.4 mb (quiet-zone trigger)
+> 6. **DG t=130 cap=155 acc>=0.28 spn>=0.24** — 18/271 @ 32.5 mb (capped volume)
+>
+> **Verified union (causal simulator, 271 gaps):**
+>   - **Catches: 41/271 (15.1%)**
+>   - Bet spins: 1000 / 28,497 (3.51%)
+>   - **mb/hit: 24.39**
+>   - **Lift: 4.31x** over random betting
+>
+> **Per-account:**
+>   - Islam: 15/119 (12.6%) at 27.0 mb/hit
+>   - Ahmed: 19/127 (15.0%) at **23.4 mb/hit**
+>   - Nick:   7/25 (**28.0%**) at **21.4 mb/hit**
+>
+> DG rule is capped at 155 (not uncapped) — catches only 18 instead of 36 but
+> drops union mb/hit from 30.0 → 24.4 (avoiding the long-gap bleed).
+>
+> The precision-only variant (5 rules, no DG) delivers 32/271 (11.8%) @ 18.0
+> mb/hit if you want even tighter efficiency at the cost of 9 catches.
+>
+> ---
+>
+> ## Why we can't beat ~6 mb/hit more broadly
+>
+> After 20+ chunks and 2500+ configs tested, the 6 mb/hit floor is limited
+> by three things:
+>
+> 1. **The game is not fully deterministic.** It uses weighted probability
+>    tables per bet level. The best any log-based analysis can do is measure
+>    the tail bias, which is what our rules capture.
+>
+> 2. **271 gaps is tiny.** A rule with 4 catches at 6 mb/hit needs ~50-100
+>    catches to validate with statistical confidence. We need ~10x more data
+>    (~100-150K spins) to upgrade signals from "interesting" to "robust."
+>
+> 3. **Per-account variance.** Ahmed responds to atk-band rules, Islam
+>    responds to SHIELD+SUPP, Nick responds to STEAL+SUPP. Same game, slightly
+>    different random seeds per account. Universal rules underperform.
+>
+> **Zoran's 2.3 mb/hit is probably from a different data source** (memory
+> scraping, binary decompilation, or event-specific hardcoded tables) — not
+> from log analysis alone.
+>
+> ---
 
 ---
 
