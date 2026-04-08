@@ -1,5 +1,6 @@
 #import "SLSpinStore.h"
 #import "SLConstants.h"
+#import "SLAccountID.h"
 
 static NSInteger sSpinCount = 0;
 static BOOL sHeaderEnsured = NO;
@@ -103,7 +104,9 @@ static NSString *SLSessionDate(void) {
 static NSString *SLCSVPath(void) {
     NSString *docs = NSSearchPathForDirectoriesInDomains(
         NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
-    NSString *filename = [NSString stringWithFormat:@"spin_history_%@.csv", SLSessionDate()];
+    // Filename format: spin_history_{account}_{YYYY-MM-DD}.csv
+    NSString *filename = [NSString stringWithFormat:@"spin_history_%@_%@.csv",
+                          SLAccountLabel(), SLSessionDate()];
     return [docs stringByAppendingPathComponent:filename];
 }
 
@@ -276,7 +279,7 @@ void SLSpinStoreRotateCSV(void) {
     sPrevAccumCurrent = -1; sPrevAccumMission = -1;
     SLSaveRunningCounters();
 
-    NSLog(@"[SpinLogger] CSV rotated → spin_history_%@.csv", sSessionDate);
+    NSLog(@"[SpinLogger] CSV rotated -> spin_history_%@_%@.csv", SLAccountLabel(), sSessionDate);
 }
 
 NSString *SLSpinStoreCSVPath(void) {

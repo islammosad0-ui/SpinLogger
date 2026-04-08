@@ -1,15 +1,16 @@
 #import <Foundation/Foundation.h>
 
 // ---------------------------------------------------------------------------
-//  SLDebtTracker — 16-rule ensemble ACC/SPN triple predictor
+//  SLDebtTracker — real-causal ensemble ACC/SPN triple predictor
 //
-//  Final design from nuclear analysis (Apr 2026):
-//   - 16 rules OR-combined
-//   - Cooldown 8/3 (after 8 consecutive bet spins, skip 3)
+//  v5 design (2026-04-08) — after phantom bug fix + STEAL/quiet-zone hunt:
+//   - OR-combined rule list (7 rules in final causal ensemble)
+//   - Rules: STEAL/SHIELD-conditioned + quiet-zone suppression + capped DG
+//     + early-S-window prev=M/L prediction
 //   - 5 phases: WAIT / SOON / ALERT / BET / REST
-//   - Tracks prev_gap_length and prev_real_triple
-//   - Slope buffer supports any window 1..20
-//   - 63/178 catches @ 10.49 mb/hit (validated all 3 accounts)
+//   - Tracks prev_gap_length, prev_real_triple, prev_gap_class (S/M/L)
+//   - Slope buffer (window 1..20) + quiet-zone buffer (last-N symbol sum)
+//   - Verified: 45/271 catches @ ~28 mb/hit on 271-gap validation
 // ---------------------------------------------------------------------------
 
 typedef NS_ENUM(NSInteger, SLDebtPhase) {
@@ -23,12 +24,31 @@ typedef NS_ENUM(NSInteger, SLDebtPhase) {
 // Maximum slope window. The rate history buffer is sized for any window 1..20.
 #define kSLSlopeWindowMax 20
 
-// Cooldown defaults (the 8/3 rule from analysis)
-#define kSLDefaultCooldownAfter 8
-#define kSLDefaultCooldownLen   3
+// Quiet-zone window max (last-N symbol sum for the suppression rule)
+#define kSLQuietZoneMax 20
 
-// Number of rules in the ACC ensemble (used for the (N/16) badge)
-#define kSLAccEnsembleRuleCount 16
+// Cooldown defaults (disabled by default in v5 — cooldown didn't help the real ensemble)
+#define kSLDefaultCooldownAfter 0
+#define kSLDefaultCooldownLen   0
+
+// S/M/L classification boundaries for gap length
+#define kSLGapXsMax  39    // <40 = XS (mix-event triples)
+#define kSLGapSMin   40    // 40-105 = S
+#define kSLGapSMax  105
+#define kSLGapMMin  106    // 106-160 = M
+#define kSLGapMMax  160    // 161+ = L
+
+// Number of rules in the ACC ensemble (used for the (N/X) badge)
+#define kSLAccEnsembleRuleCount 7
+
+// Gap length class
+typedef NS_ENUM(NSInteger, SLGapClass) {
+    SLGapClassUnknown = 0,
+    SLGapClassXS,
+    SLGapClassS,
+    SLGapClassM,
+    SLGapClassL,
+};
 
 // ---------------------------------------------------------------------------
 //  SLDebtRule — one bet rule. The tracker fires BET if ANY rule evaluates true.
@@ -37,12 +57,17 @@ typedef NS_ENUM(NSInteger, SLDebtPhase) {
 @property (nonatomic, copy)   NSString *name;          // human-readable name (for logging/UI)
 @property (nonatomic, assign) NSInteger bitIndex;      // 0..15 for the bet_decisions.csv bitmask
 
-// Base gates (used in M bucket / when no SML override is active)
+// Base gates
 @property (nonatomic, assign) NSInteger spinThreshold; // min sa_spins (use 999 to disable)
+@property (nonatomic, assign) NSInteger spinCap;       // max sa_spins (0 = no cap, e.g. 105 for S-window)
 @property (nonatomic, assign) double    rateGate;      // min sa_acc/sa_spins (0=off)
 @property (nonatomic, assign) double    spnRateGate;   // min sa_spn/sa_spins (0=off, COMBO uses 0.20)
 @property (nonatomic, assign) double    minSlope;      // min rate slope (0=off)
 @property (nonatomic, assign) NSInteger slopeWindow;   // lookback window for slope (default 10)
+
+// Quiet-zone suppression gate (last-N symbol sum <= max)
+@property (nonatomic, assign) NSInteger quietZoneWindow; // 0 = off (e.g. 10 = check last 10 spins)
+@property (nonatomic, assign) NSInteger quietZoneMax;    // max total symbols allowed in window
 
 // SML S-bucket override: when prev_gap < smlSBound, use these instead of base
 @property (nonatomic, assign) NSInteger smlSBound;     // 0 = no S override
@@ -57,6 +82,10 @@ typedef NS_ENUM(NSInteger, SLDebtPhase) {
 // Conditional: only fire if previous real triple was this type ("" = no condition)
 @property (nonatomic, copy)   NSString *requiredPrevTriple;
 
+// Prev-gap class condition: only fire if previous gap's class matches
+// (bitmask: 0=none, 1=XS, 2=S, 4=M, 8=L — OR the desired classes)
+@property (nonatomic, assign) NSInteger requiredPrevClassMask;
+
 + (instancetype)ruleWithName:(NSString *)name bitIndex:(NSInteger)bitIndex;
 @end
 
@@ -69,7 +98,8 @@ typedef NS_ENUM(NSInteger, SLDebtPhase) {
 @property (nonatomic, assign) NSInteger cooldownLen;    // rest length in spins (default 3)
 
 // Preset factories
-+ (instancetype)accEnsembleDefaults;  // 16 rules (the final ACC ensemble)
++ (instancetype)accCausalDefaults;    // v5: 6-rule causal ensemble (STEAL + SHIELD + quiet-zone)
++ (instancetype)accEnsembleDefaults;  // v4 legacy (phantom 16 rules) - kept for comparison
 + (instancetype)accBaselineDefaults;  // single rule: 130/0.30 (legacy comparison)
 + (instancetype)accComboOnlyDefaults; // single rule: COMBO only
 + (instancetype)spnDefaults;          // single rule: SPN Sniper 120/0.25
@@ -89,6 +119,7 @@ typedef NS_ENUM(NSInteger, SLDebtPhase) {
 // Gap-context state (survives event reset only via explicit reset)
 @property (nonatomic, assign, readonly) NSInteger prevGapLength;     // -1 = unknown
 @property (nonatomic, copy,   readonly) NSString *prevRealTriple;    // nil = unknown
+@property (nonatomic, assign, readonly) SLGapClass prevGapClass;     // derived from prevGapLength
 
 // Phase state
 @property (nonatomic, assign, readonly) SLDebtPhase phase;
@@ -108,10 +139,12 @@ typedef NS_ENUM(NSInteger, SLDebtPhase) {
 //   realTripleType — if this spin was any real triple, the type string ("attack"/"shield"/etc.). nil if no real triple.
 //   primary        — count of primary symbols on this spin (for sa_acc / ss_spn)
 //   secondary      — count of secondary symbols (sa_spn for ACC tracker, 0 for SPN)
+//   totalSymbols   — total symbols this spin (atk+stl+shd+spn+acc, 0..3) — for quiet-zone rule
 - (void)onSpin:(BOOL)isTarget
   realTripleType:(NSString *)realTripleType
         primary:(NSInteger)primary
-      secondary:(NSInteger)secondary;
+      secondary:(NSInteger)secondary
+  totalSymbols:(NSInteger)totalSymbols;
 
 // State accessors (used by UI / logging)
 - (double)accumRate;                       // saSymbols / saSpins
@@ -123,6 +156,15 @@ typedef NS_ENUM(NSInteger, SLDebtPhase) {
 - (NSArray<SLDebtRule *> *)firingRules;    // currently firing rules (for UI panel)
 - (NSArray<SLDebtRule *> *)soonRules;      // rules close to firing
 - (NSArray<SLDebtRule *> *)dormantRules;   // rules that cannot fire on this gap context
+
+// S/M/L prediction for NEXT gap based on prev gap's class
+//   Returns a human-readable string like "S(50%)", "M(45%)", "L/M", or "?" if unknown
+- (NSString *)predictedNextWindow;
+// Quiet-zone state — total symbols in last N spins (for display)
+- (NSInteger)symbolsInLastWindow:(NSInteger)N;
+// Class a gap length
++ (SLGapClass)classifyGapLength:(NSInteger)length;
++ (NSString *)classAbbreviation:(SLGapClass)cls;
 
 // Reset (event change or manual)
 - (void)reset;

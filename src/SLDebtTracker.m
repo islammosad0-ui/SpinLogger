@@ -11,10 +11,13 @@
     r.name = name;
     r.bitIndex = bitIndex;
     r.spinThreshold = 999;  // disabled by default
+    r.spinCap = 0;          // no cap by default
     r.rateGate = 0.0;
     r.spnRateGate = 0.0;
     r.minSlope = 0.0;
     r.slopeWindow = 10;
+    r.quietZoneWindow = 0;
+    r.quietZoneMax = 0;
     r.smlSBound = 0;
     r.smlSThreshold = 0;
     r.smlSGate = 0.0;
@@ -22,6 +25,7 @@
     r.smlLThreshold = 0;
     r.smlLGate = 0.0;
     r.requiredPrevTriple = @"";
+    r.requiredPrevClassMask = 0;
     return r;
 }
 
@@ -40,6 +44,79 @@
         _cooldownLen = kSLDefaultCooldownLen;
     }
     return self;
+}
+
++ (instancetype)accCausalDefaults {
+    // v5 DEFAULT — 7 rules from the real causal hunt (2026-04-08).
+    // Verified: 45/271 @ ~28 mb/hit on 271-gap validation set.
+    // See analysis/nuclear/NUCLEAR_FINDINGS.md "RECOMMENDED ENSEMBLE".
+    SLDebtTrackerConfig *c = [[self alloc] init];
+
+    // Rule 1 — STEAL t=65 g=0.34 (S-window precision): 4/271 @ 16.5 mb
+    SLDebtRule *r1 = [SLDebtRule ruleWithName:@"STEAL t65 g0.34" bitIndex:0];
+    r1.requiredPrevTriple = @"steal";
+    r1.spinThreshold = 65;
+    r1.spinCap = 105;   // S-window cap
+    r1.rateGate = 0.34;
+    [c.rules addObject:r1];
+
+    // Rule 2 — STEAL t=130 g=0.28 (volume workhorse): 14/271 @ 15.0 mb
+    SLDebtRule *r2 = [SLDebtRule ruleWithName:@"STEAL t130 g0.28" bitIndex:1];
+    r2.requiredPrevTriple = @"steal";
+    r2.spinThreshold = 130;
+    r2.rateGate = 0.28;
+    [c.rules addObject:r2];
+
+    // Rule 3 — STEAL t=150 g=0.30 (L-window gem): 5/271 @ 6.2 mb, 17x lift
+    SLDebtRule *r3 = [SLDebtRule ruleWithName:@"STEAL t150 g0.30" bitIndex:2];
+    r3.requiredPrevTriple = @"steal";
+    r3.spinThreshold = 150;
+    r3.rateGate = 0.30;
+    [c.rules addObject:r3];
+
+    // Rule 4 — SHIELD t=150 g=0.30: 8/271 @ 18.4 mb
+    SLDebtRule *r4 = [SLDebtRule ruleWithName:@"SHIELD t150 g0.30" bitIndex:3];
+    r4.requiredPrevTriple = @"shield";
+    r4.spinThreshold = 150;
+    r4.rateGate = 0.30;
+    [c.rules addObject:r4];
+
+    // Rule 5 — Quiet-zone suppression: 7/271 @ 19.4 mb
+    // The game reduces total symbol output in the ~10 spins before a triple.
+    SLDebtRule *r5 = [SLDebtRule ruleWithName:@"Quiet-zone last10<=10 t130" bitIndex:4];
+    r5.spinThreshold = 130;
+    r5.quietZoneWindow = 10;
+    r5.quietZoneMax = 10;
+    [c.rules addObject:r5];
+
+    // Rule 6 — Double-gate t=130 capped at 155 acc>=0.28 spn>=0.24
+    // Capping at 155 avoids the long-gap bleed that pushes union mb/hit from ~18 to ~30.
+    // Verified: capped DG adds 9 catches over precision-only at only +6 mb/hit overhead.
+    SLDebtRule *r6 = [SLDebtRule ruleWithName:@"DG t130 cap155 acc0.28 spn0.24" bitIndex:5];
+    r6.spinThreshold = 130;
+    r6.spinCap = 155;
+    r6.rateGate = 0.28;
+    r6.spnRateGate = 0.24;
+    [c.rules addObject:r6];
+
+    // Rule 7 — Early S-window trigger (user's "predict S then fire" idea)
+    // Only fires when prev gap was M or L (predicting next is S, 50-55% probability).
+    // Window: sa_spins in [60..105] with quiet-zone suppression.
+    // Causal: 4/271 @ 24.8 mb — Nick 1 @ 12 mb, Ahmed 2 @ 22 mb, Islam 1 @ 44 mb.
+    SLDebtRule *r7 = [SLDebtRule ruleWithName:@"prev=M/L early S window supp<=10" bitIndex:6];
+    r7.spinThreshold = 60;
+    r7.spinCap = 105;
+    r7.quietZoneWindow = 10;
+    r7.quietZoneMax = 10;
+    // requiredPrevClassMask: M=4, L=8 → 4|8=12
+    r7.requiredPrevClassMask = (1 << SLGapClassM) | (1 << SLGapClassL);
+    [c.rules addObject:r7];
+
+    // Cooldown disabled for v5 — didn't help the real ensemble
+    c.cooldownAfter = 0;
+    c.cooldownLen = 0;
+
+    return c;
 }
 
 + (instancetype)accEnsembleDefaults {
@@ -234,12 +311,17 @@
 // ============================================================================
 @interface SLDebtTracker () {
     double _rateHistory[kSLSlopeWindowMax + 1];
+    // Ring buffer of ALL-symbols delta per spin (for quiet-zone rule).
+    // _allSymHistory[k] = total symbols (atk+stl+shd+spn+acc) landed on the k-th spin.
+    // We store up to kSLQuietZoneMax+1 slots.
+    NSInteger _allSymHistory[kSLQuietZoneMax + 1];
 }
 @property (nonatomic, assign, readwrite) NSInteger saSpins;
 @property (nonatomic, assign, readwrite) NSInteger saSymbols;
 @property (nonatomic, assign, readwrite) NSInteger saSpnSymbols;
 @property (nonatomic, assign, readwrite) NSInteger prevGapLength;
 @property (nonatomic, copy,   readwrite) NSString *prevRealTriple;
+@property (nonatomic, assign, readwrite) SLGapClass prevGapClass;
 @property (nonatomic, assign, readwrite) SLDebtPhase phase;
 @property (nonatomic, assign, readwrite) NSInteger firingRuleCount;
 @property (nonatomic, assign, readwrite) NSUInteger firingRuleBitmask;
@@ -277,6 +359,51 @@
     double rateNow = [self accumRate];
     double ratePrev = _rateHistory[(self.saSpins - win) % (kSLSlopeWindowMax + 1)];
     return rateNow - ratePrev;
+}
+
+- (NSInteger)symbolsInLastWindow:(NSInteger)N {
+    if (N <= 0 || N > kSLQuietZoneMax) return -1;
+    if (self.saSpins < N) return -1;  // not enough history
+    NSInteger sum = 0;
+    // _allSymHistory[k] was written on spin k (1..saSpins). We want last N spins.
+    // So indices: saSpins - N + 1 .. saSpins
+    for (NSInteger k = self.saSpins - N + 1; k <= self.saSpins; k++) {
+        sum += _allSymHistory[k % (kSLQuietZoneMax + 1)];
+    }
+    return sum;
+}
+
++ (SLGapClass)classifyGapLength:(NSInteger)length {
+    if (length <= 0) return SLGapClassUnknown;
+    if (length <= kSLGapXsMax)  return SLGapClassXS;
+    if (length <= kSLGapSMax)   return SLGapClassS;
+    if (length <= kSLGapMMax)   return SLGapClassM;
+    return SLGapClassL;
+}
+
++ (NSString *)classAbbreviation:(SLGapClass)cls {
+    switch (cls) {
+        case SLGapClassXS: return @"XS";
+        case SLGapClassS:  return @"S";
+        case SLGapClassM:  return @"M";
+        case SLGapClassL:  return @"L";
+        default:           return @"?";
+    }
+}
+
+- (NSString *)predictedNextWindow {
+    // Based on transition matrix from chunk 17 analysis:
+    //   M -> S at 50% (M window size 106-160, S window 40-105)
+    //   L -> S at 55% (L >160, S 40-105)
+    //   S -> M at 45%
+    //   XS -> M/L mixed
+    switch (self.prevGapClass) {
+        case SLGapClassM:  return @"S(50%)";
+        case SLGapClassL:  return @"S(55%)";
+        case SLGapClassS:  return @"M(45%)";
+        case SLGapClassXS: return @"M/L";
+        default:           return @"?";
+    }
 }
 
 #pragma mark - Rule resolution
@@ -317,10 +444,24 @@
     NSInteger thresh; double gate;
     if (![self resolveRule:r threshold:&thresh gate:&gate]) return NO;
 
+    // Prev-gap class condition: bitmask must include current prevGapClass
+    if (r.requiredPrevClassMask > 0) {
+        NSInteger classBit = 1 << (NSInteger)self.prevGapClass;
+        if (!(r.requiredPrevClassMask & classBit)) return NO;
+    }
+
     if (self.saSpins < thresh) return NO;
+    // Spin cap: rule only fires if sa_spins <= cap (0 = no cap)
+    if (r.spinCap > 0 && self.saSpins > r.spinCap) return NO;
     if (gate > 0.0 && [self accumRate] < gate) return NO;
     if (r.spnRateGate > 0.0 && [self spnRate] < r.spnRateGate) return NO;
     if (r.minSlope > 0.0 && [self slopeForWindow:r.slopeWindow] < r.minSlope) return NO;
+    // Quiet-zone gate: total symbols in last-N spins must be <= max
+    if (r.quietZoneWindow > 0) {
+        NSInteger sum = [self symbolsInLastWindow:r.quietZoneWindow];
+        if (sum < 0) return NO;  // not enough history yet
+        if (sum > r.quietZoneMax) return NO;
+    }
     return YES;
 }
 
@@ -376,7 +517,8 @@
 - (void)onSpin:(BOOL)isTarget
   realTripleType:(NSString *)realTripleType
         primary:(NSInteger)primary
-      secondary:(NSInteger)secondary {
+      secondary:(NSInteger)secondary
+  totalSymbols:(NSInteger)totalSymbols {
 
     self.saSpins++;
     self.saSymbols    += primary;
@@ -388,6 +530,9 @@
         _rateHistory[self.saSpins % (kSLSlopeWindowMax + 1)] =
             (double)self.saSymbols / (double)self.saSpins;
     }
+
+    // Record total symbols on this spin for quiet-zone rule
+    _allSymHistory[self.saSpins % (kSLQuietZoneMax + 1)] = totalSymbols;
 
     // ---- Update prev_real_triple if this spin was a non-target real triple ----
     // (target triples are handled in the reset block below)
@@ -435,6 +580,7 @@
     // ---- Target triple? Save state then reset (AFTER rule evaluation) ----
     if (isTarget) {
         self.prevGapLength    = self.saSpins;
+        self.prevGapClass     = [SLDebtTracker classifyGapLength:self.saSpins];
         self.prevRealTriple   = realTripleType;  // the target itself
         self.saSpins          = 0;
         self.saSymbols        = 0;
@@ -447,6 +593,7 @@
         // They reflect what fired on the catch spin (so the CSV logger records the catch correctly).
         // They'll be recomputed on the next spin.
         memset(_rateHistory, 0, sizeof(_rateHistory));
+        memset(_allSymHistory, 0, sizeof(_allSymHistory));
         return;
     }
 
@@ -500,6 +647,7 @@
     self.saSymbols = 0;
     self.saSpnSymbols = 0;
     self.prevGapLength = -1;
+    self.prevGapClass = SLGapClassUnknown;
     self.prevRealTriple = nil;
     self.phase = SLDebtPhaseWaiting;
     self.consecBets = 0;
@@ -508,6 +656,7 @@
     self.firingRuleCount = 0;
     self.firingRuleBitmask = 0;
     memset(_rateHistory, 0, sizeof(_rateHistory));
+    memset(_allSymHistory, 0, sizeof(_allSymHistory));
 }
 
 - (NSDictionary *)stateDictionary {
@@ -516,6 +665,7 @@
         @"saSymbols":         @(self.saSymbols),
         @"saSpnSymbols":      @(self.saSpnSymbols),
         @"prevGapLength":     @(self.prevGapLength),
+        @"prevGapClass":      @(self.prevGapClass),
         @"prevRealTriple":    self.prevRealTriple ?: @"",
         @"phase":             @(self.phase),
         @"consecBets":        @(self.consecBets),
@@ -529,6 +679,7 @@
     self.saSpins           = [dict[@"saSpins"]           integerValue];
     self.saSymbols         = [dict[@"saSymbols"]         integerValue];
     self.saSpnSymbols      = [dict[@"saSpnSymbols"]      integerValue];
+    self.prevGapClass      = (SLGapClass)[dict[@"prevGapClass"] integerValue];
     self.prevGapLength     = dict[@"prevGapLength"] ? [dict[@"prevGapLength"] integerValue] : -1;
     NSString *prt = dict[@"prevRealTriple"];
     self.prevRealTriple    = (prt.length > 0) ? prt : nil;

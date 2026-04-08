@@ -1,5 +1,6 @@
 #import "SLBetDecisionLogger.h"
 #import "SLConstants.h"
+#import "SLAccountID.h"
 
 // ---------------------------------------------------------------------------
 //  bet_decisions CSV — writes one row per spin with full ACC tracker state
@@ -42,7 +43,9 @@ static NSString *SLBetSessionDate(void) {
 static NSString *SLBetCSVPath(void) {
     NSString *docs = NSSearchPathForDirectoriesInDomains(
         NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
-    NSString *filename = [NSString stringWithFormat:@"bet_decisions_%@.csv", SLBetSessionDate()];
+    // Filename format: bet_decisions_{account}_{YYYY-MM-DD}.csv
+    NSString *filename = [NSString stringWithFormat:@"bet_decisions_%@_%@.csv",
+                          SLAccountLabel(), SLBetSessionDate()];
     return [docs stringByAppendingPathComponent:filename];
 }
 
@@ -71,7 +74,7 @@ void SLBetDecisionLoggerRotate(void) {
     sSessionDate = [df stringFromDate:[NSDate date]];
     [[NSUserDefaults standardUserDefaults] setObject:sSessionDate forKey:@"Speeder_BetDecisionsDate"];
     sHeaderEnsured = NO;
-    NSLog(@"[SpinLogger] bet_decisions rotated -> bet_decisions_%@.csv", sSessionDate);
+    NSLog(@"[SpinLogger] bet_decisions rotated -> bet_decisions_%@_%@.csv", SLAccountLabel(), sSessionDate);
 }
 
 static NSString *PhaseString(SLDebtPhase p) {

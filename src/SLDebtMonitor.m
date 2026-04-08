@@ -4,6 +4,8 @@
 #import "SLConstants.h"
 #import "SLSpinParser.h"
 #import "SLBetDecisionLogger.h"
+#import "SLAccountID.h"
+#import "SLSpinStore.h"
 
 // ---------------------------------------------------------------------------
 //  SLDebtTile — one draggable UIWindow for a single tracker (ACC or SPN)
@@ -16,6 +18,7 @@
 @property (nonatomic, strong) UILabel *rateLabel;
 @property (nonatomic, strong) UILabel *phaseLabel;
 @property (nonatomic, strong) UILabel *missionBadge;      // top-right "M37" badge
+@property (nonatomic, strong) UILabel *predictBadge;      // top-left "S(50%)" predicted next window
 @property (nonatomic, strong) SLDebtTracker *tracker;
 @property (nonatomic, copy)   NSString *emoji;
 @property (nonatomic, copy)   NSString *symbolName;       // which symbol to count
@@ -87,7 +90,7 @@
                                symbolName:kSLSymbolAccumulation
                                 glowColor:[UIColor colorWithRed:0.2 green:1.0 blue:0.3 alpha:1.0]
                          watchBorderColor:[UIColor colorWithRed:1.0 green:0.75 blue:0.0 alpha:0.8]
-                                  tracker:[[SLDebtTracker alloc] initWithConfig:[SLDebtTrackerConfig accEnsembleDefaults]]
+                                  tracker:[[SLDebtTracker alloc] initWithConfig:[SLDebtTrackerConfig accCausalDefaults]]
                               defaultsKey:@"Speeder_DebtACC"
                                   posXKey:@"Speeder_DebtACCX"
                                   posYKey:@"Speeder_DebtACCY"
@@ -194,6 +197,15 @@
     [container addSubview:missionBadge];
     tile.missionBadge = missionBadge;
 
+    // Predicted next-window badge (top-left) — shows S(50%) / M(45%) / L from prev gap class
+    UILabel *predictBadge = [[UILabel alloc] initWithFrame:CGRectMake(2, 1, 34, 10)];
+    predictBadge.font = [UIFont monospacedDigitSystemFontOfSize:8 weight:UIFontWeightMedium];
+    predictBadge.textColor = [UIColor colorWithRed:0.4 green:0.8 blue:1.0 alpha:1.0];
+    predictBadge.textAlignment = NSTextAlignmentLeft;
+    predictBadge.hidden = YES;
+    [container addSubview:predictBadge];
+    tile.predictBadge = predictBadge;
+
     // Rate label (middle) — acc rate (and spn rate if COMBO)
     UILabel *rateLabel = [[UILabel alloc] initWithFrame:CGRectMake(4, 20, tileW - 8, 16)];
     rateLabel.font = [UIFont monospacedDigitSystemFontOfSize:11 weight:UIFontWeightMedium];
@@ -293,9 +305,13 @@
     NSArray *reels = @[result.reel1 ?: @"", result.reel2 ?: @"", result.reel3 ?: @""];
     NSInteger accSymbols = 0;
     NSInteger spnSymbols = 0;
+    NSInteger totalRealSymbols = 0;  // acc+spn+atk+stl+shd — for quiet-zone rule
     for (NSString *r in reels) {
-        if ([r isEqualToString:kSLSymbolAccumulation]) accSymbols++;
-        if ([r isEqualToString:kSLSymbolSpins])        spnSymbols++;
+        if ([r isEqualToString:kSLSymbolAccumulation]) { accSymbols++; totalRealSymbols++; }
+        else if ([r isEqualToString:kSLSymbolSpins])   { spnSymbols++; totalRealSymbols++; }
+        else if ([r isEqualToString:kSLSymbolAttack] ||
+                 [r isEqualToString:kSLSymbolSteal]  ||
+                 [r isEqualToString:kSLSymbolShield]) { totalRealSymbols++; }
     }
 
     // --- Latest GAE state for tile display ---
@@ -315,7 +331,8 @@
     [self.accTile.tracker onSpin:isAccTriple
                   realTripleType:realTripleType
                          primary:accSymbols
-                       secondary:spnSymbols];
+                       secondary:spnSymbols
+                    totalSymbols:totalRealSymbols];
 
     // --- Log this spin's bet decision (BEFORE the gap_idx increments on triple) ---
     // The CSV row reflects the state AFTER the spin was processed (including catch detection).
@@ -332,7 +349,8 @@
     [self.spnTile.tracker onSpin:isSpnTriple
                   realTripleType:realTripleType
                          primary:spnSymbols
-                       secondary:0];
+                       secondary:0
+                    totalSymbols:totalRealSymbols];
 
     // --- Update UI ---
     [self updateTileUI:self.accTile];
@@ -372,6 +390,15 @@
         tile.missionBadge.hidden = tile.compact;
     } else {
         tile.missionBadge.hidden = YES;
+    }
+
+    // Predicted next-window badge — shows S(50%) / M(45%) / L / ? based on prev gap class.
+    // Only meaningful for ACC tracker (SPN has its own cycle).
+    if (tile == self.accTile && t.prevGapClass != SLGapClassUnknown) {
+        tile.predictBadge.text = [t predictedNextWindow];
+        tile.predictBadge.hidden = tile.compact;
+    } else {
+        tile.predictBadge.hidden = YES;
     }
 
     // Middle row: rate display — acc | spn for ACC ensemble (if any rule uses spn gate),
@@ -622,19 +649,25 @@
 
     // --- Presets ---
     if (isAcc) {
-        [sheet addAction:[UIAlertAction actionWithTitle:@"Ensemble (16 rules) — 62/178 @ 10.95mb [DEFAULT]"
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Causal v5 (6 rules) — real ~22mb [DEFAULT]"
+                                                 style:UIAlertActionStyleDefault
+                                               handler:^(UIAlertAction *a) {
+            [self applyConfigToTile:tile config:[SLDebtTrackerConfig accCausalDefaults]];
+            dismiss();
+        }]];
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Ensemble v4 (16 rules, phantom) — legacy"
                                                  style:UIAlertActionStyleDefault
                                                handler:^(UIAlertAction *a) {
             [self applyConfigToTile:tile config:[SLDebtTrackerConfig accEnsembleDefaults]];
             dismiss();
         }]];
-        [sheet addAction:[UIAlertAction actionWithTitle:@"COMBO only — 42/178 @ 9.3mb"
+        [sheet addAction:[UIAlertAction actionWithTitle:@"COMBO only — legacy"
                                                  style:UIAlertActionStyleDefault
                                                handler:^(UIAlertAction *a) {
             [self applyConfigToTile:tile config:[SLDebtTrackerConfig accComboOnlyDefaults]];
             dismiss();
         }]];
-        [sheet addAction:[UIAlertAction actionWithTitle:@"Baseline 130/0.30 — 31/178 @ 17.1mb"
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Baseline 130/0.30 — simple"
                                                  style:UIAlertActionStyleDefault
                                                handler:^(UIAlertAction *a) {
             [self applyConfigToTile:tile config:[SLDebtTrackerConfig accBaselineDefaults]];
@@ -646,6 +679,17 @@
                                                handler:^(UIAlertAction *a) {
             [self applyConfigToTile:tile config:[SLDebtTrackerConfig spnDefaults]];
             dismiss();
+        }]];
+    }
+
+    // --- Set Account Label (only on ACC tile to avoid duplication) ---
+    if (isAcc) {
+        NSString *accTitle = [NSString stringWithFormat:@"Set Account Label (current: %@)", SLAccountLabel()];
+        [sheet addAction:[UIAlertAction actionWithTitle:accTitle
+                                                 style:UIAlertActionStyleDefault
+                                               handler:^(UIAlertAction *a) {
+            dismiss();
+            [self showAccountLabelEditor];
         }]];
     }
 
@@ -674,6 +718,40 @@
 
 // showThresholdEditorForTile removed: 16-rule ensemble doesn't have a single threshold to edit.
 // Future: implement a per-rule editor or "tap-to-expand panel" with rule details.
+
+- (void)showAccountLabelEditor {
+    UIAlertController *alert = [UIAlertController
+        alertControllerWithTitle:@"Set Account Label"
+                         message:@"Used to name CSV files (spin_history_LABEL_DATE.csv).\nLetters, digits, underscores only."
+                  preferredStyle:UIAlertControllerStyleAlert];
+
+    [alert addTextFieldWithConfigurationHandler:^(UITextField *tf) {
+        tf.placeholder = @"e.g. islam, ahmed, nick";
+        tf.text = SLAccountLabel();
+        tf.autocapitalizationType = UITextAutocapitalizationTypeNone;
+        tf.autocorrectionType = UITextAutocorrectionTypeNo;
+    }];
+
+    UIWindow *presWin = [self settingsPresentationWindowForScene:
+                         (UIWindowScene *)self.accTile.window.windowScene];
+    void (^dismiss)(void) = ^{ self.settingsWindow.hidden = YES; };
+
+    [alert addAction:[UIAlertAction actionWithTitle:@"Save"
+                                              style:UIAlertActionStyleDefault
+                                            handler:^(UIAlertAction *a) {
+        NSString *raw = alert.textFields.firstObject.text ?: @"";
+        SLSetAccountLabel(raw);
+        // Rotate both CSVs so they start writing to the new filename
+        SLSpinStoreRotateCSV();
+        SLBetDecisionLoggerRotate();
+        dismiss();
+    }]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel"
+                                              style:UIAlertActionStyleCancel
+                                            handler:^(UIAlertAction *a) { dismiss(); }]];
+
+    [presWin.rootViewController presentViewController:alert animated:YES completion:nil];
+}
 
 #pragma mark - Persistence
 
