@@ -98,11 +98,13 @@ typedef NS_ENUM(NSInteger, SLGapClass) {
 @property (nonatomic, assign) NSInteger cooldownLen;    // rest length in spins (default 3)
 
 // Preset factories
-+ (instancetype)accCausalDefaults;    // v5: 6-rule causal ensemble (STEAL + SHIELD + quiet-zone)
-+ (instancetype)accEnsembleDefaults;  // v4 legacy (phantom 16 rules) - kept for comparison
-+ (instancetype)accBaselineDefaults;  // single rule: 130/0.30 (legacy comparison)
-+ (instancetype)accComboOnlyDefaults; // single rule: COMBO only
-+ (instancetype)spnDefaults;          // single rule: SPN Sniper 120/0.25
++ (instancetype)accCausalDefaults;      // v5 DEFAULT: 7-rule (STEAL+SHIELD+quiet-zone+DGcap+early-S). 45/271 @ ~28 mb
++ (instancetype)accCausal6Capped;       // v5.1 6-rule: drops early-S, keeps DG cap155. 41/271 @ 24.4 mb (4.3x lift)
++ (instancetype)accCausal6Uncapped;     // v5  6-rule: drops early-S, uncapped DG.     53/271 @ 30.0 mb (3.5x lift)
++ (instancetype)accEnsembleDefaults;    // v4 legacy (phantom 16 rules) - kept for comparison
++ (instancetype)accBaselineDefaults;    // single rule: 130/0.30 (legacy comparison)
++ (instancetype)accComboOnlyDefaults;   // single rule: COMBO only
++ (instancetype)spnDefaults;            // single rule: SPN Sniper 120/0.25
 @end
 
 // ---------------------------------------------------------------------------

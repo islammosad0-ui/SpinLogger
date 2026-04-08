@@ -119,6 +119,28 @@
     return c;
 }
 
+// v5.1 — 6-rule causal ensemble (drops r7 early-S, keeps DG cap155).
+// Verified: 41/271 (15.1%) @ 24.4 mb/hit, 4.3x lift. Best efficiency variant.
++ (instancetype)accCausal6Capped {
+    SLDebtTrackerConfig *c = [self accCausalDefaults];
+    // Drop the last rule (r7 — prev=M/L early-S trigger). That leaves r1..r6.
+    if (c.rules.count > 0) [c.rules removeLastObject];
+    return c;
+}
+
+// v5 — 6-rule causal ensemble (drops r7 AND removes the 155 cap from r6).
+// Verified: 53/271 (19.6%) @ 30.0 mb/hit, 3.5x lift. More volume, lower efficiency.
++ (instancetype)accCausal6Uncapped {
+    SLDebtTrackerConfig *c = [self accCausal6Capped];
+    // r6 (DG t130) is now the last rule — uncap its spinCap and rename for clarity.
+    SLDebtRule *r6 = [c.rules lastObject];
+    if (r6) {
+        r6.spinCap = 0;  // remove 155 cap → DG fires indefinitely above 130
+        r6.name = @"DG t130 uncapped acc0.28 spn0.24";
+    }
+    return c;
+}
+
 + (instancetype)accEnsembleDefaults {
     SLDebtTrackerConfig *c = [[self alloc] init];
 

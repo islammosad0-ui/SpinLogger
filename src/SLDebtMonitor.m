@@ -625,7 +625,9 @@
 - (void)showConfigMenuForTile:(SLDebtTile *)tile {
     SLDebtTracker *t = tile.tracker;
     BOOL isAcc = (tile == self.accTile);
-    NSString *title = isAcc ? @"ACC Tracker (16-rule)" : @"SPN Tracker";
+    NSString *title = isAcc
+        ? [NSString stringWithFormat:@"ACC Tracker (%lu rules)", (unsigned long)t.config.rules.count]
+        : @"SPN Tracker";
 
     // Build status string with current state
     double accR = [t accumRate];
@@ -659,10 +661,22 @@
 
     // --- Presets ---
     if (isAcc) {
-        [sheet addAction:[UIAlertAction actionWithTitle:@"Causal v5 (6 rules) — real ~22mb [DEFAULT]"
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Causal v5 (7 rules) — 45/271 @ 28mb [DEFAULT]"
                                                  style:UIAlertActionStyleDefault
                                                handler:^(UIAlertAction *a) {
             [self applyConfigToTile:tile config:[SLDebtTrackerConfig accCausalDefaults]];
+            dismiss();
+        }]];
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Causal v5.1 (6r capped) — 41/271 @ 24mb (4.3x)"
+                                                 style:UIAlertActionStyleDefault
+                                               handler:^(UIAlertAction *a) {
+            [self applyConfigToTile:tile config:[SLDebtTrackerConfig accCausal6Capped]];
+            dismiss();
+        }]];
+        [sheet addAction:[UIAlertAction actionWithTitle:@"Causal v5 (6r uncapped) — 53/271 @ 30mb (3.5x)"
+                                                 style:UIAlertActionStyleDefault
+                                               handler:^(UIAlertAction *a) {
+            [self applyConfigToTile:tile config:[SLDebtTrackerConfig accCausal6Uncapped]];
             dismiss();
         }]];
         [sheet addAction:[UIAlertAction actionWithTitle:@"Ensemble v4 (16 rules, phantom) — legacy"
