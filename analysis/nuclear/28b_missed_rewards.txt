@@ -1,0 +1,83 @@
+==============================================================================================================
+  SCENARIO A: start 100,000  |  ladder 22 missions
+==============================================================================================================
+  acct/sess    strategy       end            missions  on next mission                   missed reward
+  ------------------------------------------------------------------------------------------------------------
+  Islam s0     Pure 1x        OUT OF DATA        5/22  M6:       453 /     2,400 (  19%) need     1,947          6,000
+  Islam s0     Pure 6000x     BANKRUPT           8/22  M9:    16,478 /    20,000 (  82%) need     3,522         40,000
+  Islam s0     Pure Hammer    BANKRUPT          11/22  M12:    40,578 /    70,000 (  58%) need    29,422        125,000
+  Islam s0     Pure Ensemble  BANKRUPT          13/22  M14:    40,346 /   150,000 (  27%) need   109,654        250,000
+  Islam s0     HYBRID         BANKRUPT          13/22  M14:   115,128 /   150,000 (  77%) need    34,872        250,000
+
+  Islam s1     Pure 1x        OUT OF DATA        4/22  M5:       382 /     1,200 (  32%) need       818          3,100
+  Islam s1     Pure 6000x     BANKRUPT          12/22  M13:    49,478 /   100,000 (  49%) need    50,522        175,000
+  Islam s1     Pure Hammer    BANKRUPT          12/22  M13:    71,878 /   100,000 (  72%) need    28,122        175,000
+  Islam s1     Pure Ensemble  BANKRUPT          16/22  M17:   136,605 /   300,000 (  46%) need   163,395        400,000
+  Islam s1     HYBRID         BANKRUPT          16/22  M17:   178,078 /   300,000 (  59%) need   121,922        400,000
+
+  Ahmed s0     Pure 1x        OUT OF DATA        5/22  M6:       209 /     2,400 (   9%) need     2,191          6,000
+  Ahmed s0     Pure 6000x     BANKRUPT           0/22  M1:         0 /         7 (   0%) need         7            120
+  Ahmed s0     Pure Hammer    BANKRUPT           9/22  M10:    23,103 /    30,000 (  77%) need     6,897         60,000
+  Ahmed s0     Pure Ensemble  OUT OF DATA       16/22  M17:   173,833 /   300,000 (  58%) need   126,167        400,000
+  Ahmed s0     HYBRID         BANKRUPT          11/22  M12:    50,303 /    70,000 (  72%) need    19,697        125,000
+
+  Ahmed s1     Pure 1x        OUT OF DATA        4/22  M5:       520 /     1,200 (  43%) need       680          3,100
+  Ahmed s1     Pure 6000x     BANKRUPT           9/22  M10:     8,478 /    30,000 (  28%) need    21,522         60,000
+  Ahmed s1     Pure Hammer    BANKRUPT           9/22  M10:    24,318 /    30,000 (  81%) need     5,682         60,000
+  Ahmed s1     Pure Ensemble  BANKRUPT          15/22  M16:   194,424 /   250,000 (  78%) need    55,576        350,000
+  Ahmed s1     HYBRID         BANKRUPT          14/22  M15:   102,193 /   200,000 (  51%) need    97,807        300,000
+
+  Nick s0      Pure 1x        OUT OF DATA        3/22  M4:        20 /       800 (   2%) need       780          1,700
+  Nick s0      Pure 6000x     BANKRUPT          10/22  M11:    20,478 /    45,000 (  46%) need    24,522         85,000
+  Nick s0      Pure Hammer    BANKRUPT           8/22  M9:    14,423 /    20,000 (  72%) need     5,577         40,000
+  Nick s0      Pure Ensemble  OUT OF DATA       12/22  M13:    49,781 /   100,000 (  50%) need    50,219        175,000
+  Nick s0      HYBRID         BANKRUPT           8/22  M9:    14,423 /    20,000 (  72%) need     5,577         40,000
+
+  Nick s1      Pure 1x        OUT OF DATA        2/22  M3:       177 /       225 (  79%) need        48            800
+  Nick s1      Pure 6000x     BANKRUPT           7/22  M8:     8,478 /    10,000 (  85%) need     1,522         20,000
+  Nick s1      Pure Hammer    OUT OF DATA        9/22  M10:    10,693 /    30,000 (  36%) need    19,307         60,000
+  Nick s1      Pure Ensemble  OUT OF DATA       11/22  M12:    53,724 /    70,000 (  77%) need    16,276        125,000
+  Nick s1      HYBRID         OUT OF DATA       12/22  M13:    12,193 /   100,000 (  12%) need    87,807        175,000
+
+
+==============================================================================================================
+  SCENARIO B: start 299,000  |  ladder 20 missions
+==============================================================================================================
+  acct/sess    strategy       end            missions  on next mission                   missed reward
+  ------------------------------------------------------------------------------------------------------------
+  Islam s0     Pure 1x        OUT OF DATA        1/20  M2:     1,275 /     3,000 (  42%) need     1,725          2,700
+  Islam s0     Pure 6000x     BANKRUPT           7/20  M8:    50,000 /    75,000 (  67%) need    25,000        107,500
+  Islam s0     Pure Hammer    BANKRUPT           8/20  M9:    22,100 /   105,000 (  21%) need    82,900        162,500
+  Islam s0     Pure Ensemble  BANKRUPT           8/20  M9:    89,868 /   105,000 (  86%) need    15,132        162,500
+  Islam s0     HYBRID         BANKRUPT           9/20  M10:    89,650 /   150,000 (  60%) need    60,350        230,000
+
+  Islam s1     Pure 1x        OUT OF DATA        1/20  M2:         4 /     3,000 (   0%) need     2,996          2,700
+  Islam s1     Pure 6000x     BANKRUPT           8/20  M9:    47,000 /   105,000 (  45%) need    58,000        162,500
+  Islam s1     Pure Hammer    BANKRUPT           8/20  M9:    75,400 /   105,000 (  72%) need    29,600        162,500
+  Islam s1     Pure Ensemble  BANKRUPT          11/20  M12:   258,058 /   300,000 (  86%) need    41,942        472,500
+  Islam s1     HYBRID         BANKRUPT          11/20  M12:   293,600 /   300,000 (  98%) need     6,400        472,500
+
+  Ahmed s0     Pure 1x        OUT OF DATA        1/20  M2:     1,031 /     3,000 (  34%) need     1,969          2,700
+  Ahmed s0     Pure 6000x     BANKRUPT           7/20  M8:    44,000 /    75,000 (  59%) need    31,000        107,500
+  Ahmed s0     Pure Hammer    BANKRUPT           8/20  M9:    92,495 /   105,000 (  88%) need    12,505        162,500
+  Ahmed s0     Pure Ensemble  OUT OF DATA       12/20  M13:    61,355 /   450,000 (  14%) need   388,645        540,000
+  Ahmed s0     HYBRID         BANKRUPT           8/20  M9:    74,115 /   105,000 (  71%) need    30,885        162,500
+
+  Ahmed s1     Pure 1x        OUT OF DATA        1/20  M2:       142 /     3,000 (   5%) need     2,858          2,700
+  Ahmed s1     Pure 6000x     BANKRUPT           7/20  M8:    68,000 /    75,000 (  91%) need     7,000        107,500
+  Ahmed s1     Pure Hammer    BANKRUPT           9/20  M10:   115,400 /   150,000 (  77%) need    34,600        230,000
+  Ahmed s1     Pure Ensemble  OUT OF DATA       12/20  M13:   300,426 /   450,000 (  67%) need   149,574        540,000
+  Ahmed s1     HYBRID         BANKRUPT          10/20  M11:   173,515 /   225,000 (  77%) need    51,485        337,500
+
+  Nick s0      Pure 1x        OUT OF DATA        0/20  M1:       342 /     1,500 (  23%) need     1,158          1,100
+  Nick s0      Pure 6000x     BANKRUPT           7/20  M8:    68,000 /    75,000 (  91%) need     7,000        107,500
+  Nick s0      Pure Hammer    OUT OF DATA        7/20  M8:    53,000 /    75,000 (  71%) need    22,000        107,500
+  Nick s0      Pure Ensemble  OUT OF DATA        8/20  M9:    17,303 /   105,000 (  16%) need    87,697        162,500
+  Nick s0      HYBRID         OUT OF DATA        9/20  M10:    84,250 /   150,000 (  56%) need    65,750        230,000
+
+  Nick s1      Pure 1x        OUT OF DATA        0/20  M1:       274 /     1,500 (  18%) need     1,226          1,100
+  Nick s1      Pure 6000x     BANKRUPT           5/20  M6:    29,000 /    36,000 (  81%) need     7,000         46,000
+  Nick s1      Pure Hammer    OUT OF DATA        4/20  M5:    19,215 /    24,000 (  80%) need     4,785         27,000
+  Nick s1      Pure Ensemble  OUT OF DATA        7/20  M8:    26,246 /    75,000 (  35%) need    48,754        107,500
+  Nick s1      HYBRID         OUT OF DATA        7/20  M8:    54,715 /    75,000 (  73%) need    20,285        107,500
+

@@ -1,0 +1,29 @@
+  no_side_events: []
+  conservative_300K: [(8, 50000), (13, 100000), (14, 16666), (15, 16666), (16, 16666), (17, 16666), (18, 16666), (19, 16666), (20, 16666), (21, 16666), (22, 16666)]
+  mid_400K: [(8, 50000), (13, 100000), (14, 27777), (15, 27777), (16, 27777), (17, 27777), (18, 27777), (19, 27777), (20, 27777), (21, 27777), (22, 27777)]
+  generous_500K: [(8, 50000), (13, 100000), (14, 38888), (15, 38888), (16, 38888), (17, 38888), (18, 38888), (19, 38888), (20, 38888), (21, 38888), (22, 38888)]
+
+========================================================================================================================
+  SCENARIO A WITH SIDE EVENTS  (start 100K, 22-mission ladder, Pure Ensemble + HYBRID only)
+========================================================================================================================
+
+  acct/sess    strategy             no_side_events   conservative_300K            mid_400K       generous_500K
+  ----------------------------------------------------------------------------------------------------------
+  Islam s0     Pure Ensemble            13/22 BANK          14/22 BANK          14/22 BANK          14/22 BANK
+  Islam s0     HYBRID                   13/22 BANK          13/22 BANK          13/22 BANK          13/22 BANK
+
+  Islam s1     Pure Ensemble            16/22 BANK          16/22 BANK          16/22 BANK          16/22 BANK
+  Islam s1     HYBRID                   16/22 BANK          16/22 BANK          16/22 BANK          16/22 BANK
+
+  Ahmed s0     Pure Ensemble     16/22 OOD bk 507K   16/22 OOD bk 707K   16/22 OOD bk 740K   16/22 OOD bk 774K
+  Ahmed s0     HYBRID                   11/22 BANK          11/22 BANK          11/22 BANK          11/22 BANK
+
+  Ahmed s1     Pure Ensemble            15/22 BANK   17/22 OOD bk 568K   17/22 OOD bk 613K   17/22 OOD bk 657K
+  Ahmed s1     HYBRID                   14/22 BANK   18/22 OOD bk 450K   18/22 OOD bk 505K   18/22 OOD bk 561K
+
+  Nick s0      Pure Ensemble     12/22 OOD bk 295K   12/22 OOD bk 345K   12/22 OOD bk 345K   12/22 OOD bk 345K
+  Nick s0      HYBRID                    8/22 BANK          10/22 BANK          10/22 BANK          10/22 BANK
+
+  Nick s1      Pure Ensemble     11/22 OOD bk 153K   11/22 OOD bk 203K   11/22 OOD bk 203K   11/22 OOD bk 203K
+  Nick s1      HYBRID            12/22 OOD bk 225K   12/22 OOD bk 275K   12/22 OOD bk 275K   12/22 OOD bk 275K
+

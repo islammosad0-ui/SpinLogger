@@ -1,0 +1,46 @@
+==============================================================================================================
+PLAY-BY-PLAY: Nick session 0, pure_ensemble, scenario A
+  Started with 100,000 spins | 976 in-event spins available
+  gae_last_mission=100
+==============================================================================================================
+
+FINAL: DATA_EXHAUSTED
+  missions cleared:   12/22
+  total pulls:        976
+  bumped pulls (>1x): 26
+  catches on bumps:   3
+  total cost:         156,950
+  total acc points:   234,303
+  rewards earned:     352,920
+  final bankroll:     295,970
+  stuck on mission 13: 49,781 / 100,000 (49.8%)
+
+--- ALL 26 BUMPED PULLS (bet > 1) ---
+   #  spin    bet acc trip       pts  prev_t sa_sp sa_acc  l10 rules                            clears                   bkr_after
+--------------------------------------------------------------------------------------------------------------
+ 470   469  6,000   2         12,000  attack   137     39   14 dg_t130                          M3+M4+M5+M6+M7             116,451
+ 471   470  6,000   2         12,000  attack   138     41   16 dg_t130                          M8                         130,451
+ 472   471  6,000   0              0  attack   139     41   19 dg_t130                                                     124,451
+ 473   472  6,000   0              0  attack   140     41   18 dg_t130                                                     118,451
+ 474   473  6,000   0              0  shield   141     41   19 dg_t130                                                     112,451
+ 475   474  6,000   0              0  shield   142     41   19 dg_t130                                                     106,451
+ 476   475  6,000   0              0  shield   143     41   19 dg_t130                                                     100,451
+ 477   476  6,000   0              0   spins   144     41   21 dg_t130                                                      94,451
+ 478   477  6,000   0              0   spins   145     41   19 dg_t130                                                      88,451
+ 479   478  6,000   0              0   spins   146     41   21 dg_t130                                                      82,451
+ 486   485  6,000   2         12,000   spins   153     43   14 dg_t130                                                      76,445
+ 550   549  6,000   0              0   steal   217     55    9 quiet_zone                                                   70,382
+ 551   550  6,000   0              0   steal   218     55    9 quiet_zone                                                   64,382
+ 552   551  6,000   3  YES    60,000   steal   219     58    9 quiet_zone                       M9+M10                     158,382
+ 682   681  6,000   0              0  attack   130     40   15 dg_t130                                                     152,253
+ 683   682  6,000   0              0  shield   131     40   16 dg_t130                                                     146,253
+ 684   683  6,000   0              0  shield   132     40   17 dg_t130                                                     140,253
+ 685   684  6,000   2         12,000  shield   133     42   17 dg_t130                                                     134,253
+ 784   783  6,000   0              0   steal    96     22   10 early_s                                                     128,155
+ 787   786  6,000   0              0   steal    99     23   10 early_s                                                     122,153
+ 942   941  6,000   1          6,000   steal   138     35   10 quiet_zone                                                  115,999
+ 943   942  6,000   3  YES    60,000   steal   139     38    9 quiet_zone                       M11                        194,999
+ 962   961  6,000   0              0   steal   156     57   10 steal_t130,steal_t150,quiet_...                             188,981
+ 963   962  6,000   0              0  shield   157     57   12 shield_t150                                                 182,981
+ 964   963  6,000   0              0  shield   158     57   11 shield_t150                                                 176,981
+ 965   964  6,000   3  YES    60,000  shield   159     60    9 shield_t150,quiet_zone           M12                        295,981

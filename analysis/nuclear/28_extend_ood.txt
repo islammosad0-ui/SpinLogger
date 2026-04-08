@@ -1,0 +1,70 @@
+======================================================================================================================
+OOD-EXTENSION SIM  —  re-running every 'OUT OF DATA' result with cycle_data=True
+  (loops the same in-event spins[] until bankrupt OR all missions cleared OR 2M-pull cap)
+======================================================================================================================
+
+Found 25 OOD cases.
+
+scen acct   sess  strategy       orig msn    orig bk  ->    ext msn     ext bk        verdict  cycles     pulls
+----------------------------------------------------------------------------------------------------------------------
+A    Islam  s0    Pure 1x          5/22       98,640  ->    10/22            0       BANKRUPT      33   242,920
+A    Islam  s1    Pure 1x          4/22       98,935  ->    10/22            0       BANKRUPT      62   242,920
+A    Ahmed  s0    Pure 1x          5/22       99,334  ->    10/22            0       BANKRUPT      36   242,920
+A    Ahmed  s0    Pure Ensemble   16/22      507,503  ->    22/22    1,308,896      CLEAR ALL       3    21,582
+A    Ahmed  s1    Pure 1x          4/22       98,678  ->    10/22            0       BANKRUPT      58   242,920
+A    Nick   s0    Pure 1x          3/22      100,144  ->     9/22            0       BANKRUPT     187   182,920
+A    Nick   s0    Pure Ensemble   12/22      295,970  ->    22/22    2,347,699      CLEAR ALL      14    14,607
+A    Nick   s1    Pure 1x          2/22       99,627  ->    10/22            0       BANKRUPT     350   242,920
+A    Nick   s1    Pure Hammer      9/22      116,690  ->    22/22    1,028,500      CLEAR ALL      23    16,069
+A    Nick   s1    Pure Ensemble   11/22      153,256  ->    22/22    1,160,513      CLEAR ALL      20    13,991
+A    Nick   s1    HYBRID          12/22      225,840  ->    17/22        2,615       BANKRUPT       6     4,716
+B    Islam  s0    Pure 1x          1/20      292,820  ->     7/20            0       BANKRUPT      64   470,900
+B    Islam  s1    Pure 1x          1/20      296,215  ->     7/20            0       BANKRUPT     121   470,900
+B    Ahmed  s0    Pure 1x          1/20      293,514  ->     7/20            0       BANKRUPT      71   470,900
+B    Ahmed  s0    Pure Ensemble   12/20      760,483  ->    16/20            6       BANKRUPT       4    30,690
+B    Ahmed  s1    Pure 1x          1/20      295,958  ->     7/20            0       BANKRUPT     113   470,900
+B    Ahmed  s1    Pure Ensemble   12/20      205,020  ->    13/20        5,422       BANKRUPT       1     5,863
+B    Nick   s0    Pure 1x          0/20      298,024  ->     6/20            0       BANKRUPT     412   402,900
+B    Nick   s0    Pure Hammer      7/20       53,460  ->     7/20        1,235       BANKRUPT       1     1,259
+B    Nick   s0    Pure Ensemble    8/20      421,450  ->    20/20    4,315,562      CLEAR ALL      44    43,496
+B    Nick   s0    HYBRID           9/20      178,920  ->     9/20        2,195       BANKRUPT       1     1,285
+B    Nick   s1    Pure 1x          0/20      298,307  ->     7/20            0       BANKRUPT     679   470,900
+B    Nick   s1    Pure Hammer      4/20      263,670  ->    15/20        4,360       BANKRUPT      24    16,761
+B    Nick   s1    Pure Ensemble    7/20      296,236  ->    15/20        5,414       BANKRUPT      21    15,117
+B    Nick   s1    HYBRID           7/20      243,820  ->    12/20          920       BANKRUPT       6     4,277
+
+======================================================================================================================
+  TALLY  (extended verdicts of OOD cases)
+======================================================================================================================
+  CLEAR ALL :   5 / 25
+  BANKRUPT  :  20 / 25
+  2M CAP    :   0 / 25  (strategy keeps growing the bankroll faster than it spends — would clear with more pulls or higher cap)
+
+  --- CASES THAT WOULD ACTUALLY CLEAR THE FULL LADDER ---
+    A Ahmed s0 Pure Ensemble   cleared in 21,582 pulls (needed 3× more event data, ~19,758 extra in-event spins) final bk=1,308,896
+    A Nick s0 Pure Ensemble   cleared in 14,607 pulls (needed 14× more event data, ~13,664 extra in-event spins) final bk=2,347,699
+    A Nick s1 Pure Hammer     cleared in 16,069 pulls (needed 23× more event data, ~15,939 extra in-event spins) final bk=1,028,500
+    A Nick s1 Pure Ensemble   cleared in 13,991 pulls (needed 20× more event data, ~13,860 extra in-event spins) final bk=1,160,513
+    B Nick s0 Pure Ensemble   cleared in 43,496 pulls (needed 44× more event data, ~42,944 extra in-event spins) final bk=4,315,562
+
+  --- CASES THAT EVENTUALLY BANKRUPT EVEN WITH UNLIMITED DATA ---
+    A Islam s0 Pure 1x         died on M11 after 33 cycles (242,920 pulls), 23,112/45,000 (51%)
+    A Islam s1 Pure 1x         died on M11 after 62 cycles (242,920 pulls), 24,554/45,000 (55%)
+    A Ahmed s0 Pure 1x         died on M11 after 36 cycles (242,920 pulls), 23,838/45,000 (53%)
+    A Ahmed s1 Pure 1x         died on M11 after 58 cycles (242,920 pulls), 26,771/45,000 (59%)
+    A Nick s0 Pure 1x         died on M10 after 187 cycles (182,920 pulls), 24,576/30,000 (82%)
+    A Nick s1 Pure 1x         died on M11 after 350 cycles (242,920 pulls), 26,516/45,000 (59%)
+    A Nick s1 HYBRID          died on M18 after 6 cycles (4,716 pulls), 283,548/350,000 (81%)
+    B Islam s0 Pure 1x         died on M8 after 64 cycles (470,900 pulls), 37,538/75,000 (50%)
+    B Islam s1 Pure 1x         died on M8 after 121 cycles (470,900 pulls), 40,320/75,000 (54%)
+    B Ahmed s0 Pure 1x         died on M8 after 71 cycles (470,900 pulls), 38,974/75,000 (52%)
+    B Ahmed s0 Pure Ensemble   died on M17 after 4 cycles (30,690 pulls), 1,107,973/1,200,000 (92%)
+    B Ahmed s1 Pure 1x         died on M8 after 113 cycles (470,900 pulls), 44,677/75,000 (60%)
+    B Ahmed s1 Pure Ensemble   died on M14 after 1 cycles (5,863 pulls), 331,017/600,000 (55%)
+    B Nick s0 Pure 1x         died on M7 after 412 cycles (402,900 pulls), 50,169/51,000 (98%)
+    B Nick s0 Pure Hammer     died on M8 after 1 cycles (1,259 pulls), 74,980/75,000 (100%)
+    B Nick s0 HYBRID          died on M10 after 1 cycles (1,285 pulls), 118,230/150,000 (79%)
+    B Nick s1 Pure 1x         died on M8 after 679 cycles (470,900 pulls), 44,181/75,000 (59%)
+    B Nick s1 Pure Hammer     died on M16 after 24 cycles (16,761 pulls), 779,925/1,050,000 (74%)
+    B Nick s1 Pure Ensemble   died on M16 after 21 cycles (15,117 pulls), 832,357/1,050,000 (79%)
+    B Nick s1 HYBRID          died on M13 after 6 cycles (4,277 pulls), 353,465/450,000 (79%)

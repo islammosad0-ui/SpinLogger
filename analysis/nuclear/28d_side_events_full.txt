@@ -1,0 +1,59 @@
+==============================================================================================================
+  SCENARIO A: 100K start, 22-mission ladder
+==============================================================================================================
+  acct/sess   strategy              no_side     cons 300K      mid 400K      gen 500K
+  ---------------------------------------------------------------------------------
+  Islam s0    Pure Ensemble       13/22 BNK     14/22 BNK     14/22 BNK     14/22 BNK
+  Islam s0    HYBRID              13/22 BNK     13/22 BNK     13/22 BNK     13/22 BNK
+  Islam s0    Pure Hammer         11/22 BNK     12/22 BNK     12/22 BNK     12/22 BNK
+
+  Islam s1    Pure Ensemble       16/22 BNK     16/22 BNK     16/22 BNK     16/22 BNK
+  Islam s1    HYBRID              16/22 BNK     16/22 BNK     16/22 BNK     16/22 BNK
+  Islam s1    Pure Hammer         12/22 BNK     12/22 BNK     12/22 BNK     12/22 BNK
+
+  Ahmed s0    Pure Ensemble       16/22 OOD     16/22 OOD     16/22 OOD     16/22 OOD
+  Ahmed s0    HYBRID              11/22 BNK     11/22 BNK     11/22 BNK     11/22 BNK
+  Ahmed s0    Pure Hammer          9/22 BNK     10/22 BNK     10/22 BNK     10/22 BNK
+
+  Ahmed s1    Pure Ensemble       15/22 BNK     17/22 OOD     17/22 OOD     17/22 OOD
+  Ahmed s1    HYBRID              14/22 BNK     18/22 OOD     18/22 OOD     18/22 OOD
+  Ahmed s1    Pure Hammer          9/22 BNK     14/22 OOD     14/22 OOD     14/22 OOD
+
+  Nick s0     Pure Ensemble       12/22 OOD     12/22 OOD     12/22 OOD     12/22 OOD
+  Nick s0     HYBRID               8/22 BNK     10/22 BNK     10/22 BNK     10/22 BNK
+  Nick s0     Pure Hammer          8/22 BNK     10/22 BNK     10/22 BNK     10/22 BNK
+
+  Nick s1     Pure Ensemble       11/22 OOD     11/22 OOD     11/22 OOD     11/22 OOD
+  Nick s1     HYBRID              12/22 OOD     12/22 OOD     12/22 OOD     12/22 OOD
+  Nick s1     Pure Hammer          9/22 OOD      9/22 OOD      9/22 OOD      9/22 OOD
+
+
+==============================================================================================================
+  SCENARIO B: 299K start, 20-mission ladder
+==============================================================================================================
+  acct/sess   strategy              no_side     cons 300K      mid 400K      gen 500K
+  ---------------------------------------------------------------------------------
+  Islam s0    Pure Ensemble        8/20 BNK      9/20 BNK      9/20 BNK      9/20 BNK
+  Islam s0    HYBRID               9/20 BNK      9/20 BNK      9/20 BNK      9/20 BNK
+  Islam s0    Pure Hammer          8/20 BNK      8/20 BNK      8/20 BNK      8/20 BNK
+
+  Islam s1    Pure Ensemble       11/20 BNK     11/20 BNK     11/20 BNK     11/20 BNK
+  Islam s1    HYBRID              11/20 BNK     12/20 BNK     12/20 BNK     12/20 BNK
+  Islam s1    Pure Hammer          8/20 BNK      8/20 BNK      8/20 BNK      8/20 BNK
+
+  Ahmed s0    Pure Ensemble       12/20 OOD     12/20 OOD     12/20 OOD     12/20 OOD
+  Ahmed s0    HYBRID               8/20 BNK     10/20 BNK     10/20 BNK     10/20 BNK
+  Ahmed s0    Pure Hammer          8/20 BNK      9/20 BNK      9/20 BNK      9/20 BNK
+
+  Ahmed s1    Pure Ensemble       12/20 OOD     12/20 OOD     12/20 OOD     12/20 OOD
+  Ahmed s1    HYBRID              10/20 BNK     10/20 BNK     10/20 BNK     10/20 BNK
+  Ahmed s1    Pure Hammer          9/20 BNK     10/20 OOD     10/20 OOD     10/20 OOD
+
+  Nick s0     Pure Ensemble        8/20 OOD      8/20 OOD      8/20 OOD      8/20 OOD
+  Nick s0     HYBRID               9/20 OOD      9/20 OOD      9/20 OOD      9/20 OOD
+  Nick s0     Pure Hammer          7/20 OOD      7/20 OOD      7/20 OOD      7/20 OOD
+
+  Nick s1     Pure Ensemble        7/20 OOD      7/20 OOD      7/20 OOD      7/20 OOD
+  Nick s1     HYBRID               7/20 OOD      7/20 OOD      7/20 OOD      7/20 OOD
+  Nick s1     Pure Hammer          4/20 OOD      4/20 OOD      4/20 OOD      4/20 OOD
+

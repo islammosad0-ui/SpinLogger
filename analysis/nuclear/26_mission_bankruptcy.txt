@@ -1,0 +1,164 @@
+================================================================================================
+MISSION LADDER BANKRUPTCY SIM  —  Coin Master 10er Symbol event
+  cost-per-pull = bet  |  points = acc_count * bet  (10 * bet on triple)
+  cascading mission completion (overflow carries forward)
+  data: per-account spin history, cycling, v5 7-rule causal ensemble
+================================================================================================
+
+================================================================================================
+  SCENARIO A: start 100,000 spins  |  ladder = 22 missions  |  top reward = 650,000
+================================================================================================
+--- Islam (data: 12,891 spins) ---
+  Pure 1x         BANKRUPT  missions=10/22  pulls=   242,920  cost=       242,920
+                  rewards_won=       142,920  final_bankroll=         0  data_cycles=18.8
+                  stuck on mission 11: 23,393 / 45,000 pts (52.0%) when bankroll ran out
+
+  Pure 6000x      BANKRUPT  missions= 9/22  pulls=        30  cost=       180,000
+                  rewards_won=        82,920  final_bankroll=     2,920  data_cycles=0.0
+                  stuck on mission 10: 14,478 / 30,000 pts (48.3%) when bankroll ran out
+
+  Pure Hammer     BANKRUPT  missions=11/22  pulls=     2,124  cost=       323,610
+                  rewards_won=       227,920  final_bankroll=     4,310  data_cycles=0.2
+                  stuck on mission 12: 50,188 / 70,000 pts (71.7%) when bankroll ran out
+
+  Pure Ensemble   BANKRUPT  missions=13/22  pulls=     2,455  cost=       626,351
+                  rewards_won=       527,920  final_bankroll=     1,569  data_cycles=0.2
+                  stuck on mission 14: 94,382 / 150,000 pts (62.9%) when bankroll ran out
+
+  HYBRID          BANKRUPT  missions=13/22  pulls=     2,150  cost=       625,610
+                  rewards_won=       527,920  final_bankroll=     2,310  data_cycles=0.2
+                  stuck on mission 14: 139,738 / 150,000 pts (93.2%) when bankroll ran out
+
+
+--- Ahmed (data: 12,928 spins) ---
+  Pure 1x         BANKRUPT  missions=10/22  pulls=   242,920  cost=       242,920
+                  rewards_won=       142,920  final_bankroll=         0  data_cycles=18.8
+                  stuck on mission 11: 24,908 / 45,000 pts (55.4%) when bankroll ran out
+
+  Pure 6000x      BANKRUPT  missions= 0/22  pulls=        16  cost=        96,000
+                  rewards_won=             0  final_bankroll=     4,000  data_cycles=0.0
+                  stuck on mission 1: 0 / 7 pts (0.0%) when bankroll ran out
+
+  Pure Hammer     BANKRUPT  missions= 9/22  pulls=       857  cost=       181,985
+                  rewards_won=        82,920  final_bankroll=       935  data_cycles=0.1
+                  stuck on mission 10: 23,398 / 30,000 pts (78.0%) when bankroll ran out
+
+  Pure Ensemble   CLEARED ALL  missions=22/22  pulls=    14,113  cost=     3,601,515
+                  rewards_won=     4,577,920  final_bankroll= 1,076,405  data_cycles=1.1
+                  >>> ALL 22 MISSIONS CLEARED, walked away with 1,076,405 spins <<<
+
+  HYBRID          BANKRUPT  missions=12/22  pulls=       868  cost=       452,885
+                  rewards_won=       352,920  final_bankroll=        35  data_cycles=0.1
+                  stuck on mission 13: 91,198 / 100,000 pts (91.2%) when bankroll ran out
+
+
+--- Nick (data: 3,104 spins) ---
+  Pure 1x         BANKRUPT  missions= 9/22  pulls=   182,920  cost=       182,920
+                  rewards_won=        82,920  final_bankroll=         0  data_cycles=58.9
+                  stuck on mission 10: 26,406 / 30,000 pts (88.0%) when bankroll ran out
+
+  Pure 6000x      BANKRUPT  missions=10/22  pulls=        40  cost=       240,000
+                  rewards_won=       142,920  final_bankroll=     2,920  data_cycles=0.0
+                  stuck on mission 11: 20,478 / 45,000 pts (45.5%) when bankroll ran out
+
+  Pure Hammer     BANKRUPT  missions= 8/22  pulls=       303  cost=       140,515
+                  rewards_won=        42,920  final_bankroll=     2,405  data_cycles=0.1
+                  stuck on mission 9: 14,423 / 20,000 pts (72.1%) when bankroll ran out
+
+  Pure Ensemble   CLEARED ALL  missions=22/22  pulls=    13,359  cost=     3,720,741
+                  rewards_won=     4,577,920  final_bankroll=   957,179  data_cycles=4.3
+                  >>> ALL 22 MISSIONS CLEARED, walked away with 957,179 spins <<<
+
+  HYBRID          BANKRUPT  missions= 8/22  pulls=       303  cost=       140,515
+                  rewards_won=        42,920  final_bankroll=     2,405  data_cycles=0.1
+                  stuck on mission 9: 14,423 / 20,000 pts (72.1%) when bankroll ran out
+
+
+  COMPACT COMPARISON  (missions cleared / next-mission % progress)
+  strategy                     Islam               Ahmed                Nick
+  --------------------------------------------------------------------------
+  Pure 1x               10/22  (52%)        10/22  (55%)         9/22  (88%)
+  Pure 6000x             9/22  (48%)          0/22  (0%)        10/22  (46%)
+  Pure Hammer           11/22  (72%)         9/22  (78%)         8/22  (72%)
+  Pure Ensemble         13/22  (63%)         22/22 CLEAR         22/22 CLEAR
+  HYBRID                13/22  (93%)        12/22  (91%)         8/22  (72%)
+
+
+================================================================================================
+  SCENARIO B: start 299,000 spins  |  ladder = 20 missions  |  top reward = 2,100,000
+================================================================================================
+--- Islam (data: 12,891 spins) ---
+  Pure 1x         BANKRUPT  missions= 7/20  pulls=   470,900  cost=       470,900
+                  rewards_won=       171,900  final_bankroll=         0  data_cycles=36.5
+                  stuck on mission 8: 38,072 / 75,000 pts (50.8%) when bankroll ran out
+
+  Pure 6000x      BANKRUPT  missions= 7/20  pulls=        78  cost=       468,000
+                  rewards_won=       171,900  final_bankroll=     2,900  data_cycles=0.0
+                  stuck on mission 8: 62,000 / 75,000 pts (82.7%) when bankroll ran out
+
+  Pure Hammer     BANKRUPT  missions= 8/20  pulls=     2,166  cost=       575,610
+                  rewards_won=       279,400  final_bankroll=     2,790  data_cycles=0.2
+                  stuck on mission 9: 37,710 / 105,000 pts (35.9%) when bankroll ran out
+
+  Pure Ensemble   BANKRUPT  missions= 9/20  pulls=     2,477  cost=       740,354
+                  rewards_won=       441,900  final_bankroll=       546  data_cycles=0.2
+                  stuck on mission 10: 92,904 / 150,000 pts (61.9%) when bankroll ran out
+
+  HYBRID          BANKRUPT  missions= 9/20  pulls=     2,169  cost=       739,610
+                  rewards_won=       441,900  final_bankroll=     1,290  data_cycles=0.2
+                  stuck on mission 10: 138,260 / 150,000 pts (92.2%) when bankroll ran out
+
+
+--- Ahmed (data: 12,928 spins) ---
+  Pure 1x         BANKRUPT  missions= 7/20  pulls=   470,900  cost=       470,900
+                  rewards_won=       171,900  final_bankroll=         0  data_cycles=36.4
+                  stuck on mission 8: 41,089 / 75,000 pts (54.8%) when bankroll ran out
+
+  Pure 6000x      BANKRUPT  missions= 7/20  pulls=        78  cost=       468,000
+                  rewards_won=       171,900  final_bankroll=     2,900  data_cycles=0.0
+                  stuck on mission 8: 44,000 / 75,000 pts (58.7%) when bankroll ran out
+
+  Pure Hammer     BANKRUPT  missions= 6/20  pulls=       893  cost=       397,985
+                  rewards_won=       103,900  final_bankroll=     4,915  data_cycles=0.1
+                  stuck on mission 7: 49,920 / 51,000 pts (97.9%) when bankroll ran out
+
+  Pure Ensemble   BANKRUPT  missions=15/20  pulls=    14,573  cost=     3,799,942
+                  rewards_won=     3,506,900  final_bankroll=     5,958  data_cycles=1.1
+                  stuck on mission 16: 784,080 / 1,050,000 pts (74.7%) when bankroll ran out
+
+  HYBRID          BANKRUPT  missions= 9/20  pulls=     1,184  cost=       736,680
+                  rewards_won=       441,900  final_bankroll=     4,220  data_cycles=0.1
+                  stuck on mission 10: 124,440 / 150,000 pts (83.0%) when bankroll ran out
+
+
+--- Nick (data: 3,104 spins) ---
+  Pure 1x         BANKRUPT  missions= 7/20  pulls=   470,900  cost=       470,900
+                  rewards_won=       171,900  final_bankroll=         0  data_cycles=151.7
+                  stuck on mission 8: 27,728 / 75,000 pts (37.0%) when bankroll ran out
+
+  Pure 6000x      BANKRUPT  missions= 7/20  pulls=        78  cost=       468,000
+                  rewards_won=       171,900  final_bankroll=     2,900  data_cycles=0.0
+                  stuck on mission 8: 68,000 / 75,000 pts (90.7%) when bankroll ran out
+
+  Pure Hammer     BANKRUPT  missions= 8/20  pulls=     1,451  cost=       576,025
+                  rewards_won=       279,400  final_bankroll=     2,375  data_cycles=0.5
+                  stuck on mission 9: 28,170 / 105,000 pts (26.8%) when bankroll ran out
+
+  Pure Ensemble   BANKRUPT  missions=14/20  pulls=    10,792  cost=     2,992,295
+                  rewards_won=     2,696,900  final_bankroll=     3,605  data_cycles=3.5
+                  stuck on mission 15: 674,409 / 750,000 pts (89.9%) when bankroll ran out
+
+  HYBRID          BANKRUPT  missions= 9/20  pulls=     1,406  cost=       739,725
+                  rewards_won=       441,900  final_bankroll=     1,175  data_cycles=0.5
+                  stuck on mission 10: 111,870 / 150,000 pts (74.6%) when bankroll ran out
+
+
+  COMPACT COMPARISON  (missions cleared / next-mission % progress)
+  strategy                     Islam               Ahmed                Nick
+  --------------------------------------------------------------------------
+  Pure 1x                7/20  (51%)         7/20  (55%)         7/20  (37%)
+  Pure 6000x             7/20  (83%)         7/20  (59%)         7/20  (91%)
+  Pure Hammer            8/20  (36%)         6/20  (98%)         8/20  (27%)
+  Pure Ensemble          9/20  (62%)        15/20  (75%)        14/20  (90%)
+  HYBRID                 9/20  (92%)         9/20  (83%)         9/20  (75%)
+

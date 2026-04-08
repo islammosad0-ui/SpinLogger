@@ -1,0 +1,95 @@
+==============================================================================================================
+EVENT-AWARE MISSION SIM  —  per-event, no cycling, state resets between events
+==============================================================================================================
+
+==============================================================================================================
+  SCENARIO A: 100K start, 22-mission ladder
+==============================================================================================================
+
+--- Islam session 0  (7,280 in-event spins, gae_last_mission=100) ---
+  Pure 1x        OUT OF DATA   missions= 5/22 (  19% next)  pulls=7,280  bumps=   0  catch_on_bump=  0  final_bk=   98,640
+  Pure 6000x     BANKRUPT      missions= 8/22 (  82% next)  pulls=   23  bumps=  23  catch_on_bump=  0  final_bk=    4,920
+  Pure Hammer    BANKRUPT      missions=11/22 (  58% next)  pulls=2,056  bumps=2056  catch_on_bump= 24  final_bk=    1,925
+  Pure Ensemble  BANKRUPT      missions=13/22 (  27% next)  pulls=2,334  bumps= 104  catch_on_bump=  2  final_bk=    1,690
+  HYBRID         BANKRUPT      missions=13/22 (  77% next)  pulls=2,088  bumps=2088  catch_on_bump= 24  final_bk=    2,025
+
+--- Islam session 1  (3,885 in-event spins, gae_last_mission=100) ---
+  Pure 1x        OUT OF DATA   missions= 4/22 (  32% next)  pulls=3,885  bumps=   0  catch_on_bump=  0  final_bk=   98,935
+  Pure 6000x     BANKRUPT      missions=12/22 (  49% next)  pulls=   75  bumps=  75  catch_on_bump=  1  final_bk=    2,920
+  Pure Hammer    BANKRUPT      missions=12/22 (  72% next)  pulls=2,669  bumps=2669  catch_on_bump= 26  final_bk=    1,180
+  Pure Ensemble  BANKRUPT      missions=16/22 (  46% next)  pulls=3,325  bumps= 254  catch_on_bump=  9  final_bk=      849
+  HYBRID         BANKRUPT      missions=16/22 (  59% next)  pulls=2,734  bumps=2734  catch_on_bump= 26  final_bk=    5,045
+
+--- Ahmed session 0  (6,586 in-event spins, gae_last_mission=100) ---
+  Pure 1x        OUT OF DATA   missions= 5/22 (   9% next)  pulls=6,586  bumps=   0  catch_on_bump=  0  final_bk=   99,334
+  Pure 6000x     BANKRUPT      missions= 0/22 (   0% next)  pulls=   16  bumps=  16  catch_on_bump=  0  final_bk=    4,000
+  Pure Hammer    BANKRUPT      missions= 9/22 (  77% next)  pulls=  586  bumps= 586  catch_on_bump=  6  final_bk=    3,610
+  Pure Ensemble  OUT OF DATA   missions=16/22 (  58% next)  pulls=6,586  bumps= 169  catch_on_bump= 12  final_bk=  507,503
+  HYBRID         BANKRUPT      missions=11/22 (  72% next)  pulls=  593  bumps= 593  catch_on_bump=  6  final_bk=    3,710
+
+--- Ahmed session 1  (4,142 in-event spins, gae_last_mission=107) ---
+  Pure 1x        OUT OF DATA   missions= 4/22 (  43% next)  pulls=4,142  bumps=   0  catch_on_bump=  0  final_bk=   98,678
+  Pure 6000x     BANKRUPT      missions= 9/22 (  28% next)  pulls=   30  bumps=  30  catch_on_bump=  0  final_bk=    2,920
+  Pure Hammer    BANKRUPT      missions= 9/22 (  81% next)  pulls=  531  bumps= 531  catch_on_bump=  4  final_bk=      370
+  Pure Ensemble  BANKRUPT      missions=15/22 (  78% next)  pulls=2,775  bumps= 195  catch_on_bump=  8  final_bk=    5,340
+  HYBRID         BANKRUPT      missions=14/22 (  51% next)  pulls=1,362  bumps=1362  catch_on_bump= 11  final_bk=    2,030
+
+--- Nick session 0  (976 in-event spins, gae_last_mission=100) ---
+  Pure 1x        OUT OF DATA   missions= 3/22 (   2% next)  pulls=  976  bumps=   0  catch_on_bump=  0  final_bk=  100,144
+  Pure 6000x     BANKRUPT      missions=10/22 (  46% next)  pulls=   40  bumps=  40  catch_on_bump=  0  final_bk=    2,920
+  Pure Hammer    BANKRUPT      missions= 8/22 (  72% next)  pulls=  303  bumps= 303  catch_on_bump=  2  final_bk=    2,405
+  Pure Ensemble  OUT OF DATA   missions=12/22 (  50% next)  pulls=  976  bumps=  26  catch_on_bump=  3  final_bk=  295,970
+  HYBRID         BANKRUPT      missions= 8/22 (  72% next)  pulls=  303  bumps= 303  catch_on_bump=  2  final_bk=    2,405
+
+--- Nick session 1  (693 in-event spins, gae_last_mission=107) ---
+  Pure 1x        OUT OF DATA   missions= 2/22 (  79% next)  pulls=  693  bumps=   0  catch_on_bump=  0  final_bk=   99,627
+  Pure 6000x     BANKRUPT      missions= 7/22 (  85% next)  pulls=   20  bumps=  20  catch_on_bump=  0  final_bk=    2,920
+  Pure Hammer    OUT OF DATA   missions= 9/22 (  36% next)  pulls=  693  bumps= 693  catch_on_bump=  6  final_bk=  116,690
+  Pure Ensemble  OUT OF DATA   missions=11/22 (  77% next)  pulls=  693  bumps=  29  catch_on_bump=  2  final_bk=  153,256
+  HYBRID         OUT OF DATA   missions=12/22 (  12% next)  pulls=  693  bumps= 693  catch_on_bump=  6  final_bk=  225,840
+
+==============================================================================================================
+  SCENARIO B: 299K start, 20-mission ladder
+==============================================================================================================
+
+--- Islam session 0  (7,280 in-event spins, gae_last_mission=100) ---
+  Pure 1x        OUT OF DATA   missions= 1/20 (  42% next)  pulls=7,280  bumps=   0  catch_on_bump=  0  final_bk=  292,820
+  Pure 6000x     BANKRUPT      missions= 7/20 (  67% next)  pulls=   78  bumps=  78  catch_on_bump=  1  final_bk=    2,900
+  Pure Hammer    BANKRUPT      missions= 8/20 (  21% next)  pulls=2,098  bumps=2098  catch_on_bump= 24  final_bk=      405
+  Pure Ensemble  BANKRUPT      missions= 8/20 (  86% next)  pulls=2,326  bumps=  96  catch_on_bump=  2  final_bk=      170
+  HYBRID         BANKRUPT      missions= 9/20 (  60% next)  pulls=2,107  bumps=2107  catch_on_bump= 24  final_bk=    1,005
+
+--- Islam session 1  (3,885 in-event spins, gae_last_mission=100) ---
+  Pure 1x        OUT OF DATA   missions= 1/20 (   0% next)  pulls=3,885  bumps=   0  catch_on_bump=  0  final_bk=  296,215
+  Pure 6000x     BANKRUPT      missions= 8/20 (  45% next)  pulls=   96  bumps=  96  catch_on_bump=  1  final_bk=    2,400
+  Pure Hammer    BANKRUPT      missions= 8/20 (  72% next)  pulls=2,699  bumps=2699  catch_on_bump= 26  final_bk=    5,160
+  Pure Ensemble  BANKRUPT      missions=11/20 (  86% next)  pulls=3,130  bumps= 217  catch_on_bump=  9  final_bk=    3,487
+  HYBRID         BANKRUPT      missions=11/20 (  98% next)  pulls=2,698  bumps=2698  catch_on_bump= 26  final_bk=    1,525
+
+--- Ahmed session 0  (6,586 in-event spins, gae_last_mission=100) ---
+  Pure 1x        OUT OF DATA   missions= 1/20 (  34% next)  pulls=6,586  bumps=   0  catch_on_bump=  0  final_bk=  293,514
+  Pure 6000x     BANKRUPT      missions= 7/20 (  59% next)  pulls=   78  bumps=  78  catch_on_bump=  1  final_bk=    2,900
+  Pure Hammer    BANKRUPT      missions= 8/20 (  88% next)  pulls=2,669  bumps=2669  catch_on_bump= 27  final_bk=      225
+  Pure Ensemble  OUT OF DATA   missions=12/20 (  14% next)  pulls=6,586  bumps= 169  catch_on_bump= 12  final_bk=  760,483
+  HYBRID         BANKRUPT      missions= 8/20 (  71% next)  pulls=  763  bumps= 763  catch_on_bump=  7  final_bk=    3,620
+
+--- Ahmed session 1  (4,142 in-event spins, gae_last_mission=107) ---
+  Pure 1x        OUT OF DATA   missions= 1/20 (   5% next)  pulls=4,142  bumps=   0  catch_on_bump=  0  final_bk=  295,958
+  Pure 6000x     BANKRUPT      missions= 7/20 (  91% next)  pulls=   78  bumps=  78  catch_on_bump=  1  final_bk=    2,900
+  Pure Hammer    BANKRUPT      missions= 9/20 (  77% next)  pulls=3,768  bumps=3768  catch_on_bump= 34  final_bk=    1,295
+  Pure Ensemble  OUT OF DATA   missions=12/20 (  67% next)  pulls=4,142  bumps= 262  catch_on_bump= 13  final_bk=  205,020
+  HYBRID         BANKRUPT      missions=10/20 (  77% next)  pulls=1,702  bumps=1702  catch_on_bump= 14  final_bk=    1,370
+
+--- Nick session 0  (976 in-event spins, gae_last_mission=100) ---
+  Pure 1x        OUT OF DATA   missions= 0/20 (  23% next)  pulls=  976  bumps=   0  catch_on_bump=  0  final_bk=  298,024
+  Pure 6000x     BANKRUPT      missions= 7/20 (  91% next)  pulls=   78  bumps=  78  catch_on_bump=  1  final_bk=    2,900
+  Pure Hammer    OUT OF DATA   missions= 7/20 (  71% next)  pulls=  976  bumps= 976  catch_on_bump=  8  final_bk=   53,460
+  Pure Ensemble  OUT OF DATA   missions= 8/20 (  16% next)  pulls=  976  bumps=  26  catch_on_bump=  3  final_bk=  421,450
+  HYBRID         OUT OF DATA   missions= 9/20 (  56% next)  pulls=  976  bumps= 976  catch_on_bump=  8  final_bk=  178,920
+
+--- Nick session 1  (693 in-event spins, gae_last_mission=107) ---
+  Pure 1x        OUT OF DATA   missions= 0/20 (  18% next)  pulls=  693  bumps=   0  catch_on_bump=  0  final_bk=  298,307
+  Pure 6000x     BANKRUPT      missions= 5/20 (  81% next)  pulls=   59  bumps=  59  catch_on_bump=  0  final_bk=    2,900
+  Pure Hammer    OUT OF DATA   missions= 4/20 (  80% next)  pulls=  693  bumps= 693  catch_on_bump=  6  final_bk=  263,670
+  Pure Ensemble  OUT OF DATA   missions= 7/20 (  35% next)  pulls=  693  bumps=  29  catch_on_bump=  2  final_bk=  296,236
+  HYBRID         OUT OF DATA   missions= 7/20 (  73% next)  pulls=  693  bumps= 693  catch_on_bump=  6  final_bk=  243,820
