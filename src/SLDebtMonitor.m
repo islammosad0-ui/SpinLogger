@@ -117,6 +117,16 @@
                                              selector:@selector(onSpinReceived:)
                                                  name:SLSpinReceivedNotification object:nil];
 
+    // Belt-and-braces: flush tracker state on any app lifecycle event so a
+    // force-quit never loses the saSpins counter.
+    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+    [nc addObserver:self selector:@selector(saveStateNow:)
+               name:UIApplicationWillResignActiveNotification object:nil];
+    [nc addObserver:self selector:@selector(saveStateNow:)
+               name:UIApplicationDidEnterBackgroundNotification object:nil];
+    [nc addObserver:self selector:@selector(saveStateNow:)
+               name:UIApplicationWillTerminateNotification object:nil];
+
     NSLog(@"[SpinLogger] DebtMonitor installed — ACC: %lu rules ensemble, SPN: %lu rule(s)",
           (unsigned long)self.accTile.tracker.config.rules.count,
           (unsigned long)self.spnTile.tracker.config.rules.count);
@@ -759,12 +769,25 @@
     NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
     [ud setObject:[self.accTile.tracker stateDictionary] forKey:self.accTile.defaultsKey];
     [ud setObject:[self.spnTile.tracker stateDictionary] forKey:self.spnTile.defaultsKey];
+    // Force flush to disk. Without this, a force-quit shortly after a spin
+    // loses the most recent state and saSpins resets on next launch.
+    [ud synchronize];
 }
 
 - (void)restoreState {
     NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
     [self.accTile.tracker restoreFromDictionary:[ud dictionaryForKey:self.accTile.defaultsKey]];
     [self.spnTile.tracker restoreFromDictionary:[ud dictionaryForKey:self.spnTile.defaultsKey]];
+    NSLog(@"[DebtMonitor] restored ACC saSpins=%ld phase=%ld, SPN saSpins=%ld phase=%ld",
+          (long)self.accTile.tracker.saSpins, (long)self.accTile.tracker.phase,
+          (long)self.spnTile.tracker.saSpins, (long)self.spnTile.tracker.phase);
+}
+
+- (void)saveStateNow:(NSNotification *)note {
+    // Called on resign/background/terminate — flush tracker state to disk so
+    // saSpins / prev-gap / phase / cooldown all survive a game restart.
+    [self saveState];
+    NSLog(@"[DebtMonitor] state flushed on %@", note.name);
 }
 
 - (void)savePosition:(SLDebtTile *)tile {

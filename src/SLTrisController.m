@@ -263,8 +263,11 @@
     for (int c = 0; c < 6; c++) {
         NSArray *arr = self.symbolCountMode ? symArrays[c] : arrays[c];
         NSMutableString *entries = [NSMutableString string];
+        NSInteger gapIdx = 1;
         for (NSNumber *val in arr) {
-            [entries appendFormat:@"<div class='e'>%ld</div>", (long)val.integerValue];
+            [entries appendFormat:@"<div class='e'>%ld-%ld</div>",
+                (long)gapIdx, (long)val.integerValue];
+            gapIdx++;
         }
         BOOL locked = [self.lockTarget isEqualToString:colKeys[c]];
         NSString *lockStyle = locked ? [NSString stringWithFormat:@"border:1.5px solid %@", colors[c]] : @"";

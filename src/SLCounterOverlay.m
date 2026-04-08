@@ -38,11 +38,13 @@ static const int kSymbolCount = 6;
 @property (nonatomic, strong) UIWindow *window;
 @property (nonatomic, strong) UIView *container;       // background tile view (for glow animation)
 @property (nonatomic, strong) UILabel *tripleLabel;   // 3X: distance between triples
-@property (nonatomic, strong) UILabel *singleLabel;   // 1X: single symbol count (resets on triple too)
+@property (nonatomic, strong) UILabel *singleLabel;   // 1X: single symbol count (resets on own triple)
+@property (nonatomic, strong) UILabel *accLabel;      // ⭐: single symbol count since last ACC triple
 @property (nonatomic, copy) NSString *symbolKey;
 @property (nonatomic, assign) CGFloat colorR, colorG, colorB;  // symbol color
 @property (nonatomic, assign) NSInteger distance;     // spins since last triple (3X)
-@property (nonatomic, assign) NSInteger singleCount;  // individual appearances since last triple (1X)
+@property (nonatomic, assign) NSInteger singleCount;  // individual appearances since last own triple (1X)
+@property (nonatomic, assign) NSInteger singleCountSinceAcc;  // individual appearances since last ACC triple
 @property (nonatomic, assign) BOOL visible;
 @end
 
@@ -69,6 +71,7 @@ static const int kSymbolCount = 6;
     for (SLCounterTile *t in self.tiles) {
         state[[t.symbolKey stringByAppendingString:@"_d"]] = @(t.distance);
         state[[t.symbolKey stringByAppendingString:@"_s"]] = @(t.singleCount);
+        state[[t.symbolKey stringByAppendingString:@"_sa"]] = @(t.singleCountSinceAcc);
         // Save position
         state[[t.symbolKey stringByAppendingString:@"_x"]] = @(t.window.frame.origin.x);
         state[[t.symbolKey stringByAppendingString:@"_y"]] = @(t.window.frame.origin.y);
@@ -83,8 +86,10 @@ static const int kSymbolCount = 6;
     for (SLCounterTile *t in self.tiles) {
         t.distance    = [state[[t.symbolKey stringByAppendingString:@"_d"]] integerValue];
         t.singleCount = [state[[t.symbolKey stringByAppendingString:@"_s"]] integerValue];
+        t.singleCountSinceAcc = [state[[t.symbolKey stringByAppendingString:@"_sa"]] integerValue];
         t.tripleLabel.text = [NSString stringWithFormat:@"%ld", (long)t.distance];
         t.singleLabel.text = [NSString stringWithFormat:@"1X:%ld", (long)t.singleCount];
+        t.accLabel.text    = [NSString stringWithFormat:@"⭐:%ld", (long)t.singleCountSinceAcc];
         // Restore saved position (clamp to screen bounds)
         NSNumber *sx = state[[t.symbolKey stringByAppendingString:@"_x"]];
         NSNumber *sy = state[[t.symbolKey stringByAppendingString:@"_y"]];
@@ -118,7 +123,7 @@ static const int kSymbolCount = 6;
     if (!scene) return;
 
     CGRect screen = scene.coordinateSpace.bounds;
-    CGFloat tileW = 50, tileH = 56;
+    CGFloat tileW = 50, tileH = 68;
     CGFloat tileGap = 4;
     CGFloat startX = (screen.size.width - (kSymbolCount * (tileW + tileGap))) / 2;
     CGFloat startY = screen.size.height - tileH - 80;
@@ -132,6 +137,7 @@ static const int kSymbolCount = 6;
         tile.colorR = def.r; tile.colorG = def.g; tile.colorB = def.b;
         tile.distance = 0;
         tile.singleCount = 0;
+        tile.singleCountSinceAcc = 0;
         tile.visible = YES;
 
         UIWindow *win = [[UIWindow alloc] initWithWindowScene:scene];
@@ -170,7 +176,7 @@ static const int kSymbolCount = 6;
         [container addSubview:tripleLabel];
         tile.tripleLabel = tripleLabel;
 
-        // 1X count — smaller, dimmer
+        // 1X count — smaller, dimmer (since last own triple)
         UILabel *singleLabel = [[UILabel alloc] initWithFrame:CGRectMake(2, 33, tileW - 4, 12)];
         singleLabel.text = @"1X:0";
         singleLabel.font = [UIFont systemFontOfSize:9];
@@ -178,6 +184,15 @@ static const int kSymbolCount = 6;
         singleLabel.textAlignment = NSTextAlignmentCenter;
         [container addSubview:singleLabel];
         tile.singleLabel = singleLabel;
+
+        // ⭐ count — since last ACC triple (all tiles share the same reset trigger)
+        UILabel *accLabel = [[UILabel alloc] initWithFrame:CGRectMake(2, 45, tileW - 4, 12)];
+        accLabel.text = @"⭐:0";
+        accLabel.font = [UIFont systemFontOfSize:9];
+        accLabel.textColor = [symColor colorWithAlphaComponent:0.5];
+        accLabel.textAlignment = NSTextAlignmentCenter;
+        [container addSubview:accLabel];
+        tile.accLabel = accLabel;
 
         // Color accent bar at bottom
         UIView *bar = [[UIView alloc] initWithFrame:CGRectMake(6, tileH - 4, tileW - 12, 2)];
@@ -271,17 +286,24 @@ static const int kSymbolCount = 6;
     }
 
     // Increment 1X count for reel symbols (potion excluded — driven by Potion Rush bar below)
+    // Both singleCount (resets on own triple) and singleCountSinceAcc (resets on ACC triple)
+    // tick together — they differ only in their reset trigger.
     for (NSString *sym in @[result.reel1 ?: @"", result.reel2 ?: @"", result.reel3 ?: @""]) {
         if (sym.length == 0 || [sym isEqualToString:@"potion"]) continue;
         for (SLCounterTile *tile in self.tiles) {
-            if ([tile.symbolKey isEqualToString:sym]) { tile.singleCount++; break; }
+            if ([tile.symbolKey isEqualToString:sym]) {
+                tile.singleCount++;
+                tile.singleCountSinceAcc++;
+                break;
+            }
         }
     }
 
     // Check for triple (reel symbols, potion excluded — driven by Potion Rush bar below)
-    if (result.reel1 && [result.reel1 isEqualToString:result.reel2] &&
-        [result.reel2 isEqualToString:result.reel3] &&
-        ![result.reel1 isEqualToString:@"potion"]) {
+    BOOL isReelTriple = (result.reel1 && [result.reel1 isEqualToString:result.reel2] &&
+                         [result.reel2 isEqualToString:result.reel3] &&
+                         ![result.reel1 isEqualToString:@"potion"]);
+    if (isReelTriple) {
         for (SLCounterTile *tile in self.tiles) {
             if ([tile.symbolKey isEqualToString:result.reel1]) {
                 [[SLTrisController shared] recordTriple:tile.symbolKey distance:tile.distance symbolCount:tile.singleCount];
@@ -289,6 +311,12 @@ static const int kSymbolCount = 6;
                 tile.singleCount = 0;
                 [self flashTriple:tile];
                 break;
+            }
+        }
+        // ⭐ reset: when an ACC triple lands, reset the since-last-ACC counter on ALL tiles.
+        if ([result.reel1 isEqualToString:kSLSymbolAccumulation]) {
+            for (SLCounterTile *tile in self.tiles) {
+                tile.singleCountSinceAcc = 0;
             }
         }
     }
@@ -328,10 +356,12 @@ static const int kSymbolCount = 6;
             // 🧪 Potion tile: just distance since last bar increase
             tile.tripleLabel.text = [NSString stringWithFormat:@"%ld", (long)tile.distance];
             tile.singleLabel.text = @"";
+            tile.accLabel.text = @"";
         } else {
-            // Reel tiles: distance since last triple, individual symbol count below
+            // Reel tiles: distance since last triple, 1X since own triple, ⭐ since ACC triple
             tile.tripleLabel.text = [NSString stringWithFormat:@"%ld", (long)tile.distance];
             tile.singleLabel.text = [NSString stringWithFormat:@"1X:%ld", (long)tile.singleCount];
+            tile.accLabel.text = [NSString stringWithFormat:@"⭐:%ld", (long)tile.singleCountSinceAcc];
         }
     }
 
@@ -368,7 +398,7 @@ static const int kSymbolCount = 6;
     UIWindowScene *scene = self.tiles.firstObject.window.windowScene;
     if (!scene) return;
     CGRect screen = scene.coordinateSpace.bounds;
-    CGFloat tileW = 50, tileH = 56, tileGap = 4;
+    CGFloat tileW = 50, tileH = 68, tileGap = 4;
     CGFloat startX = (screen.size.width - (self.tiles.count * (tileW + tileGap))) / 2;
     CGFloat startY = screen.size.height - tileH - 80;
     for (NSUInteger i = 0; i < self.tiles.count; i++) {
@@ -389,7 +419,10 @@ static const int kSymbolCount = 6;
     for (SLCounterTile *t in self.tiles) {
         t.distance = 0;
         t.singleCount = 0;
-        t.tripleLabel.text = @"0"; t.singleLabel.text = @"1X:0";
+        t.singleCountSinceAcc = 0;
+        t.tripleLabel.text = @"0";
+        t.singleLabel.text = @"1X:0";
+        t.accLabel.text = @"⭐:0";
     }
     [self saveState];
 }
@@ -398,7 +431,8 @@ static const int kSymbolCount = 6;
     for (SLCounterTile *t in self.tiles) {
         if ([t.symbolKey isEqualToString:symbol]) {
             t.distance = 0;
-            t.tripleLabel.text = @"0"; t.singleLabel.text = @"1X:0";
+            t.tripleLabel.text = @"0";
+            t.singleLabel.text = @"1X:0";
             break;
         }
     }
