@@ -11,12 +11,8 @@ def is_other_triple(s, target):
 
 def check_super_ensemble(s, traj, idx, target, p1, p2, prev_real_triple):
     cur_t = s['sa_spins'] if target == 'accumulation' else s.get('ss_spins', idx+1)
-    acc_rate = s['sa_acc'] / max(1, cur_t); spn_rate = s['sa_spn'] / max(1, cur_t)
-    slope10 = 0
-    if idx >= 10: 
-        p10=traj[idx-10]
-        slope10 = acc_rate - (p10['sa_acc']/max(1,p10['sa_spins']))
-
+    acc_rate = s['sa_acc'] / max(1, cur_t)
+    spn_rate = s['sa_spn'] / max(1, cur_t)
     if target == 'accumulation':
         if idx >= 10 and cur_t >= 130:
             p10 = traj[idx-10]; tot = ((s['sa_atk']-p10['sa_atk']) + (s['sa_stl']-p10['sa_stl']) + (s['sa_shd']-p10['sa_shd']) + (s['sa_acc']-p10['sa_acc']) + (s['sa_spn']-p10['sa_spn']))
@@ -36,11 +32,9 @@ def run_strategy_sim():
         all_data = pickle.load(f)
 
     for acct, d in all_data.items():
-        st = {'caught': 0, 'hits': 0, 'total_bets': 0}
         fname = f"C:\\Users\\Islam Nawwar\\SpinLogger\\analysis\\nuclear\\strategy_{acct}.txt"
         with open(fname, "w", encoding="utf-8") as out:
-            out.write(f"=== STRICT RESEARCH TRACE: {acct.upper()} ===\n")
-            out.write("Logic: Strict Math Ensemble | 300-Sum Predictor | No Base 100\n\n")
+            out.write(f"=== STRICT RESEARCH TRACE: {acct.upper()} ===\n\n")
 
             for target in ['accumulation', 'spins']:
                 gaps = d['gaps'].get(target, [])
@@ -49,37 +43,28 @@ def run_strategy_sim():
                 
                 ev_c = {}
                 for g_idx, g in enumerate(gaps):
-                    eid = g.get('event_id', 0)
-                    ev_c[eid] = ev_c.get(eid, 0) + 1
+                    eid = g.get('event_id', 0); ev_c[eid] = ev_c.get(eid, 0) + 1
                     if ev_c[eid] <= 4: continue
-                    
                     traj, p1, p2, pt = g['trajectory'], g['prev_gap_1'], g['prev_gap_2'], g['prev_real_triple']
-                    pred_pos = 300 - (p1 + p2)
+                    pred_pos = 300 - (p1+p2)
                     any_ens = any(check_super_ensemble(s, traj, i, target, p1, p2, pt)[0] for i, s in enumerate(traj))
                     
-                    trigger_idx, t_type = -1, "NONE"
+                    t_idx, t_type = -1, "NONE"
                     for i, s in enumerate(traj):
                         pos = s['sa_spins'] if target == 'accumulation' else s.get('ss_spins', i+1)
                         f, _ = check_super_ensemble(s, traj, i, target, p1, p2, pt)
                         is_dup = (i > 0 and s['reel_1'] == traj[i-1]['reel_1'] and s['reel_2'] == traj[i-1]['reel_2'] and s['reel_3'] == traj[i-1]['reel_3'])
                         is_p = (not any_ens) and (abs(pos - pred_pos) <= 20)
-                        if (f or is_p) and is_dup and trigger_idx == -1:
-                            trigger_idx = i; t_type = "SNIPER" if f else "300-SUM"
+                        if (f or is_p) and is_dup and t_idx == -1:
+                            t_idx = i; t_type = "SNIPER" if f else "300-SUM"
                     
-                    st['hits'] += 1
-                    dist = len(traj) - 1 - trigger_idx if trigger_idx != -1 else 999
-                    res = "MISSED"
-                    if trigger_idx != -1:
-                        if dist <= 12: st['caught'] += 1; res = "CATCH"
-                        else: res = "LATE"
-
+                    res = "CATCH" if (t_idx != -1 and len(traj)-1-t_idx <= 12) else ("FAIL" if t_idx != -1 else "MISSED")
                     out.write(f"E{eid} | Gap #{g_idx:03d} | Len: {len(traj):3d} | Pred: {pred_pos:3d} | Result: {res} | {t_type}\n")
                     
-                    bet, cd, g_bets = False, 0, 0
-                    start_view = max(0, trigger_idx - 5) if trigger_idx != -1 else max(0, len(traj)-15)
+                    bet, cd = False, 0
+                    start_view = max(0, t_idx - 5) if t_idx != -1 else max(0, len(traj)-15)
                     for k in range(start_view, len(traj)):
-                        s = traj[k]
-                        pos = s['sa_spins'] if target == 'accumulation' else s.get('ss_spins', k+1)
+                        s = traj[k]; pos = s['sa_spins'] if target == 'accumulation' else s.get('ss_spins', k+1)
                         f, rule = check_super_ensemble(s, traj, k, target, p1, p2, pt)
                         is_dup = (k > 0 and s['reel_1'] == traj[k-1]['reel_1'] and s['reel_2'] == traj[k-1]['reel_2'] and s['reel_3'] == traj[k-1]['reel_3'])
                         is_p = (not any_ens) and (abs(pos - pred_pos) <= 20)
@@ -90,16 +75,16 @@ def run_strategy_sim():
                         if min_t and bet: mod = f" <--- MINOR [{min_t.upper()}] (CD)"; cd = 5; bet = False
                         elif min_t: mod = f" <--- MINOR [{min_t.upper()}]"
                         if cd > 0: cd -= 1
-                        if cd == 0 and k < (len(traj)-1) and k >= trigger_idx and trigger_idx != -1: bet = True
-                        if bet: mod += " <--- [ HIGH BET ]"; g_bets += 1; st['total_bets'] += 1
+                        if cd == 0 and k < (len(traj)-1) and k >= t_idx and t_idx != -1: bet = True
+                        if bet: mod += " <--- [ HIGH BET $$$ ]"
+                        if is_dup: mod += " (REEL DUP!)"
                         
                         tag = f"[{rule:12s}]" if f else ("[PRED]" if is_p else "[WAITING]")
-                        if k == trigger_idx: mod += " <--- !!! ENTRY !!!"
+                        if k == t_idx: mod += " <--- !!! ENTRY !!!"
                         if k == len(traj)-1: mod += " <--- 🎯 JACKPOT"
-                        out.write(f"    T{k-max(0,trigger_idx):+03d} | SEQ:{str(s.get('seq','n/a')).rjust(6)} | POS:{str(pos).rjust(3)} | {tag} | [{s['reel_1'][:8]:8s}|{s['reel_2'][:8]:8s}|{s['reel_3'][:8]:8s}]{mod}\n")
-                    out.write("-" * 110 + f" G-Bets: {g_bets}\n\n")
-        
-        print(f"ACCOUNT: {acct:8s} | Catch: {(st['caught']/max(1,st['hits']))*100:5.1f}% | MB/Hit: {st['total_bets']/max(1,st['caught']):.1f}")
+                        out.write(f"    T{k-max(0,t_idx):+03d} | SEQ:{str(s.get('seq','n/a')).rjust(6)} | POS:{str(pos).rjust(3)} | {tag} | [{s['reel_1'][:8]:8s}|{s['reel_2'][:8]:8s}|{s['reel_3'][:8]:8s}]{mod}\n")
+                    out.write("-" * 110 + "\n\n")
+    print("Strategy Strict Updated with Duplicate Highlights.")
 
 if __name__ == "__main__":
     run_strategy_sim()
