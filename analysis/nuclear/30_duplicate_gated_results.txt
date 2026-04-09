@@ -1,0 +1,357 @@
+============================================================================================================================================
+CHUNK 30: DUPLICATE-GATED BET SIMULATION  (chunk-29 rules + duplicate-reel gate)
+============================================================================================================================================
+Hypothesis: rule fires -> wait for back-to-back duplicate reel tuple -> 7-pull bet window.
+  bet window = 7 pulls,  mini-pause = 4 pulls on {attack,steal,shield} triple
+  bet-high size = 6000 spins,  bet-low size = 1 spin
+  evaluation = causal (spin i uses prev-spin state), reruns ENTIRE per-account spin log
+  mb/hit = "max bets per hit" = count of bet-high pulls divided by catches.
+           Same convention as chunks 25-29. LOWER is better.
+
+Base-rate reference (analyze_reel_patterns.py):
+  accumulation triples preceded by duplicate in last 15: 160/271 (59.0%)
+  spins        triples preceded by duplicate in last 15: 221/333 (66.4%)
+
+############################################################################################################################################
+#  TARGET = ACCUMULATION
+############################################################################################################################################
+
+--- ACCOUNT: Islam  (12,891 spins) ---
+  Ruleset: V5  (7 rules)
+    naive_fire  catches= 16/119 ( 13.4%)  bet_spins=  826  mb/hit=   52  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 24/119 ( 20.2%)  bet_spins= 1307  mb/hit=   54  arms= 119 dups= 119 lost_arm=  0 mp=189 exp= 87
+    dup_gated   catches= 16/119 ( 13.4%)  bet_spins=  819  mb/hit=   51  arms=  98 dups=  85 lost_arm= 13 mp=108 exp= 61
+
+  Ruleset: ISLAM  (7 rules)
+    naive_fire  catches= 18/119 ( 15.1%)  bet_spins=  763  mb/hit=   42  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 23/119 ( 19.3%)  bet_spins=  997  mb/hit=   43  arms=  93 dups=  93 lost_arm=  0 mp=149 exp= 63
+    dup_gated   catches= 17/119 ( 14.3%)  bet_spins=  637  mb/hit=   37  arms=  75 dups=  64 lost_arm= 11 mp= 94 exp= 41
+
+  Ruleset: ISLAM_V2  (8 rules)
+    naive_fire  catches= 60/119 ( 50.4%)  bet_spins= 4399  mb/hit=   73  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 57/119 ( 47.9%)  bet_spins= 3529  mb/hit=   62  arms= 309 dups= 309 lost_arm=  0 mp=503 exp=230
+    dup_gated   catches= 26/119 ( 21.8%)  bet_spins= 2082  mb/hit=   80  arms= 222 dups= 183 lost_arm= 39 mp=285 exp=142
+
+  Ruleset: CAUSAL_7  (7 rules)
+    naive_fire  catches= 22/119 ( 18.5%)  bet_spins= 1070  mb/hit=   49  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 25/119 ( 21.0%)  bet_spins= 1328  mb/hit=   53  arms= 111 dups= 111 lost_arm=  0 mp=197 exp= 79
+    dup_gated   catches= 15/119 ( 12.6%)  bet_spins=  879  mb/hit=   59  arms=  97 dups=  84 lost_arm= 13 mp=123 exp= 61
+
+  Ruleset: UNION_ALL  (23 rules)
+    naive_fire  catches= 62/119 ( 52.1%)  bet_spins= 4473  mb/hit=   72  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 62/119 ( 52.1%)  bet_spins= 4037  mb/hit=   65  arms= 344 dups= 344 lost_arm=  0 mp=583 exp=258
+    dup_gated   catches= 30/119 ( 25.2%)  bet_spins= 2473  mb/hit=   82  arms= 259 dups= 217 lost_arm= 42 mp=341 exp=169
+
+
+--- ACCOUNT: Ahmed  (12,928 spins) ---
+  Ruleset: V5  (7 rules)
+    naive_fire  catches= 21/127 ( 16.5%)  bet_spins=  536  mb/hit=   26  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 23/127 ( 18.1%)  bet_spins=  935  mb/hit=   41  arms=  98 dups=  98 lost_arm=  0 mp=136 exp= 62
+    dup_gated   catches= 11/127 (  8.7%)  bet_spins=  627  mb/hit=   57  arms=  79 dups=  54 lost_arm= 25 mp= 96 exp= 38
+
+  Ruleset: ISLAM  (7 rules)
+    naive_fire  catches= 18/127 ( 14.2%)  bet_spins=  419  mb/hit=   23  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 16/127 ( 12.6%)  bet_spins=  562  mb/hit=   35  arms=  61 dups=  61 lost_arm=  0 mp= 89 exp= 33
+    dup_gated   catches=  7/127 (  5.5%)  bet_spins=  258  mb/hit=   37  arms=  43 dups=  24 lost_arm= 19 mp= 47 exp= 12
+
+  Ruleset: ISLAM_V2  (8 rules)
+    naive_fire  catches= 64/127 ( 50.4%)  bet_spins= 4047  mb/hit=   63  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 46/127 ( 36.2%)  bet_spins= 3178  mb/hit=   69  arms= 296 dups= 296 lost_arm=  0 mp=469 exp=212
+    dup_gated   catches= 34/127 ( 26.8%)  bet_spins= 1763  mb/hit=   52  arms= 192 dups= 162 lost_arm= 30 mp=266 exp=105
+
+  Ruleset: CAUSAL_7  (7 rules)
+    naive_fire  catches= 17/127 ( 13.4%)  bet_spins=  359  mb/hit=   21  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 17/127 ( 13.4%)  bet_spins=  686  mb/hit=   40  arms=  74 dups=  74 lost_arm=  0 mp= 96 exp= 51
+    dup_gated   catches= 12/127 (  9.4%)  bet_spins=  550  mb/hit=   46  arms=  66 dups=  51 lost_arm= 15 mp= 76 exp= 36
+
+  Ruleset: UNION_ALL  (23 rules)
+    naive_fire  catches= 65/127 ( 51.2%)  bet_spins= 4120  mb/hit=   63  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 50/127 ( 39.4%)  bet_spins= 3638  mb/hit=   73  arms= 337 dups= 337 lost_arm=  0 mp=534 exp=249
+    dup_gated   catches= 39/127 ( 30.7%)  bet_spins= 2203  mb/hit=   56  arms= 232 dups= 200 lost_arm= 32 mp=330 exp=136
+
+
+--- ACCOUNT: Nick  (3,104 spins) ---
+  Ruleset: V5  (7 rules)
+    naive_fire  catches=  8/25  ( 32.0%)  bet_spins=  146  mb/hit=   18  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 10/25  ( 40.0%)  bet_spins=  255  mb/hit=   26  arms=  28 dups=  28 lost_arm=  0 mp= 42 exp= 13
+    dup_gated   catches=  6/25  ( 24.0%)  bet_spins=  163  mb/hit=   27  arms=  26 dups=  20 lost_arm=  6 mp= 26 exp= 11
+
+  Ruleset: ISLAM  (7 rules)
+    naive_fire  catches=  6/25  ( 24.0%)  bet_spins=  120  mb/hit=   20  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 10/25  ( 40.0%)  bet_spins=  194  mb/hit=   19  arms=  22 dups=  22 lost_arm=  0 mp= 29 exp= 10
+    dup_gated   catches=  6/25  ( 24.0%)  bet_spins=  123  mb/hit=   20  arms=  21 dups=  16 lost_arm=  5 mp= 13 exp=  9
+
+  Ruleset: ISLAM_V2  (8 rules)
+    naive_fire  catches= 11/25  ( 44.0%)  bet_spins=  962  mb/hit=   87  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 11/25  ( 44.0%)  bet_spins=  873  mb/hit=   79  arms=  72 dups=  72 lost_arm=  0 mp=131 exp= 58
+    dup_gated   catches=  4/25  ( 16.0%)  bet_spins=  515  mb/hit=  129  arms=  53 dups=  45 lost_arm=  8 mp= 73 exp= 39
+
+  Ruleset: CAUSAL_7  (7 rules)
+    naive_fire  catches=  5/25  ( 20.0%)  bet_spins=  139  mb/hit=   28  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches=  4/25  ( 16.0%)  bet_spins=  232  mb/hit=   58  arms=  19 dups=  19 lost_arm=  0 mp= 42 exp= 12
+    dup_gated   catches=  2/25  (  8.0%)  bet_spins=  161  mb/hit=   80  arms=  17 dups=  12 lost_arm=  5 mp= 28 exp= 10
+
+  Ruleset: UNION_ALL  (23 rules)
+    naive_fire  catches= 15/25  ( 60.0%)  bet_spins=  993  mb/hit=   66  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 15/25  ( 60.0%)  bet_spins= 1003  mb/hit=   67  arms=  84 dups=  84 lost_arm=  0 mp=156 exp= 62
+    dup_gated   catches=  6/25  ( 24.0%)  bet_spins=  610  mb/hit=  102  arms=  65 dups=  53 lost_arm= 12 mp= 95 exp= 43
+
+
+============================================================================================================================================
+OVERALL  target=accumulation  (summed across Islam, Ahmed, Nick)  bet_window=7
+============================================================================================================================================
+  ruleset    strategy        catches   recall  bet_spins   mb/hit   arms   dups  lost   mp  exp
+  CAUSAL_7   dup_gated       29/271    10.7%       1590       55    180    147    33  227  107
+  CAUSAL_7   naive_fire      44/271    16.2%       1568       36      0      0     0    0    0
+  CAUSAL_7   rule_window     46/271    17.0%       2246       49    204    204     0  335  142
+  ISLAM      dup_gated       30/271    11.1%       1018       34    139    104    35  154   62
+  ISLAM      naive_fire      42/271    15.5%       1302       31      0      0     0    0    0
+  ISLAM      rule_window     49/271    18.1%       1753       36    176    176     0  267  106
+  ISLAM_V2   dup_gated       64/271    23.6%       4360       68    467    390    77  624  286
+  ISLAM_V2   naive_fire     135/271    49.8%       9408       70      0      0     0    0    0
+  ISLAM_V2   rule_window    114/271    42.1%       7580       66    677    677     0 1103  500
+  UNION_ALL  dup_gated       75/271    27.7%       5286       70    556    470    86  766  348
+  UNION_ALL  naive_fire     142/271    52.4%       9586       68      0      0     0    0    0
+  UNION_ALL  rule_window    127/271    46.9%       8678       68    765    765     0 1273  569
+  V5         dup_gated       33/271    12.2%       1609       49    203    159    44  230  110
+  V5         naive_fire      45/271    16.6%       1508       34      0      0     0    0    0
+  V5         rule_window     57/271    21.0%       2497       44    245    245     0  367  162
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+DISTANCE FROM NEAREST BACK-TO-BACK DUPLICATE TO ACCUMULATION TRIPLE
+  dist = # pulls between the duplicate-detection spin and the triple-landing spin.
+  A bet window of size W starting at the duplicate will catch a triple if distance <= W - 1.
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Total accumulation triples: 271
+  No duplicate within 40 spins: 12 (4.4%)
+   dist  count    cum   cum%
+      1     14     14   5.2%
+      2     13     27  10.0%
+      3     11     38  14.0%
+      4     15     53  19.6%
+      5     24     77  28.4%
+      6     10     87  32.1%
+      7     11     98  36.2%
+      8      7    105  38.7%
+      9     11    116  42.8%
+     10      7    123  45.4%
+     11     13    136  50.2%
+     12      7    143  52.8%
+     13     12    155  57.2%
+     14      5    160  59.0%
+     15      5    165  60.9%
+     16     10    175  64.6%
+     17      5    180  66.4%
+     18     11    191  70.5%
+     19      7    198  73.1%
+     20      7    205  75.6%
+     21      2    207  76.4%
+     22      7    214  79.0%
+     23      3    217  80.1%
+     24      4    221  81.5%
+     25      5    226  83.4%
+     27      2    228  84.1%
+     28      2    230  84.9%
+     29      3    233  86.0%
+     30      1    234  86.3%
+     31      3    237  87.5%
+     32      3    240  88.6%
+     33      4    244  90.0%
+     34      3    247  91.1%
+     35      0    247  91.1%
+     36      1    248  91.5%
+     37      3    251  92.6%
+     38      3    254  93.7%
+     39      3    257  94.8%
+     40      2    259  95.6%
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+BET-WINDOW SWEEP — ruleset=UNION_ALL, strategy=dup_gated, target=accumulation
+  Tests different bet_window sizes. Mini-pause fixed at 4. Shows how window size
+  trades off catches vs bet-spins burned.
+--------------------------------------------------------------------------------------------------------------------------------------------
+   win  mp    catches  recall  bet_spins   mb/hit  arms  dups  lost
+     5   0   58/271    21.4%       4587       79   738   608   129
+     5   4   56/271    20.7%       4025       72   670   554   115
+     7   0   86/271    31.7%       6343       74   619   514   104
+     7   4   75/271    27.7%       5286       70   556   470    86
+    10   0  124/271    45.8%       8356       67   494   425    69
+    10   4  100/271    36.9%       6722       67   445   381    64
+    14   0  145/271    53.5%      10304       71   379   325    54
+    14   4  111/271    41.0%       7811       70   345   296    49
+    20   0  164/271    60.5%      11627       71   292   255    37
+    20   4  129/271    47.6%       8599       67   278   245    33
+    30   0  178/271    65.7%      12357       69   239   215    24
+    30   4  138/271    50.9%       9027       65   237   213    24
+
+############################################################################################################################################
+#  TARGET = SPINS
+############################################################################################################################################
+
+--- ACCOUNT: Islam  (12,891 spins) ---
+  Ruleset: V5  (7 rules)
+    naive_fire  catches= 11/147 (  7.5%)  bet_spins=  826  mb/hit=   75  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 17/147 ( 11.6%)  bet_spins= 1320  mb/hit=   78  arms= 117 dups= 117 lost_arm=  0 mp=188 exp= 90
+    dup_gated   catches= 13/147 (  8.8%)  bet_spins=  896  mb/hit=   69  arms=  95 dups=  86 lost_arm=  9 mp=122 exp= 65
+
+  Ruleset: ISLAM  (7 rules)
+    naive_fire  catches= 13/147 (  8.8%)  bet_spins=  763  mb/hit=   59  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 15/147 ( 10.2%)  bet_spins= 1056  mb/hit=   70  arms= 101 dups= 101 lost_arm=  0 mp=151 exp= 74
+    dup_gated   catches=  9/147 (  6.1%)  bet_spins=  736  mb/hit=   82  arms=  83 dups=  69 lost_arm= 14 mp= 99 exp= 55
+
+  Ruleset: ISLAM_V2  (8 rules)
+    naive_fire  catches= 42/147 ( 28.6%)  bet_spins= 4399  mb/hit=  105  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 52/147 ( 35.4%)  bet_spins= 3990  mb/hit=   77  arms= 340 dups= 340 lost_arm=  0 mp=562 exp=262
+    dup_gated   catches= 36/147 ( 24.5%)  bet_spins= 2398  mb/hit=   67  arms= 251 dups= 217 lost_arm= 33 mp=321 exp=164
+
+  Ruleset: CAUSAL_7  (7 rules)
+    naive_fire  catches= 14/147 (  9.5%)  bet_spins= 1070  mb/hit=   76  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 19/147 ( 12.9%)  bet_spins= 1142  mb/hit=   60  arms=  98 dups=  98 lost_arm=  0 mp=161 exp= 71
+    dup_gated   catches= 16/147 ( 10.9%)  bet_spins=  797  mb/hit=   50  arms=  83 dups=  72 lost_arm= 11 mp=118 exp= 51
+
+  Ruleset: UNION_ALL  (23 rules)
+    naive_fire  catches= 42/147 ( 28.6%)  bet_spins= 4473  mb/hit=  106  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 53/147 ( 36.1%)  bet_spins= 4085  mb/hit=   77  arms= 346 dups= 346 lost_arm=  0 mp=577 exp=266
+    dup_gated   catches= 37/147 ( 25.2%)  bet_spins= 2497  mb/hit=   67  arms= 257 dups= 224 lost_arm= 33 mp=343 exp=168
+
+
+--- ACCOUNT: Ahmed  (12,928 spins) ---
+  Ruleset: V5  (7 rules)
+    naive_fire  catches=  6/146 (  4.1%)  bet_spins=  536  mb/hit=   89  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 10/146 (  6.8%)  bet_spins= 1119  mb/hit=  112  arms=  98 dups=  98 lost_arm=  0 mp=169 exp= 76
+    dup_gated   catches=  8/146 (  5.5%)  bet_spins=  760  mb/hit=   95  arms=  76 dups=  67 lost_arm=  9 mp=129 exp= 46
+
+  Ruleset: ISLAM  (7 rules)
+    naive_fire  catches=  3/146 (  2.1%)  bet_spins=  419  mb/hit=  140  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 11/146 (  7.5%)  bet_spins=  802  mb/hit=   73  arms=  63 dups=  63 lost_arm=  0 mp=125 exp= 47
+    dup_gated   catches=  6/146 (  4.1%)  bet_spins=  495  mb/hit=   82  arms=  47 dups=  40 lost_arm=  7 mp= 81 exp= 28
+
+  Ruleset: ISLAM_V2  (8 rules)
+    naive_fire  catches= 46/146 ( 31.5%)  bet_spins= 4047  mb/hit=   88  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 41/146 ( 28.1%)  bet_spins= 3856  mb/hit=   94  arms= 332 dups= 332 lost_arm=  0 mp=577 exp=256
+    dup_gated   catches= 34/146 ( 23.3%)  bet_spins= 2289  mb/hit=   67  arms= 223 dups= 196 lost_arm= 27 mp=361 exp=137
+
+  Ruleset: CAUSAL_7  (7 rules)
+    naive_fire  catches=  2/146 (  1.4%)  bet_spins=  359  mb/hit=  180  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches=  6/146 (  4.1%)  bet_spins=  671  mb/hit=  112  arms=  58 dups=  58 lost_arm=  0 mp= 99 exp= 48
+    dup_gated   catches=  4/146 (  2.7%)  bet_spins=  504  mb/hit=  126  arms=  49 dups=  44 lost_arm=  5 mp= 75 exp= 34
+
+  Ruleset: UNION_ALL  (23 rules)
+    naive_fire  catches= 48/146 ( 32.9%)  bet_spins= 4120  mb/hit=   86  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 42/146 ( 28.8%)  bet_spins= 4027  mb/hit=   96  arms= 346 dups= 346 lost_arm=  0 mp=609 exp=267
+    dup_gated   catches= 34/146 ( 23.3%)  bet_spins= 2424  mb/hit=   71  arms= 234 dups= 205 lost_arm= 29 mp=386 exp=145
+
+
+--- ACCOUNT: Nick  (3,104 spins) ---
+  Ruleset: V5  (7 rules)
+    naive_fire  catches=  1/40  (  2.5%)  bet_spins=  146  mb/hit=  146  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches=  3/40  (  7.5%)  bet_spins=  321  mb/hit=  107  arms=  27 dups=  27 lost_arm=  0 mp= 44 exp= 22
+    dup_gated   catches=  2/40  (  5.0%)  bet_spins=  262  mb/hit=  131  arms=  24 dups=  22 lost_arm=  2 mp= 39 exp= 17
+
+  Ruleset: ISLAM  (7 rules)
+    naive_fire  catches=  1/40  (  2.5%)  bet_spins=  120  mb/hit=  120  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches=  2/40  (  5.0%)  bet_spins=  287  mb/hit=  144  arms=  21 dups=  21 lost_arm=  0 mp= 43 exp= 18
+    dup_gated   catches=  2/40  (  5.0%)  bet_spins=  237  mb/hit=  118  arms=  20 dups=  19 lost_arm=  1 mp= 34 exp= 15
+
+  Ruleset: ISLAM_V2  (8 rules)
+    naive_fire  catches= 17/40  ( 42.5%)  bet_spins=  962  mb/hit=   57  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 16/40  ( 40.0%)  bet_spins=  921  mb/hit=   58  arms=  82 dups=  82 lost_arm=  0 mp=139 exp= 59
+    dup_gated   catches=  6/40  ( 15.0%)  bet_spins=  573  mb/hit=   96  arms=  64 dups=  52 lost_arm= 12 mp= 86 exp= 38
+
+  Ruleset: CAUSAL_7  (7 rules)
+    naive_fire  catches=  1/40  (  2.5%)  bet_spins=  139  mb/hit=  139  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches=  1/40  (  2.5%)  bet_spins=  194  mb/hit=  194  arms=  16 dups=  16 lost_arm=  0 mp= 29 exp= 13
+    dup_gated   catches=  1/40  (  2.5%)  bet_spins=  127  mb/hit=  127  arms=  13 dups=  13 lost_arm=  0 mp= 17 exp=  9
+
+  Ruleset: UNION_ALL  (23 rules)
+    naive_fire  catches= 17/40  ( 42.5%)  bet_spins=  993  mb/hit=   58  arms=   0 dups=   0 lost_arm=  0 mp=  0 exp=  0
+    rule_window catches= 16/40  ( 40.0%)  bet_spins=  989  mb/hit=   62  arms=  88 dups=  88 lost_arm=  0 mp=146 exp= 64
+    dup_gated   catches=  6/40  ( 15.0%)  bet_spins=  631  mb/hit=  105  arms=  70 dups=  57 lost_arm= 13 mp= 95 exp= 42
+
+
+============================================================================================================================================
+OVERALL  target=spins  (summed across Islam, Ahmed, Nick)  bet_window=7
+============================================================================================================================================
+  ruleset    strategy        catches   recall  bet_spins   mb/hit   arms   dups  lost   mp  exp
+  CAUSAL_7   dup_gated       21/333     6.3%       1428       68    145    129    16  210   94
+  CAUSAL_7   naive_fire      17/333     5.1%       1568       92      0      0     0    0    0
+  CAUSAL_7   rule_window     26/333     7.8%       2007       77    172    172     0  289  132
+  ISLAM      dup_gated       17/333     5.1%       1468       86    150    128    22  214   98
+  ISLAM      naive_fire      17/333     5.1%       1302       77      0      0     0    0    0
+  ISLAM      rule_window     28/333     8.4%       2145       77    185    185     0  319  139
+  ISLAM_V2   dup_gated       76/333    22.8%       5260       69    538    465    72  768  339
+  ISLAM_V2   naive_fire     105/333    31.5%       9408       90      0      0     0    0    0
+  ISLAM_V2   rule_window    109/333    32.7%       8767       80    754    754     0 1278  577
+  UNION_ALL  dup_gated       77/333    23.1%       5552       72    561    486    75  824  355
+  UNION_ALL  naive_fire     107/333    32.1%       9586       90      0      0     0    0    0
+  UNION_ALL  rule_window    111/333    33.3%       9101       82    780    780     0 1332  597
+  V5         dup_gated       23/333     6.9%       1918       83    195    175    20  290  128
+  V5         naive_fire      18/333     5.4%       1508       84      0      0     0    0    0
+  V5         rule_window     30/333     9.0%       2760       92    242    242     0  401  188
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+DISTANCE FROM NEAREST BACK-TO-BACK DUPLICATE TO SPINS TRIPLE
+  dist = # pulls between the duplicate-detection spin and the triple-landing spin.
+  A bet window of size W starting at the duplicate will catch a triple if distance <= W - 1.
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Total spins triples: 333
+  No duplicate within 40 spins: 16 (4.8%)
+   dist  count    cum   cum%
+      1     28     28   8.4%
+      2     19     47  14.1%
+      3     30     77  23.1%
+      4     21     98  29.4%
+      5     12    110  33.0%
+      6     13    123  36.9%
+      7     18    141  42.3%
+      8     10    151  45.3%
+      9     12    163  48.9%
+     10     10    173  52.0%
+     11     16    189  56.8%
+     12      9    198  59.5%
+     13     15    213  64.0%
+     14      8    221  66.4%
+     15      3    224  67.3%
+     16      6    230  69.1%
+     17     11    241  72.4%
+     18      5    246  73.9%
+     19      4    250  75.1%
+     20      5    255  76.6%
+     21      7    262  78.7%
+     22      2    264  79.3%
+     23      5    269  80.8%
+     24      5    274  82.3%
+     25      4    278  83.5%
+     26      4    282  84.7%
+     27      2    284  85.3%
+     28      4    288  86.5%
+     29      2    290  87.1%
+     30      8    298  89.5%
+     31      3    301  90.4%
+     32      2    303  91.0%
+     33      2    305  91.6%
+     34      1    306  91.9%
+     35      4    310  93.1%
+     37      2    312  93.7%
+     38      2    314  94.3%
+     39      1    315  94.6%
+     40      2    317  95.2%
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+BET-WINDOW SWEEP — ruleset=UNION_ALL, strategy=dup_gated, target=spins
+  Tests different bet_window sizes. Mini-pause fixed at 4. Shows how window size
+  trades off catches vs bet-spins burned.
+--------------------------------------------------------------------------------------------------------------------------------------------
+   win  mp    catches  recall  bet_spins   mb/hit  arms  dups  lost
+     5   0   69/333    20.7%       4841       70   729   632    96
+     5   4   62/333    18.6%       4308       69   662   574    87
+     7   0   92/333    27.6%       6653       72   614   531    82
+     7   4   77/333    23.1%       5552       72   561   486    75
+    10   0  125/333    37.5%       8767       70   501   438    63
+    10   4  104/333    31.2%       7133       69   460   405    55
+    14   0  158/333    47.4%      11185       71   401   350    51
+    14   4  122/333    36.6%       8661       71   377   332    45
+    20   0  189/333    56.8%      13262       70   330   292    38
+    20   4  142/333    42.6%       9887       70   323   284    39
+    30   0  213/333    64.0%      14496       68   291   257    34
+    30   4  158/333    47.4%      10618       67   290   256    34
