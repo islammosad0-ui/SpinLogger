@@ -1,0 +1,289 @@
+========================================================================================================================
+STRATEGY LAB  (chunk 29 rewrite)  —  clearing-focused, Islam-priority
+========================================================================================================================
+Real in-event budgets:
+  Islam s0 = 7,280    Islam s1 = 3,885
+  Ahmed s0 = 6,586    Ahmed s1 = 4,142
+  Nick  s0 =   976    Nick  s1 =   693
+
+========================================================================================================================
+DUAL-CYCLE EMPIRICAL STATS  (test of the 115-spin hypothesis)
+========================================================================================================================
+Islam s0:  ACC cycle n=70 mean=102 median=89 std=75  | DC sum median=136 std=91 pred ±10: 17/80 (21%) ±20: 26/80 (32%)
+Islam s1:  ACC cycle n=30 mean=127 median=106 std=93  | DC sum median=156 std=139 pred ±10: 9/45 (20%) ±20: 10/45 (22%)
+Ahmed s0:  ACC cycle n=66 mean=97 median=104 std=46  | DC sum median=123 std=41 pred ±10: 19/79 (24%) ±20: 37/79 (47%)
+Ahmed s1:  ACC cycle n=38 mean=108 median=101 std=45  | DC sum median=117 std=37 pred ±10: 8/44 (18%) ±20: 15/44 (34%)
+Nick s0:  ACC cycle n=7 mean=131 median=136 std=66  | DC sum median=139 std=54 pred ±10: 2/13 (15%) ±20: 2/13 (15%)
+Nick s1:  ACC cycle n=5 mean=103 median=103 std=29  | DC sum median=103 std=32 pred ±10: 2/7 (29%) ±20: 2/7 (29%)
+
+
+========================================================================================================================
+  SCENARIO A  (start 100,000 spins, 22-mission ladder)
+========================================================================================================================
+
+--- Islam s0  (7,280 in-event spins) ---
+  pure_1x                   5/22 ( 19%)  pulls=7,280  bk=   99,480
+  pure_6000                 8/22 ( 93%)  pulls=5,573  bk=        0
+  pure_hammer              12/22 ( 44%)  pulls=2,378  bk=        0
+  ensemble_v5               7/22 ( 38%)  pulls=3,330  bk=        0
+  hybrid_v5                11/22 ( 32%)  pulls=2,252  bk=        0
+  superbump_v5              7/22 ( 53%)  pulls=7,280  bk=      497
+  island_kill_v5            8/22 ( 41%)  pulls=  695  bk=        0
+  mission_aware_v5          9/22 ( 32%)  pulls=6,726  bk=        0
+  bankroll_scaled_v5        9/22 ( 90%)  pulls=5,129  bk=        0
+  ensemble_islam            7/22 ( 38%)  pulls=3,330  bk=        0
+  hybrid_islam             10/22 ( 84%)  pulls=1,758  bk=        0
+  superbump_islam           7/22 ( 29%)  pulls=1,118  bk=        0
+  island_kill_islam        10/22 ( 40%)  pulls=  675  bk=        0
+  mission_aware_islam       9/22 ( 48%)  pulls=3,361  bk=        0
+  bankroll_scaled_islam     8/22 ( 79%)  pulls=2,284  bk=        0
+  ensemble_v5_dc            9/22 ( 53%)  pulls=3,340  bk=        0
+  superbump_v5_dc           8/22 ( 84%)  pulls=1,119  bk=        0
+  dualcycle_bump_v5        11/22 (  9%)  pulls=2,197  bk=        0
+  ensemble_islam_dc         9/22 ( 53%)  pulls=3,340  bk=        0
+  superbump_islam_dc        8/22 ( 84%)  pulls=1,119  bk=        0
+  dualcycle_bump_islam     11/22 (  9%)  pulls=2,197  bk=        0
+  islam_killer              8/22 ( 84%)  pulls=2,363  bk=        0
+  islam_killer_dc           9/22 ( 66%)  pulls=  700  bk=        0
+  islam_killer_small        9/22 ( 28%)  pulls=3,361  bk=        0
+  islam_killer_sml_dc       9/22 ( 26%)  pulls=5,034  bk=        0
+  islam_conserve            6/22 ( 53%)  pulls=7,280  bk=    3,511
+  islam_conserve_v5         9/22 ( 92%)  pulls=7,280  bk=    3,509
+  islam_conserve_dc         9/22 ( 31%)  pulls=7,280  bk=    7,494
+  islam_conserve_6k         9/22 ( 48%)  pulls=3,361  bk=        0
+  islam_conserve_6k_v5      9/22 ( 32%)  pulls=6,726  bk=        0
+  islam_scaled_conserve     9/22 (  6%)  pulls=3,319  bk=        0
+  islam_reserve_guard       9/22 ( 55%)  pulls=5,053  bk=        0
+  islam_reserve_v5          9/22 ( 76%)  pulls=4,464  bk=        0
+  islam_pace_400            8/22 ( 79%)  pulls=  976  bk=        0
+  islam_pace_400_v5         7/22 ( 53%)  pulls=  527  bk=        0
+  islam_pace_1500          10/22 ( 54%)  pulls=1,532  bk=        0
+  islam_pace_1500_v5       10/22 ( 51%)  pulls=1,690  bk=        0
+  islam_adaptive_base       9/22 ( 34%)  pulls=3,900  bk=        0
+  islam_adaptive_v5         6/22 (  7%)  pulls=  600  bk=        0
+  islam_v2_ensemble         9/22 ( 13%)  pulls=3,340  bk=        0
+  islam_v2_superbump        9/22 ( 13%)  pulls=3,340  bk=        0
+  islam_v2_killer          10/22 ( 78%)  pulls=  962  bk=        0
+  islam_v2_conserve        10/22 (  5%)  pulls=7,280  bk=    5,011
+  islam_v2_conserve_6k      9/22 ( 50%)  pulls=5,047  bk=        0
+  islam_v2_pace_400         8/22 ( 52%)  pulls=  372  bk=        0
+  islam_v2_island_kill      4/22 ( 40%)  pulls=  195  bk=        0
+  islam_v2_clean_hammer     8/22 ( 71%)  pulls=  949  bk=        0
+  phase_1x_ensemble         5/22 ( 19%)  pulls=7,280  bk=   99,480
+  phase_1x_ensemble_i       5/22 ( 19%)  pulls=7,280  bk=   99,480
+  phase_1x_superbump        5/22 ( 19%)  pulls=7,280  bk=   99,480
+  phase_1x_superbump_i      5/22 ( 19%)  pulls=7,280  bk=   99,480
+  phase_hammer_killer      10/22 ( 71%)  pulls=2,394  bk=        0
+  phase_hammer_sb          11/22 ( 67%)  pulls=2,264  bk=        0
+  phase_hammer_sb_i        11/22 ( 21%)  pulls=2,249  bk=        0
+  triple_phase_v5           5/22 ( 19%)  pulls=7,280  bk=   99,480
+  triple_phase_islam        5/22 ( 19%)  pulls=7,280  bk=   99,480
+  clean_hammer_v5          12/22 ( 37%)  pulls=2,302  bk=        0
+  clean_hammer_islam       12/22 ( 37%)  pulls=2,302  bk=        0
+  shield_hunter            10/22 (  0%)  pulls=  686  bk=        0
+  shield_hunter_dc          9/22 ( 72%)  pulls=  398  bk=        0
+
+--- Islam s1  (3,885 in-event spins) ---
+  pure_1x                   4/22 ( 32%)  pulls=3,885  bk=   99,385
+  pure_6000                12/22 ( 81%)  pulls=3,365  bk=        0
+  pure_hammer              12/22 ( 79%)  pulls=2,993  bk=        0
+  ensemble_v5              11/22 ( 70%)  pulls=3,885  bk=      539
+  hybrid_v5                12/22 ( 56%)  pulls=1,437  bk=        0
+  superbump_v5              8/22 ( 60%)  pulls=3,885  bk=    1,501
+  island_kill_v5           10/22 ( 27%)  pulls=  552  bk=        0
+  mission_aware_v5         10/22 ( 59%)  pulls=3,885  bk=    2,538
+  bankroll_scaled_v5       12/22 ( 82%)  pulls=3,545  bk=        0
+  ensemble_islam           14/22 ( 71%)  pulls=3,885  bk=    4,630
+  hybrid_islam             15/22 ( 56%)  pulls=2,969  bk=        0
+  superbump_islam          16/22 ( 74%)  pulls=3,885  bk=      641
+  island_kill_islam         9/22 ( 25%)  pulls=  592  bk=        0
+  mission_aware_islam      14/22 ( 63%)  pulls=3,885  bk=    3,112
+  bankroll_scaled_islam    13/22 ( 36%)  pulls=3,885  bk=      679
+  ensemble_v5_dc           11/22 ( 87%)  pulls=3,885  bk=      539
+  superbump_v5_dc           7/22 ( 89%)  pulls=1,058  bk=        0
+  dualcycle_bump_v5         7/22 ( 89%)  pulls=1,051  bk=        0
+  ensemble_islam_dc        11/22 ( 79%)  pulls=3,885  bk=      539
+  superbump_islam_dc        9/22 ( 80%)  pulls=3,885  bk=    1,510
+  dualcycle_bump_islam      6/22 ( 58%)  pulls=3,885  bk=    2,491
+  islam_killer             17/22 (100%)  pulls=2,792  bk=        0
+  islam_killer_dc          11/22 ( 76%)  pulls=  363  bk=        0
+  islam_killer_small       15/22 ( 73%)  pulls=3,885  bk=    4,141
+  islam_killer_sml_dc      10/22 ( 19%)  pulls=3,885  bk=    2,031
+  islam_conserve           17/22 ( 70%)  pulls=3,885  bk=    2,096
+  islam_conserve_v5        11/22 ( 69%)  pulls=1,083  bk=        0
+  islam_conserve_dc        11/22 ( 65%)  pulls=1,083  bk=        0
+  islam_conserve_6k        14/22 ( 32%)  pulls=3,885  bk=    3,140
+  islam_conserve_6k_v5     10/22 ( 59%)  pulls=3,885  bk=    2,538
+  islam_scaled_conserve    17/22 ( 72%)  pulls=3,885  bk=   14,598
+  islam_reserve_guard      15/22 ( 88%)  pulls=3,885  bk=    1,108
+  islam_reserve_v5         17/22 ( 75%)  pulls=3,885  bk=    1,748
+  islam_pace_400            8/22 ( 55%)  pulls=  661  bk=        0
+  islam_pace_400_v5         8/22 ( 67%)  pulls=  577  bk=        0
+  islam_pace_1500          12/22 ( 62%)  pulls=1,284  bk=        0
+  islam_pace_1500_v5       11/22 (100%)  pulls=  415  bk=        0
+  islam_adaptive_base       6/22 ( 43%)  pulls=3,885  bk=        3
+  islam_adaptive_v5         9/22 ( 38%)  pulls=3,885  bk=      314
+  islam_v2_ensemble         8/22 ( 90%)  pulls=3,885  bk=    1,508
+  islam_v2_superbump        8/22 ( 90%)  pulls=3,885  bk=    1,508
+  islam_v2_killer           8/22 ( 67%)  pulls=  533  bk=        0
+  islam_v2_conserve         8/22 ( 62%)  pulls=3,885  bk=    2,015
+  islam_v2_conserve_6k     11/22 ( 80%)  pulls=2,806  bk=        0
+  islam_v2_pace_400        10/22 ( 39%)  pulls=  519  bk=        0
+  islam_v2_island_kill      8/22 ( 10%)  pulls=  234  bk=        0
+  islam_v2_clean_hammer     8/22 ( 71%)  pulls=  460  bk=        0
+  phase_1x_ensemble         4/22 ( 32%)  pulls=3,885  bk=   99,385
+  phase_1x_ensemble_i       4/22 ( 32%)  pulls=3,885  bk=   99,385
+  phase_1x_superbump        4/22 ( 32%)  pulls=3,885  bk=   99,385
+  phase_1x_superbump_i      4/22 ( 32%)  pulls=3,885  bk=   99,385
+  phase_hammer_killer       8/22 ( 38%)  pulls=  590  bk=        0
+  phase_hammer_sb           8/22 ( 20%)  pulls=  512  bk=        0
+  phase_hammer_sb_i        17/22 ( 35%)  pulls=2,961  bk=        0
+  triple_phase_v5           4/22 ( 32%)  pulls=3,885  bk=   99,385
+  triple_phase_islam        4/22 ( 32%)  pulls=3,885  bk=   99,385
+  clean_hammer_v5          11/22 ( 86%)  pulls=1,449  bk=        0
+  clean_hammer_islam       16/22 ( 53%)  pulls=2,904  bk=        0
+  shield_hunter             8/22 ( 60%)  pulls=  531  bk=        0
+  shield_hunter_dc         11/22 ( 81%)  pulls=  397  bk=        0
+
+========================================================================================================================
+  SCENARIO B  (start 299,000 spins, 20-mission ladder)
+========================================================================================================================
+
+--- Islam s0  (7,280 in-event spins) ---
+  pure_1x                   1/20 ( 42%)  pulls=7,280  bk=  293,660
+  pure_6000                 8/20 ( 17%)  pulls=2,846  bk=        0
+  pure_hammer               8/20 ( 28%)  pulls=2,348  bk=        0
+  ensemble_v5               5/20 ( 68%)  pulls=3,349  bk=        0
+  hybrid_v5                 7/20 ( 75%)  pulls=2,373  bk=        0
+  superbump_v5              5/20 ( 56%)  pulls=3,335  bk=        0
+  island_kill_v5            7/20 ( 15%)  pulls=2,282  bk=        0
+  mission_aware_v5          5/20 ( 92%)  pulls=7,280  bk=    1,025
+  bankroll_scaled_v5        6/20 ( 75%)  pulls=4,552  bk=        0
+  ensemble_islam            5/20 ( 68%)  pulls=3,349  bk=        0
+  hybrid_islam              7/20 ( 80%)  pulls=2,386  bk=        0
+  superbump_islam           6/20 ( 20%)  pulls=3,345  bk=        0
+  island_kill_islam         6/20 ( 43%)  pulls=1,324  bk=        0
+  mission_aware_islam       5/20 ( 72%)  pulls=3,352  bk=        0
+  bankroll_scaled_islam     7/20 ( 74%)  pulls=6,904  bk=        0
+  ensemble_v5_dc            6/20 ( 81%)  pulls=1,147  bk=        0
+  superbump_v5_dc           7/20 (  3%)  pulls=5,575  bk=        0
+  dualcycle_bump_v5         6/20 ( 99%)  pulls=3,310  bk=        0
+  ensemble_islam_dc         6/20 ( 81%)  pulls=1,147  bk=        0
+  superbump_islam_dc        7/20 (  3%)  pulls=5,575  bk=        0
+  dualcycle_bump_islam      6/20 ( 99%)  pulls=3,310  bk=        0
+  islam_killer              4/20 ( 98%)  pulls=2,625  bk=        0
+  islam_killer_dc           6/20 ( 68%)  pulls=  184  bk=        0
+  islam_killer_small        6/20 ( 37%)  pulls=5,600  bk=        0
+  islam_killer_sml_dc       6/20 ( 92%)  pulls=1,682  bk=        0
+  islam_conserve            3/20 ( 59%)  pulls=5,549  bk=        0
+  islam_conserve_v5         5/20 ( 78%)  pulls=3,866  bk=        0
+  islam_conserve_dc         6/20 ( 61%)  pulls=1,651  bk=        0
+  islam_conserve_6k         5/20 ( 72%)  pulls=3,352  bk=        0
+  islam_conserve_6k_v5      5/20 ( 92%)  pulls=7,280  bk=    1,025
+  islam_scaled_conserve     4/20 ( 49%)  pulls=7,280  bk=    3,476
+  islam_reserve_guard       6/20 ( 37%)  pulls=5,600  bk=        0
+  islam_reserve_v5          5/20 ( 78%)  pulls=4,450  bk=        0
+  islam_pace_400            5/20 ( 97%)  pulls=  763  bk=        0
+  islam_pace_400_v5         6/20 ( 58%)  pulls=1,393  bk=        0
+  islam_pace_1500           7/20 ( 65%)  pulls=2,347  bk=        0
+  islam_pace_1500_v5        8/20 ( 57%)  pulls=1,221  bk=        0
+  islam_adaptive_base       4/20 ( 45%)  pulls=3,897  bk=        0
+  islam_adaptive_v5         5/20 ( 22%)  pulls=3,929  bk=        0
+  islam_v2_ensemble         6/20 ( 69%)  pulls=1,147  bk=        0
+  islam_v2_superbump        6/20 ( 69%)  pulls=1,147  bk=        0
+  islam_v2_killer           6/20 ( 92%)  pulls=  728  bk=        0
+  islam_v2_conserve         6/20 ( 65%)  pulls=7,280  bk=    7,485
+  islam_v2_conserve_6k      6/20 ( 63%)  pulls=4,471  bk=        0
+  islam_v2_pace_400         6/20 ( 79%)  pulls=  553  bk=        0
+  islam_v2_island_kill      6/20 ( 19%)  pulls=  959  bk=        0
+  islam_v2_clean_hammer     5/20 ( 50%)  pulls=  884  bk=        0
+  phase_1x_ensemble         1/20 ( 42%)  pulls=7,280  bk=  293,660
+  phase_1x_ensemble_i       1/20 ( 42%)  pulls=7,280  bk=  293,660
+  phase_1x_superbump        1/20 ( 42%)  pulls=7,280  bk=  293,660
+  phase_1x_superbump_i      1/20 ( 42%)  pulls=7,280  bk=  293,660
+  phase_hammer_killer       8/20 ( 42%)  pulls=2,265  bk=        0
+  phase_hammer_sb           8/20 ( 28%)  pulls=2,390  bk=        0
+  phase_hammer_sb_i         8/20 ( 48%)  pulls=2,258  bk=        0
+  triple_phase_v5           1/20 ( 42%)  pulls=7,280  bk=  293,660
+  triple_phase_islam        1/20 ( 42%)  pulls=7,280  bk=  293,660
+  clean_hammer_v5           8/20 ( 27%)  pulls=2,286  bk=        0
+  clean_hammer_islam        8/20 ( 49%)  pulls=2,390  bk=        0
+  shield_hunter             6/20 ( 28%)  pulls=1,244  bk=        0
+  shield_hunter_dc          7/20 ( 46%)  pulls=  697  bk=        0
+
+--- Islam s1  (3,885 in-event spins) ---
+  pure_1x                   1/20 (  0%)  pulls=3,885  bk=  296,665
+  pure_6000                 9/20 ( 82%)  pulls=3,413  bk=        0
+  pure_hammer               8/20 ( 84%)  pulls=2,984  bk=        0
+  ensemble_v5              10/20 ( 68%)  pulls=3,885  bk=    1,626
+  hybrid_v5                11/20 ( 45%)  pulls=3,173  bk=        0
+  superbump_v5             12/20 ( 68%)  pulls=3,885  bk=    3,679
+  island_kill_v5            6/20 ( 60%)  pulls=  530  bk=        0
+  mission_aware_v5         10/20 ( 49%)  pulls=3,885  bk=    2,631
+  bankroll_scaled_v5       10/20 ( 89%)  pulls=3,885  bk=      680
+  ensemble_islam           10/20 ( 63%)  pulls=3,885  bk=    1,626
+  hybrid_islam             11/20 ( 40%)  pulls=3,192  bk=        0
+  superbump_islam          12/20 ( 48%)  pulls=3,495  bk=        0
+  island_kill_islam        12/20 ( 98%)  pulls=2,997  bk=        0
+  mission_aware_islam      10/20 ( 69%)  pulls=3,885  bk=    3,096
+  bankroll_scaled_islam    10/20 ( 63%)  pulls=3,885  bk=      170
+  ensemble_v5_dc            8/20 ( 86%)  pulls=2,806  bk=        0
+  superbump_v5_dc           9/20 ( 73%)  pulls=3,337  bk=        0
+  dualcycle_bump_v5         4/20 ( 69%)  pulls=3,885  bk=    2,484
+  ensemble_islam_dc         8/20 ( 63%)  pulls=2,806  bk=        0
+  superbump_islam_dc        9/20 ( 78%)  pulls=1,095  bk=        0
+  dualcycle_bump_islam      4/20 ( 69%)  pulls=3,885  bk=      482
+  islam_killer             13/20 ( 41%)  pulls=2,953  bk=        0
+  islam_killer_dc           4/20 ( 58%)  pulls=  382  bk=        0
+  islam_killer_small       11/20 ( 60%)  pulls=3,885  bk=    5,152
+  islam_killer_sml_dc      10/20 ( 31%)  pulls=1,725  bk=        0
+  islam_conserve           12/20 ( 93%)  pulls=3,885  bk=    1,575
+  islam_conserve_v5         9/20 ( 83%)  pulls=3,885  bk=   13,004
+  islam_conserve_dc         4/20 ( 50%)  pulls=3,885  bk=    4,982
+  islam_conserve_6k        10/20 ( 65%)  pulls=3,885  bk=    3,131
+  islam_conserve_6k_v5     10/20 ( 52%)  pulls=3,885  bk=    4,633
+  islam_scaled_conserve    12/20 ( 95%)  pulls=3,885  bk=    1,579
+  islam_reserve_guard      11/20 ( 58%)  pulls=3,885  bk=    1,602
+  islam_reserve_v5         12/20 ( 69%)  pulls=3,885  bk=    1,683
+  islam_pace_400           12/20 ( 86%)  pulls=2,731  bk=        0
+  islam_pace_400_v5        10/20 ( 33%)  pulls=1,585  bk=        0
+  islam_pace_1500           7/20 ( 81%)  pulls=1,589  bk=        0
+  islam_pace_1500_v5        8/20 ( 94%)  pulls=1,064  bk=        0
+  islam_adaptive_base      13/20 ( 26%)  pulls=3,885  bk=      270
+  islam_adaptive_v5         9/20 ( 96%)  pulls=3,885  bk=      686
+  islam_v2_ensemble         7/20 ( 92%)  pulls=3,348  bk=        0
+  islam_v2_superbump        7/20 ( 92%)  pulls=3,348  bk=        0
+  islam_v2_killer           6/20 ( 22%)  pulls=  177  bk=        0
+  islam_v2_conserve         6/20 ( 22%)  pulls=1,611  bk=        0
+  islam_v2_conserve_6k      7/20 ( 86%)  pulls=1,679  bk=        0
+  islam_v2_pace_400         6/20 ( 69%)  pulls=  326  bk=        0
+  islam_v2_island_kill      6/20 ( 60%)  pulls=  227  bk=        0
+  islam_v2_clean_hammer     5/20 ( 44%)  pulls=  537  bk=        0
+  phase_1x_ensemble         1/20 (  0%)  pulls=3,885  bk=  296,665
+  phase_1x_ensemble_i       1/20 (  0%)  pulls=3,885  bk=  296,665
+  phase_1x_superbump        1/20 (  0%)  pulls=3,885  bk=  296,665
+  phase_1x_superbump_i      1/20 (  0%)  pulls=3,885  bk=  296,665
+  phase_hammer_killer       9/20 ( 15%)  pulls=3,009  bk=        0
+  phase_hammer_sb           9/20 ( 31%)  pulls=2,944  bk=        0
+  phase_hammer_sb_i         9/20 ( 44%)  pulls=3,202  bk=        0
+  triple_phase_v5           1/20 (  0%)  pulls=3,885  bk=  296,665
+  triple_phase_islam        1/20 (  0%)  pulls=3,885  bk=  296,665
+  clean_hammer_v5          12/20 ( 50%)  pulls=3,210  bk=        0
+  clean_hammer_islam       11/20 ( 67%)  pulls=2,998  bk=        0
+  shield_hunter            12/20 ( 85%)  pulls=2,957  bk=        0
+  shield_hunter_dc          7/20 ( 72%)  pulls=  533  bk=        0
+
+========================================================================================================================
+  ISLAM CLEARING QUEST  —  did ANY strategy clear for Islam?
+========================================================================================================================
+  NO clear yet. Top 10 Islam attempts by missions cleared:
+    islam_killer              best: Scen A s1 17/22 (100% next) pulls=2,792 bk=        0
+    islam_conserve            best: Scen A s1 17/22 ( 70% next) pulls=3,885 bk=    2,096
+    islam_scaled_conserve     best: Scen A s1 17/22 ( 72% next) pulls=3,885 bk=   14,598
+    islam_reserve_v5          best: Scen A s1 17/22 ( 75% next) pulls=3,885 bk=    1,748
+    phase_hammer_sb_i         best: Scen A s1 17/22 ( 35% next) pulls=2,961 bk=        0
+    superbump_islam           best: Scen A s1 16/22 ( 74% next) pulls=3,885 bk=      641
+    clean_hammer_islam        best: Scen A s1 16/22 ( 53% next) pulls=2,904 bk=        0
+    hybrid_islam              best: Scen A s1 15/22 ( 56% next) pulls=2,969 bk=        0
+    islam_killer_small        best: Scen A s1 15/22 ( 73% next) pulls=3,885 bk=    4,141
+    islam_reserve_guard       best: Scen A s1 15/22 ( 88% next) pulls=3,885 bk=    1,108
