@@ -1,0 +1,65 @@
+=== STRATEGY PUSH: SUCCESSFUL CATCHES (63 TOTAL) ===
+Account | Target | Gap # | Len | Bets used
+Islam   | accumul | # 10 | 129 |   3 MB
+Islam   | accumul | # 12 |  19 |   0 MB
+Islam   | accumul | # 62 | 113 |   5 MB
+Islam   | accumul | # 86 | 112 |   8 MB
+Islam   | accumul | #111 | 126 |   3 MB
+Islam   | spins   | #  6 | 110 |   4 MB
+Islam   | spins   | # 18 | 109 |   6 MB
+Islam   | spins   | # 20 |  70 |   4 MB
+Islam   | spins   | # 28 | 113 |  13 MB
+Islam   | spins   | # 36 | 114 |   2 MB
+Islam   | spins   | # 37 |  66 |   8 MB
+Islam   | spins   | # 54 |  88 |   5 MB
+Islam   | spins   | # 75 |  94 |   2 MB
+Islam   | spins   | # 81 |  44 |   3 MB
+Islam   | spins   | # 82 |  96 |   8 MB
+Islam   | spins   | # 84 | 106 |   2 MB
+Islam   | spins   | #107 | 109 |   2 MB
+Islam   | spins   | #108 | 108 |   4 MB
+Islam   | spins   | #118 |  78 |   6 MB
+Islam   | spins   | #120 | 120 |   9 MB
+Islam   | spins   | #121 |  43 |   5 MB
+Islam   | spins   | #136 | 108 |   4 MB
+Islam   | spins   | #148 | 109 |   5 MB
+Nick    | accumul | #  5 | 116 |   3 MB
+Nick    | accumul | #  8 | 110 |   0 MB
+Nick    | accumul | # 19 | 133 |  11 MB
+Nick    | accumul | # 30 | 116 |   3 MB
+Nick    | accumul | # 38 | 108 |   4 MB
+Nick    | accumul | # 39 | 113 |   2 MB
+Nick    | accumul | # 43 | 119 |   8 MB
+Nick    | spins   | # 15 | 111 |   5 MB
+Nick    | spins   | # 35 | 108 |   5 MB
+Nick    | spins   | # 38 | 124 |   1 MB
+Nick    | spins   | # 51 |  91 |   2 MB
+Nick    | spins   | # 60 | 128 |   5 MB
+Ahmed   | accumul | #  5 | 120 |   3 MB
+Ahmed   | accumul | #  6 | 135 |   6 MB
+Ahmed   | accumul | # 11 |  13 |   3 MB
+Ahmed   | accumul | # 16 | 117 |   5 MB
+Ahmed   | accumul | # 18 |  54 |   5 MB
+Ahmed   | accumul | # 26 | 111 |   3 MB
+Ahmed   | accumul | # 53 |  81 |   5 MB
+Ahmed   | accumul | # 56 |  27 |   5 MB
+Ahmed   | accumul | # 58 | 104 |   5 MB
+Ahmed   | accumul | # 79 | 124 |   9 MB
+Ahmed   | accumul | #119 | 110 |   7 MB
+Ahmed   | accumul | #124 | 114 |   9 MB
+Ahmed   | accumul | #126 |  99 |   4 MB
+Ahmed   | spins   | # 25 | 113 |   8 MB
+Ahmed   | spins   | # 26 | 114 |   2 MB
+Ahmed   | spins   | # 33 | 141 |   2 MB
+Ahmed   | spins   | # 41 | 117 |   6 MB
+Ahmed   | spins   | # 46 | 139 |   6 MB
+Ahmed   | spins   | # 48 | 101 |   2 MB
+Ahmed   | spins   | # 54 |  28 |   6 MB
+Ahmed   | spins   | # 63 | 108 |   0 MB
+Ahmed   | spins   | # 72 | 112 |   0 MB
+Ahmed   | spins   | # 78 | 107 |   3 MB
+Ahmed   | spins   | # 84 | 116 |   6 MB
+Ahmed   | spins   | #114 | 161 |   3 MB
+Ahmed   | spins   | #126 | 108 |   3 MB
+Ahmed   | spins   | #138 | 130 |   1 MB
+Ahmed   | spins   | #140 |  84 |   3 MB

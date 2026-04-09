@@ -1,57 +1,26 @@
-"""
-Nuclear analysis foundation loader.
-
-Loads Islam / Nick / Ahmed CSVs into a clean gap-centric structure.
-For each gap we store the full per-spin trajectory of every sa_* and ss_*
-counter, plus contextual data. Saves a pickle for downstream sweep scripts.
-
-Gap definition:
-  - ACC gap: spins between consecutive (acc,acc,acc) triples. Length is taken
-    from sa_spins at the ending row (this includes pre-CSV-recording history,
-    so the first gap of each account is recoverable).
-  - Other (spn/atk/stl/shd) gap: spins between consecutive triples of that
-    type, measured by CSV row index. First incomplete gap is dropped.
-
-Real triple types (game-meaningful): accumulation, spins, attack, steal, shield.
-Junk triples (excluded from "real triple" detection): coin, goldSack.
-"""
 import csv
 import pickle
 from pathlib import Path
 
-# Per-account sources. Multiple files per account are loaded as separate
-# SESSIONS — their counters start fresh at sa_spins=1 for each file. The
-# loader computes gaps within each session and concatenates the gap lists
-# per account. Session boundaries are preserved via a `session_idx` field
-# on each spin record.
-DATA_FILES = {
-    'Islam': [
-        r'C:\Users\Islam\Downloads\Islam Account spin_history_2026-04-04.csv',
-        r'C:\Users\Islam\Desktop\Coin Master\SpinLogger\analysis\nuclear\data_2026-04-07\Islam_spin_history.csv',
-    ],
-    'Nick': [
-        r'C:\Users\Islam\Downloads\Nick Account spin_history_2026-04-04 (1).csv',
-        r'C:\Users\Islam\Desktop\Coin Master\SpinLogger\analysis\nuclear\data_2026-04-07\Nick_spin_history.csv',
-    ],
-    'Ahmed': [
-        r'C:\Users\Islam\Downloads\Ahmed Account spin_history_2026-04-05.csv',
-        r'C:\Users\Islam\Desktop\Coin Master\SpinLogger\analysis\nuclear\data_2026-04-07\Ahmed_spin_history.csv',
-    ],
-}
+# --- AUTOMATED DATA SCANNER ---
+BASE_DATA_DIR = Path(__file__).parent.parent.parent / "data"
+DATA_FILES = {}
+for account in ['Islam', 'Nick', 'Ahmed']:
+    acc_dir = BASE_DATA_DIR / account
+    if acc_dir.exists():
+        paths = list(acc_dir.glob("*.csv"))
+        DATA_FILES[account] = [str(p) for p in paths if "spin_history" in p.name.lower()]
+    else:
+        DATA_FILES[account] = []
 
 REAL_TRIPLES = ['accumulation', 'spins', 'attack', 'steal', 'shield']
-TRIPLE_SHORT = {'accumulation': 'acc', 'spins': 'spn', 'attack': 'atk',
-                'steal': 'stl', 'shield': 'shd'}
 JUNK_TRIPLES = ['coin', 'goldSack']
 
 SA_COUNTERS = ['sa_spins', 'sa_atk', 'sa_stl', 'sa_shd', 'sa_spn', 'sa_acc',
                'sa_3x_atk', 'sa_3x_stl', 'sa_3x_shd']
 SS_COUNTERS = ['ss_spins', 'ss_atk', 'ss_stl', 'ss_shd', 'ss_spn', 'ss_acc',
                'ss_3x_atk', 'ss_3x_stl', 'ss_3x_shd']
-
-
 PER_SPIN_SYM_COUNTS = ['atk_count', 'stl_count', 'shd_count', 'spn_count', 'acc_count']
-
 
 def safe_int(x, default=0):
     try:
@@ -59,16 +28,13 @@ def safe_int(x, default=0):
     except (ValueError, TypeError):
         return default
 
-
 def safe_float(x, default=0.0):
     try:
         return float(x)
     except (ValueError, TypeError):
         return default
 
-
 def classify_triple(row):
-    """Return triple type symbol if row is a real triple, else None."""
     if row.get('is_triple', '').lower() != 'true':
         return None
     r1, r2, r3 = row.get('reel_1', ''), row.get('reel_2', ''), row.get('reel_3', '')
@@ -76,252 +42,166 @@ def classify_triple(row):
         return r1
     return None
 
-
-def classify_any_triple(row):
-    """Return any triple symbol (incl. junk), else None."""
-    if row.get('is_triple', '').lower() != 'true':
-        return None
-    r1, r2, r3 = row.get('reel_1', ''), row.get('reel_2', ''), row.get('reel_3', '')
-    if r1 == r2 == r3 and r1 in (REAL_TRIPLES + JUNK_TRIPLES):
-        return r1
-    return None
-
-
-def load_csv(path):
-    with open(path, 'r', encoding='utf-8') as f:
-        return list(csv.DictReader(f))
-
-
 def build_spin_records(rows):
-    """Build a per-spin enriched record list."""
     out = []
     for idx, row in enumerate(rows):
         rec = {col: safe_int(row.get(col, 0)) for col in SA_COUNTERS + SS_COUNTERS}
         for col in PER_SPIN_SYM_COUNTS:
             rec[col] = safe_int(row.get(col, 0))
-        rec['idx'] = idx
+        rec['seq'] = safe_int(row.get('seq', 0))
         rec['reel_1'] = row.get('reel_1', '')
         rec['reel_2'] = row.get('reel_2', '')
         rec['reel_3'] = row.get('reel_3', '')
-        rec['triple'] = classify_triple(row)         # real triples only
-        rec['any_triple'] = classify_any_triple(row) # incl. coin/goldSack
-        rec['gae_segment'] = row.get('gae_segment', '')
-        rec['gae_grand_prize'] = safe_int(row.get('gae_grand_prize', 0))
-        rec['gae_last_mission'] = safe_int(row.get('gae_last_mission', 0))
+        rec['triple'] = classify_triple(row)
         rec['accum_mission'] = safe_int(row.get('accum_mission', 0))
-        rec['accum_pct'] = safe_float(row.get('accum_pct', 0))
-        rec['accum_current'] = safe_int(row.get('accum_current', 0))
-        rec['accum_total'] = safe_int(row.get('accum_total', 0))
         rec['accum_delta'] = safe_int(row.get('accum_delta', 0))
         rec['bet_multiplier'] = safe_float(row.get('bet_multiplier', 1))
         rec['bet_level'] = safe_int(row.get('bet_level', 0))
-        rec['coins_won'] = safe_int(row.get('coins_won', 0))
-        rec['shields'] = safe_int(row.get('shields', 0))
-        rec['reward_code'] = safe_int(row.get('reward_code', 0))
-        # Event type detection: mix event = accum bar moved without acc symbols
-        rec['mix_signal'] = (rec['accum_delta'] > 0 and rec['acc_count'] == 0)
+        rec['gae_segment'] = row.get('gae_segment', '')
+        rec['gae_grand_prize'] = safe_int(row.get('gae_grand_prize', 0))
         out.append(rec)
     return out
 
-
 def build_counter_gaps(spins, target, counter_field):
-    """
-    Gap builder using a specific counter field (sa_spins for ACC, ss_spins for SPN).
-    The counter resets on the target triple, so the value at the ending row IS
-    the true gap length (including pre-CSV-recording history). The first gap of
-    each account is therefore recoverable.
-    """
     gaps = []
     last_idx = None
-    prev_real_triple = None
+    p1, p2 = 0, 0
+    prev_triple = "none"
+    event_id = 0
     for i, s in enumerate(spins):
+        # Only increment event_id on MAJOR sequence jumps (New Session)
+        if i > 0 and abs(s['seq'] - spins[i-1]['seq']) > 1000:
+            event_id += 1
+            p1, p2 = 0, 0 # Reset cycle history for new event
+            
         if s['triple'] == target:
             length = s[counter_field]
             csv_traj = spins[(last_idx + 1):(i + 1)] if last_idx is not None else spins[:i + 1]
             gaps.append({
                 'target': target,
-                'end_idx': i,
-                'start_idx': (last_idx + 1) if last_idx is not None else 0,
                 'length': length,
-                'csv_length': len(csv_traj),
-                'is_first_gap': last_idx is None,
-                'trajectory': csv_traj,
-                'end_event': s['gae_segment'],
-                'end_grand_prize': s['gae_grand_prize'],
-                'end_mission': s['accum_mission'],
-                'end_bet_level': s['bet_level'],
-                'end_bet_multiplier': s['bet_multiplier'],
-                'prev_real_triple': prev_real_triple,
+                'prev_gap_1': p1,
+                'prev_gap_2': p2,
+                'prev_real_triple': prev_triple,
+                'event_id': event_id,
+                'is_first_gap': (last_idx is None) or (i > 0 and abs(s['seq'] - spins[i-1]['seq']) > 1000),
+                'trajectory': csv_traj
             })
             last_idx = i
-            prev_real_triple = target
+            p2 = p1; p1 = length
+            prev_triple = target
         elif s['triple'] is not None:
-            prev_real_triple = s['triple']
+            prev_triple = s['triple']
     return gaps
 
-
 def build_index_gaps(spins, target):
-    """Generic gap builder using CSV row distances. Drops first incomplete gap."""
     gaps = []
     last_idx = None
-    prev_real_triple = None
+    p1, p2 = 0, 0
+    prev_triple = "none"
+    event_id = 0
     for i, s in enumerate(spins):
+        # Index gaps are harder to detect events, but we can use Seq ID jumps
+        if i > 0 and abs(s['seq'] - spins[i-1]['seq']) > 500:
+            event_id += 1
+            p1, p2 = 0, 0
+
         if s['triple'] == target:
             if last_idx is not None:
                 csv_traj = spins[last_idx + 1:i + 1]
                 gaps.append({
                     'target': target,
-                    'end_idx': i,
-                    'start_idx': last_idx + 1,
                     'length': i - last_idx,
-                    'csv_length': len(csv_traj),
+                    'prev_gap_1': p1,
+                    'prev_gap_2': p2,
+                    'prev_real_triple': prev_triple,
+                    'event_id': event_id,
                     'is_first_gap': False,
-                    'trajectory': csv_traj,
-                    'end_event': s['gae_segment'],
-                    'end_grand_prize': s['gae_grand_prize'],
-                    'end_mission': s['accum_mission'],
-                    'end_bet_level': s['bet_level'],
-                    'end_bet_multiplier': s['bet_multiplier'],
-                    'prev_real_triple': prev_real_triple,
+                    'trajectory': csv_traj
                 })
+                p2 = p1
+                p1 = i - last_idx
             last_idx = i
-            prev_real_triple = target
+            prev_triple = target
         elif s['triple'] is not None:
-            prev_real_triple = s['triple']
+            prev_triple = s['triple']
     return gaps
-
 
 def main():
     out_dir = Path(__file__).parent
-    out_dir.mkdir(exist_ok=True)
-
     all_data = {}
-    summary = ["=" * 70, "NUCLEAR LOADER - gap inventory", "=" * 70]
+    summary = ["=== SMART NUCLEAR LOADER ==="]
 
     for account, paths in DATA_FILES.items():
-        # Backwards compat: allow a single string path
-        if isinstance(paths, str):
-            paths = [paths]
+        if not paths: continue
 
-        # Load each CSV as a separate session
-        all_spins = []       # concatenated with session_idx stamped
-        all_acc_gaps = []
-        all_spn_gaps = []
-        all_atk_gaps = []
-        all_stl_gaps = []
-        all_shd_gaps = []
-        session_summaries = []
+        # 1. Load and Fingerprint
+        all_raw_rows = []
+        for p in paths:
+            with open(p, 'r', encoding='utf-8') as f:
+                all_raw_rows.extend(list(csv.DictReader(f)))
+        
+        # Deduplicate by 'seq'
+        unique_rows = {}
+        for row in all_raw_rows:
+            seq = safe_int(row.get('seq'))
+            if seq not in unique_rows:
+                unique_rows[seq] = row
+        
+        # Sort by 'seq' so the timeline is perfectly chronological
+        sorted_keys = sorted(unique_rows.keys())
+        sorted_rows = [unique_rows[k] for k in sorted_keys]
+        
+        # Convert to records
+        all_spins = build_spin_records(sorted_rows)
 
-        for sess_idx, path in enumerate(paths):
-            rows = load_csv(path)
-            spins = build_spin_records(rows)
-            # Tag each spin with its session index and filename
-            for s in spins:
-                s['session_idx'] = sess_idx
-                s['session_file'] = Path(path).name
-            all_spins.extend(spins)
+        # 2. Split into Sessions based on mission reset
+        sessions = []
+        current_session = []
+        prev_mission = -1
+        
+        for s in all_spins:
+            # If mission drops, it's a new event/session
+            if s['accum_mission'] < prev_mission and prev_mission != -1:
+                if current_session: sessions.append(current_session)
+                current_session = []
+            
+            current_session.append(s)
+            prev_mission = s['accum_mission']
+        
+        if current_session: sessions.append(current_session)
 
-            # Compute gaps within THIS session (counters don't cross sessions)
-            acc_gaps = build_counter_gaps(spins, 'accumulation', 'sa_spins')
-            spn_gaps = build_counter_gaps(spins, 'spins', 'ss_spins')
-            atk_gaps = build_index_gaps(spins, 'attack')
-            stl_gaps = build_index_gaps(spins, 'steal')
-            shd_gaps = build_index_gaps(spins, 'shield')
+        # 3. Build Gaps per Session
+        total_acc = []
+        total_spn = []
+        total_atk = []
+        total_stl = []
+        total_shd = []
 
-            # Tag each gap with its session too
-            for g in acc_gaps + spn_gaps + atk_gaps + stl_gaps + shd_gaps:
-                g['session_idx'] = sess_idx
-                g['session_file'] = Path(path).name
+        for sess in sessions:
+            total_acc.extend(build_counter_gaps(sess, 'accumulation', 'sa_spins'))
+            total_spn.extend(build_counter_gaps(sess, 'spins', 'ss_spins'))
+            total_atk.extend(build_index_gaps(sess, 'attack'))
+            total_stl.extend(build_index_gaps(sess, 'steal'))
+            total_shd.extend(build_index_gaps(sess, 'shield'))
 
-            all_acc_gaps.extend(acc_gaps)
-            all_spn_gaps.extend(spn_gaps)
-            all_atk_gaps.extend(atk_gaps)
-            all_stl_gaps.extend(stl_gaps)
-            all_shd_gaps.extend(shd_gaps)
-
-            session_summaries.append({
-                'file': Path(path).name,
-                'spins': len(spins),
-                'acc_gaps': len(acc_gaps),
-                'spn_gaps': len(spn_gaps),
-            })
-
-        acct = {'spins': all_spins, 'gaps': {
-            'accumulation': all_acc_gaps,
-            'spins': all_spn_gaps,
-            'attack': all_atk_gaps,
-            'steal': all_stl_gaps,
-            'shield': all_shd_gaps,
+        all_data[account] = {'spins': all_spins, 'gaps': {
+            'accumulation': total_acc,
+            'spins': total_spn,
+            'attack': total_atk,
+            'steal': total_stl,
+            'shield': total_shd,
         }}
 
-        line = f"\n{account}: {len(all_spins)} spins across {len(paths)} session(s)"
-        summary.append(line)
-        print(line)
-        for ss in session_summaries:
-            line = f"  - {ss['file']}: {ss['spins']} spins, {ss['acc_gaps']} ACC gaps, {ss['spn_gaps']} SPN gaps"
-            summary.append(line)
-            print(line)
-
-        if all_acc_gaps:
-            lengths = [g['length'] for g in all_acc_gaps]
-            line = (f"  accumulation : {len(all_acc_gaps):4d} gaps (sa_spins)  "
-                    f"mean={sum(lengths)/len(lengths):6.1f}  "
-                    f"min={min(lengths):4d}  max={max(lengths):4d}")
-        else:
-            line = "  accumulation : 0 gaps"
+        line = f"\n{account}: {len(all_spins)} unique spins across {len(sessions)} detected events."
         summary.append(line); print(line)
+        summary.append(f"  Total Gaps: ACC={len(total_acc)}, SPN={len(total_spn)}")
 
-        if all_spn_gaps:
-            lengths = [g['length'] for g in all_spn_gaps]
-            line = (f"  spins        : {len(all_spn_gaps):4d} gaps (ss_spins)  "
-                    f"mean={sum(lengths)/len(lengths):6.1f}  "
-                    f"min={min(lengths):4d}  max={max(lengths):4d}")
-        else:
-            line = "  spins        : 0 gaps"
-        summary.append(line); print(line)
-
-        for target in ['attack', 'steal', 'shield']:
-            g_list = acct['gaps'][target]
-            if g_list:
-                lengths = [g['length'] for g in g_list]
-                line = (f"  {target:13s}: {len(g_list):4d} gaps (idx)       "
-                        f"mean={sum(lengths)/len(lengths):6.1f}  "
-                        f"min={min(lengths):4d}  max={max(lengths):4d}")
-            else:
-                line = f"  {target:13s}: 0 gaps"
-            summary.append(line); print(line)
-
-        all_data[account] = acct
-
-    # Dedup signature check
-    summary.append("\n--- DEDUP SIGNATURE CHECK (first 50 reels) ---")
-    sigs = {}
-    for acct, d in all_data.items():
-        sig = tuple((s['reel_1'], s['reel_2'], s['reel_3']) for s in d['spins'][:50])
-        sigs[acct] = sig
-    accts = list(sigs)
-    for i in range(len(accts)):
-        for j in range(i+1, len(accts)):
-            same = sigs[accts[i]] == sigs[accts[j]]
-            summary.append(f"  {accts[i]} vs {accts[j]}: {'SAME *** DUP ***' if same else 'different'}")
-
-    # Aggregate gap counts across accounts
-    summary.append("\n--- TOTAL GAPS ACROSS ALL 3 ACCOUNTS ---")
-    for target in REAL_TRIPLES:
-        total = sum(len(d['gaps'][target]) for d in all_data.values())
-        summary.append(f"  {target:13s}: {total} gaps")
-
-    pickle_path = out_dir / 'gaps.pkl'
-    with open(pickle_path, 'wb') as f:
+    with open(out_dir / 'gaps.pkl', 'wb') as f:
         pickle.dump(all_data, f)
-
-    summary_path = out_dir / '01_inventory.txt'
-    with open(summary_path, 'w', encoding='utf-8') as f:
+    
+    with open(out_dir / '01_inventory.txt', 'w', encoding='utf-8') as f:
         f.write('\n'.join(summary))
-
-    print(f"\nSaved gap data -> {pickle_path}")
-    print(f"Saved summary  -> {summary_path}")
-
 
 if __name__ == '__main__':
     main()

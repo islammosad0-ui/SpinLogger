@@ -1,0 +1,34 @@
+=== PURE ZO-KI STRATEGY BACKTEST ===
+
+Total ACC (Event) Gaps  : 271
+Total SPN (Capsule) Gaps: 333
+
+TEST 1: The 'Long -> Short -> Short -> Medium' Cycle
+  Rule: If gap > 150, expect next two < 100, then expect 110-130.
+  Times a Long run (>150) occurred: 52
+  -> Followed by ONE Short (<100) : 34 (65.4%)
+  -> Followed by TWO Shorts       : 12 (23.1%)
+  -> TWO Shorts then a Medium (110-130): 2 (3.8%)
+
+  Let's expand the Medium definition to 100-140 just in case:
+  -> TWO Shorts then Expanded Medium (100-140): 4 (7.7%)
+
+TEST 2: The Capsule (SPN) Triple Pattern
+  Rule: '2-3 times short, very long'
+  Times we had 2 consecutive Short Capsule gaps (<100): 125
+  -> Followed by a Very Long (>150): 19 (15.2%)
+  Times we had 3 consecutive Short Capsule gaps (<100): 80
+  -> Followed by a Very Long (>150): 10 (12.5%)
+
+  Average Capsule Gap length overall: 85.6 spins
+
+TEST 3: Continuous Capsule Counting ('Drought' tracking)
+  Rule: If Capsules didn't hit for X spins at the end of an ACC run, they will hit around 100-X in the next run.
+  We already track `ss_spins` which does exactly this. 
+  Let's see the variation: how many spins does a Capsule gap take normally?
+  Capsule Gap Size Distribution:
+  0-50 spins  : 91 gaps (27.3%)
+  50-100 spins: 124 gaps (37.2%)
+  100-150 rng : 77 gaps (23.1%)
+  150-200 rng : 31 gaps (9.3%)
+  200+ spins  : 10 gaps (3.0%)

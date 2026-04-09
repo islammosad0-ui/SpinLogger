@@ -1,0 +1,334 @@
+=== PREVIOUS 10 REELS ANALYSIS (THE QUIET ZONE) ===
+
+====================================================
+  TARGET: TRIPLE ACCUMULATION
+====================================================
+
+--- ACCOUNT: Islam (119 accumulation hits) ---
+Symbol   | Normal Float % | Last 10 Spins % | Difference 
+----------------------------------------------------------
+attack   |           31.1% |            32.6% | +1.5%
+accumulation |           23.4% |            21.1% | -2.3%
+coin     |           23.3% |            25.1% | +1.8%
+steal    |            7.9% |             7.3% | -0.6%
+goldSack |            7.5% |             6.5% | -1.0%
+shield   |            5.4% |             5.5% | +0.1%
+spins    |            1.4% |             1.8% | +0.5%
+
+Visual Examples of the 10 spins immediately preceding the drop:
+  Example 1:
+    T-10: [attack | spins  | goldSa]
+    T-09: [spins  | spins  | spins ]
+    T-08: [shield | shield | shield]
+    T-07: [spins  | spins  | spins ]
+    T-06: [attack | spins  | goldSa]
+    T-05: [shield | shield | shield]
+    T-04: [goldSa | goldSa | goldSa]
+    T-03: [coin   | coin   | coin  ]
+    T-02: [goldSa | goldSa | goldSa]
+    T-01: [coin   | coin   | steal ]
+    ----- BINGO -----
+    T-00: [accumu | accumu | accumu]
+
+  Example 2:
+    T-10: [attack | attack | attack]
+    T-09: [coin   | spins  | spins ]
+    T-08: [attack | coin   | shield]
+    T-07: [coin   | coin   | steal ]
+    T-06: [attack | spins  | goldSa]
+    T-05: [accumu | goldSa | goldSa]
+    T-04: [steal  | steal  | steal ]
+    T-03: [goldSa | goldSa | goldSa]
+    T-02: [coin   | coin   | steal ]
+    T-01: [shield | shield | shield]
+    ----- BINGO -----
+    T-00: [accumu | accumu | accumu]
+
+  Example 3:
+    T-10: [steal  | steal  | goldSa]
+    T-09: [coin   | coin   | coin  ]
+    T-08: [steal  | steal  | steal ]
+    T-07: [attack | attack | goldSa]
+    T-06: [accumu | accumu | goldSa]
+    T-05: [accumu | goldSa | goldSa]
+    T-04: [attack | attack | attack]
+    T-03: [accumu | goldSa | goldSa]
+    T-02: [attack | spins  | goldSa]
+    T-01: [attack | spins  | goldSa]
+    ----- BINGO -----
+    T-00: [accumu | accumu | accumu]
+
+--- ACCOUNT: Nick (25 accumulation hits) ---
+Symbol   | Normal Float % | Last 10 Spins % | Difference 
+----------------------------------------------------------
+attack   |           30.5% |            29.6% | -0.9%
+accumulation |           22.7% |            20.0% | -2.7%
+coin     |           23.8% |            27.2% | +3.4%
+steal    |            8.1% |             8.4% | +0.3%
+goldSack |            7.5% |             8.0% | +0.5%
+shield   |            5.5% |             4.0% | -1.5%
+spins    |            1.9% |             2.8% | +0.9%
+
+Visual Examples of the 10 spins immediately preceding the drop:
+  Example 1:
+    T-10: [goldSa | goldSa | goldSa]
+    T-09: [goldSa | goldSa | goldSa]
+    T-08: [coin   | coin   | coin  ]
+    T-07: [shield | shield | shield]
+    T-06: [attack | spins  | goldSa]
+    T-05: [accumu | accumu | coin  ]
+    T-04: [coin   | coin   | steal ]
+    T-03: [attack | spins  | goldSa]
+    T-02: [coin   | steal  | steal ]
+    T-01: [steal  | steal  | steal ]
+    ----- BINGO -----
+    T-00: [accumu | accumu | accumu]
+
+  Example 2:
+    T-10: [shield | goldSa | goldSa]
+    T-09: [coin   | spins  | spins ]
+    T-08: [spins  | spins  | spins ]
+    T-07: [attack | attack | goldSa]
+    T-06: [attack | attack | attack]
+    T-05: [attack | coin   | coin  ]
+    T-04: [coin   | coin   | coin  ]
+    T-03: [coin   | steal  | spins ]
+    T-02: [accumu | goldSa | goldSa]
+    T-01: [attack | attack | goldSa]
+    ----- BINGO -----
+    T-00: [accumu | accumu | accumu]
+
+  Example 3:
+    T-10: [accumu | goldSa | goldSa]
+    T-09: [coin   | spins  | spins ]
+    T-08: [attack | steal  | goldSa]
+    T-07: [coin   | steal  | shield]
+    T-06: [attack | spins  | goldSa]
+    T-05: [attack | spins  | goldSa]
+    T-04: [attack | attack | attack]
+    T-03: [accumu | goldSa | goldSa]
+    T-02: [coin   | shield | shield]
+    T-01: [accumu | goldSa | goldSa]
+    ----- BINGO -----
+    T-00: [accumu | accumu | accumu]
+
+--- ACCOUNT: Ahmed (127 accumulation hits) ---
+Symbol   | Normal Float % | Last 10 Spins % | Difference 
+----------------------------------------------------------
+attack   |           30.6% |            30.0% | -0.6%
+accumulation |           23.6% |            21.6% | -2.0%
+coin     |           22.9% |            24.1% | +1.2%
+steal    |            8.8% |             9.1% | +0.2%
+goldSack |            7.4% |             8.1% | +0.7%
+shield   |            5.4% |             5.8% | +0.5%
+spins    |            1.3% |             1.3% | +0.0%
+
+Visual Examples of the 10 spins immediately preceding the drop:
+  Example 1:
+    T-10: [attack | coin   | coin  ]
+    T-09: [attack | spins  | goldSa]
+    T-08: [coin   | coin   | spins ]
+    T-07: [shield | shield | shield]
+    T-06: [coin   | coin   | spins ]
+    T-05: [accumu | goldSa | goldSa]
+    T-04: [attack | attack | goldSa]
+    T-03: [accumu | goldSa | goldSa]
+    T-02: [accumu | accumu | coin  ]
+    T-01: [goldSa | goldSa | goldSa]
+    ----- BINGO -----
+    T-00: [accumu | accumu | accumu]
+
+  Example 2:
+    T-10: [accumu | accumu | coin  ]
+    T-09: [goldSa | goldSa | goldSa]
+    T-08: [attack | attack | attack]
+    T-07: [steal  | steal  | steal ]
+    T-06: [coin   | coin   | spins ]
+    T-05: [accumu | goldSa | goldSa]
+    T-04: [attack | steal  | goldSa]
+    T-03: [accumu | goldSa | goldSa]
+    T-02: [attack | spins  | goldSa]
+    T-01: [coin   | coin   | coin  ]
+    ----- BINGO -----
+    T-00: [accumu | accumu | accumu]
+
+  Example 3:
+    T-10: [attack | steal  | goldSa]
+    T-09: [attack | attack | attack]
+    T-08: [accumu | goldSa | goldSa]
+    T-07: [coin   | coin   | coin  ]
+    T-06: [goldSa | goldSa | goldSa]
+    T-05: [accumu | goldSa | goldSa]
+    T-04: [coin   | coin   | spins ]
+    T-03: [accumu | goldSa | goldSa]
+    T-02: [spins  | spins  | spins ]
+    T-01: [coin   | shield | shield]
+    ----- BINGO -----
+    T-00: [accumu | accumu | accumu]
+
+====================================================
+  TARGET: TRIPLE SPINS
+====================================================
+
+--- ACCOUNT: Islam (147 spins hits) ---
+Symbol   | Normal Float % | Last 10 Spins % | Difference 
+----------------------------------------------------------
+attack   |           31.1% |            30.5% | -0.5%
+accumulation |           23.4% |            22.7% | -0.8%
+coin     |           23.3% |            25.6% | +2.3%
+steal    |            7.9% |             7.6% | -0.3%
+goldSack |            7.5% |             7.6% | +0.1%
+shield   |            5.4% |             5.4% | -0.1%
+spins    |            1.4% |             0.7% | -0.7%
+
+Visual Examples of the 10 spins immediately preceding the drop:
+  Example 1:
+    T-10: [steal  | steal  | steal ]
+    T-09: [attack | attack | attack]
+    T-08: [coin   | spins  | spins ]
+    T-07: [accumu | accumu | coin  ]
+    T-06: [coin   | spins  | spins ]
+    T-05: [attack | attack | attack]
+    T-04: [steal  | steal  | steal ]
+    T-03: [coin   | coin   | steal ]
+    T-02: [accumu | goldSa | goldSa]
+    T-01: [attack | spins  | goldSa]
+    ----- BINGO -----
+    T-00: [spins | spins | spins]
+
+  Example 2:
+    T-10: [coin   | spins  | spins ]
+    T-09: [accumu | accumu | coin  ]
+    T-08: [coin   | spins  | spins ]
+    T-07: [attack | attack | attack]
+    T-06: [steal  | steal  | steal ]
+    T-05: [coin   | coin   | steal ]
+    T-04: [accumu | goldSa | goldSa]
+    T-03: [attack | spins  | goldSa]
+    T-02: [spins  | spins  | spins ]
+    T-01: [shield | shield | shield]
+    ----- BINGO -----
+    T-00: [spins | spins | spins]
+
+  Example 3:
+    T-10: [coin   | coin   | steal ]
+    T-09: [coin   | steal  | spins ]
+    T-08: [accumu | goldSa | goldSa]
+    T-07: [coin   | coin   | coin  ]
+    T-06: [attack | steal  | goldSa]
+    T-05: [accumu | goldSa | goldSa]
+    T-04: [attack | attack | goldSa]
+    T-03: [goldSa | goldSa | goldSa]
+    T-02: [shield | shield | shield]
+    T-01: [attack | attack | attack]
+    ----- BINGO -----
+    T-00: [spins | spins | spins]
+
+--- ACCOUNT: Nick (40 spins hits) ---
+Symbol   | Normal Float % | Last 10 Spins % | Difference 
+----------------------------------------------------------
+attack   |           30.5% |            32.0% | +1.5%
+accumulation |           22.7% |            21.5% | -1.2%
+coin     |           23.8% |            24.5% | +0.7%
+steal    |            8.1% |             8.8% | +0.7%
+goldSack |            7.5% |             7.5% | +0.0%
+shield   |            5.5% |             4.5% | -1.0%
+spins    |            1.9% |             1.2% | -0.7%
+
+Visual Examples of the 10 spins immediately preceding the drop:
+  Example 1:
+    T-10: [accumu | goldSa | goldSa]
+    T-09: [goldSa | goldSa | goldSa]
+    T-08: [coin   | shield | shield]
+    T-07: [accumu | accumu | coin  ]
+    T-06: [attack | attack | coin  ]
+    T-05: [coin   | coin   | steal ]
+    T-04: [coin   | coin   | steal ]
+    T-03: [coin   | spins  | spins ]
+    T-02: [accumu | accumu | coin  ]
+    T-01: [accumu | goldSa | goldSa]
+    ----- BINGO -----
+    T-00: [spins | spins | spins]
+
+  Example 2:
+    T-10: [coin   | spins  | spins ]
+    T-09: [accumu | accumu | coin  ]
+    T-08: [accumu | goldSa | goldSa]
+    T-07: [spins  | spins  | spins ]
+    T-06: [accumu | goldSa | goldSa]
+    T-05: [attack | attack | attack]
+    T-04: [coin   | coin   | steal ]
+    T-03: [attack | attack | attack]
+    T-02: [attack | attack | attack]
+    T-01: [accumu | goldSa | goldSa]
+    ----- BINGO -----
+    T-00: [spins | spins | spins]
+
+  Example 3:
+    T-10: [accumu | goldSa | goldSa]
+    T-09: [coin   | spins  | spins ]
+    T-08: [shield | shield | shield]
+    T-07: [attack | attack | goldSa]
+    T-06: [steal  | spins  | goldSa]
+    T-05: [goldSa | goldSa | goldSa]
+    T-04: [accumu | accumu | coin  ]
+    T-03: [attack | coin   | shield]
+    T-02: [accumu | accumu | coin  ]
+    T-01: [accumu | goldSa | goldSa]
+    ----- BINGO -----
+    T-00: [spins | spins | spins]
+
+--- ACCOUNT: Ahmed (146 spins hits) ---
+Symbol   | Normal Float % | Last 10 Spins % | Difference 
+----------------------------------------------------------
+attack   |           30.6% |            31.2% | +0.6%
+accumulation |           23.6% |            23.1% | -0.5%
+coin     |           22.9% |            22.5% | -0.4%
+steal    |            8.8% |             8.4% | -0.4%
+goldSack |            7.4% |             7.4% | -0.0%
+shield   |            5.4% |             7.1% | +1.7%
+spins    |            1.3% |             0.3% | -1.0%
+
+Visual Examples of the 10 spins immediately preceding the drop:
+  Example 1:
+    T-10: [coin   | coin   | steal ]
+    T-09: [accumu | goldSa | goldSa]
+    T-08: [goldSa | goldSa | goldSa]
+    T-07: [coin   | coin   | steal ]
+    T-06: [coin   | steal  | steal ]
+    T-05: [coin   | steal  | steal ]
+    T-04: [accumu | goldSa | goldSa]
+    T-03: [attack | attack | coin  ]
+    T-02: [attack | spins  | goldSa]
+    T-01: [steal  | spins  | goldSa]
+    ----- BINGO -----
+    T-00: [spins | spins | spins]
+
+  Example 2:
+    T-10: [accumu | goldSa | goldSa]
+    T-09: [attack | attack | attack]
+    T-08: [coin   | steal  | steal ]
+    T-07: [coin   | spins  | spins ]
+    T-06: [accumu | goldSa | goldSa]
+    T-05: [attack | attack | attack]
+    T-04: [coin   | coin   | coin  ]
+    T-03: [steal  | steal  | steal ]
+    T-02: [attack | attack | coin  ]
+    T-01: [coin   | coin   | coin  ]
+    ----- BINGO -----
+    T-00: [spins | spins | spins]
+
+  Example 3:
+    T-10: [goldSa | goldSa | goldSa]
+    T-09: [shield | goldSa | goldSa]
+    T-08: [attack | steal  | goldSa]
+    T-07: [attack | attack | attack]
+    T-06: [accumu | goldSa | goldSa]
+    T-05: [coin   | coin   | coin  ]
+    T-04: [goldSa | goldSa | goldSa]
+    T-03: [accumu | goldSa | goldSa]
+    T-02: [coin   | coin   | spins ]
+    T-01: [accumu | goldSa | goldSa]
+    ----- BINGO -----
+    T-00: [spins | spins | spins]
+

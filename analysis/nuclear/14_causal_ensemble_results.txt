@@ -1,0 +1,151 @@
+====================================================================================================
+CHUNK 14: NEW CAUSAL ACC ENSEMBLE
+====================================================================================================
+Total gaps: 178
+
+============================================================
+STEP 1: Causal SML sweep
+============================================================
+Sweeping (s_bound, l_bound, t_l, gate) — L-bucket only (most signal),
+with t_s/t_m = SKIP (None). Then a small full-SML grid.
+
+--- L-only SML: prev >= L_bound, threshold = t_l, gate = g ---
+ L_bound   t_l   gate  catches
+  L>=120  t_l=130  g=0.31    4/178  bet=0.11%  mb/hit=  4.8  lift=21.36x
+  L>=140  t_l=130  g=0.29    4/178  bet=0.12%  mb/hit=  5.5  lift=18.45x
+  L>=120  t_l=130  g=0.30    5/178  bet=0.18%  mb/hit=  6.4  lift=15.85x
+  L>=130  t_l=130  g=0.29    4/178  bet=0.14%  mb/hit=  6.5  lift=15.61x
+  L>=120  t_l=130  g=0.29    7/178  bet=0.28%  mb/hit=  7.3  lift=13.93x
+  L>=140  t_l=130  g=0.28    6/178  bet=0.29%  mb/hit=  8.8  lift=11.49x
+  L>=120  t_l=130  g=0.28   10/178  bet=0.52%  mb/hit=  9.4  lift=10.79x
+  L>=130  t_l=130  g=0.28    7/178  bet=0.38%  mb/hit=  9.9  lift=10.29x
+  L>=120  t_l=140  g=0.28    4/178  bet=0.23%  mb/hit= 10.2  lift=9.90x
+  L>=120  t_l=130  g=0.27   10/178  bet=0.72%  mb/hit= 13.0  lift=7.81x
+  L>=130  t_l=100  g=0.31    5/178  bet=0.36%  mb/hit= 13.0  lift=7.81x
+  L>=140  t_l=100  g=0.31    5/178  bet=0.36%  mb/hit= 13.0  lift=7.81x
+  L>=140  t_l=130  g=0.27    6/178  bet=0.45%  mb/hit= 13.7  lift=7.42x
+  L>=120  t_l=140  g=0.27    4/178  bet=0.33%  mb/hit= 14.8  lift=6.88x
+  L>=140  t_l=120  g=0.29    4/178  bet=0.33%  mb/hit= 14.8  lift=6.88x
+  L>=150  t_l=100  g=0.30    4/178  bet=0.33%  mb/hit= 14.8  lift=6.88x
+  L>=160  t_l=100  g=0.30    4/178  bet=0.33%  mb/hit= 14.8  lift=6.88x
+  L>=130  t_l=130  g=0.27    7/178  bet=0.58%  mb/hit= 15.0  lift=6.76x
+  L>=120  t_l=120  g=0.31    4/178  bet=0.34%  mb/hit= 15.5  lift=6.55x
+  L>=120  t_l=130  g=0.26   10/178  bet=0.89%  mb/hit= 16.0  lift=6.34x
+  L>=150  t_l=100  g=0.29    5/178  bet=0.44%  mb/hit= 16.0  lift=6.34x
+  L>=160  t_l=100  g=0.29    5/178  bet=0.44%  mb/hit= 16.0  lift=6.34x
+  L>=130  t_l=120  g=0.29    4/178  bet=0.35%  mb/hit= 16.0  lift=6.34x
+  L>=100  t_l=130  g=0.31    4/178  bet=0.37%  mb/hit= 16.5  lift=6.15x
+  L>=110  t_l=130  g=0.31    4/178  bet=0.37%  mb/hit= 16.5  lift=6.15x
+
+--- Full SML grid (S/M/L thresholds, gate=0.30..0.32) ---
+  s   l   tS   tM   tL  gate  metrics
+ 50 120   SK   SK  130 0.30     5/178  bet=0.18%  mb/hit=  6.4  lift=15.85x
+ 80 120   SK   SK  130 0.30     5/178  bet=0.18%  mb/hit=  6.4  lift=15.85x
+100 120   SK   SK  130 0.30     5/178  bet=0.18%  mb/hit=  6.4  lift=15.85x
+ 50 120   SK   SK  130 0.29     7/178  bet=0.28%  mb/hit=  7.3  lift=13.93x
+ 80 120   SK   SK  130 0.29     7/178  bet=0.28%  mb/hit=  7.3  lift=13.93x
+100 120   SK   SK  130 0.29     7/178  bet=0.28%  mb/hit=  7.3  lift=13.93x
+ 50 130   SK   SK  100 0.31     5/178  bet=0.36%  mb/hit= 13.0  lift=7.81x
+ 80 130   SK   SK  100 0.31     5/178  bet=0.36%  mb/hit= 13.0  lift=7.81x
+100 130   SK   SK  100 0.31     5/178  bet=0.36%  mb/hit= 13.0  lift=7.81x
+ 50 130   SK  150  100 0.32     5/178  bet=0.38%  mb/hit= 13.6  lift=7.46x
+ 50 120   SK  150  130 0.31     7/178  bet=0.54%  mb/hit= 13.9  lift=7.32x
+ 80 120   SK  150  130 0.31     6/178  bet=0.48%  mb/hit= 14.5  lift=7.00x
+ 50 110   SK  150  130 0.31     7/178  bet=0.59%  mb/hit= 15.1  lift=6.70x
+ 50 120  100  150  130 0.32     6/178  bet=0.52%  mb/hit= 15.7  lift=6.48x
+ 80 110   SK  150  130 0.31     6/178  bet=0.53%  mb/hit= 16.0  lift=6.34x
+ 50 150   SK   SK  100 0.29     5/178  bet=0.44%  mb/hit= 16.0  lift=6.34x
+ 80 150   SK   SK  100 0.29     5/178  bet=0.44%  mb/hit= 16.0  lift=6.34x
+100 150   SK   SK  100 0.29     5/178  bet=0.44%  mb/hit= 16.0  lift=6.34x
+ 50 110  100  150  130 0.32     6/178  bet=0.54%  mb/hit= 16.2  lift=6.28x
+ 50 130  100  150  100 0.32     7/178  bet=0.64%  mb/hit= 16.6  lift=6.12x
+
+============================================================
+STEP 2: Causal SHIELD/triple-cond sweep
+============================================================
+  triple  thresh   gate  metrics
+   steal     130  0.29     6/178  bet=0.36%  mb/hit= 10.8  lift=9.37x
+   steal     130  0.31     4/178  bet=0.30%  mb/hit= 13.5  lift=7.52x
+   steal     130  0.30     4/178  bet=0.30%  mb/hit= 13.8  lift=7.38x
+  shield     150  0.30     3/178  bet=0.25%  mb/hit= 15.0  lift=6.76x
+   steal     130  0.32     3/178  bet=0.27%  mb/hit= 16.0  lift=6.34x
+   steal     130  0.28     6/178  bet=0.55%  mb/hit= 16.7  lift=6.09x
+  shield     140  0.30     4/178  bet=0.39%  mb/hit= 17.8  lift=5.72x
+  shield     130  0.30     6/178  bet=0.63%  mb/hit= 19.0  lift=5.34x
+   steal     120  0.31     4/178  bet=0.42%  mb/hit= 19.0  lift=5.34x
+  shield     130  0.31     3/178  bet=0.33%  mb/hit= 20.0  lift=5.07x
+   spins     130  0.29     3/178  bet=0.35%  mb/hit= 21.0  lift=4.83x
+   steal     120  0.29     6/178  bet=0.71%  mb/hit= 21.5  lift=4.72x
+   steal     120  0.32     3/178  bet=0.37%  mb/hit= 22.3  lift=4.54x
+   spins     130  0.28     3/178  bet=0.39%  mb/hit= 23.3  lift=4.35x
+   spins     120  0.29     4/178  bet=0.54%  mb/hit= 24.2  lift=4.18x
+  attack     100  0.35     3/178  bet=0.41%  mb/hit= 24.7  lift=4.11x
+   steal     120  0.30     4/178  bet=0.55%  mb/hit= 25.0  lift=4.06x
+  attack     100  0.34     3/178  bet=0.42%  mb/hit= 25.0  lift=4.06x
+   steal     110  0.31     4/178  bet=0.56%  mb/hit= 25.5  lift=3.98x
+   steal     120  0.28     7/178  bet=0.99%  mb/hit= 25.6  lift=3.97x
+  shield     140  0.28     8/178  bet=1.15%  mb/hit= 25.9  lift=3.92x
+  shield     140  0.29     5/178  bet=0.73%  mb/hit= 26.4  lift=3.84x
+  attack     100  0.33     3/178  bet=0.44%  mb/hit= 26.7  lift=3.80x
+   steal     110  0.32     3/178  bet=0.44%  mb/hit= 26.7  lift=3.80x
+  shield     150  0.28     6/178  bet=0.90%  mb/hit= 27.0  lift=3.76x
+
+============================================================
+STEP 3: Build candidate ensemble
+============================================================
+Total candidate rules: 29
+
+                                              rule  metrics
+------------------------------------------------------------------------------------------
+                            FLAT 130/0.31 stop=160   10/178  bet=1.11%  mb/hit= 20.1  lift=5.05x
+                                     FLAT 130/0.31   10/178  bet=1.45%  mb/hit= 26.2  lift=3.87x
+                                     FLAT 130/0.30   15/178  bet=2.76%  mb/hit= 33.3  lift=3.05x
+                                     FLAT 130/0.28   32/178  bet=5.94%  mb/hit= 33.5  lift=3.03x
+                                     FLAT 115/0.34    5/178  bet=0.58%  mb/hit= 20.8  lift=4.88x
+                                     FLAT 110/0.34    5/178  bet=0.73%  mb/hit= 26.2  lift=3.87x
+                                     FLAT 150/0.28   19/178  bet=3.61%  mb/hit= 34.3  lift=2.96x
+                                     FLAT 100/0.35    5/178  bet=0.78%  mb/hit= 28.0  lift=3.62x
+                         SML L>=120 t_l=130 g=0.31    4/178  bet=0.11%  mb/hit=  4.8  lift=21.36x
+                         SML L>=140 t_l=130 g=0.29    4/178  bet=0.12%  mb/hit=  5.5  lift=18.45x
+                         SML L>=120 t_l=130 g=0.30    5/178  bet=0.18%  mb/hit=  6.4  lift=15.85x
+                         SML L>=130 t_l=130 g=0.29    4/178  bet=0.14%  mb/hit=  6.5  lift=15.61x
+                         SML L>=120 t_l=130 g=0.29    7/178  bet=0.28%  mb/hit=  7.3  lift=13.93x
+                         SML L>=140 t_l=130 g=0.28    6/178  bet=0.29%  mb/hit=  8.8  lift=11.49x
+                         SML L>=120 t_l=130 g=0.28   10/178  bet=0.52%  mb/hit=  9.4  lift=10.79x
+                         SML L>=130 t_l=130 g=0.28    7/178  bet=0.38%  mb/hit=  9.9  lift=10.29x
+          SML s=50 l=120 tS=SK tM=SK tL=130 g=0.30    5/178  bet=0.18%  mb/hit=  6.4  lift=15.85x
+          SML s=80 l=120 tS=SK tM=SK tL=130 g=0.30    5/178  bet=0.18%  mb/hit=  6.4  lift=15.85x
+         SML s=100 l=120 tS=SK tM=SK tL=130 g=0.30    5/178  bet=0.18%  mb/hit=  6.4  lift=15.85x
+          SML s=50 l=120 tS=SK tM=SK tL=130 g=0.29    7/178  bet=0.28%  mb/hit=  7.3  lift=13.93x
+          SML s=80 l=120 tS=SK tM=SK tL=130 g=0.29    7/178  bet=0.28%  mb/hit=  7.3  lift=13.93x
+         SML s=100 l=120 tS=SK tM=SK tL=130 g=0.29    7/178  bet=0.28%  mb/hit=  7.3  lift=13.93x
+          SML s=50 l=130 tS=SK tM=SK tL=100 g=0.31    5/178  bet=0.36%  mb/hit= 13.0  lift=7.81x
+          SML s=80 l=130 tS=SK tM=SK tL=100 g=0.31    5/178  bet=0.36%  mb/hit= 13.0  lift=7.81x
+                           COND steal t=130 g=0.29    6/178  bet=0.36%  mb/hit= 10.8  lift=9.37x
+                           COND steal t=130 g=0.31    4/178  bet=0.30%  mb/hit= 13.5  lift=7.52x
+                           COND steal t=130 g=0.30    4/178  bet=0.30%  mb/hit= 13.8  lift=7.38x
+                          COND shield t=150 g=0.30    3/178  bet=0.25%  mb/hit= 15.0  lift=6.76x
+                           COND steal t=130 g=0.32    3/178  bet=0.27%  mb/hit= 16.0  lift=6.34x
+
+============================================================
+STEP 4: True union of all candidates (causal)
+============================================================
+True union catches:  36/178  bet=6.87%  mb/hit= 34.5  lift=2.94x
+
+============================================================
+STEP 5: Greedy minimum cover (causal)
+============================================================
+Greedy chosen (11 rules):
+  + SML L>=120 t_l=130 g=0.31  (+4 new, 19 bet spins alone)
+  + SML L>=140 t_l=130 g=0.29  (+2 new, 22 bet spins alone)
+  + COND shield t=150 g=0.30  (+3 new, 45 bet spins alone)
+  + SML s=50 l=130 tS=SK tM=SK tL=100 g=0.31  (+3 new, 65 bet spins alone)
+  + COND steal t=130 g=0.29  (+3 new, 65 bet spins alone)
+  + SML L>=130 t_l=130 g=0.28  (+3 new, 69 bet spins alone)
+  + SML L>=120 t_l=130 g=0.30  (+1 new, 32 bet spins alone)
+  + FLAT 115/0.34  (+2 new, 104 bet spins alone)
+  + FLAT 150/0.28  (+11 new, 652 bet spins alone)
+  + FLAT 130/0.31 stop=160  (+2 new, 201 bet spins alone)
+  + FLAT 130/0.28  (+2 new, 1072 bet spins alone)
+
+True greedy subset simulation:  36/178  bet=6.47%  mb/hit= 32.5  lift=3.12x

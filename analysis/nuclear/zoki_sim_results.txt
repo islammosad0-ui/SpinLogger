@@ -1,0 +1,32 @@
+=== ZO KI STRATEGY SIMULATION (28K SPINS) ===
+
+Betting Rules Engaged:
+- Base bet HIGH if Spins > 100
+- Base bet HIGH if Capsule Drought > 75
+- Sequence Lock: If L -> S -> S, ONLY bet HIGH strictly between 110-130
+- Power Rest: STRICT 'x1' enforced for 10 spins after ANY secondary win
+
+--- Islam ---
+Total Spins Played : 12891
+High Bet Spins Mode: 1101 (8.5%)
+Event Triples Hit  : 13 / 119 (10.9%)
+Capsule Triples Hit: 18
+Efficiency Metrics : 84.7 high-bets per Event Triple Catch
+
+--- Nick ---
+Total Spins Played : 3104
+High Bet Spins Mode: 248 (8.0%)
+Event Triples Hit  : 3 / 25 (12.0%)
+Capsule Triples Hit: 5
+Efficiency Metrics : 82.7 high-bets per Event Triple Catch
+
+--- Ahmed ---
+Total Spins Played : 12928
+High Bet Spins Mode: 909 (7.0%)
+Event Triples Hit  : 16 / 127 (12.6%)
+Capsule Triples Hit: 12
+Efficiency Metrics : 56.8 high-bets per Event Triple Catch
+
+--- OVERALL ---
+Total Event Catches: 32 / 271 (11.8%)
+Mean Bets per Catch: 70.6 mb/hit

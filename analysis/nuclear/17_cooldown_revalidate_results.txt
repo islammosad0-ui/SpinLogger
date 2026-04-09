@@ -1,0 +1,36 @@
+====================================================================================================
+CHUNK 17: COOLDOWN-AWARE RE-VALIDATION (8/3 rule applied)
+====================================================================================================
+Total gaps: 178
+Cooldown: 8 consec bets -> 3 REST spins
+
+--- First-N greedy subsets WITH cooldown ---
+  N                           last rule added                                             metrics
+  1                 SML L>=120 t_l=130 g=0.31         4/178  bet=0.11%  mb/hit=  4.8  lift=21.36x
+  2                 SML L>=140 t_l=130 g=0.29         6/178  bet=0.20%  mb/hit=  6.0  lift=16.91x
+  3                  COND shield t=150 g=0.30    8/178  bet=0.43%  mb/hit=  9.6  lift=10.54x  lost-to-REST=1
+  4              SML s=50 l=130 tL=100 g=0.31   11/178  bet=0.71%  mb/hit= 11.6  lift=8.72x  lost-to-REST=1
+  5                   COND steal t=130 g=0.29   13/178  bet=0.94%  mb/hit= 13.0  lift=7.81x  lost-to-REST=2
+  6                 SML L>=130 t_l=130 g=0.28   16/178  bet=1.16%  mb/hit= 13.1  lift=7.77x  lost-to-REST=2
+  7                 SML L>=120 t_l=130 g=0.30   17/178  bet=1.21%  mb/hit= 12.8  lift=7.91x  lost-to-REST=2
+  8                             FLAT 115/0.34   20/178  bet=1.52%  mb/hit= 13.7  lift=7.41x  lost-to-REST=1
+  9                             FLAT 150/0.28   30/178  bet=4.01%  mb/hit= 24.2  lift=4.20x  lost-to-REST=2
+ 10                    FLAT 130/0.31 stop=160   32/178  bet=4.32%  mb/hit= 24.4  lift=4.16x  lost-to-REST=2
+ 11                             FLAT 130/0.28   31/178  bet=5.19%  mb/hit= 30.3  lift=3.35x  lost-to-REST=5
+
+--- Hand-curated lean subsets WITH cooldown ---
+  A: 3 rules  ->   10/178  bet=0.47%  mb/hit=  8.4  lift=12.08x
+  B: 5 rules  ->   16/178  bet=1.31%  mb/hit= 14.8  lift=6.85x  lost-to-REST=1
+  C: 7 rules  ->   21/178  bet=1.75%  mb/hit= 15.0  lift=6.74x  lost-to-REST=1
+  D: 8 rules  ->   22/178  bet=1.94%  mb/hit= 15.9  lift=6.38x  lost-to-REST=1
+  E: 9 rules  ->   22/178  bet=3.00%  mb/hit= 24.6  lift=4.13x  lost-to-REST=3
+
+--- Direct comparison: NO cooldown vs WITH cooldown for Subset C ---
+  NO  cooldown:  22/178  bet=2.07%  mb/hit= 17.0  lift=5.98x
+  8/3 cooldown:  21/178  bet=1.75%  mb/hit= 15.0  lift=6.74x  lost-to-REST=1
+  Delta: catches 22->21 (1 lost), bets 373->316 (57 saved, -15.3%)
+
+--- Per-account breakdown for Subset C WITH cooldown ---
+  Islam :  10/83  bet=2.02%  mb/hit= 16.7  lift=5.96x
+  Ahmed :   8/77  bet=1.05%  mb/hit=  9.9  lift=9.86x  lost-to-REST=1
+  Nick  :   3/18  bet=3.04%  mb/hit= 23.3  lift=5.49x

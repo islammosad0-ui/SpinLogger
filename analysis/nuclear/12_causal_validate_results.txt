@@ -1,0 +1,118 @@
+====================================================================================================
+CHUNK 12: CAUSAL VALIDATION of the existing 16-rule ensemble
+====================================================================================================
+Total gaps: 178 (178 ACC gaps across Islam/Ahmed/Nick)
+
+Each row compares the rule's NON-CAUSAL score (from chunk 10) against
+its CAUSAL score (strategy evaluated on counters at end of prior spin).
+
+                                         rule   NC catches   NC mb/hit   C catches    C mb/hit   C lift
+-------------------------------------------------------------------------------------------------------
+            COMBO w10 t110 a0.28 p0.20 s0.010     42/178       9.3     9/178      38.6     2.6x
+             Ideal RA w8 t110 rate0.30 s0.006     39/178       8.1     6/178      45.8     2.2x
+                      RA t130 rate0.28 s0.010     31/178       8.6     6/178      39.2     2.6x
+                                FLAT 150/0.32      7/178       6.7     4/178      10.0    10.1x
+            SML L>=120 tL=130 g=0.32 (L-only)      5/178       2.4     1/178       7.0    14.5x
+            SML L>=120 tL=130 g=0.30 (L-only)     10/178       4.2     5/178       6.4    15.9x
+           SML S100 L120 tM=180 tL=130 g=0.32     12/178       3.8     5/178       6.8    14.9x
+           SML S100 L120 tM=110 tL=130 g=0.32     13/178       4.8     5/178      10.0    10.1x
+           SML S100 L130 tM=130 tL=100 g=0.32     16/178       5.9     7/178      11.3     9.0x
+           SML S50  L130 tM=150 tL=100 g=0.32     17/178       7.8     7/178      16.6     6.1x
+     SML S50  L130 tS=80 tM=150 tL=100 g=0.32     19/178       9.6     7/178      23.3     4.4x
+             DG t130 acc0.32 spn0.22 (Sniper)     10/178       6.1     2/178      25.5     4.0x
+                      DG t130 acc0.32 spn0.20     11/178       7.2     3/178      22.7     4.5x
+                      DG t120 acc0.32 spn0.22     11/178       8.7     2/178      42.5     2.4x
+                      DG t130 acc0.30 spn0.25     15/178       8.7     6/178      19.3     5.2x
+                                FLAT 130/0.33     10/178       9.8     4/178      22.0     4.6x
+                      RA t120 rate0.28 s0.010     35/178       9.8     7/178      44.0     2.3x
+           SML S100 L150 tM=130 tL=100 g=0.32     15/178       5.7     6/178      11.8     8.6x
+           SML S100 L170 tM=130 tL=100 g=0.32     14/178       6.0     5/178      14.0     7.2x
+      SML L>=100 tL=130 g=0.32 (L-only loose)      6/178       5.7     1/178      28.0     3.6x
+    SML S50 L120 tS=SKIP tM=150 tL=130 g=0.32     10/178       5.6     4/178      11.5     8.8x
+   SML S50 L120 tS=SKIP tM=SKIP tL=130 g=0.32      5/178       2.4     1/178       7.0    14.5x
+           SML S100 L120 tM=150 tL=130 g=0.32     12/178       4.9     5/178       9.4    10.8x
+     SML S50 L130 tS=100 tM=160 tL=100 g=0.34      5/178       1.6     1/178       3.0    33.8x
+                                FLAT 130/0.37      3/178       7.0     0/178       inf     0.0x
+                                FLAT 110/0.37      4/178       9.5     1/178      34.0     3.0x
+                                FLAT 150/0.37      3/178       1.3     0/178       inf     0.0x
+                                FLAT 130/0.36      4/178       9.5     3/178      11.3     9.0x
+                                FLAT 130/0.34      5/178      14.4     4/178      16.8     6.1x
+                         SHIELD-cond 110/0.32      9/178       9.4     2/178      38.0     2.7x
+                         SHIELD-cond 120/0.32      6/178       8.5     1/178      45.0     2.3x
+                         SHIELD-cond 130/0.32      6/178       6.3     1/178      32.0     3.2x
+                         SHIELD-cond 140/0.32      4/178       6.0     1/178      20.0     5.1x
+                         ATTACK-cond 130/0.32      2/178      23.5     1/178      45.0     2.3x
+                         ATTACK-cond 110/0.32      4/178      20.2     2/178      38.5     2.6x
+
+--- TRUE causal union (bet if ANY of the 16 rules fires causally) ---
+  Catches  : 21/178 (11.8%)
+  Bet spins: 765 / 18061 (4.24%)
+  mb/hit   : 36.4
+  lift     : 2.8x
+
+  Per-account causal union:
+    Islam :   7/ 83 (8%)
+    Ahmed :  12/ 77 (16%)
+    Nick  :   2/ 18 (11%)
+
+--- Headline drop (non-causal -> causal) ---
+  Non-causal union of 16 rules : 63/178 catches  (the old '63/178' figure)
+  Causal     union of 16 rules : 21/178 catches
+  Phantom catches removed      : 42
+  Survival rate                : 33%
+
+--- Gaps that were phantom-only catches (in non-causal union but NOT in causal) ---
+Count: 42
+  gap   6  acct=Islam   len= 87  prev=46
+  gap   7  acct=Islam   len=151  prev=87
+  gap  10  acct=Islam   len=129  prev=49
+  gap  13  acct=Islam   len=132  prev=19
+  gap  25  acct=Islam   len=394  prev=34
+  gap  27  acct=Islam   len=185  prev=3
+  gap  29  acct=Islam   len=123  prev=35
+  gap  31  acct=Islam   len=177  prev=73
+  gap  33  acct=Islam   len=127  prev=7
+  gap  36  acct=Islam   len=191  prev=58
+  gap  46  acct=Islam   len=131  prev=107
+  gap  58  acct=Islam   len= 89  prev=5
+  gap  59  acct=Islam   len=184  prev=89
+  gap  60  acct=Islam   len=114  prev=184
+  gap  62  acct=Islam   len=113  prev=37
+  gap  63  acct=Islam   len=227  prev=113
+  gap  64  acct=Islam   len=101  prev=227
+  gap  65  acct=Islam   len=233  prev=101
+  gap  67  acct=Islam   len=136  prev=49
+  gap  68  acct=Islam   len=150  prev=136
+  gap  73  acct=Islam   len=133  prev=66
+  gap  76  acct=Islam   len=114  prev=62
+  gap  82  acct=Islam   len=161  prev=88
+  gap  84  acct=Ahmed   len=132  prev=147
+  gap  92  acct=Ahmed   len=250  prev=10
+  gap  95  acct=Ahmed   len=127  prev=13
+  gap 102  acct=Ahmed   len=133  prev=54
+  gap 104  acct=Ahmed   len=119  prev=90
+  gap 105  acct=Ahmed   len=110  prev=119
+  gap 107  acct=Ahmed   len=158  prev=37
+  gap 111  acct=Ahmed   len=147  prev=59
+  gap 120  acct=Ahmed   len=170  prev=42
+  gap 126  acct=Ahmed   len=141  prev=108
+  gap 127  acct=Ahmed   len=137  prev=141
+  gap 135  acct=Ahmed   len=135  prev=72
+  gap 138  acct=Ahmed   len=140  prev=117
+  gap 142  acct=Ahmed   len=130  prev=104
+  gap 145  acct=Ahmed   len=153  prev=58
+  gap 158  acct=Ahmed   len=120  prev=123
+  gap 168  acct=Nick    len=110  prev=19
+  gap 169  acct=Nick    len=163  prev=110
+  gap 172  acct=Nick    len=154  prev=250
+
+--- GREEDY MINIMUM COVER (causal) ---
+  Greedy chosen subset (8 configs):
+    + SML S50 L130 tS=100 tM=160 tL=100 g=0.34  (+1 new catches)
+    + SML L>=120 tL=130 g=0.30 (L-only)  (+5 new catches)
+    + SML S100 L120 tM=180 tL=130 g=0.32  (+4 new catches)
+    + FLAT 110/0.37  (+1 new catches)
+    + COMBO w10 t110 a0.28 p0.20 s0.010  (+6 new catches)
+    + SML S50  L130 tM=150 tL=100 g=0.32  (+2 new catches)
+    + SHIELD-cond 110/0.32  (+1 new catches)
+    + DG t130 acc0.30 spn0.25  (+1 new catches)

@@ -1,0 +1,37 @@
+=== ULTIMATE PRECISION SIMULATION: ENSEMBLE + DUPLICATE REELS ===
+Logic: 1. Ensemble (Double Gate/Combo/Accel) is FIRING (Alerting).
+       2. While firing, we wait for an EXACT DUPLICATE reel.
+       3. Once duplicate hit -> BET HIGH for only 10 spins.
+
+======================================================================
+   TARGET: TRIPLE ACCUMULATION
+======================================================================
+
+Account: Islam    | Gaps: 121 | Signals:  30 | Catches:   5 | Eff: 56.8 mb/hit
+Account: Nick     | Gaps:  46 | Signals:  18 | Catches:   4 | Eff: 38.8 mb/hit
+Account: Ahmed    | Gaps: 132 | Signals:  32 | Catches:   8 | Eff: 35.4 mb/hit
+
+--- OVERALL ACCUMULATION SUMMARY ---
+Total Gaps Analyzed: 299
+Total Duplicate Signals while Ensemble Active: 80
+Triple hit within 5 spins : 8 (10.0%)
+Triple hit within 10 spins: 17 (21.2%) *** WINNER ***
+Precision Score (Hits per Signal)   : 21.2%
+Efficiency (Mean Bets per Catch)    : 42.5 mb/hit
+
+======================================================================
+   TARGET: TRIPLE SPINS
+======================================================================
+
+Account: Islam    | Gaps: 149 | Signals:  11 | Catches:   2 | Eff: 51.5 mb/hit
+Account: Nick     | Gaps:  64 | Signals:   2 | Catches:   0 | Eff: 20.0 mb/hit
+Account: Ahmed    | Gaps: 153 | Signals:   6 | Catches:   2 | Eff: 25.5 mb/hit
+
+--- OVERALL SPINS SUMMARY ---
+Total Gaps Analyzed: 366
+Total Duplicate Signals while Ensemble Active: 19
+Triple hit within 5 spins : 2 (10.5%)
+Triple hit within 10 spins: 4 (21.1%) *** WINNER ***
+Precision Score (Hits per Signal)   : 21.1%
+Efficiency (Mean Bets per Catch)    : 43.5 mb/hit
+

@@ -428,11 +428,14 @@ def simulate(spins, rules, target, strategy, bet_high=6000,
                 bet_counter = 0
                 pause_counter = 0
 
-        # Post-spin state machine evolution (only for stateful strategies)
+        # Post-spin state machine evolution (only for stateful strategies).
+        # mini_pause > 0: on a mid-win triple, drop to 1x for `mini_pause`
+        #                 pulls, then resume BET_HIGH with a fresh window.
+        # mini_pause == 0: mid-wins are IGNORED — bet window runs flat to 0.
         if strategy in (STRAT_WINDOW, STRAT_GATED) and not is_target:
             if state == 'BET_HIGH':
                 bet_counter -= 1
-                if is_mini_trigger:
+                if is_mini_trigger and mini_pause > 0:
                     state = 'MINI_PAUSE'
                     pause_counter = mini_pause
                     mini_pauses += 1

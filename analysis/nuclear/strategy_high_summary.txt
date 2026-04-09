@@ -1,0 +1,9 @@
+=== HIGH CATCH SUMMARY (POS 100 VERSION) ===
+
+Account  | Catch Rate | MB/Hit Efficiency
+---------------------------------------------
+Islam    |        8.8% |   4.8 mb/hit
+Nick     |       11.8% |   4.1 mb/hit
+Ahmed    |       10.1% |   4.3 mb/hit
+---------------------------------------------
+GLOBAL   |        9.8% |   4.4 mb/hit

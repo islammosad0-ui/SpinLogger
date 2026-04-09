@@ -1,0 +1,649 @@
+============================================================================================================================================
+CHUNK 16: PER-GAP DETAIL — NEW CAUSAL 7-RULE ENSEMBLE (Subset C) + 8/3 COOLDOWN
+============================================================================================================================================
+Total ACC gaps: 178
+
+Rules (7):
+  - SML L>=120 t_l=130 g=0.30    [L120/.30]
+  - SML L>=120 t_l=130 g=0.28    [L120/.28]
+  - SML L>=140 t_l=130 g=0.29    [L140/.29]
+  - FLAT 130/0.31 stop=160    [F130/.31]
+  - COND steal t=130 g=0.29    [Cstl]
+  - COND shield t=150 g=0.30    [Cshd]
+  - SML s=50 l=130 tL=100 g=0.31    [Llo100]
+
+Cooldown: 8 consecutive bets -> 3 spins of forced REST (no eval, no bet).
+Convention: causal — rule(traj[i-1]) fires the BET on spin i.
+  BET@N         = high-bet spin (rule fired AND not in cooldown).
+  REST          = forced rest, no eval.
+  WOULD-FIRE-BUT-REST = rule WOULD have fired but was blocked by REST.
+  caught? YES   = a rule fired exactly on the triple-landing spin (1-spin warning).
+  caught? lost  = the triple landed in REST (catch was blocked by cooldown).
+
+============================================================================================================================================
+ALL 178 GAPS
+============================================================================================================================================
+   #   Acct  len  prev   pTri  caught? #bets #rest  1stBet  lastBet  caught by     
+--------------------------------------------------------------------------------------------------------------------------------------------
+   0  Islam   82     — shield              0     0                                 
+   1  Islam  146    82 shield              0     0                                 
+   2  Islam   21   146 attack              0     0                                 
+   3  Islam   59    21 attack              0     0                                 
+   4  Islam  149    59  spins              0     0                                 
+   5  Islam   46   149  spins              0     0                                 
+   6  Islam   87    46 shield              0     0                                 
+   7  Islam  151    87 attack              0     0                                 
+   8  Islam   93   151  steal              0     0                                 
+   9  Islam   49    93 shield              0     0                                 
+  10  Islam  129    49 shield              0     0                                 
+  11  Islam  136   129  spins      YES     6     0     130      135  L120/.30      
+  12  Islam   19   136 attack              0     0                                 
+  13  Islam  132    19 attack              0     0                                 
+  14  Islam   71   132 attack              0     0                                 
+  15  Islam  136    71 attack              0     0                                 
+  16  Islam   68   136 attack              0     0                                 
+  17  Islam   65    68 attack              0     0                                 
+  18  Islam   55    65 attack              0     0                                 
+  19  Islam   28    55 attack              0     0                                 
+  20  Islam  100    28 attack              0     0                                 
+  21  Islam   30   100 attack              0     0                                 
+  22  Islam   39    30 shield              0     0                                 
+  23  Islam   12    39 accumu              0     0                                 
+  24  Islam   34    12  steal              0     0                                 
+  25  Islam  394    34 attack              0     0                                 
+  26  Islam    3   394 accumu              0     0                                 
+  27  Islam  185     3 attack              0     0                                 
+  28  Islam   35   185 attack              0     0                                 
+  29  Islam  123    35  spins              0     0                                 
+  30  Islam   73   123 attack              0     0                                 
+  31  Islam  177    73  steal              0     0                                 
+  32  Islam    7   177 accumu              0     0                                 
+  33  Islam  127     7 attack              0     0                                 
+  34  Islam   64   127  steal              0     0                                 
+  35  Islam   58    64 attack              0     0                                 
+  36  Islam  191    58 attack             12     0     134      160                
+  37  Islam   74   191 attack              0     0                                 
+  38  Islam   62    74 attack              0     0                                 
+  39  Islam  107    62 attack              0     0                                 
+  40  Islam  125   107 attack              0     0                                 
+  41  Islam  144   125 shield      YES    11     3     130      143  L120/.30      
+  42  Islam   44   144 attack              0     0                                 
+  43  Islam  169    44 shield      YES    30     9     130      168  Cshd          
+  44  Islam  101   169  spins      YES     1     0     100      100  Llo100        
+  45  Islam  107   101 attack              0     0                                 
+  46  Islam  131   107  spins              0     0                                 
+  47  Islam   24   131 attack              0     0                                 
+  48  Islam   33    24  steal              0     0                                 
+  49  Islam   80    33 attack              0     0                                 
+  50  Islam  156    80  steal      YES    20     6     130      155  F130/.31      
+  51  Islam   44   156 shield              0     0                                 
+  52  Islam  163    44 shield              0     0                                 
+  53  Islam   53   163  steal              0     0                                 
+  54  Islam  245    53 attack              0     0                                 
+  55  Islam   69   245 attack              0     0                                 
+  56  Islam   65    69  steal              0     0                                 
+  57  Islam    5    65 attack              0     0                                 
+  58  Islam   89     5 attack              0     0                                 
+  59  Islam  184    89  spins             17     6     130      160                
+  60  Islam  114   184 attack      YES    11     3     100      113  Llo100        
+  61  Islam   37   114  steal              0     0                                 
+  62  Islam  113    37  spins              0     0                                 
+  63  Islam  227   113 attack             16     6     141      159                
+  64  Islam  101   227 attack              0     0                                 
+  65  Islam  233   101 shield             15     0     153      203                
+  66  Islam   49   233 shield              0     0                                 
+  67  Islam  136    49 shield      YES     5     0     131      135  F130/.31      
+  68  Islam  150   136 attack      YES    13     3     134      149  L120/.28      
+  69  Islam  163   150 shield      YES     7     0     156      162  L120/.28      
+  70  Islam   28   163 attack              0     0                                 
+  71  Islam  163    28 shield              0     0                                 
+  72  Islam   66   163  steal              0     0                                 
+  73  Islam  133    66  steal      YES     3     0     130      132  Cstl          
+  74  Islam   56   133 attack              0     0                                 
+  75  Islam   62    56  steal              0     0                                 
+  76  Islam  114    62  steal              0     0                                 
+  77  Islam  105   114 attack              0     0                                 
+  78  Islam   28   105 attack              0     0                                 
+  79  Islam   85    28  spins              0     0                                 
+  80  Islam  226    85 attack              0     0                                 
+  81  Islam   88   226 shield              0     0                                 
+  82  Islam  161    88 attack              0     0                                 
+  83  Ahmed  147     — shield              0     0                                 
+  84  Ahmed  132   147  steal      YES     2     0     130      131  L120/.28      
+  85  Ahmed   29   132  spins              0     0                                 
+  86  Ahmed   11    29  spins              0     0                                 
+  87  Ahmed   55    11  steal              0     0                                 
+  88  Ahmed  120    55 attack              0     0                                 
+  89  Ahmed  135   120  steal      YES     5     0     130      134  L120/.30      
+  90  Ahmed  125   135 shield              0     0                                 
+  91  Ahmed   10   125 shield              0     0                                 
+  92  Ahmed  250    10 shield              0     0                                 
+  93  Ahmed   57   250 shield              0     0                                 
+  94  Ahmed   13    57 attack              0     0                                 
+  95  Ahmed  127    13 attack              0     0                                 
+  96  Ahmed   78   127 attack              0     0                                 
+  97  Ahmed   59    78 shield              0     0                                 
+  98  Ahmed  153    59 attack      YES    17     6     130      152  F130/.31      
+  99  Ahmed   90   153 shield              0     0                                 
+ 100  Ahmed  154    90 shield      YES     2     0     150      153  Cshd          
+ 101  Ahmed   54   154  spins              0     0                                 
+ 102  Ahmed  133    54  spins      YES     3     0     130      132  F130/.31      
+ 103  Ahmed   90   133 shield              0     0                                 
+ 104  Ahmed  119    90 shield              0     0                                 
+ 105  Ahmed  110   119 shield              0     0                                 
+ 106  Ahmed   37   110 attack              0     0                                 
+ 107  Ahmed  158    37 attack              0     0                                 
+ 108  Ahmed  102   158  steal              0     0                                 
+ 109  Ahmed  111   102 attack              0     0                                 
+ 110  Ahmed   59   111  steal              0     0                                 
+ 111  Ahmed  147    59 attack              0     0                                 
+ 112  Ahmed   69   147 shield              0     0                                 
+ 113  Ahmed  127    69 shield              0     0                                 
+ 114  Ahmed   49   127 shield              0     0                                 
+ 115  Ahmed  117    49 shield              0     0                                 
+ 116  Ahmed   48   117 shield              0     0                                 
+ 117  Ahmed  151    48  steal     lost    16     5     130      148                
+ 118  Ahmed  128   151 attack              0     0                                 
+ 119  Ahmed   42   128 attack              0     0                                 
+ 120  Ahmed  170    42 attack              3     0     136      138                
+ 121  Ahmed   49   170 attack              0     0                                 
+ 122  Ahmed  101    49 shield              0     0                                 
+ 123  Ahmed  123   101  steal              0     0                                 
+ 124  Ahmed   40   123  spins              0     0                                 
+ 125  Ahmed  108    40 shield              0     0                                 
+ 126  Ahmed  141   108 shield              0     0                                 
+ 127  Ahmed  137   141 shield      YES    24     3     100      136  L120/.28      
+ 128  Ahmed   86   137 attack              0     0                                 
+ 129  Ahmed   29    86 shield              0     0                                 
+ 130  Ahmed  141    29 shield              0     0                                 
+ 131  Ahmed  132   141  steal      YES     4     0     125      131  L120/.30      
+ 132  Ahmed   84   132 attack              0     0                                 
+ 133  Ahmed   83    84 attack              0     0                                 
+ 134  Ahmed   72    83  steal              0     0                                 
+ 135  Ahmed  135    72 attack              0     0                                 
+ 136  Ahmed   81   135 attack              0     0                                 
+ 137  Ahmed  117    81 shield              0     0                                 
+ 138  Ahmed  140   117 attack              0     0                                 
+ 139  Ahmed   27   140 attack              0     0                                 
+ 140  Ahmed   78    27  steal              0     0                                 
+ 141  Ahmed  104    78 attack              0     0                                 
+ 142  Ahmed  130   104 attack              0     0                                 
+ 143  Ahmed  148   130 attack              0     0                                 
+ 144  Ahmed   58   148 shield              0     0                                 
+ 145  Ahmed  153    58 attack              0     0                                 
+ 146  Ahmed   44   153 shield              0     0                                 
+ 147  Ahmed   78    44 attack              0     0                                 
+ 148  Ahmed  140    78  steal              2     0     130      131                
+ 149  Ahmed  101   140 attack      YES     1     0     100      100  Llo100        
+ 150  Ahmed  140   101 shield              0     0                                 
+ 151  Ahmed   37   140 shield              0     0                                 
+ 152  Ahmed   89    37  spins              0     0                                 
+ 153  Ahmed  134    89  steal              0     0                                 
+ 154  Ahmed   54   134 attack              0     0                                 
+ 155  Ahmed  139    54 attack              0     0                                 
+ 156  Ahmed   79   139 attack              0     0                                 
+ 157  Ahmed  123    79  spins              0     0                                 
+ 158  Ahmed  120   123  steal              0     0                                 
+ 159  Ahmed   30   120  steal              0     0                                 
+ 160   Nick   84     —  steal              0     0                                 
+ 161   Nick   85    84 attack              0     0                                 
+ 162   Nick  197    85 attack              0     0                                 
+ 163   Nick  219   197  steal              9     3     137      153                
+ 164   Nick  136   219 shield      YES    22     3     100      135  L120/.30      
+ 165   Nick  116   136  steal              0     0                                 
+ 166   Nick  139   116  steal              0     0                                 
+ 167   Nick   19   139  steal              0     0                                 
+ 168   Nick  110    19 shield              0     0                                 
+ 169   Nick  163   110 attack              0     0                                 
+ 170   Nick   19   163 attack              0     0                                 
+ 171   Nick  250    19 attack              0     0                                 
+ 172   Nick  154   250 attack      YES    19     3     106      153  L120/.28      
+ 173   Nick   18   154 shield              0     0                                 
+ 174   Nick   40    18 attack              0     0                                 
+ 175   Nick  340    40  steal              0     0                                 
+ 176   Nick   90   340  steal              0     0                                 
+ 177   Nick  159    90 shield      YES    20     6     131      158  F130/.31      
+
+Total caught (causal, 8/3 cooldown): 21 / 178
+Triples lost to REST: 1
+
+============================================================================================================================================
+ONLY THE 21 CAUGHT GAPS — full firing detail
+============================================================================================================================================
+Each caught gap shows the full event timeline: BET = high-bet spin (rule fired,
+not in cooldown), REST = forced rest after 8 consecutive bets (no eval, no bet),
+WOULD = rule would have fired but was blocked by REST. The triple landed on LAST spin.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap # 11  acct=Islam   length= 136  prev_gap=  129  prev_triple=spins
+    Triple landed on spin 136
+    Caught by: SML L>=120 t_l=130 g=0.30
+    Bets: 6   REST spins: 0   warning window: spin 130..136
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        130     BET        130       42   0.323  SML L>=120 t_l=130 g=0.30               
+        131     BET        131       42   0.321  SML L>=120 t_l=130 g=0.30               
+        132     BET        132       42   0.318  SML L>=120 t_l=130 g=0.30               
+        133     BET        133       42   0.316  SML L>=120 t_l=130 g=0.30               
+        134     BET        134       42   0.313  SML L>=120 t_l=130 g=0.30               
+        135     BET        135       42   0.311  SML L>=120 t_l=130 g=0.30               
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap # 41  acct=Islam   length= 144  prev_gap=  125  prev_triple=shield
+    Triple landed on spin 144
+    Caught by: SML L>=120 t_l=130 g=0.30
+    Bets: 11   REST spins: 3   warning window: spin 130..144
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        130     BET        130       41   0.315  SML L>=120 t_l=130 g=0.30               
+        131     BET        131       41   0.313  SML L>=120 t_l=130 g=0.30               
+        132     BET        132       41   0.311  SML L>=120 t_l=130 g=0.30               
+        133     BET        133       41   0.308  SML L>=120 t_l=130 g=0.30               
+        134     BET        134       41   0.306  SML L>=120 t_l=130 g=0.30               
+        135     BET        135       41   0.304  SML L>=120 t_l=130 g=0.30               
+        136     BET        136       41   0.301  SML L>=120 t_l=130 g=0.30               
+        137     BET        137       41   0.299  SML L>=120 t_l=130 g=0.28               
+        138  WOULD-FIRE-BUT-REST        138       41   0.297  SML L>=120 t_l=130 g=0.28               
+        139  WOULD-FIRE-BUT-REST        139       43   0.309  SML L>=120 t_l=130 g=0.30               
+        140  WOULD-FIRE-BUT-REST        140       43   0.307  SML L>=120 t_l=130 g=0.30               
+        141     BET        141       43   0.305  SML L>=120 t_l=130 g=0.30               
+        142     BET        142       43   0.303  SML L>=120 t_l=130 g=0.30               
+        143     BET        143       44   0.308  SML L>=120 t_l=130 g=0.30               
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap # 43  acct=Islam   length= 169  prev_gap=   44  prev_triple=shield
+    Triple landed on spin 169
+    Caught by: COND shield t=150 g=0.30
+    Bets: 30   REST spins: 9   warning window: spin 130..169
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        130     BET        130       42   0.323  FLAT 130/0.31 stop=160                  
+        131     BET        131       43   0.328  FLAT 130/0.31 stop=160                  
+        132     BET        132       43   0.326  FLAT 130/0.31 stop=160                  
+        133     BET        133       43   0.323  FLAT 130/0.31 stop=160                  
+        134     BET        134       43   0.321  FLAT 130/0.31 stop=160                  
+        135     BET        135       43   0.319  FLAT 130/0.31 stop=160                  
+        136     BET        136       44   0.324  FLAT 130/0.31 stop=160                  
+        137     BET        137       44   0.321  FLAT 130/0.31 stop=160                  
+        138  WOULD-FIRE-BUT-REST        138       44   0.319  FLAT 130/0.31 stop=160                  
+        139  WOULD-FIRE-BUT-REST        139       44   0.317  FLAT 130/0.31 stop=160                  
+        140  WOULD-FIRE-BUT-REST        140       44   0.314  FLAT 130/0.31 stop=160                  
+        141     BET        141       45   0.319  FLAT 130/0.31 stop=160                  
+        142     BET        142       45   0.317  FLAT 130/0.31 stop=160                  
+        143     BET        143       46   0.322  FLAT 130/0.31 stop=160                  
+        144     BET        144       46   0.319  FLAT 130/0.31 stop=160                  
+        145     BET        145       46   0.317  FLAT 130/0.31 stop=160                  
+        146     BET        146       46   0.315  FLAT 130/0.31 stop=160                  
+        147     BET        147       46   0.313  FLAT 130/0.31 stop=160                  
+        148     BET        148       46   0.311  FLAT 130/0.31 stop=160                  
+        149    REST        149       46   0.309                                          
+        150  WOULD-FIRE-BUT-REST        150       46   0.307  COND shield t=150 g=0.30                
+        151  WOULD-FIRE-BUT-REST        151       47   0.311  FLAT 130/0.31 stop=160                  
+        152     BET        152       47   0.309  COND shield t=150 g=0.30                
+        153     BET        153       47   0.307  COND shield t=150 g=0.30                
+        154     BET        154       47   0.305  COND shield t=150 g=0.30                
+        155     BET        155       47   0.303  COND shield t=150 g=0.30                
+        156     BET        156       49   0.314  FLAT 130/0.31 stop=160                  
+        157     BET        157       49   0.312  FLAT 130/0.31 stop=160                  
+        158     BET        158       49   0.310  FLAT 130/0.31 stop=160                  
+        159     BET        159       49   0.308  COND shield t=150 g=0.30                
+        160  WOULD-FIRE-BUT-REST        160       49   0.306  COND shield t=150 g=0.30                
+        161  WOULD-FIRE-BUT-REST        161       49   0.304  COND shield t=150 g=0.30                
+        162  WOULD-FIRE-BUT-REST        162       50   0.309  COND shield t=150 g=0.30                
+        163     BET        163       50   0.307  COND shield t=150 g=0.30                
+        164     BET        164       50   0.305  COND shield t=150 g=0.30                
+        165     BET        165       51   0.309  COND shield t=150 g=0.30                
+        166     BET        166       51   0.307  COND shield t=150 g=0.30                
+        167     BET        167       51   0.305  COND shield t=150 g=0.30                
+        168     BET        168       52   0.310  COND shield t=150 g=0.30                
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap # 44  acct=Islam   length= 101  prev_gap=  169  prev_triple=spins
+    Triple landed on spin 101
+    Caught by: SML s=50 l=130 tL=100 g=0.31
+    Bets: 1   REST spins: 0   warning window: spin 100..101
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        100     BET        100       32   0.320  SML s=50 l=130 tL=100 g=0.31            
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap # 50  acct=Islam   length= 156  prev_gap=   80  prev_triple=steal
+    Triple landed on spin 156
+    Caught by: FLAT 130/0.31 stop=160
+    Bets: 20   REST spins: 6   warning window: spin 130..156
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        130     BET        130       44   0.338  FLAT 130/0.31 stop=160                  
+        131     BET        131       45   0.344  FLAT 130/0.31 stop=160                  
+        132     BET        132       45   0.341  FLAT 130/0.31 stop=160                  
+        133     BET        133       45   0.338  FLAT 130/0.31 stop=160                  
+        134     BET        134       47   0.351  FLAT 130/0.31 stop=160                  
+        135     BET        135       47   0.348  FLAT 130/0.31 stop=160                  
+        136     BET        136       48   0.353  FLAT 130/0.31 stop=160                  
+        137     BET        137       48   0.350  FLAT 130/0.31 stop=160                  
+        138  WOULD-FIRE-BUT-REST        138       50   0.362  FLAT 130/0.31 stop=160                  
+        139  WOULD-FIRE-BUT-REST        139       50   0.360  FLAT 130/0.31 stop=160                  
+        140  WOULD-FIRE-BUT-REST        140       51   0.364  FLAT 130/0.31 stop=160                  
+        141     BET        141       51   0.362  FLAT 130/0.31 stop=160                  
+        142     BET        142       51   0.359  FLAT 130/0.31 stop=160                  
+        143     BET        143       51   0.357  FLAT 130/0.31 stop=160                  
+        144     BET        144       51   0.354  FLAT 130/0.31 stop=160                  
+        145     BET        145       52   0.359  FLAT 130/0.31 stop=160                  
+        146     BET        146       52   0.356  FLAT 130/0.31 stop=160                  
+        147     BET        147       52   0.354  FLAT 130/0.31 stop=160                  
+        148     BET        148       52   0.351  FLAT 130/0.31 stop=160                  
+        149  WOULD-FIRE-BUT-REST        149       54   0.362  FLAT 130/0.31 stop=160                  
+        150  WOULD-FIRE-BUT-REST        150       54   0.360  FLAT 130/0.31 stop=160                  
+        151  WOULD-FIRE-BUT-REST        151       54   0.358  FLAT 130/0.31 stop=160                  
+        152     BET        152       54   0.355  FLAT 130/0.31 stop=160                  
+        153     BET        153       54   0.353  FLAT 130/0.31 stop=160                  
+        154     BET        154       54   0.351  FLAT 130/0.31 stop=160                  
+        155     BET        155       56   0.361  FLAT 130/0.31 stop=160                  
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap # 60  acct=Islam   length= 114  prev_gap=  184  prev_triple=attack
+    Triple landed on spin 114
+    Caught by: SML s=50 l=130 tL=100 g=0.31
+    Bets: 11   REST spins: 3   warning window: spin 100..114
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        100     BET        100       34   0.340  SML s=50 l=130 tL=100 g=0.31            
+        101     BET        101       34   0.337  SML s=50 l=130 tL=100 g=0.31            
+        102     BET        102       34   0.333  SML s=50 l=130 tL=100 g=0.31            
+        103     BET        103       34   0.330  SML s=50 l=130 tL=100 g=0.31            
+        104     BET        104       34   0.327  SML s=50 l=130 tL=100 g=0.31            
+        105     BET        105       34   0.324  SML s=50 l=130 tL=100 g=0.31            
+        106     BET        106       34   0.321  SML s=50 l=130 tL=100 g=0.31            
+        107     BET        107       34   0.318  SML s=50 l=130 tL=100 g=0.31            
+        108  WOULD-FIRE-BUT-REST        108       34   0.315  SML s=50 l=130 tL=100 g=0.31            
+        109  WOULD-FIRE-BUT-REST        109       35   0.321  SML s=50 l=130 tL=100 g=0.31            
+        110  WOULD-FIRE-BUT-REST        110       35   0.318  SML s=50 l=130 tL=100 g=0.31            
+        111     BET        111       36   0.324  SML s=50 l=130 tL=100 g=0.31            
+        112     BET        112       36   0.321  SML s=50 l=130 tL=100 g=0.31            
+        113     BET        113       36   0.319  SML s=50 l=130 tL=100 g=0.31            
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap # 67  acct=Islam   length= 136  prev_gap=   49  prev_triple=shield
+    Triple landed on spin 136
+    Caught by: FLAT 130/0.31 stop=160
+    Bets: 5   REST spins: 0   warning window: spin 131..136
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        131     BET        131       42   0.321  FLAT 130/0.31 stop=160                  
+        132     BET        132       42   0.318  FLAT 130/0.31 stop=160                  
+        133     BET        133       42   0.316  FLAT 130/0.31 stop=160                  
+        134     BET        134       42   0.313  FLAT 130/0.31 stop=160                  
+        135     BET        135       42   0.311  FLAT 130/0.31 stop=160                  
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap # 68  acct=Islam   length= 150  prev_gap=  136  prev_triple=attack
+    Triple landed on spin 150
+    Caught by: SML L>=120 t_l=130 g=0.28
+    Bets: 13   REST spins: 3   warning window: spin 134..150
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        134     BET        134       38   0.284  SML L>=120 t_l=130 g=0.28               
+        135     BET        135       39   0.289  SML L>=120 t_l=130 g=0.28               
+        136     BET        136       40   0.294  SML L>=120 t_l=130 g=0.28               
+        137     BET        137       40   0.292  SML L>=120 t_l=130 g=0.28               
+        138     BET        138       40   0.290  SML L>=120 t_l=130 g=0.28               
+        139     BET        139       40   0.288  SML L>=120 t_l=130 g=0.28               
+        140     BET        140       41   0.293  SML L>=120 t_l=130 g=0.28               
+        141     BET        141       41   0.291  SML L>=120 t_l=130 g=0.28               
+        142  WOULD-FIRE-BUT-REST        142       41   0.289  SML L>=120 t_l=130 g=0.28               
+        143  WOULD-FIRE-BUT-REST        143       41   0.287  SML L>=120 t_l=130 g=0.28               
+        144  WOULD-FIRE-BUT-REST        144       41   0.285  SML L>=120 t_l=130 g=0.28               
+        145     BET        145       41   0.283  SML L>=120 t_l=130 g=0.28               
+        146     BET        146       41   0.281  SML L>=120 t_l=130 g=0.28               
+        147     BET        147       42   0.286  SML L>=120 t_l=130 g=0.28               
+        148     BET        148       42   0.284  SML L>=120 t_l=130 g=0.28               
+        149     BET        149       43   0.289  SML L>=120 t_l=130 g=0.28               
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap # 69  acct=Islam   length= 163  prev_gap=  150  prev_triple=shield
+    Triple landed on spin 163
+    Caught by: SML L>=120 t_l=130 g=0.28
+    Bets: 7   REST spins: 0   warning window: spin 156..163
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        156     BET        156       44   0.282  SML L>=120 t_l=130 g=0.28               
+        157     BET        157       45   0.287  SML L>=120 t_l=130 g=0.28               
+        158     BET        158       45   0.285  SML L>=120 t_l=130 g=0.28               
+        159     BET        159       46   0.289  SML L>=120 t_l=130 g=0.28               
+        160     BET        160       46   0.287  SML L>=120 t_l=130 g=0.28               
+        161     BET        161       46   0.286  SML L>=120 t_l=130 g=0.28               
+        162     BET        162       46   0.284  SML L>=120 t_l=130 g=0.28               
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap # 73  acct=Islam   length= 133  prev_gap=   66  prev_triple=steal
+    Triple landed on spin 133
+    Caught by: COND steal t=130 g=0.29
+    Bets: 3   REST spins: 0   warning window: spin 130..133
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        130     BET        130       39   0.300  COND steal t=130 g=0.29                 
+        131     BET        131       39   0.298  COND steal t=130 g=0.29                 
+        132     BET        132       39   0.295  COND steal t=130 g=0.29                 
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap # 84  acct=Ahmed   length= 132  prev_gap=  147  prev_triple=steal
+    Triple landed on spin 132
+    Caught by: SML L>=120 t_l=130 g=0.28
+    Bets: 2   REST spins: 0   warning window: spin 130..132
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        130     BET        130       38   0.292  SML L>=120 t_l=130 g=0.28               
+        131     BET        131       38   0.290  SML L>=120 t_l=130 g=0.28               
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap # 89  acct=Ahmed   length= 135  prev_gap=  120  prev_triple=steal
+    Triple landed on spin 135
+    Caught by: SML L>=120 t_l=130 g=0.30
+    Bets: 5   REST spins: 0   warning window: spin 130..135
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        130     BET        130       45   0.346  SML L>=120 t_l=130 g=0.30               
+        131     BET        131       45   0.344  SML L>=120 t_l=130 g=0.30               
+        132     BET        132       45   0.341  SML L>=120 t_l=130 g=0.30               
+        133     BET        133       45   0.338  SML L>=120 t_l=130 g=0.30               
+        134     BET        134       46   0.343  SML L>=120 t_l=130 g=0.30               
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap # 98  acct=Ahmed   length= 153  prev_gap=   59  prev_triple=attack
+    Triple landed on spin 153
+    Caught by: FLAT 130/0.31 stop=160
+    Bets: 17   REST spins: 6   warning window: spin 130..153
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        130     BET        130       48   0.369  FLAT 130/0.31 stop=160                  
+        131     BET        131       48   0.366  FLAT 130/0.31 stop=160                  
+        132     BET        132       49   0.371  FLAT 130/0.31 stop=160                  
+        133     BET        133       50   0.376  FLAT 130/0.31 stop=160                  
+        134     BET        134       50   0.373  FLAT 130/0.31 stop=160                  
+        135     BET        135       51   0.378  FLAT 130/0.31 stop=160                  
+        136     BET        136       51   0.375  FLAT 130/0.31 stop=160                  
+        137     BET        137       51   0.372  FLAT 130/0.31 stop=160                  
+        138  WOULD-FIRE-BUT-REST        138       53   0.384  FLAT 130/0.31 stop=160                  
+        139  WOULD-FIRE-BUT-REST        139       54   0.388  FLAT 130/0.31 stop=160                  
+        140  WOULD-FIRE-BUT-REST        140       54   0.386  FLAT 130/0.31 stop=160                  
+        141     BET        141       54   0.383  FLAT 130/0.31 stop=160                  
+        142     BET        142       54   0.380  FLAT 130/0.31 stop=160                  
+        143     BET        143       54   0.378  FLAT 130/0.31 stop=160                  
+        144     BET        144       54   0.375  FLAT 130/0.31 stop=160                  
+        145     BET        145       55   0.379  FLAT 130/0.31 stop=160                  
+        146     BET        146       55   0.377  FLAT 130/0.31 stop=160                  
+        147     BET        147       55   0.374  FLAT 130/0.31 stop=160                  
+        148     BET        148       55   0.372  FLAT 130/0.31 stop=160                  
+        149  WOULD-FIRE-BUT-REST        149       55   0.369  FLAT 130/0.31 stop=160                  
+        150  WOULD-FIRE-BUT-REST        150       55   0.367  FLAT 130/0.31 stop=160                  
+        151  WOULD-FIRE-BUT-REST        151       56   0.371  FLAT 130/0.31 stop=160                  
+        152     BET        152       56   0.368  FLAT 130/0.31 stop=160                  
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap #100  acct=Ahmed   length= 154  prev_gap=   90  prev_triple=shield
+    Triple landed on spin 154
+    Caught by: COND shield t=150 g=0.30
+    Bets: 2   REST spins: 0   warning window: spin 150..154
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        150     BET        150       45   0.300  COND shield t=150 g=0.30                
+        153     BET        153       47   0.307  COND shield t=150 g=0.30                
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap #102  acct=Ahmed   length= 133  prev_gap=   54  prev_triple=spins
+    Triple landed on spin 133
+    Caught by: FLAT 130/0.31 stop=160
+    Bets: 3   REST spins: 0   warning window: spin 130..133
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        130     BET        130       42   0.323  FLAT 130/0.31 stop=160                  
+        131     BET        131       42   0.321  FLAT 130/0.31 stop=160                  
+        132     BET        132       42   0.318  FLAT 130/0.31 stop=160                  
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap #127  acct=Ahmed   length= 137  prev_gap=  141  prev_triple=shield
+    Triple landed on spin 137
+    Caught by: SML L>=120 t_l=130 g=0.28
+    Bets: 24   REST spins: 3   warning window: spin 100..137
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        100     BET        100       31   0.310  SML s=50 l=130 tL=100 g=0.31            
+        102     BET        102       32   0.314  SML s=50 l=130 tL=100 g=0.31            
+        103     BET        103       32   0.311  SML s=50 l=130 tL=100 g=0.31            
+        106     BET        106       33   0.311  SML s=50 l=130 tL=100 g=0.31            
+        109     BET        109       35   0.321  SML s=50 l=130 tL=100 g=0.31            
+        110     BET        110       35   0.318  SML s=50 l=130 tL=100 g=0.31            
+        111     BET        111       35   0.315  SML s=50 l=130 tL=100 g=0.31            
+        112     BET        112       35   0.312  SML s=50 l=130 tL=100 g=0.31            
+        114     BET        114       37   0.325  SML s=50 l=130 tL=100 g=0.31            
+        115     BET        115       38   0.330  SML s=50 l=130 tL=100 g=0.31            
+        116     BET        116       38   0.328  SML s=50 l=130 tL=100 g=0.31            
+        117     BET        117       38   0.325  SML s=50 l=130 tL=100 g=0.31            
+        118     BET        118       38   0.322  SML s=50 l=130 tL=100 g=0.31            
+        119     BET        119       38   0.319  SML s=50 l=130 tL=100 g=0.31            
+        120     BET        120       38   0.317  SML s=50 l=130 tL=100 g=0.31            
+        121     BET        121       39   0.322  SML s=50 l=130 tL=100 g=0.31            
+        122  WOULD-FIRE-BUT-REST        122       39   0.320  SML s=50 l=130 tL=100 g=0.31            
+        123  WOULD-FIRE-BUT-REST        123       39   0.317  SML s=50 l=130 tL=100 g=0.31            
+        124  WOULD-FIRE-BUT-REST        124       39   0.315  SML s=50 l=130 tL=100 g=0.31            
+        125     BET        125       39   0.312  SML s=50 l=130 tL=100 g=0.31            
+        130     BET        130       39   0.300  SML L>=120 t_l=130 g=0.30               
+        131     BET        131       39   0.298  SML L>=120 t_l=130 g=0.28               
+        132     BET        132       39   0.295  SML L>=120 t_l=130 g=0.28               
+        133     BET        133       39   0.293  SML L>=120 t_l=130 g=0.28               
+        134     BET        134       39   0.291  SML L>=120 t_l=130 g=0.28               
+        135     BET        135       39   0.289  SML L>=120 t_l=130 g=0.28               
+        136     BET        136       39   0.287  SML L>=120 t_l=130 g=0.28               
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap #131  acct=Ahmed   length= 132  prev_gap=  141  prev_triple=steal
+    Triple landed on spin 132
+    Caught by: SML L>=120 t_l=130 g=0.30
+    Bets: 4   REST spins: 0   warning window: spin 125..132
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        125     BET        125       39   0.312  SML s=50 l=130 tL=100 g=0.31            
+        129     BET        129       41   0.318  SML s=50 l=130 tL=100 g=0.31            
+        130     BET        130       41   0.315  SML L>=120 t_l=130 g=0.30               
+        131     BET        131       41   0.313  SML L>=120 t_l=130 g=0.30               
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap #149  acct=Ahmed   length= 101  prev_gap=  140  prev_triple=attack
+    Triple landed on spin 101
+    Caught by: SML s=50 l=130 tL=100 g=0.31
+    Bets: 1   REST spins: 0   warning window: spin 100..101
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        100     BET        100       35   0.350  SML s=50 l=130 tL=100 g=0.31            
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap #164  acct=Nick    length= 136  prev_gap=  219  prev_triple=shield
+    Triple landed on spin 136
+    Caught by: SML L>=120 t_l=130 g=0.30
+    Bets: 22   REST spins: 3   warning window: spin 100..136
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        100     BET        100       34   0.340  SML s=50 l=130 tL=100 g=0.31            
+        101     BET        101       34   0.337  SML s=50 l=130 tL=100 g=0.31            
+        102     BET        102       34   0.333  SML s=50 l=130 tL=100 g=0.31            
+        103     BET        103       34   0.330  SML s=50 l=130 tL=100 g=0.31            
+        104     BET        104       34   0.327  SML s=50 l=130 tL=100 g=0.31            
+        105     BET        105       34   0.324  SML s=50 l=130 tL=100 g=0.31            
+        106     BET        106       35   0.330  SML s=50 l=130 tL=100 g=0.31            
+        107     BET        107       35   0.327  SML s=50 l=130 tL=100 g=0.31            
+        108  WOULD-FIRE-BUT-REST        108       35   0.324  SML s=50 l=130 tL=100 g=0.31            
+        109  WOULD-FIRE-BUT-REST        109       35   0.321  SML s=50 l=130 tL=100 g=0.31            
+        110  WOULD-FIRE-BUT-REST        110       35   0.318  SML s=50 l=130 tL=100 g=0.31            
+        111     BET        111       35   0.315  SML s=50 l=130 tL=100 g=0.31            
+        112     BET        112       35   0.312  SML s=50 l=130 tL=100 g=0.31            
+        121     BET        121       38   0.314  SML s=50 l=130 tL=100 g=0.31            
+        122     BET        122       38   0.311  SML s=50 l=130 tL=100 g=0.31            
+        123     BET        123       39   0.317  SML s=50 l=130 tL=100 g=0.31            
+        124     BET        124       39   0.315  SML s=50 l=130 tL=100 g=0.31            
+        125     BET        125       39   0.312  SML s=50 l=130 tL=100 g=0.31            
+        129     BET        129       40   0.310  SML s=50 l=130 tL=100 g=0.31            
+        130     BET        130       40   0.308  SML L>=120 t_l=130 g=0.30               
+        131     BET        131       40   0.305  SML L>=120 t_l=130 g=0.30               
+        132     BET        132       40   0.303  SML L>=120 t_l=130 g=0.30               
+        133     BET        133       42   0.316  SML L>=120 t_l=130 g=0.30               
+        134     BET        134       42   0.313  SML L>=120 t_l=130 g=0.30               
+        135     BET        135       42   0.311  SML L>=120 t_l=130 g=0.30               
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap #172  acct=Nick    length= 154  prev_gap=  250  prev_triple=attack
+    Triple landed on spin 154
+    Caught by: SML L>=120 t_l=130 g=0.28
+    Bets: 19   REST spins: 3   warning window: spin 106..154
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        106     BET        106       33   0.311  SML s=50 l=130 tL=100 g=0.31            
+        108     BET        108       34   0.315  SML s=50 l=130 tL=100 g=0.31            
+        109     BET        109       34   0.312  SML s=50 l=130 tL=100 g=0.31            
+        130     BET        130       37   0.285  SML L>=120 t_l=130 g=0.28               
+        131     BET        131       37   0.282  SML L>=120 t_l=130 g=0.28               
+        132     BET        132       37   0.280  SML L>=120 t_l=130 g=0.28               
+        137     BET        137       39   0.285  SML L>=120 t_l=130 g=0.28               
+        138     BET        138       39   0.283  SML L>=120 t_l=130 g=0.28               
+        139     BET        139       39   0.281  SML L>=120 t_l=130 g=0.28               
+        141     BET        141       40   0.284  SML L>=120 t_l=130 g=0.28               
+        142     BET        142       40   0.282  SML L>=120 t_l=130 g=0.28               
+        143     BET        143       42   0.294  SML L>=120 t_l=130 g=0.28               
+        144     BET        144       42   0.292  SML L>=120 t_l=130 g=0.28               
+        145     BET        145       42   0.290  SML L>=120 t_l=130 g=0.28               
+        146     BET        146       42   0.288  SML L>=120 t_l=130 g=0.28               
+        147     BET        147       42   0.286  SML L>=120 t_l=130 g=0.28               
+        148     BET        148       42   0.284  SML L>=120 t_l=130 g=0.28               
+        149  WOULD-FIRE-BUT-REST        149       42   0.282  SML L>=120 t_l=130 g=0.28               
+        150  WOULD-FIRE-BUT-REST        150       42   0.280  SML L>=120 t_l=130 g=0.28               
+        151    REST        151       42   0.278                                          
+        152     BET        152       44   0.289  SML L>=120 t_l=130 g=0.28               
+        153     BET        153       45   0.294  SML L>=120 t_l=130 g=0.28               
+--------------------------------------------------------------------------------------------------------------------------------------------
+  Gap #177  acct=Nick    length= 159  prev_gap=   90  prev_triple=shield
+    Triple landed on spin 159
+    Caught by: FLAT 130/0.31 stop=160
+    Bets: 20   REST spins: 6   warning window: spin 131..159
+       spin    kind   sa_spins   sa_acc    rate  rule                                    
+        131     BET        131       41   0.313  FLAT 130/0.31 stop=160                  
+        132     BET        132       41   0.311  FLAT 130/0.31 stop=160                  
+        135     BET        135       42   0.311  FLAT 130/0.31 stop=160                  
+        136     BET        136       44   0.324  FLAT 130/0.31 stop=160                  
+        137     BET        137       44   0.321  FLAT 130/0.31 stop=160                  
+        138     BET        138       45   0.326  FLAT 130/0.31 stop=160                  
+        139     BET        139       46   0.331  FLAT 130/0.31 stop=160                  
+        140     BET        140       48   0.343  FLAT 130/0.31 stop=160                  
+        141     BET        141       48   0.340  FLAT 130/0.31 stop=160                  
+        142     BET        142       48   0.338  FLAT 130/0.31 stop=160                  
+        143  WOULD-FIRE-BUT-REST        143       48   0.336  FLAT 130/0.31 stop=160                  
+        144  WOULD-FIRE-BUT-REST        144       49   0.340  FLAT 130/0.31 stop=160                  
+        145  WOULD-FIRE-BUT-REST        145       49   0.338  FLAT 130/0.31 stop=160                  
+        146     BET        146       51   0.349  FLAT 130/0.31 stop=160                  
+        147     BET        147       51   0.347  FLAT 130/0.31 stop=160                  
+        148     BET        148       51   0.345  FLAT 130/0.31 stop=160                  
+        149     BET        149       53   0.356  FLAT 130/0.31 stop=160                  
+        150     BET        150       53   0.353  FLAT 130/0.31 stop=160                  
+        151     BET        151       53   0.351  FLAT 130/0.31 stop=160                  
+        152     BET        152       54   0.355  FLAT 130/0.31 stop=160                  
+        153     BET        153       54   0.353  FLAT 130/0.31 stop=160                  
+        154  WOULD-FIRE-BUT-REST        154       56   0.364  FLAT 130/0.31 stop=160                  
+        155  WOULD-FIRE-BUT-REST        155       57   0.368  FLAT 130/0.31 stop=160                  
+        156  WOULD-FIRE-BUT-REST        156       57   0.365  FLAT 130/0.31 stop=160                  
+        157     BET        157       57   0.363  FLAT 130/0.31 stop=160                  
+        158     BET        158       57   0.361  FLAT 130/0.31 stop=160                  
+
+============================================================================================================================================
+GAPS WHERE THE ENSEMBLE BET BUT DID NOT CATCH THE TRIPLE (8 gaps)
+============================================================================================================================================
+These are bet-spins that paid in coins for nothing. Lower is better.
+
+   #   Acct  len  prev  #bets  #rest  bets (spin->rule)
+--------------------------------------------------------------------------------------------------------------------------------------------
+  36  Islam  191    58     12      0  134@F130/.31,135@F130/.31,144@F130/.31,145@F130/.31,146@F130/.31,147@F130/.31,148@F130/.31,156@F130/.31 +4 more
+  59  Islam  184    89     17      6  130@F130/.31,131@F130/.31,132@F130/.31,133@F130/.31,134@F130/.31,135@F130/.31,136@F130/.31,137@F130/.31 +9 more
+  63  Islam  227   113     16      6  141@F130/.31,142@F130/.31,143@F130/.31,144@F130/.31,145@F130/.31,146@F130/.31,147@F130/.31,148@F130/.31 +8 more
+  65  Islam  233   101     15      0  153@Cshd,155@Cshd,156@Cshd,158@Cshd,159@Cshd,160@Cshd,161@Cshd,162@Cshd +7 more
+ 117  Ahmed  151    48     16      5  130@F130/.31,131@F130/.31,132@F130/.31,133@F130/.31,134@F130/.31,135@F130/.31,136@F130/.31,137@F130/.31 +8 more
+ 120  Ahmed  170    42      3      0  136@F130/.31,137@F130/.31,138@F130/.31
+ 148  Ahmed  140    78      2      0  130@Cstl,131@Cstl
+ 163   Nick  219   197      9      3  137@L120/.28,138@L120/.28,139@L120/.28,140@L120/.28,141@L120/.28,142@L120/.28,143@L120/.28,144@L120/.28 +1 more
+
+============================================================================================================================================
+PER-RULE CONTRIBUTION (across all gaps, with break-on-first-match priority, post-cooldown)
+============================================================================================================================================
+rule                                  catches   bet_spins    mb/hit
+----------------------------------------------------------------------
+SML L>=120 t_l=130 g=0.30                   5          30       6.0
+SML L>=120 t_l=130 g=0.28                   5          54      10.8
+SML L>=140 t_l=130 g=0.29                   0           0       inf
+FLAT 130/0.31 stop=160                      5         148      29.6
+COND steal t=130 g=0.29                     1           5       5.0
+COND shield t=150 g=0.30                    2          28      14.0
+SML s=50 l=130 tL=100 g=0.31                3          51      17.0
+
+============================================================================================================================================
+PER-ACCOUNT SUMMARY (with 8/3 cooldown)
+============================================================================================================================================
+  Islam :  10/ 83 caught   bet_spins= 167   REST_spins=  36   lost_to_REST=0   mb/hit= 16.7
+  Ahmed :   8/ 77 caught   bet_spins=  79   REST_spins=  14   lost_to_REST=1   mb/hit=  9.9
+  Nick  :   3/ 18 caught   bet_spins=  70   REST_spins=  15   lost_to_REST=0   mb/hit= 23.3

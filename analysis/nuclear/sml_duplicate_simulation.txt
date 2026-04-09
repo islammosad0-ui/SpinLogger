@@ -1,0 +1,406 @@
+=== S/M/L + DUPLICATE REEL PINPOINT SIMULATION ===
+Strategy: Use previous gap to PREDICT current gap type.
+          Then look for duplicate reels in the predicted window.
+          If duplicate found -> BET HIGH, triple is imminent.
+
+======================================================================
+   TARGET: TRIPLE ACCUMULATION
+======================================================================
+
+--- ACCOUNT: Islam (119 hits) ---
+
+  Gap #  7 | Prev: M ( 87) | Curr: L (151) | Predicted: S | Dup at spin  54 [attack  |attack  |goldSack] | Triple  97 spins later
+  Gap #  8 | Prev: L (151) | Curr: M ( 93) | Predicted: S | Dup at spin  56 [accumula|goldSack|goldSack] | Triple  37 spins later
+  Gap # 10 | Prev: S ( 49) | Curr: M (129) | Predicted: M | Dup at spin  84 [accumula|goldSack|goldSack] | Triple  45 spins later
+  Gap # 11 | Prev: M (129) | Curr: L (136) | Predicted: S | Dup at spin  76 [accumula|goldSack|goldSack] | Triple  60 spins later
+  Gap # 13 | Prev: S ( 19) | Curr: L (132) | Predicted: M | Dup at spin  87 [accumula|goldSack|goldSack] | Triple  45 spins later
+  Gap # 14 | Prev: L (132) | Curr: S ( 71) | Predicted: S | Dup at spin  50 [attack  |spins   |goldSack] | Triple  21 spins later
+  Gap # 15 | Prev: S ( 71) | Curr: L (136) | Predicted: M | Dup at spin  91 [attack  |attack  |attack  ] | Triple  45 spins later
+  Gap # 16 | Prev: L (136) | Curr: S ( 68) | Predicted: S | Dup at spin  54 [attack  |spins   |goldSack] | Triple  14 spins later *** CAUGHT ***
+  Gap # 20 | Prev: S ( 28) | Curr: M (100) | Predicted: M | Dup at spin  87 [coin    |coin    |coin    ] | Triple  13 spins later *** CAUGHT ***
+  Gap # 25 | Prev: S ( 34) | Curr: L (394) | Predicted: M | Dup at spin  80 [accumula|goldSack|goldSack] | Triple 314 spins later
+  Gap # 27 | Prev: S (  3) | Curr: L (185) | Predicted: M | Dup at spin  82 [goldSack|goldSack|goldSack] | Triple 103 spins later
+  Gap # 29 | Prev: S ( 35) | Curr: M (123) | Predicted: M | Dup at spin  92 [accumula|goldSack|goldSack] | Triple  31 spins later
+  Gap # 30 | Prev: M (123) | Curr: S ( 73) | Predicted: S | Dup at spin  55 [accumula|goldSack|goldSack] | Triple  18 spins later
+  Gap # 31 | Prev: S ( 73) | Curr: L (177) | Predicted: M | Dup at spin  93 [coin    |steal   |steal   ] | Triple  84 spins later
+  Gap # 33 | Prev: S (  7) | Curr: M (127) | Predicted: M | Dup at spin  97 [accumula|goldSack|goldSack] | Triple  30 spins later
+  Gap # 36 | Prev: S ( 58) | Curr: L (191) | Predicted: M | Dup at spin  80 [accumula|goldSack|goldSack] | Triple 111 spins later
+  Gap # 37 | Prev: L (191) | Curr: S ( 74) | Predicted: S | Dup at spin  58 [attack  |coin    |shield  ] | Triple  16 spins later
+  Gap # 40 | Prev: M (107) | Curr: M (125) | Predicted: S | Dup at spin  70 [accumula|goldSack|goldSack] | Triple  55 spins later
+  Gap # 41 | Prev: M (125) | Curr: L (144) | Predicted: S | Dup at spin  56 [accumula|accumula|coin    ] | Triple  88 spins later
+  Gap # 43 | Prev: S ( 44) | Curr: L (169) | Predicted: M | Dup at spin  98 [attack  |attack  |attack  ] | Triple  71 spins later
+  Gap # 44 | Prev: L (169) | Curr: M (101) | Predicted: S | Dup at spin  54 [accumula|goldSack|goldSack] | Triple  47 spins later
+  Gap # 45 | Prev: M (101) | Curr: M (107) | Predicted: S | Dup at spin  51 [goldSack|goldSack|goldSack] | Triple  56 spins later
+  Gap # 46 | Prev: M (107) | Curr: L (131) | Predicted: S | Dup at spin  51 [attack  |spins   |goldSack] | Triple  80 spins later
+  Gap # 50 | Prev: M ( 80) | Curr: L (156) | Predicted: S | Dup at spin  54 [attack  |spins   |goldSack] | Triple 102 spins later
+  Gap # 52 | Prev: S ( 44) | Curr: L (163) | Predicted: M | Dup at spin  83 [goldSack|goldSack|goldSack] | Triple  80 spins later
+  Gap # 54 | Prev: S ( 53) | Curr: L (245) | Predicted: M | Dup at spin  94 [attack  |coin    |coin    ] | Triple 151 spins later
+  Gap # 58 | Prev: S (  5) | Curr: M ( 89) | Predicted: M | Dup at spin  84 [coin    |coin    |steal   ] | Triple   5 spins later *** CAUGHT ***
+  Gap # 60 | Prev: L (184) | Curr: M (114) | Predicted: S | Dup at spin  64 [steal   |spins   |goldSack] | Triple  50 spins later
+  Gap # 62 | Prev: S ( 37) | Curr: M (113) | Predicted: M | Dup at spin  85 [shield  |shield  |shield  ] | Triple  28 spins later
+  Gap # 63 | Prev: M (113) | Curr: L (227) | Predicted: S | Dup at spin  80 [coin    |coin    |coin    ] | Triple 147 spins later
+  Gap # 64 | Prev: L (227) | Curr: M (101) | Predicted: S | Dup at spin  67 [goldSack|goldSack|goldSack] | Triple  34 spins later
+  Gap # 65 | Prev: M (101) | Curr: L (233) | Predicted: S | Dup at spin  57 [accumula|goldSack|goldSack] | Triple 176 spins later
+  Gap # 67 | Prev: S ( 49) | Curr: L (136) | Predicted: M | Dup at spin  80 [accumula|goldSack|goldSack] | Triple  56 spins later
+  Gap # 68 | Prev: L (136) | Curr: L (150) | Predicted: S | Dup at spin  50 [steal   |spins   |goldSack] | Triple 100 spins later
+  Gap # 69 | Prev: L (150) | Curr: L (163) | Predicted: S | Dup at spin  76 [coin    |steal   |spins   ] | Triple  87 spins later
+  Gap # 71 | Prev: S ( 28) | Curr: L (163) | Predicted: M | Dup at spin  99 [accumula|goldSack|goldSack] | Triple  64 spins later
+  Gap # 73 | Prev: S ( 66) | Curr: L (133) | Predicted: M | Dup at spin 112 [attack  |steal   |goldSack] | Triple  21 spins later
+  Gap # 76 | Prev: S ( 62) | Curr: M (114) | Predicted: M | Dup at spin  81 [accumula|goldSack|goldSack] | Triple  33 spins later
+  Gap # 77 | Prev: M (114) | Curr: M (105) | Predicted: S | Dup at spin  53 [accumula|goldSack|goldSack] | Triple  52 spins later
+  Gap # 80 | Prev: M ( 85) | Curr: L (226) | Predicted: S | Dup at spin  52 [attack  |spins   |goldSack] | Triple 174 spins later
+  Gap # 82 | Prev: M ( 88) | Curr: L (161) | Predicted: S | Dup at spin  75 [accumula|goldSack|goldSack] | Triple  86 spins later
+  Gap # 83 | Prev: L (161) | Curr: L (185) | Predicted: S | Dup at spin  63 [coin    |coin    |coin    ] | Triple 122 spins later
+  Gap # 84 | Prev: L (185) | Curr: S ( 66) | Predicted: S | Dup at spin  52 [steal   |spins   |goldSack] | Triple  14 spins later *** CAUGHT ***
+  Gap # 85 | Prev: S ( 66) | Curr: M ( 95) | Predicted: M | Dup at spin  80 [goldSack|goldSack|goldSack] | Triple  15 spins later *** CAUGHT ***
+  Gap # 86 | Prev: M ( 95) | Curr: M (112) | Predicted: S | Dup at spin  82 [accumula|goldSack|goldSack] | Triple  30 spins later
+  Gap # 87 | Prev: M (112) | Curr: L (146) | Predicted: S | Dup at spin  64 [goldSack|goldSack|goldSack] | Triple  82 spins later
+  Gap # 88 | Prev: L (146) | Curr: M (107) | Predicted: S | Dup at spin  53 [accumula|goldSack|goldSack] | Triple  54 spins later
+  Gap # 90 | Prev: S ( 32) | Curr: L (166) | Predicted: M | Dup at spin  83 [accumula|goldSack|goldSack] | Triple  83 spins later
+  Gap # 92 | Prev: S ( 49) | Curr: L (156) | Predicted: M | Dup at spin 109 [coin    |coin    |spins   ] | Triple  47 spins later
+  Gap # 95 | Prev: S ( 70) | Curr: L (152) | Predicted: M | Dup at spin  99 [coin    |coin    |coin    ] | Triple  53 spins later
+  Gap #101 | Prev: S ( 77) | Curr: L (150) | Predicted: M | Dup at spin  98 [attack  |spins   |goldSack] | Triple  52 spins later
+  Gap #102 | Prev: L (150) | Curr: M (102) | Predicted: S | Dup at spin  52 [attack  |steal   |goldSack] | Triple  50 spins later
+  Gap #103 | Prev: M (102) | Curr: M ( 83) | Predicted: S | Dup at spin  67 [attack  |steal   |goldSack] | Triple  16 spins later
+  Gap #104 | Prev: M ( 83) | Curr: S ( 70) | Predicted: S | Dup at spin  60 [attack  |attack  |attack  ] | Triple  10 spins later *** CAUGHT ***
+  Gap #105 | Prev: S ( 70) | Curr: L (134) | Predicted: M | Dup at spin  89 [attack  |steal   |goldSack] | Triple  45 spins later
+  Gap #106 | Prev: L (134) | Curr: S ( 69) | Predicted: S | Dup at spin  60 [accumula|accumula|coin    ] | Triple   9 spins later *** CAUGHT ***
+  Gap #107 | Prev: S ( 69) | Curr: L (160) | Predicted: M | Dup at spin  95 [accumula|goldSack|goldSack] | Triple  65 spins later
+  Gap #108 | Prev: L (160) | Curr: M (108) | Predicted: S | Dup at spin  58 [coin    |coin    |coin    ] | Triple  50 spins later
+  Gap #110 | Prev: S ( 55) | Curr: L (173) | Predicted: M | Dup at spin 116 [coin    |coin    |steal   ] | Triple  57 spins later
+  Gap #111 | Prev: L (173) | Curr: M (126) | Predicted: S | Dup at spin  52 [accumula|goldSack|goldSack] | Triple  74 spins later
+  Gap #112 | Prev: M (126) | Curr: S ( 77) | Predicted: S | Dup at spin  65 [accumula|accumula|coin    ] | Triple  12 spins later *** CAUGHT ***
+  Gap #113 | Prev: S ( 77) | Curr: L (137) | Predicted: M | Dup at spin  81 [attack  |attack  |attack  ] | Triple  56 spins later
+  Gap #114 | Prev: L (137) | Curr: L (280) | Predicted: S | Dup at spin  53 [accumula|goldSack|goldSack] | Triple 227 spins later
+  Gap #115 | Prev: L (280) | Curr: L (292) | Predicted: S | Dup at spin  56 [accumula|goldSack|goldSack] | Triple 236 spins later
+  Gap #116 | Prev: L (292) | Curr: L (443) | Predicted: S | Dup at spin  67 [accumula|goldSack|goldSack] | Triple 376 spins later
+  Gap #117 | Prev: L (443) | Curr: S ( 70) | Predicted: S | Dup at spin  55 [accumula|goldSack|goldSack] | Triple  15 spins later *** CAUGHT ***
+  Gap #118 | Prev: S ( 70) | Curr: L (166) | Predicted: M | Dup at spin  99 [accumula|accumula|coin    ] | Triple  67 spins later
+
+  Account Summary: 67 duplicate signals, 9 catches, 984 high bets, 109.3 mb/hit
+
+--- ACCOUNT: Nick (25 hits) ---
+
+  Gap #  2 | Prev: M ( 85) | Curr: L (197) | Predicted: S | Dup at spin  60 [coin    |coin    |steal   ] | Triple 137 spins later
+  Gap #  3 | Prev: L (197) | Curr: L (219) | Predicted: S | Dup at spin  84 [coin    |coin    |coin    ] | Triple 135 spins later
+  Gap #  4 | Prev: L (219) | Curr: L (136) | Predicted: S | Dup at spin  57 [attack  |attack  |attack  ] | Triple  79 spins later
+  Gap #  5 | Prev: L (136) | Curr: M (116) | Predicted: S | Dup at spin  86 [accumula|goldSack|goldSack] | Triple  30 spins later
+  Gap #  6 | Prev: M (116) | Curr: L (139) | Predicted: S | Dup at spin  52 [coin    |steal   |steal   ] | Triple  87 spins later
+  Gap #  8 | Prev: S ( 19) | Curr: M (110) | Predicted: M | Dup at spin 105 [attack  |attack  |attack  ] | Triple   5 spins later *** CAUGHT ***
+  Gap #  9 | Prev: M (110) | Curr: L (163) | Predicted: S | Dup at spin  72 [coin    |coin    |steal   ] | Triple  91 spins later
+  Gap # 11 | Prev: S ( 19) | Curr: L (250) | Predicted: M | Dup at spin  85 [attack  |attack  |goldSack] | Triple 165 spins later
+  Gap # 12 | Prev: L (250) | Curr: L (154) | Predicted: S | Dup at spin  50 [shield  |shield  |shield  ] | Triple 104 spins later
+  Gap # 15 | Prev: S ( 40) | Curr: L (340) | Predicted: M | Dup at spin  85 [steal   |steal   |steal   ] | Triple 255 spins later
+  Gap # 16 | Prev: L (340) | Curr: M ( 90) | Predicted: S | Dup at spin  62 [accumula|goldSack|goldSack] | Triple  28 spins later
+  Gap # 17 | Prev: M ( 90) | Curr: L (159) | Predicted: S | Dup at spin  55 [attack  |spins   |goldSack] | Triple 104 spins later
+  Gap # 18 | Prev: L (159) | Curr: L (144) | Predicted: S | Dup at spin  50 [attack  |steal   |goldSack] | Triple  94 spins later
+  Gap # 19 | Prev: L (144) | Curr: M (103) | Predicted: S | Dup at spin  63 [attack  |steal   |goldSack] | Triple  40 spins later
+  Gap # 20 | Prev: M (103) | Curr: S ( 76) | Predicted: S | Dup at spin  57 [accumula|goldSack|goldSack] | Triple  19 spins later
+  Gap # 21 | Prev: S ( 76) | Curr: M (122) | Predicted: M | Dup at spin  81 [steal   |steal   |steal   ] | Triple  41 spins later
+  Gap # 22 | Prev: M (122) | Curr: L (149) | Predicted: S | Dup at spin  73 [accumula|accumula|coin    ] | Triple  76 spins later
+
+  Account Summary: 17 duplicate signals, 1 catches, 246 high bets, 246.0 mb/hit
+
+--- ACCOUNT: Ahmed (127 hits) ---
+
+  Gap #  5 | Prev: S ( 55) | Curr: M (120) | Predicted: M | Dup at spin  81 [goldSack|goldSack|goldSack] | Triple  39 spins later
+  Gap #  7 | Prev: L (135) | Curr: M (125) | Predicted: S | Dup at spin  50 [attack  |spins   |goldSack] | Triple  75 spins later
+  Gap # 10 | Prev: L (250) | Curr: S ( 57) | Predicted: S | Dup at spin  51 [attack  |coin    |coin    ] | Triple   6 spins later *** CAUGHT ***
+  Gap # 12 | Prev: S ( 13) | Curr: M (127) | Predicted: M | Dup at spin  81 [attack  |coin    |coin    ] | Triple  46 spins later
+  Gap # 13 | Prev: M (127) | Curr: S ( 78) | Predicted: S | Dup at spin  67 [attack  |coin    |coin    ] | Triple  11 spins later *** CAUGHT ***
+  Gap # 15 | Prev: S ( 59) | Curr: L (153) | Predicted: M | Dup at spin  85 [accumula|goldSack|goldSack] | Triple  68 spins later
+  Gap # 16 | Prev: L (153) | Curr: M (117) | Predicted: S | Dup at spin  56 [accumula|goldSack|goldSack] | Triple  61 spins later
+  Gap # 17 | Prev: M (117) | Curr: L (154) | Predicted: S | Dup at spin  54 [coin    |coin    |steal   ] | Triple 100 spins later
+  Gap # 19 | Prev: S ( 54) | Curr: L (133) | Predicted: M | Dup at spin  83 [attack  |coin    |coin    ] | Triple  50 spins later
+  Gap # 20 | Prev: L (133) | Curr: M ( 90) | Predicted: S | Dup at spin  52 [attack  |attack  |coin    ] | Triple  38 spins later
+  Gap # 21 | Prev: M ( 90) | Curr: M (119) | Predicted: S | Dup at spin  51 [accumula|goldSack|goldSack] | Triple  68 spins later
+  Gap # 22 | Prev: M (119) | Curr: M (110) | Predicted: S | Dup at spin  56 [goldSack|goldSack|goldSack] | Triple  54 spins later
+  Gap # 24 | Prev: S ( 37) | Curr: L (158) | Predicted: M | Dup at spin 117 [goldSack|goldSack|goldSack] | Triple  41 spins later
+  Gap # 25 | Prev: L (158) | Curr: M (102) | Predicted: S | Dup at spin  73 [attack  |spins   |goldSack] | Triple  29 spins later
+  Gap # 26 | Prev: M (102) | Curr: M (111) | Predicted: S | Dup at spin  50 [accumula|accumula|coin    ] | Triple  61 spins later
+  Gap # 28 | Prev: S ( 59) | Curr: L (147) | Predicted: M | Dup at spin  86 [shield  |shield  |shield  ] | Triple  61 spins later
+  Gap # 30 | Prev: S ( 69) | Curr: M (127) | Predicted: M | Dup at spin  84 [attack  |attack  |attack  ] | Triple  43 spins later
+  Gap # 32 | Prev: S ( 49) | Curr: M (117) | Predicted: M | Dup at spin  83 [coin    |coin    |spins   ] | Triple  34 spins later
+  Gap # 34 | Prev: S ( 48) | Curr: L (151) | Predicted: M | Dup at spin 104 [accumula|goldSack|goldSack] | Triple  47 spins later
+  Gap # 35 | Prev: L (151) | Curr: M (128) | Predicted: S | Dup at spin  54 [shield  |shield  |shield  ] | Triple  74 spins later
+  Gap # 37 | Prev: S ( 42) | Curr: L (170) | Predicted: M | Dup at spin  82 [accumula|goldSack|goldSack] | Triple  88 spins later
+  Gap # 39 | Prev: S ( 49) | Curr: M (101) | Predicted: M | Dup at spin  88 [accumula|goldSack|goldSack] | Triple  13 spins later *** CAUGHT ***
+  Gap # 40 | Prev: M (101) | Curr: M (123) | Predicted: S | Dup at spin  52 [coin    |steal   |spins   ] | Triple  71 spins later
+  Gap # 42 | Prev: S ( 40) | Curr: M (108) | Predicted: M | Dup at spin  86 [attack  |steal   |goldSack] | Triple  22 spins later
+  Gap # 43 | Prev: M (108) | Curr: L (141) | Predicted: S | Dup at spin  59 [shield  |shield  |shield  ] | Triple  82 spins later
+  Gap # 44 | Prev: L (141) | Curr: L (137) | Predicted: S | Dup at spin  50 [accumula|goldSack|goldSack] | Triple  87 spins later
+  Gap # 45 | Prev: L (137) | Curr: M ( 86) | Predicted: S | Dup at spin  50 [accumula|goldSack|goldSack] | Triple  36 spins later
+  Gap # 47 | Prev: S ( 29) | Curr: L (141) | Predicted: M | Dup at spin 110 [coin    |coin    |coin    ] | Triple  31 spins later
+  Gap # 48 | Prev: L (141) | Curr: L (132) | Predicted: S | Dup at spin  50 [steal   |spins   |goldSack] | Triple  82 spins later
+  Gap # 49 | Prev: L (132) | Curr: M ( 84) | Predicted: S | Dup at spin  52 [accumula|goldSack|goldSack] | Triple  32 spins later
+  Gap # 50 | Prev: M ( 84) | Curr: M ( 83) | Predicted: S | Dup at spin  61 [accumula|goldSack|goldSack] | Triple  22 spins later
+  Gap # 52 | Prev: S ( 72) | Curr: L (135) | Predicted: M | Dup at spin  80 [accumula|goldSack|goldSack] | Triple  55 spins later
+  Gap # 53 | Prev: L (135) | Curr: M ( 81) | Predicted: S | Dup at spin  60 [coin    |coin    |coin    ] | Triple  21 spins later
+  Gap # 54 | Prev: M ( 81) | Curr: M (117) | Predicted: S | Dup at spin  50 [accumula|goldSack|goldSack] | Triple  67 spins later
+  Gap # 55 | Prev: M (117) | Curr: L (140) | Predicted: S | Dup at spin  61 [attack  |steal   |goldSack] | Triple  79 spins later
+  Gap # 58 | Prev: S ( 78) | Curr: M (104) | Predicted: M | Dup at spin  99 [accumula|goldSack|goldSack] | Triple   5 spins later *** CAUGHT ***
+  Gap # 59 | Prev: M (104) | Curr: M (130) | Predicted: S | Dup at spin  64 [accumula|goldSack|goldSack] | Triple  66 spins later
+  Gap # 60 | Prev: M (130) | Curr: L (148) | Predicted: S | Dup at spin  53 [goldSack|goldSack|goldSack] | Triple  95 spins later
+  Gap # 62 | Prev: S ( 58) | Curr: L (153) | Predicted: M | Dup at spin  81 [attack  |attack  |attack  ] | Triple  72 spins later
+  Gap # 65 | Prev: S ( 78) | Curr: L (140) | Predicted: M | Dup at spin  96 [accumula|goldSack|goldSack] | Triple  44 spins later
+  Gap # 66 | Prev: L (140) | Curr: M (101) | Predicted: S | Dup at spin  55 [goldSack|goldSack|goldSack] | Triple  46 spins later
+  Gap # 67 | Prev: M (101) | Curr: L (140) | Predicted: S | Dup at spin  55 [attack  |steal   |goldSack] | Triple  85 spins later
+  Gap # 69 | Prev: S ( 37) | Curr: M ( 89) | Predicted: M | Dup at spin  86 [coin    |steal   |shield  ] | Triple   3 spins later *** CAUGHT ***
+  Gap # 70 | Prev: M ( 89) | Curr: L (134) | Predicted: S | Dup at spin  56 [accumula|goldSack|goldSack] | Triple  78 spins later
+  Gap # 72 | Prev: S ( 54) | Curr: L (139) | Predicted: M | Dup at spin 108 [accumula|goldSack|goldSack] | Triple  31 spins later
+  Gap # 73 | Prev: L (139) | Curr: S ( 79) | Predicted: S | Dup at spin  72 [accumula|accumula|coin    ] | Triple   7 spins later *** CAUGHT ***
+  Gap # 74 | Prev: S ( 79) | Curr: M (123) | Predicted: M | Dup at spin  92 [coin    |coin    |coin    ] | Triple  31 spins later
+  Gap # 75 | Prev: M (123) | Curr: M (120) | Predicted: S | Dup at spin  66 [goldSack|goldSack|goldSack] | Triple  54 spins later
+  Gap # 77 | Prev: S ( 30) | Curr: M (129) | Predicted: M | Dup at spin 112 [accumula|accumula|coin    ] | Triple  17 spins later
+  Gap # 78 | Prev: M (129) | Curr: L (134) | Predicted: S | Dup at spin  52 [attack  |coin    |coin    ] | Triple  82 spins later
+  Gap # 79 | Prev: L (134) | Curr: M (124) | Predicted: S | Dup at spin  65 [steal   |spins   |goldSack] | Triple  59 spins later
+  Gap # 80 | Prev: M (124) | Curr: S ( 78) | Predicted: S | Dup at spin  53 [coin    |coin    |steal   ] | Triple  25 spins later
+  Gap # 82 | Prev: S ( 57) | Curr: L (176) | Predicted: M | Dup at spin  85 [coin    |steal   |steal   ] | Triple  91 spins later
+  Gap # 83 | Prev: L (176) | Curr: M (105) | Predicted: S | Dup at spin  66 [accumula|goldSack|goldSack] | Triple  39 spins later
+  Gap # 84 | Prev: M (105) | Curr: M ( 85) | Predicted: S | Dup at spin  58 [accumula|goldSack|goldSack] | Triple  27 spins later
+  Gap # 85 | Prev: M ( 85) | Curr: M (118) | Predicted: S | Dup at spin  52 [accumula|goldSack|goldSack] | Triple  66 spins later
+  Gap # 87 | Prev: S ( 35) | Curr: L (157) | Predicted: M | Dup at spin  91 [steal   |spins   |goldSack] | Triple  66 spins later
+  Gap # 89 | Prev: S ( 25) | Curr: L (133) | Predicted: M | Dup at spin  87 [coin    |coin    |spins   ] | Triple  46 spins later
+  Gap # 90 | Prev: L (133) | Curr: M ( 86) | Predicted: S | Dup at spin  61 [steal   |steal   |steal   ] | Triple  25 spins later
+  Gap # 91 | Prev: M ( 86) | Curr: L (260) | Predicted: S | Dup at spin  50 [attack  |attack  |goldSack] | Triple 210 spins later
+  Gap # 93 | Prev: S ( 75) | Curr: M (117) | Predicted: M | Dup at spin  83 [accumula|goldSack|goldSack] | Triple  34 spins later
+  Gap # 94 | Prev: M (117) | Curr: S ( 79) | Predicted: S | Dup at spin  57 [accumula|goldSack|goldSack] | Triple  22 spins later
+  Gap # 96 | Prev: M ( 97) | Curr: M (103) | Predicted: S | Dup at spin  79 [coin    |coin    |steal   ] | Triple  24 spins later
+  Gap # 97 | Prev: M (103) | Curr: L (163) | Predicted: S | Dup at spin  80 [coin    |steal   |spins   ] | Triple  83 spins later
+  Gap # 98 | Prev: L (163) | Curr: L (193) | Predicted: S | Dup at spin  81 [accumula|goldSack|goldSack] | Triple 112 spins later
+  Gap # 99 | Prev: L (193) | Curr: M (121) | Predicted: S | Dup at spin  52 [accumula|goldSack|goldSack] | Triple  69 spins later
+  Gap #100 | Prev: M (121) | Curr: L (149) | Predicted: S | Dup at spin  54 [steal   |spins   |goldSack] | Triple  95 spins later
+  Gap #101 | Prev: L (149) | Curr: M (123) | Predicted: S | Dup at spin  55 [accumula|goldSack|goldSack] | Triple  68 spins later
+  Gap #102 | Prev: M (123) | Curr: M ( 94) | Predicted: S | Dup at spin  50 [attack  |attack  |coin    ] | Triple  44 spins later
+  Gap #103 | Prev: M ( 94) | Curr: L (142) | Predicted: S | Dup at spin  91 [coin    |steal   |spins   ] | Triple  51 spins later
+  Gap #105 | Prev: S ( 53) | Curr: L (163) | Predicted: M | Dup at spin  81 [coin    |steal   |spins   ] | Triple  82 spins later
+  Gap #106 | Prev: L (163) | Curr: M ( 97) | Predicted: S | Dup at spin  69 [accumula|goldSack|goldSack] | Triple  28 spins later
+  Gap #108 | Prev: S ( 46) | Curr: L (181) | Predicted: M | Dup at spin  88 [accumula|goldSack|goldSack] | Triple  93 spins later
+  Gap #111 | Prev: M (101) | Curr: M (101) | Predicted: S | Dup at spin  57 [accumula|goldSack|goldSack] | Triple  44 spins later
+  Gap #112 | Prev: M (101) | Curr: L (153) | Predicted: S | Dup at spin  88 [accumula|goldSack|goldSack] | Triple  65 spins later
+  Gap #113 | Prev: L (153) | Curr: S ( 69) | Predicted: S | Dup at spin  54 [accumula|goldSack|goldSack] | Triple  15 spins later *** CAUGHT ***
+  Gap #115 | Prev: S ( 69) | Curr: L (162) | Predicted: M | Dup at spin  88 [attack  |spins   |goldSack] | Triple  74 spins later
+  Gap #117 | Prev: S ( 44) | Curr: M (118) | Predicted: M | Dup at spin  83 [coin    |coin    |spins   ] | Triple  35 spins later
+  Gap #118 | Prev: M (118) | Curr: L (149) | Predicted: S | Dup at spin  57 [accumula|goldSack|goldSack] | Triple  92 spins later
+  Gap #119 | Prev: L (149) | Curr: M (110) | Predicted: S | Dup at spin  71 [attack  |steal   |goldSack] | Triple  39 spins later
+  Gap #120 | Prev: M (110) | Curr: M ( 84) | Predicted: S | Dup at spin  60 [accumula|goldSack|goldSack] | Triple  24 spins later
+  Gap #122 | Prev: S ( 40) | Curr: L (158) | Predicted: M | Dup at spin  81 [coin    |coin    |coin    ] | Triple  77 spins later
+  Gap #124 | Prev: S ( 52) | Curr: M (114) | Predicted: M | Dup at spin  89 [attack  |spins   |goldSack] | Triple  25 spins later
+  Gap #125 | Prev: M (114) | Curr: M ( 86) | Predicted: S | Dup at spin  68 [attack  |spins   |goldSack] | Triple  18 spins later
+  Gap #126 | Prev: M ( 86) | Curr: M ( 99) | Predicted: S | Dup at spin  75 [accumula|goldSack|goldSack] | Triple  24 spins later
+
+  Account Summary: 85 duplicate signals, 7 catches, 1236 high bets, 176.6 mb/hit
+
+
+======================================================================
+OVERALL SUMMARY FOR ACCUMULATION:
+  Total Gaps Analyzed: 265
+  S/M/L Prediction Accuracy: 104/265 (39.2%)
+  Duplicate Signals Found in Window: 169
+  Triple landed within 5 spins of dup: 4 (2.4%)
+  Triple landed within 10 spins of dup: 8 (4.7%)
+  Triple CAUGHT (within 15 spins of dup): 17 (10.1%)
+  Total High Bets Used: 2466
+  Total Catches: 17
+  Efficiency: 145.1 mb/hit
+======================================================================
+
+======================================================================
+   TARGET: TRIPLE SPINS
+======================================================================
+
+--- ACCOUNT: Islam (147 hits) ---
+
+  Gap #  3 | Prev: S ( 77) | Curr: M (126) | Predicted: M | Dup at spin  82 [attack  |spins   |goldSack] | Triple  44 spins later
+  Gap #  6 | Prev: S ( 20) | Curr: M (110) | Predicted: M | Dup at spin  99 [coin    |coin    |steal   ] | Triple  11 spins later *** CAUGHT ***
+  Gap # 11 | Prev: S ( 51) | Curr: L (143) | Predicted: M | Dup at spin  88 [accumula|accumula|coin    ] | Triple  55 spins later
+  Gap # 12 | Prev: L (143) | Curr: S ( 59) | Predicted: S | Dup at spin  53 [goldSack|goldSack|goldSack] | Triple   6 spins later *** CAUGHT ***
+  Gap # 17 | Prev: S (  3) | Curr: L (170) | Predicted: M | Dup at spin  80 [accumula|goldSack|goldSack] | Triple  90 spins later
+  Gap # 18 | Prev: L (170) | Curr: M (109) | Predicted: S | Dup at spin  64 [steal   |spins   |goldSack] | Triple  45 spins later
+  Gap # 19 | Prev: M (109) | Curr: L (140) | Predicted: S | Dup at spin  50 [accumula|goldSack|goldSack] | Triple  90 spins later
+  Gap # 20 | Prev: L (140) | Curr: S ( 70) | Predicted: S | Dup at spin  62 [shield  |shield  |shield  ] | Triple   8 spins later *** CAUGHT ***
+  Gap # 22 | Prev: S ( 31) | Curr: L (187) | Predicted: M | Dup at spin  86 [attack  |attack  |coin    ] | Triple 101 spins later
+  Gap # 23 | Prev: L (187) | Curr: M ( 96) | Predicted: S | Dup at spin  81 [accumula|accumula|coin    ] | Triple  15 spins later *** CAUGHT ***
+  Gap # 24 | Prev: M ( 96) | Curr: L (193) | Predicted: S | Dup at spin  64 [shield  |shield  |shield  ] | Triple 129 spins later
+  Gap # 25 | Prev: L (193) | Curr: L (166) | Predicted: S | Dup at spin  55 [accumula|goldSack|goldSack] | Triple 111 spins later
+  Gap # 26 | Prev: L (166) | Curr: L (171) | Predicted: S | Dup at spin  62 [attack  |spins   |goldSack] | Triple 109 spins later
+  Gap # 28 | Prev: S ( 47) | Curr: M (113) | Predicted: M | Dup at spin 100 [accumula|goldSack|goldSack] | Triple  13 spins later *** CAUGHT ***
+  Gap # 30 | Prev: S (  8) | Curr: L (159) | Predicted: M | Dup at spin 113 [steal   |spins   |goldSack] | Triple  46 spins later
+  Gap # 33 | Prev: S ( 27) | Curr: L (152) | Predicted: M | Dup at spin  90 [accumula|goldSack|goldSack] | Triple  62 spins later
+  Gap # 35 | Prev: S ( 28) | Curr: M (127) | Predicted: M | Dup at spin  97 [goldSack|goldSack|goldSack] | Triple  30 spins later
+  Gap # 36 | Prev: M (127) | Curr: M (114) | Predicted: S | Dup at spin  90 [coin    |coin    |steal   ] | Triple  24 spins later
+  Gap # 37 | Prev: M (114) | Curr: S ( 66) | Predicted: S | Dup at spin  54 [accumula|goldSack|goldSack] | Triple  12 spins later *** CAUGHT ***
+  Gap # 38 | Prev: S ( 66) | Curr: L (207) | Predicted: M | Dup at spin 100 [accumula|goldSack|goldSack] | Triple 107 spins later
+  Gap # 40 | Prev: S ( 55) | Curr: L (137) | Predicted: M | Dup at spin  81 [accumula|goldSack|goldSack] | Triple  56 spins later
+  Gap # 42 | Prev: S ( 46) | Curr: L (139) | Predicted: M | Dup at spin  93 [attack  |attack  |attack  ] | Triple  46 spins later
+  Gap # 43 | Prev: L (139) | Curr: S ( 53) | Predicted: S | Dup at spin  51 [accumula|accumula|coin    ] | Triple   2 spins later *** CAUGHT ***
+  Gap # 44 | Prev: S ( 53) | Curr: L (169) | Predicted: M | Dup at spin  92 [attack  |attack  |coin    ] | Triple  77 spins later
+  Gap # 45 | Prev: L (169) | Curr: M ( 91) | Predicted: S | Dup at spin  59 [attack  |attack  |attack  ] | Triple  32 spins later
+  Gap # 46 | Prev: M ( 91) | Curr: S ( 63) | Predicted: S | Dup at spin  51 [steal   |spins   |goldSack] | Triple  12 spins later *** CAUGHT ***
+  Gap # 48 | Prev: S ( 73) | Curr: M (118) | Predicted: M | Dup at spin  91 [coin    |coin    |coin    ] | Triple  27 spins later
+  Gap # 49 | Prev: M (118) | Curr: M (122) | Predicted: S | Dup at spin  60 [attack  |attack  |attack  ] | Triple  62 spins later
+  Gap # 50 | Prev: M (122) | Curr: M ( 99) | Predicted: S | Dup at spin  62 [coin    |coin    |coin    ] | Triple  37 spins later
+  Gap # 51 | Prev: M ( 99) | Curr: L (267) | Predicted: S | Dup at spin  62 [goldSack|goldSack|goldSack] | Triple 205 spins later
+  Gap # 52 | Prev: L (267) | Curr: M ( 83) | Predicted: S | Dup at spin  56 [goldSack|goldSack|goldSack] | Triple  27 spins later
+  Gap # 53 | Prev: M ( 83) | Curr: M (117) | Predicted: S | Dup at spin  68 [attack  |steal   |goldSack] | Triple  49 spins later
+  Gap # 54 | Prev: M (117) | Curr: M ( 88) | Predicted: S | Dup at spin  67 [attack  |steal   |goldSack] | Triple  21 spins later
+  Gap # 59 | Prev: S ( 26) | Curr: M (100) | Predicted: M | Dup at spin  84 [attack  |attack  |goldSack] | Triple  16 spins later
+  Gap # 60 | Prev: M (100) | Curr: L (185) | Predicted: S | Dup at spin  72 [accumula|goldSack|goldSack] | Triple 113 spins later
+  Gap # 61 | Prev: L (185) | Curr: L (162) | Predicted: S | Dup at spin  55 [attack  |spins   |goldSack] | Triple 107 spins later
+  Gap # 64 | Prev: S ( 11) | Curr: M (123) | Predicted: M | Dup at spin  97 [accumula|goldSack|goldSack] | Triple  26 spins later
+  Gap # 65 | Prev: M (123) | Curr: S ( 60) | Predicted: S | Dup at spin  52 [accumula|goldSack|goldSack] | Triple   8 spins later *** CAUGHT ***
+  Gap # 68 | Prev: S ( 38) | Curr: L (199) | Predicted: M | Dup at spin 114 [attack  |attack  |goldSack] | Triple  85 spins later
+  Gap # 71 | Prev: S ( 70) | Curr: M ( 94) | Predicted: M | Dup at spin  90 [attack  |spins   |goldSack] | Triple   4 spins later *** CAUGHT ***
+  Gap # 73 | Prev: S ( 48) | Curr: L (183) | Predicted: M | Dup at spin  87 [coin    |coin    |steal   ] | Triple  96 spins later
+  Gap # 75 | Prev: S ( 25) | Curr: M ( 94) | Predicted: M | Dup at spin  88 [steal   |spins   |goldSack] | Triple   6 spins later *** CAUGHT ***
+  Gap # 76 | Prev: M ( 94) | Curr: L (167) | Predicted: S | Dup at spin  80 [accumula|goldSack|goldSack] | Triple  87 spins later
+  Gap # 80 | Prev: M (105) | Curr: L (151) | Predicted: S | Dup at spin  52 [coin    |steal   |spins   ] | Triple  99 spins later
+  Gap # 82 | Prev: S ( 44) | Curr: M ( 96) | Predicted: M | Dup at spin  84 [coin    |steal   |spins   ] | Triple  12 spins later *** CAUGHT ***
+  Gap # 83 | Prev: M ( 96) | Curr: L (166) | Predicted: S | Dup at spin  53 [attack  |steal   |goldSack] | Triple 113 spins later
+  Gap # 84 | Prev: L (166) | Curr: M (106) | Predicted: S | Dup at spin  64 [accumula|goldSack|goldSack] | Triple  42 spins later
+  Gap # 86 | Prev: S ( 28) | Curr: L (212) | Predicted: M | Dup at spin  86 [coin    |coin    |coin    ] | Triple 126 spins later
+  Gap # 87 | Prev: L (212) | Curr: S ( 77) | Predicted: S | Dup at spin  64 [attack  |spins   |goldSack] | Triple  13 spins later *** CAUGHT ***
+  Gap # 91 | Prev: S ( 71) | Curr: M (125) | Predicted: M | Dup at spin  95 [coin    |coin    |spins   ] | Triple  30 spins later
+  Gap # 92 | Prev: M (125) | Curr: M ( 80) | Predicted: S | Dup at spin  63 [steal   |spins   |goldSack] | Triple  17 spins later
+  Gap # 95 | Prev: M ( 95) | Curr: S ( 67) | Predicted: S | Dup at spin  52 [coin    |coin    |steal   ] | Triple  15 spins later *** CAUGHT ***
+  Gap # 97 | Prev: S ( 50) | Curr: L (149) | Predicted: M | Dup at spin  80 [attack  |attack  |attack  ] | Triple  69 spins later
+  Gap # 99 | Prev: S ( 56) | Curr: M (100) | Predicted: M | Dup at spin  95 [goldSack|goldSack|goldSack] | Triple   5 spins later *** CAUGHT ***
+  Gap #100 | Prev: M (100) | Curr: M ( 96) | Predicted: S | Dup at spin  59 [coin    |coin    |coin    ] | Triple  37 spins later
+  Gap #103 | Prev: M ( 85) | Curr: L (141) | Predicted: S | Dup at spin  80 [attack  |attack  |attack  ] | Triple  61 spins later
+  Gap #104 | Prev: L (141) | Curr: M ( 81) | Predicted: S | Dup at spin  67 [steal   |spins   |goldSack] | Triple  14 spins later *** CAUGHT ***
+  Gap #105 | Prev: M ( 81) | Curr: M (100) | Predicted: S | Dup at spin  66 [coin    |coin    |coin    ] | Triple  34 spins later
+  Gap #106 | Prev: M (100) | Curr: M ( 89) | Predicted: S | Dup at spin  50 [accumula|goldSack|goldSack] | Triple  39 spins later
+  Gap #107 | Prev: M ( 89) | Curr: M (109) | Predicted: S | Dup at spin  67 [accumula|accumula|coin    ] | Triple  42 spins later
+  Gap #108 | Prev: M (109) | Curr: M (108) | Predicted: S | Dup at spin  52 [coin    |steal   |shield  ] | Triple  56 spins later
+  Gap #109 | Prev: M (108) | Curr: S ( 68) | Predicted: S | Dup at spin  52 [coin    |coin    |spins   ] | Triple  16 spins later
+  Gap #117 | Prev: M ( 90) | Curr: L (138) | Predicted: S | Dup at spin  62 [attack  |attack  |attack  ] | Triple  76 spins later
+  Gap #118 | Prev: L (138) | Curr: S ( 78) | Predicted: S | Dup at spin  68 [attack  |steal   |goldSack] | Triple  10 spins later *** CAUGHT ***
+  Gap #119 | Prev: S ( 78) | Curr: M (124) | Predicted: M | Dup at spin  80 [attack  |attack  |goldSack] | Triple  44 spins later
+  Gap #120 | Prev: M (124) | Curr: M (120) | Predicted: S | Dup at spin  88 [accumula|goldSack|goldSack] | Triple  32 spins later
+  Gap #122 | Prev: S ( 43) | Curr: L (154) | Predicted: M | Dup at spin  87 [accumula|goldSack|goldSack] | Triple  67 spins later
+  Gap #124 | Prev: S ( 32) | Curr: M (127) | Predicted: M | Dup at spin  88 [steal   |spins   |goldSack] | Triple  39 spins later
+  Gap #126 | Prev: S ( 66) | Curr: L (194) | Predicted: M | Dup at spin  81 [accumula|goldSack|goldSack] | Triple 113 spins later
+  Gap #130 | Prev: S ( 51) | Curr: M ( 96) | Predicted: M | Dup at spin  87 [accumula|goldSack|goldSack] | Triple   9 spins later *** CAUGHT ***
+  Gap #131 | Prev: M ( 96) | Curr: L (210) | Predicted: S | Dup at spin  52 [attack  |attack  |attack  ] | Triple 158 spins later
+  Gap #134 | Prev: S ( 49) | Curr: L (255) | Predicted: M | Dup at spin  87 [attack  |spins   |goldSack] | Triple 168 spins later
+  Gap #136 | Prev: S ( 34) | Curr: M (108) | Predicted: M | Dup at spin  91 [accumula|goldSack|goldSack] | Triple  17 spins later
+  Gap #137 | Prev: M (108) | Curr: S ( 68) | Predicted: S | Dup at spin  55 [attack  |attack  |attack  ] | Triple  13 spins later *** CAUGHT ***
+  Gap #144 | Prev: S ( 69) | Curr: M (106) | Predicted: M | Dup at spin  84 [attack  |attack  |goldSack] | Triple  22 spins later
+  Gap #146 | Prev: S ( 25) | Curr: L (246) | Predicted: M | Dup at spin  93 [accumula|accumula|coin    ] | Triple 153 spins later
+
+  Account Summary: 76 duplicate signals, 19 catches, 1060 high bets, 55.8 mb/hit
+
+--- ACCOUNT: Nick (40 hits) ---
+
+  Gap #  5 | Prev: S ( 12) | Curr: M (126) | Predicted: M | Dup at spin  92 [steal   |steal   |steal   ] | Triple  34 spins later
+  Gap #  6 | Prev: M (126) | Curr: M ( 95) | Predicted: S | Dup at spin  52 [attack  |attack  |coin    ] | Triple  43 spins later
+  Gap # 10 | Prev: S ( 13) | Curr: M (114) | Predicted: M | Dup at spin  82 [accumula|goldSack|goldSack] | Triple  32 spins later
+  Gap # 11 | Prev: M (114) | Curr: M (124) | Predicted: S | Dup at spin  94 [coin    |coin    |spins   ] | Triple  30 spins later
+  Gap # 14 | Prev: S ( 29) | Curr: L (134) | Predicted: M | Dup at spin  81 [attack  |spins   |goldSack] | Triple  53 spins later
+  Gap # 15 | Prev: L (134) | Curr: M (111) | Predicted: S | Dup at spin  70 [attack  |steal   |goldSack] | Triple  41 spins later
+  Gap # 18 | Prev: S ( 79) | Curr: L (152) | Predicted: M | Dup at spin  99 [accumula|goldSack|goldSack] | Triple  53 spins later
+  Gap # 22 | Prev: S ( 54) | Curr: L (140) | Predicted: M | Dup at spin 100 [shield  |shield  |shield  ] | Triple  40 spins later
+  Gap # 23 | Prev: L (140) | Curr: L (173) | Predicted: S | Dup at spin  61 [accumula|goldSack|goldSack] | Triple 112 spins later
+  Gap # 32 | Prev: S ( 74) | Curr: M (119) | Predicted: M | Dup at spin  83 [coin    |coin    |coin    ] | Triple  36 spins later
+  Gap # 33 | Prev: M (119) | Curr: L (153) | Predicted: S | Dup at spin  50 [coin    |steal   |spins   ] | Triple 103 spins later
+  Gap # 34 | Prev: L (153) | Curr: S ( 78) | Predicted: S | Dup at spin  52 [attack  |coin    |spins   ] | Triple  26 spins later
+  Gap # 35 | Prev: S ( 78) | Curr: M (108) | Predicted: M | Dup at spin  99 [accumula|goldSack|goldSack] | Triple   9 spins later *** CAUGHT ***
+  Gap # 36 | Prev: M (108) | Curr: M (106) | Predicted: S | Dup at spin  53 [attack  |coin    |coin    ] | Triple  53 spins later
+  Gap # 38 | Prev: S ( 14) | Curr: M (124) | Predicted: M | Dup at spin 118 [coin    |steal   |spins   ] | Triple   6 spins later *** CAUGHT ***
+  Gap # 39 | Prev: M (124) | Curr: M ( 90) | Predicted: S | Dup at spin  71 [coin    |steal   |spins   ] | Triple  19 spins later
+
+  Account Summary: 16 duplicate signals, 2 catches, 227 high bets, 113.5 mb/hit
+
+--- ACCOUNT: Ahmed (146 hits) ---
+
+  Gap #  4 | Prev: S ( 12) | Curr: M ( 97) | Predicted: M | Dup at spin  90 [attack  |coin    |coin    ] | Triple   7 spins later *** CAUGHT ***
+  Gap #  7 | Prev: S ( 70) | Curr: L (132) | Predicted: M | Dup at spin  94 [accumula|accumula|coin    ] | Triple  38 spins later
+  Gap #  8 | Prev: L (132) | Curr: M ( 95) | Predicted: S | Dup at spin  73 [attack  |spins   |goldSack] | Triple  22 spins later
+  Gap #  9 | Prev: M ( 95) | Curr: L (205) | Predicted: S | Dup at spin  72 [attack  |coin    |coin    ] | Triple 133 spins later
+  Gap # 10 | Prev: L (205) | Curr: L (310) | Predicted: S | Dup at spin  73 [accumula|goldSack|goldSack] | Triple 237 spins later
+  Gap # 11 | Prev: L (310) | Curr: L (314) | Predicted: S | Dup at spin  50 [goldSack|goldSack|goldSack] | Triple 264 spins later
+  Gap # 12 | Prev: L (314) | Curr: S ( 78) | Predicted: S | Dup at spin  73 [attack  |spins   |goldSack] | Triple   5 spins later *** CAUGHT ***
+  Gap # 16 | Prev: S ( 75) | Curr: M (130) | Predicted: M | Dup at spin  84 [attack  |coin    |coin    ] | Triple  46 spins later
+  Gap # 18 | Prev: S ( 55) | Curr: L (147) | Predicted: M | Dup at spin  82 [accumula|goldSack|goldSack] | Triple  65 spins later
+  Gap # 19 | Prev: L (147) | Curr: M (124) | Predicted: S | Dup at spin  60 [accumula|goldSack|goldSack] | Triple  64 spins later
+  Gap # 25 | Prev: S ( 68) | Curr: M (113) | Predicted: M | Dup at spin  92 [goldSack|goldSack|goldSack] | Triple  21 spins later
+  Gap # 26 | Prev: M (113) | Curr: M (114) | Predicted: S | Dup at spin  58 [attack  |steal   |goldSack] | Triple  56 spins later
+  Gap # 27 | Prev: M (114) | Curr: M ( 87) | Predicted: S | Dup at spin  59 [accumula|accumula|coin    ] | Triple  28 spins later
+  Gap # 29 | Prev: S ( 14) | Curr: M (122) | Predicted: M | Dup at spin  92 [accumula|goldSack|goldSack] | Triple  30 spins later
+  Gap # 30 | Prev: M (122) | Curr: M (103) | Predicted: S | Dup at spin  88 [attack  |spins   |goldSack] | Triple  15 spins later *** CAUGHT ***
+  Gap # 31 | Prev: M (103) | Curr: M (101) | Predicted: S | Dup at spin  57 [coin    |coin    |spins   ] | Triple  44 spins later
+  Gap # 32 | Prev: M (101) | Curr: S ( 61) | Predicted: S | Dup at spin  56 [accumula|accumula|coin    ] | Triple   5 spins later *** CAUGHT ***
+  Gap # 33 | Prev: S ( 61) | Curr: L (141) | Predicted: M | Dup at spin  81 [accumula|goldSack|goldSack] | Triple  60 spins later
+  Gap # 34 | Prev: L (141) | Curr: S ( 62) | Predicted: S | Dup at spin  55 [accumula|goldSack|goldSack] | Triple   7 spins later *** CAUGHT ***
+  Gap # 35 | Prev: S ( 62) | Curr: L (138) | Predicted: M | Dup at spin  84 [steal   |spins   |goldSack] | Triple  54 spins later
+  Gap # 37 | Prev: S ( 32) | Curr: L (182) | Predicted: M | Dup at spin 129 [goldSack|goldSack|goldSack] | Triple  53 spins later
+  Gap # 39 | Prev: S ( 35) | Curr: M (124) | Predicted: M | Dup at spin  80 [coin    |steal   |spins   ] | Triple  44 spins later
+  Gap # 41 | Prev: S ( 66) | Curr: M (117) | Predicted: M | Dup at spin  87 [attack  |steal   |goldSack] | Triple  30 spins later
+  Gap # 48 | Prev: S ( 58) | Curr: M (101) | Predicted: M | Dup at spin  86 [attack  |shield  |goldSack] | Triple  15 spins later *** CAUGHT ***
+  Gap # 49 | Prev: M (101) | Curr: L (145) | Predicted: S | Dup at spin  56 [attack  |attack  |goldSack] | Triple  89 spins later
+  Gap # 50 | Prev: L (145) | Curr: M (113) | Predicted: S | Dup at spin  80 [accumula|goldSack|goldSack] | Triple  33 spins later
+  Gap # 53 | Prev: M ( 85) | Curr: L (176) | Predicted: S | Dup at spin  58 [accumula|goldSack|goldSack] | Triple 118 spins later
+  Gap # 55 | Prev: S ( 28) | Curr: M (125) | Predicted: M | Dup at spin  89 [accumula|accumula|coin    ] | Triple  36 spins later
+  Gap # 56 | Prev: M (125) | Curr: M (113) | Predicted: S | Dup at spin  67 [coin    |coin    |steal   ] | Triple  46 spins later
+  Gap # 57 | Prev: M (113) | Curr: M (124) | Predicted: S | Dup at spin  67 [accumula|goldSack|goldSack] | Triple  57 spins later
+  Gap # 59 | Prev: S ( 13) | Curr: M ( 93) | Predicted: M | Dup at spin  81 [accumula|goldSack|goldSack] | Triple  12 spins later *** CAUGHT ***
+  Gap # 63 | Prev: S ( 61) | Curr: M (108) | Predicted: M | Dup at spin  93 [coin    |coin    |coin    ] | Triple  15 spins later *** CAUGHT ***
+  Gap # 64 | Prev: M (108) | Curr: L (147) | Predicted: S | Dup at spin  72 [steal   |spins   |goldSack] | Triple  75 spins later
+  Gap # 67 | Prev: S ( 65) | Curr: M (128) | Predicted: M | Dup at spin  89 [coin    |steal   |spins   ] | Triple  39 spins later
+  Gap # 68 | Prev: M (128) | Curr: M ( 97) | Predicted: S | Dup at spin  61 [accumula|goldSack|goldSack] | Triple  36 spins later
+  Gap # 69 | Prev: M ( 97) | Curr: S ( 70) | Predicted: S | Dup at spin  55 [accumula|goldSack|goldSack] | Triple  15 spins later *** CAUGHT ***
+  Gap # 72 | Prev: M ( 81) | Curr: M (112) | Predicted: S | Dup at spin  81 [accumula|goldSack|goldSack] | Triple  31 spins later
+  Gap # 73 | Prev: M (112) | Curr: S ( 78) | Predicted: S | Dup at spin  59 [coin    |coin    |coin    ] | Triple  19 spins later
+  Gap # 77 | Prev: S ( 29) | Curr: L (154) | Predicted: M | Dup at spin  96 [attack  |steal   |goldSack] | Triple  58 spins later
+  Gap # 78 | Prev: L (154) | Curr: M (107) | Predicted: S | Dup at spin  64 [attack  |spins   |goldSack] | Triple  43 spins later
+  Gap # 81 | Prev: S ( 45) | Curr: M ( 87) | Predicted: M | Dup at spin  85 [steal   |spins   |goldSack] | Triple   2 spins later *** CAUGHT ***
+  Gap # 84 | Prev: S ( 38) | Curr: M (116) | Predicted: M | Dup at spin  94 [accumula|goldSack|goldSack] | Triple  22 spins later
+  Gap # 94 | Prev: S ( 73) | Curr: L (157) | Predicted: M | Dup at spin  81 [coin    |steal   |steal   ] | Triple  76 spins later
+  Gap # 99 | Prev: S ( 50) | Curr: L (161) | Predicted: M | Dup at spin  90 [accumula|goldSack|goldSack] | Triple  71 spins later
+  Gap #100 | Prev: L (161) | Curr: S ( 71) | Predicted: S | Dup at spin  66 [steal   |spins   |goldSack] | Triple   5 spins later *** CAUGHT ***
+  Gap #105 | Prev: S ( 45) | Curr: M ( 85) | Predicted: M | Dup at spin  80 [attack  |coin    |coin    ] | Triple   5 spins later *** CAUGHT ***
+  Gap #106 | Prev: M ( 85) | Curr: L (230) | Predicted: S | Dup at spin  55 [attack  |coin    |coin    ] | Triple 175 spins later
+  Gap #108 | Prev: S ( 45) | Curr: M ( 90) | Predicted: M | Dup at spin  83 [accumula|goldSack|goldSack] | Triple   7 spins later *** CAUGHT ***
+  Gap #110 | Prev: S ( 12) | Curr: M ( 83) | Predicted: M | Dup at spin  81 [accumula|goldSack|goldSack] | Triple   2 spins later *** CAUGHT ***
+  Gap #111 | Prev: M ( 83) | Curr: M ( 86) | Predicted: S | Dup at spin  68 [accumula|accumula|coin    ] | Triple  18 spins later
+  Gap #113 | Prev: S ( 37) | Curr: L (161) | Predicted: M | Dup at spin  92 [goldSack|goldSack|goldSack] | Triple  69 spins later
+  Gap #115 | Prev: S ( 19) | Curr: L (324) | Predicted: M | Dup at spin  86 [accumula|goldSack|goldSack] | Triple 238 spins later
+  Gap #118 | Prev: S ( 43) | Curr: L (187) | Predicted: M | Dup at spin  84 [attack  |attack  |attack  ] | Triple 103 spins later
+  Gap #119 | Prev: L (187) | Curr: M ( 95) | Predicted: S | Dup at spin  69 [coin    |coin    |coin    ] | Triple  26 spins later
+  Gap #120 | Prev: M ( 95) | Curr: M (130) | Predicted: S | Dup at spin  60 [accumula|goldSack|goldSack] | Triple  70 spins later
+  Gap #123 | Prev: S (  5) | Curr: L (171) | Predicted: M | Dup at spin  92 [attack  |steal   |goldSack] | Triple  79 spins later
+  Gap #124 | Prev: L (171) | Curr: S ( 63) | Predicted: S | Dup at spin  55 [attack  |spins   |goldSack] | Triple   8 spins later *** CAUGHT ***
+  Gap #125 | Prev: S ( 63) | Curr: M (108) | Predicted: M | Dup at spin  83 [accumula|goldSack|goldSack] | Triple  25 spins later
+  Gap #126 | Prev: M (108) | Curr: S ( 60) | Predicted: S | Dup at spin  51 [accumula|goldSack|goldSack] | Triple   9 spins later *** CAUGHT ***
+  Gap #128 | Prev: M (105) | Curr: M ( 80) | Predicted: S | Dup at spin  52 [shield  |shield  |shield  ] | Triple  28 spins later
+  Gap #129 | Prev: M ( 80) | Curr: L (175) | Predicted: S | Dup at spin  63 [accumula|accumula|coin    ] | Triple 112 spins later
+  Gap #130 | Prev: L (175) | Curr: S ( 78) | Predicted: S | Dup at spin  54 [attack  |attack  |goldSack] | Triple  24 spins later
+  Gap #131 | Prev: S ( 78) | Curr: M ( 92) | Predicted: M | Dup at spin  81 [steal   |spins   |goldSack] | Triple  11 spins later *** CAUGHT ***
+  Gap #132 | Prev: M ( 92) | Curr: S ( 59) | Predicted: S | Dup at spin  56 [coin    |coin    |steal   ] | Triple   3 spins later *** CAUGHT ***
+  Gap #135 | Prev: S ( 31) | Curr: L (171) | Predicted: M | Dup at spin  90 [attack  |spins   |goldSack] | Triple  81 spins later
+  Gap #136 | Prev: L (171) | Curr: S ( 79) | Predicted: S | Dup at spin  68 [accumula|goldSack|goldSack] | Triple  11 spins later *** CAUGHT ***
+  Gap #137 | Prev: S ( 79) | Curr: M (130) | Predicted: M | Dup at spin  85 [coin    |coin    |steal   ] | Triple  45 spins later
+  Gap #138 | Prev: M (130) | Curr: M ( 92) | Predicted: S | Dup at spin  52 [goldSack|goldSack|goldSack] | Triple  40 spins later
+  Gap #139 | Prev: M ( 92) | Curr: M ( 84) | Predicted: S | Dup at spin  51 [accumula|goldSack|goldSack] | Triple  33 spins later
+  Gap #140 | Prev: M ( 84) | Curr: S ( 60) | Predicted: S | Dup at spin  52 [accumula|goldSack|goldSack] | Triple   8 spins later *** CAUGHT ***
+  Gap #141 | Prev: S ( 60) | Curr: M ( 98) | Predicted: M | Dup at spin  80 [accumula|goldSack|goldSack] | Triple  18 spins later
+  Gap #142 | Prev: M ( 98) | Curr: M (115) | Predicted: S | Dup at spin  76 [coin    |coin    |coin    ] | Triple  39 spins later
+  Gap #143 | Prev: M (115) | Curr: L (154) | Predicted: S | Dup at spin  51 [accumula|goldSack|goldSack] | Triple 103 spins later
+  Gap #144 | Prev: L (154) | Curr: M ( 96) | Predicted: S | Dup at spin  87 [coin    |coin    |steal   ] | Triple   9 spins later *** CAUGHT ***
+
+  Account Summary: 74 duplicate signals, 21 catches, 988 high bets, 47.0 mb/hit
+
+
+======================================================================
+OVERALL SUMMARY FOR SPINS:
+  Total Gaps Analyzed: 327
+  S/M/L Prediction Accuracy: 147/327 (45.0%)
+  Duplicate Signals Found in Window: 166
+  Triple landed within 5 spins of dup: 10 (6.0%)
+  Triple landed within 10 spins of dup: 25 (15.1%)
+  Triple CAUGHT (within 15 spins of dup): 42 (25.3%)
+  Total High Bets Used: 2275
+  Total Catches: 42
+  Efficiency: 54.2 mb/hit
+======================================================================
+

@@ -1,0 +1,36 @@
+==========================================================================================
+CHUNK 15: PICK ENSEMBLE SIZE — sweet spot scan
+==========================================================================================
+
+--- First-N greedy subsets ---
+  N                           last rule added                                   metrics
+  1                 SML L>=120 t_l=130 g=0.31    4/178  bet=0.11%  mb/hit=  4.8  lift=21.36x
+  2                 SML L>=140 t_l=130 g=0.29    6/178  bet=0.20%  mb/hit=  6.0  lift=16.91x
+  3                  COND shield t=150 g=0.30    9/178  bet=0.45%  mb/hit=  9.0  lift=11.27x
+  4              SML s=50 l=130 tL=100 g=0.31   12/178  bet=0.78%  mb/hit= 11.8  lift=8.64x
+  5                   COND steal t=130 g=0.29   15/178  bet=1.07%  mb/hit= 12.9  lift=7.89x
+  6                 SML L>=130 t_l=130 g=0.28   18/178  bet=1.33%  mb/hit= 13.3  lift=7.61x
+  7                 SML L>=120 t_l=130 g=0.30   19/178  bet=1.38%  mb/hit= 13.1  lift=7.74x
+  8                             FLAT 115/0.34   21/178  bet=1.75%  mb/hit= 15.0  lift=6.74x
+  9                             FLAT 150/0.28   32/178  bet=4.99%  mb/hit= 28.2  lift=3.60x
+ 10                    FLAT 130/0.31 stop=160   34/178  bet=5.37%  mb/hit= 28.5  lift=3.56x
+ 11                             FLAT 130/0.28   36/178  bet=6.47%  mb/hit= 32.5  lift=3.12x
+
+--- Hand-curated lean subsets ---
+  A: SML L-only family (3 rules)  ->  10/178  bet=0.52%  mb/hit=  9.4  lift=10.79x
+     - SML L>=120 t_l=130 g=0.30
+     - SML L>=120 t_l=130 g=0.28
+     - SML L>=140 t_l=130 g=0.29
+  B: A + FLAT130/.31stop + COND steal (5 rules)  ->  17/178  bet=1.56%  mb/hit= 16.5  lift=6.14x
+     - FLAT 130/0.31 stop=160
+     - COND steal t=130 g=0.29
+  C: B + COND shield + SML s/l (7 rules)  ->  22/178  bet=2.07%  mb/hit= 17.0  lift=5.98x
+     - COND shield t=150 g=0.30
+     - SML s=50 l=130 tL=100 g=0.31
+  D: C + FLAT 115/.34 (8 rules)  ->  23/178  bet=2.27%  mb/hit= 17.8  lift=5.69x
+  E: D + FLAT 130/.30 (9 rules)  ->  25/178  bet=3.67%  mb/hit= 26.5  lift=3.83x
+
+--- Per-account breakdown for subset C (8 rules) ---
+  Islam :  10/83  bet=2.38%  mb/hit= 19.7  lift=5.05x
+  Ahmed :   9/77  bet=1.24%  mb/hit= 10.3  lift=9.42x
+  Nick  :   3/18  bet=3.60%  mb/hit= 27.7  lift=4.63x
