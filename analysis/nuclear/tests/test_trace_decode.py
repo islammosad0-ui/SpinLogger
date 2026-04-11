@@ -24,3 +24,15 @@ def test_segment_groups_by_spin_num():
     buckets = trace_decode.segment_by_spin(snaps)
     assert 64200 in buckets
     assert buckets[64200].settled is not None
+
+
+def test_payline_sanity_matches_ground_truth():
+    snaps = trace_decode.load_jsonl(FIX / "tiny_trace.jsonl")
+    buckets = trace_decode.segment_by_spin(snaps)
+    import pandas as pd
+    hist = pd.read_csv(FIX / "tiny_spin_history.csv")
+    result = trace_decode.stage2_payline_sanity(buckets, hist)
+    # Fixture is crafted so all 3 spins match
+    assert result["match_rate"] == 1.0
+    assert result["n_spins_checked"] == 3
+    assert result["mismatches"] == []

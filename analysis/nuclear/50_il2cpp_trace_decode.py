@@ -64,6 +64,51 @@ def segment_by_spin(snaps: List[Snapshot]) -> Dict[int, Spin]:
     return buckets
 
 
+def _extract_payline_from_settled(snap: Snapshot) -> Optional[tuple]:
+    """Walk fields → SlotResult → SlotSymbol3 → symbol1/2/3 → return (s1,s2,s3) or None."""
+    for key, cls_fields in snap.fields.items():
+        if key.startswith("SlotSymbol3@"):
+            try:
+                return (
+                    cls_fields["symbol1"]["i32"],
+                    cls_fields["symbol2"]["i32"],
+                    cls_fields["symbol3"]["i32"],
+                )
+            except KeyError:
+                return None
+    return None
+
+
+def stage2_payline_sanity(buckets: Dict[int, Spin], hist: pd.DataFrame) -> dict:
+    """Cross-reference memory payline (sym1/2/3) with spin_history r1/r2/r3."""
+    checked = 0
+    matches = 0
+    mismatches = []
+    hist_lookup = hist.set_index("seq")[["r1", "r2", "r3"]].to_dict("index")
+
+    for spin_num, spin in buckets.items():
+        if spin.settled is None:
+            continue
+        mem = _extract_payline_from_settled(spin.settled)
+        if mem is None:
+            continue
+        if spin_num not in hist_lookup:
+            continue
+        checked += 1
+        gt = hist_lookup[spin_num]
+        if mem == (gt["r1"], gt["r2"], gt["r3"]):
+            matches += 1
+        else:
+            mismatches.append({"spin_num": spin_num, "mem": mem, "hist": gt})
+
+    return {
+        "n_spins_checked": checked,
+        "n_matches": matches,
+        "match_rate": matches / checked if checked else 0.0,
+        "mismatches": mismatches,
+    }
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--trace", required=True, type=Path, help="Path to JSONL trace file")
