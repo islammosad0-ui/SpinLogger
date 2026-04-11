@@ -1,0 +1,170 @@
+================================================================================
+TWO-STAGE STRATEGY - FULL AUDIT REPORT
+================================================================================
+
+--- Islam Session 0: FAIL (9/22) ---
+Pulls: 1,286 | Final BK: 10 | Max BK: 118,665
+
+  [CATCH LOG (High Bet >= 400) - N=5]
+    Pull  1003: ATT | Bet:  6000 | Pts:      0 | BK:    74,665 | s_Maj:  68 | s_Spn: 115 | ProjSpn: 115
+    Pull  1164: ATT | Bet:  6000 | Pts:      0 | BK:    24,520 | s_Maj:  74 | s_Spn: 106 | ProjSpn: 115
+    Pull  1268: STE | Bet:  6000 | Pts:      0 | BK:    11,140 | s_Maj:  52 | s_Spn: 101 | ProjSpn: 115
+    Pull  1274: SHI | Bet:  1500 | Pts:      0 | BK:     3,580 | s_Maj:  58 | s_Spn: 107 | ProjSpn: 115
+    Pull  1281: ATT | Bet:   400 | Pts:      0 | BK:       120 | s_Maj:  65 | s_Spn: 114 | ProjSpn: 115
+
+  [GAP AUDIT / MISSION PROGRESS]
+    Mission |   Pull |   Bankroll
+    -----------------------------------
+    M 1     |      6 |    100,030
+    M 2     |     28 |     99,900
+    M 3     |     57 |    100,565
+    M 4     |    193 |    100,375
+    M 5     |    426 |    100,880
+    M 6     |    827 |    101,765
+    M 7     |    988 |    104,665
+    M 8     |    989 |    118,665
+    M 9     |    998 |    104,665
+
+================================================================================
+
+--- Islam Session 1: FAIL (11/22) ---
+Pulls: 3,885 | Final BK: 234,500 | Max BK: 242,105
+
+  [CATCH LOG (High Bet >= 400) - N=7]
+    Pull   233: SHI | Bet:  6000 | Pts:      0 | BK:    97,980 | s_Maj:  93 | s_Spn: 106 | ProjSpn: 115
+    Pull   242: SHI | Bet:  6000 | Pts:      0 | BK:    67,920 | s_Maj: 102 | s_Spn: 115 | ProjSpn: 115
+    Pull   449: SPI | Bet:  6000 | Pts:      0 | BK:   113,145 | s_Maj:  94 | s_Spn: 100 | ProjSpn: 115
+    Pull   925: ATT | Bet:  6000 | Pts:      0 | BK:   128,650 | s_Maj:  93 | s_Spn: 102 | ProjSpn: 115
+    Pull   935: ACC | Bet:  6000 | Pts:  60000 | BK:    92,590 | s_Maj: 103 | s_Spn: 112 | ProjSpn: 115
+    Pull  3293: ATT | Bet:  6000 | Pts:      0 | BK:   188,165 | s_Maj: 103 | s_Spn: 103 | ProjSpn:  -1
+    Pull  3298: SPI | Bet:  6000 | Pts:      0 | BK:   242,105 | s_Maj: 108 | s_Spn: 108 | ProjSpn:  -1
+
+  [GAP AUDIT / MISSION PROGRESS]
+    Mission |   Pull |   Bankroll
+    -----------------------------------
+    M 1     |      1 |    100,105
+    M 2     |      1 |    100,305
+    M 3     |     19 |    100,835
+    M 4     |    154 |    100,960
+    M 5     |    227 |     96,980
+    M 6     |    227 |    102,980
+    M 7     |    231 |     89,980
+    M 8     |    232 |    103,980
+    M 9     |    568 |    151,510
+    M10     |    935 |    152,590
+    M11     |  1,099 |    235,580
+
+================================================================================
+
+--- Ahmed Session 0: FAIL (10/22) ---
+Pulls: 1,977 | Final BK: 5 | Max BK: 145,390
+
+  [CATCH LOG (High Bet >= 400) - N=13]
+    Pull   104: SPI | Bet:  6000 | Pts:      0 | BK:   140,435 | s_Maj:  61 | s_Spn: 104 | ProjSpn: 115
+    Pull  1046: ATT | Bet:  6000 | Pts:      0 | BK:   109,330 | s_Maj:  65 | s_Spn: 104 | ProjSpn: 115
+    Pull  1057: STE | Bet:  6000 | Pts:      0 | BK:    87,270 | s_Maj:  76 | s_Spn: 115 | ProjSpn: 115
+    Pull  1062: ATT | Bet:  6000 | Pts:      0 | BK:    81,210 | s_Maj:  81 | s_Spn: 120 | ProjSpn: 115
+    Pull  1201: ATT | Bet:  6000 | Pts:      0 | BK:    41,470 | s_Maj: 101 | s_Spn: 112 | ProjSpn: 115
+    Pull  1208: SHI | Bet:  6000 | Pts:      0 | BK:    83,410 | s_Maj: 108 | s_Spn: 119 | ProjSpn: 115
+    Pull  1461: SHI | Bet:  6000 | Pts:      0 | BK:    62,260 | s_Maj:  56 | s_Spn: 102 | ProjSpn: 115
+    Pull  1469: ATT | Bet:  6000 | Pts:      0 | BK:    38,200 | s_Maj:  64 | s_Spn: 110 | ProjSpn: 115
+    Pull  1474: SPI | Bet:  6000 | Pts:      0 | BK:    92,140 | s_Maj:  69 | s_Spn: 115 | ProjSpn: 115
+    Pull  1642: STE | Bet:  6000 | Pts:      0 | BK:    83,785 | s_Maj:  24 | s_Spn: 100 | ProjSpn: 115
+    Pull  1652: SHI | Bet:  6000 | Pts:      0 | BK:    47,725 | s_Maj:  34 | s_Spn: 110 | ProjSpn: 115
+    Pull  1763: SHI | Bet:  1500 | Pts:      0 | BK:     1,345 | s_Maj:  86 | s_Spn: 108 | ProjSpn: 115
+    Pull  1769: SPI | Bet:   400 | Pts:      0 | BK:     4,485 | s_Maj:  92 | s_Spn: 114 | ProjSpn: 115
+
+  [GAP AUDIT / MISSION PROGRESS]
+    Mission |   Pull |   Bankroll
+    -----------------------------------
+    M 1     |     17 |     99,865
+    M 2     |     38 |     99,750
+    M 3     |     46 |    100,430
+    M 4     |    100 |     95,335
+    M 5     |    100 |     98,435
+    M 6     |    100 |    104,435
+    M 7     |    567 |    145,390
+    M 8     |  1,052 |    117,270
+    M 9     |  1,194 |     83,470
+    M10     |  1,206 |     95,410
+
+================================================================================
+
+--- Ahmed Session 1: FAIL (9/22) ---
+Pulls: 1,591 | Final BK: 10 | Max BK: 148,760
+
+  [CATCH LOG (High Bet >= 400) - N=8]
+    Pull   149: SPI | Bet:  6000 | Pts:      0 | BK:   147,065 | s_Maj:  21 | s_Spn: 101 | ProjSpn: 115
+    Pull   443: ATT | Bet:  6000 | Pts:      0 | BK:   106,025 | s_Maj:  96 | s_Spn: 107 | ProjSpn: 115
+    Pull   450: ATT | Bet:  6000 | Pts:      0 | BK:    98,965 | s_Maj: 103 | s_Spn: 114 | ProjSpn: 115
+    Pull  1040: STE | Bet:  6000 | Pts:      0 | BK:    93,210 | s_Maj:  26 | s_Spn: 100 | ProjSpn: 115
+    Pull  1047: SHI | Bet:  6000 | Pts:      0 | BK:    75,150 | s_Maj:  33 | s_Spn: 107 | ProjSpn: 115
+    Pull  1055: ATT | Bet:  6000 | Pts:      0 | BK:    51,090 | s_Maj:  41 | s_Spn: 115 | ProjSpn: 115
+    Pull  1221: ATT | Bet:  6000 | Pts:      0 | BK:    30,945 | s_Maj:  47 | s_Spn: 101 | ProjSpn: 115
+    Pull  1236: SHI | Bet:  6000 | Pts:      0 | BK:     4,885 | s_Maj:  62 | s_Spn: 116 | ProjSpn: 115
+
+  [GAP AUDIT / MISSION PROGRESS]
+    Mission |   Pull |   Bankroll
+    -----------------------------------
+    M 1     |      3 |    100,075
+    M 2     |     21 |    100,005
+    M 3     |     44 |    100,460
+    M 4     |    184 |    148,240
+    M 5     |    386 |    148,760
+    M 6     |    437 |    142,025
+    M 7     |    449 |    104,965
+    M 8     |    455 |    112,905
+    M 9     |  1,229 |     46,885
+
+================================================================================
+
+--- Nick Session 0: FAIL (8/22) ---
+Pulls: 905 | Final BK: 10 | Max BK: 101,035
+
+  [CATCH LOG (High Bet >= 400) - N=5]
+    Pull   592: SHI | Bet:  6000 | Pts:      0 | BK:    74,600 | s_Maj:  40 | s_Spn: 103 | ProjSpn: 115
+    Pull   601: ATT | Bet:  6000 | Pts:      0 | BK:    44,540 | s_Maj:  49 | s_Spn: 112 | ProjSpn: 115
+    Pull   705: STE | Bet:  6000 | Pts:      0 | BK:    42,175 | s_Maj:  17 | s_Spn: 102 | ProjSpn: 115
+    Pull   713: ATT | Bet:  6000 | Pts:      0 | BK:    38,115 | s_Maj:  25 | s_Spn: 110 | ProjSpn: 115
+    Pull   718: SHI | Bet:  6000 | Pts:      0 | BK:    32,055 | s_Maj:  30 | s_Spn: 115 | ProjSpn: 115
+
+  [GAP AUDIT / MISSION PROGRESS]
+    Mission |   Pull |   Bankroll
+    -----------------------------------
+    M 1     |      2 |    100,090
+    M 2     |     15 |    100,095
+    M 3     |     51 |    100,655
+    M 4     |    169 |    101,035
+    M 5     |    452 |    100,340
+    M 6     |    703 |     43,175
+    M 7     |    703 |     54,175
+    M 8     |    712 |     44,115
+
+================================================================================
+
+--- Nick Session 1: FAIL (9/22) ---
+Pulls: 693 | Final BK: 24,100 | Max BK: 100,175
+
+  [CATCH LOG (High Bet >= 400) - N=6]
+    Pull   149: STE | Bet:  6000 | Pts:      0 | BK:    75,095 | s_Maj:  18 | s_Spn: 103 | ProjSpn: 115
+    Pull   376: ATT | Bet:  6000 | Pts:      0 | BK:    24,015 | s_Maj:  66 | s_Spn: 101 | ProjSpn: 115
+    Pull   383: SPI | Bet:  6000 | Pts:      0 | BK:    65,955 | s_Maj:  73 | s_Spn: 108 | ProjSpn: 115
+    Pull   595: ATT | Bet:  6000 | Pts:      0 | BK:    61,180 | s_Maj:  28 | s_Spn: 106 | ProjSpn: 115
+    Pull   601: SHI | Bet:  6000 | Pts:      0 | BK:    49,120 | s_Maj:  34 | s_Spn: 112 | ProjSpn: 115
+    Pull   609: ATT | Bet:  6000 | Pts:      0 | BK:    25,060 | s_Maj:  42 | s_Spn: 120 | ProjSpn: 115
+
+  [GAP AUDIT / MISSION PROGRESS]
+    Mission |   Pull |   Bankroll
+    -----------------------------------
+    M 1     |      8 |    100,000
+    M 2     |     30 |     99,870
+    M 3     |     73 |    100,175
+    M 4     |    156 |     58,735
+    M 5     |    156 |     61,835
+    M 6     |    156 |     67,835
+    M 7     |    160 |     54,835
+    M 8     |    166 |     38,835
+    M 9     |    592 |     79,180
+
+================================================================================
+

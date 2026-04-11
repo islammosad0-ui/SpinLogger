@@ -1,0 +1,433 @@
+================================================================================
+SCATTER SWARM SNIPER - FULL AUDIT REPORT
+================================================================================
+
+--- Islam Session 0: CLEAR!! ---
+Pulls: 2,367 | Final BK: 1,248,605 | Max BK: 2,032,230
+
+  [HIGH-VALUE CATCH LOG - N=76]
+    Pull    38: STE | Bet: 20000 | Pts:      0 | BK:    79,765 | sum_5: 11, acc_5:  3
+    Pull   138: STE | Bet: 20000 | Pts:      0 | BK:    60,775 | sum_5: 11, acc_5:  4
+    Pull   141: SHI | Bet: 20000 | Pts:      0 | BK:    60,825 | sum_5: 11, acc_5:  3
+    Pull   172: ACC | Bet:  6000 | Pts:  60000 | BK:    47,375 | sum_5: 10, acc_5:  4
+    Pull   380: ACC | Bet: 20000 | Pts: 200000 | BK:   178,100 | sum_5: 11, acc_5:  3
+    Pull   381: SHI | Bet: 20000 | Pts:      0 | BK:   458,100 | sum_5: 14, acc_5:  3
+    Pull   382: ATT | Bet: 20000 | Pts:      0 | BK:   438,100 | sum_5: 14, acc_5:  3
+    Pull   397: SHI | Bet: 20000 | Pts:      0 | BK:   337,950 | sum_5: 11, acc_5:  3
+    Pull   478: ATT | Bet: 20000 | Pts:      0 | BK:   466,940 | sum_5: 11, acc_5:  5
+    Pull   479: SPI | Bet: 20000 | Pts:      0 | BK:   646,940 | sum_5: 12, acc_5:  3
+    Pull   513: ACC | Bet: 20000 | Pts: 200000 | BK:   625,290 | sum_5: 10, acc_5:  5
+    Pull   576: ATT | Bet: 20000 | Pts:      0 | BK:   824,115 | sum_5: 11, acc_5:  3
+    Pull   607: ATT | Bet: 20000 | Pts:      0 | BK:   780,565 | sum_5: 10, acc_5:  3
+    Pull   750: STE | Bet: 20000 | Pts:      0 | BK:   680,930 | sum_5: 11, acc_5:  3
+    Pull   806: ACC | Bet: 20000 | Pts: 200000 | BK:   660,010 | sum_5: 10, acc_5:  4
+    Pull   810: SPI | Bet: 20000 | Pts:      0 | BK: 1,149,995 | sum_5: 11, acc_5:  4
+    Pull   830: ATT | Bet: 20000 | Pts:      0 | BK: 1,109,725 | sum_5: 10, acc_5:  3
+    Pull   847: ATT | Bet: 20000 | Pts:      0 | BK: 1,069,500 | sum_5: 10, acc_5:  3
+    Pull   888: SPI | Bet: 20000 | Pts:      0 | BK: 1,228,085 | sum_5: 11, acc_5:  3
+    Pull   931: SHI | Bet: 20000 | Pts:      0 | BK: 1,195,835 | sum_5: 10, acc_5:  3
+    Pull   935: ACC | Bet: 20000 | Pts: 200000 | BK: 1,174,635 | sum_5: 12, acc_5:  3
+    Pull   937: STE | Bet: 20000 | Pts:      0 | BK: 1,534,635 | sum_5: 11, acc_5:  3
+    Pull  1027: ATT | Bet: 20000 | Pts:      0 | BK: 1,471,930 | sum_5: 10, acc_5:  3
+    Pull  1071: ACC | Bet: 20000 | Pts: 200000 | BK: 1,402,680 | sum_5: 11, acc_5:  3
+    Pull  1074: SHI | Bet: 20000 | Pts:      0 | BK: 1,792,680 | sum_5: 12, acc_5:  5
+    Pull  1090: ACC | Bet: 20000 | Pts: 200000 | BK: 1,752,470 | sum_5: 13, acc_5:  5
+    Pull  1093: SHI | Bet: 20000 | Pts:      0 | BK: 1,692,470 | sum_5: 13, acc_5:  3
+    Pull  1262: ATT | Bet: 20000 | Pts:      0 | BK: 1,502,835 | sum_5: 10, acc_5:  4
+    Pull  1406: STE | Bet: 20000 | Pts:      0 | BK: 1,433,715 | sum_5: 11, acc_5:  3
+    Pull  1423: ACC | Bet: 20000 | Pts: 200000 | BK: 1,405,115 | sum_5: 10, acc_5:  3
+    Pull  1458: SHI | Bet: 20000 | Pts:      0 | BK: 1,824,650 | sum_5: 11, acc_5:  3
+    Pull  1480: SHI | Bet: 20000 | Pts:      0 | BK: 1,763,770 | sum_5: 10, acc_5:  3
+    Pull  1482: SHI | Bet: 20000 | Pts:      0 | BK: 1,723,770 | sum_5: 11, acc_5:  3
+    Pull  1483: ATT | Bet: 20000 | Pts:      0 | BK: 1,703,770 | sum_5: 12, acc_5:  3
+    Pull  1491: ACC | Bet: 20000 | Pts: 200000 | BK: 1,683,420 | sum_5: 11, acc_5:  3
+    Pull  1494: ATT | Bet: 20000 | Pts:      0 | BK: 1,623,420 | sum_5: 12, acc_5:  3
+    Pull  1515: ATT | Bet: 20000 | Pts:      0 | BK: 1,583,135 | sum_5: 11, acc_5:  4
+    Pull  1577: ATT | Bet: 20000 | Pts:      0 | BK: 2,012,155 | sum_5: 11, acc_5:  3
+    Pull  1660: ATT | Bet: 20000 | Pts:      0 | BK: 1,851,180 | sum_5: 11, acc_5:  4
+    Pull  1736: SHI | Bet: 20000 | Pts:      0 | BK: 1,824,430 | sum_5: 10, acc_5:  3
+    Pull  1738: ATT | Bet: 20000 | Pts:      0 | BK: 1,784,430 | sum_5: 12, acc_5:  3
+    Pull  1792: SHI | Bet: 20000 | Pts:      0 | BK: 1,703,680 | sum_5: 10, acc_5:  3
+    Pull  1831: STE | Bet: 20000 | Pts:      0 | BK: 1,643,140 | sum_5: 10, acc_5:  4
+    Pull  1902: ATT | Bet: 20000 | Pts:      0 | BK: 1,602,255 | sum_5: 10, acc_5:  4
+    Pull  1951: ATT | Bet: 20000 | Pts:      0 | BK: 1,579,855 | sum_5: 11, acc_5:  3
+    Pull  1986: SHI | Bet: 20000 | Pts:      0 | BK: 1,507,055 | sum_5: 10, acc_5:  4
+    Pull  2049: ATT | Bet:  6000 | Pts:      0 | BK: 1,404,255 | sum_5:  9, acc_5:  4
+    Pull  2053: ATT | Bet:  6000 | Pts:      0 | BK: 1,380,255 | sum_5: 10, acc_5:  0
+    Pull  2066: STE | Bet:  6000 | Pts:      0 | BK: 1,288,255 | sum_5: 10, acc_5:  0
+    Pull  2067: SHI | Bet:  6000 | Pts:      0 | BK: 1,282,255 | sum_5: 11, acc_5:  0
+    Pull  2072: STE | Bet:  6000 | Pts:      0 | BK: 1,252,255 | sum_5:  7, acc_5:  2
+    Pull  2074: SHI | Bet:  6000 | Pts:      0 | BK: 1,240,255 | sum_5:  8, acc_5:  2
+    Pull  2090: ATT | Bet:  6000 | Pts:      0 | BK: 1,144,255 | sum_5:  8, acc_5:  1
+    Pull  2098: SHI | Bet:  6000 | Pts:      0 | BK: 1,096,255 | sum_5: 11, acc_5:  0
+    Pull  2102: ATT | Bet:  6000 | Pts:      0 | BK: 1,072,255 | sum_5: 10, acc_5:  1
+    Pull  2116: ATT | Bet:  6000 | Pts:      0 | BK: 1,588,255 | sum_5:  9, acc_5:  2
+    Pull  2130: SHI | Bet: 20000 | Pts:      0 | BK: 1,476,255 | sum_5: 10, acc_5:  3
+    Pull  2142: ATT | Bet:  6000 | Pts:      0 | BK: 1,376,255 | sum_5:  9, acc_5:  0
+    Pull  2143: SHI | Bet:  6000 | Pts:      0 | BK: 1,370,255 | sum_5: 11, acc_5:  0
+    Pull  2144: ATT | Bet:  6000 | Pts:      0 | BK: 1,364,255 | sum_5: 12, acc_5:  0
+    Pull  2150: ATT | Bet:  6000 | Pts:      0 | BK: 1,328,255 | sum_5:  8, acc_5:  1
+    Pull  2151: ATT | Bet:  6000 | Pts:      0 | BK: 1,322,255 | sum_5: 11, acc_5:  1
+    Pull  2157: STE | Bet:  6000 | Pts:      0 | BK: 1,286,255 | sum_5:  7, acc_5:  0
+    Pull  2190: SHI | Bet:  6000 | Pts:      0 | BK: 1,088,255 | sum_5:  7, acc_5:  4
+    Pull  2201: SPI | Bet:  6000 | Pts:      0 | BK: 1,082,255 | sum_5: 10, acc_5:  0
+    Pull  2204: STE | Bet:  6000 | Pts:      0 | BK: 1,064,255 | sum_5:  9, acc_5:  1
+    Pull  2207: ATT | Bet:  6000 | Pts:      0 | BK: 1,046,255 | sum_5: 11, acc_5:  2
+    Pull  2209: SHI | Bet:  6000 | Pts:      0 | BK: 1,034,255 | sum_5: 12, acc_5:  2
+    Pull  2210: SHI | Bet:  6000 | Pts:      0 | BK: 1,028,255 | sum_5: 13, acc_5:  2
+    Pull  2211: STE | Bet:  6000 | Pts:      0 | BK: 1,022,255 | sum_5: 14, acc_5:  0
+    Pull  2212: ATT | Bet:  6000 | Pts:      0 | BK: 1,016,255 | sum_5: 14, acc_5:  0
+    Pull  2218: ATT | Bet:  6000 | Pts:      0 | BK:   924,255 | sum_5: 10, acc_5:  1
+    Pull  2234: ACC | Bet:  6000 | Pts:  60000 | BK:   828,255 | sum_5:  7, acc_5:  5
+    Pull  2259: SHI | Bet: 20000 | Pts:      0 | BK:   787,910 | sum_5: 12, acc_5:  4
+    Pull  2329: ATT | Bet: 20000 | Pts:      0 | BK:   706,555 | sum_5: 10, acc_5:  3
+    Pull  2367: ACC | Bet: 20000 | Pts: 200000 | BK:   598,605 | sum_5: 12, acc_5:  6
+
+  [GAP AUDIT / MISSION PROGRESS]
+    Mission |   Pull |   Bankroll
+    -----------------------------------
+    M 1     |      6 |    100,030
+    M 2     |     28 |     99,900
+    M 3     |     57 |     80,930
+    M 4     |    128 |     81,225
+    M 5     |    140 |     43,825
+    M 6     |    140 |     49,825
+    M 7     |    140 |     60,825
+    M 8     |    140 |     80,825
+    M 9     |    172 |     87,375
+    M10     |    172 |    147,375
+    M11     |    283 |    210,965
+    M12     |    380 |    303,100
+    M13     |    380 |    478,100
+    M14     |    400 |    527,950
+    M15     |    513 |    925,290
+    M16     |    806 |  1,010,010
+    M17     |    935 |  1,574,635
+    M18     |  1,072 |  1,832,680
+    M19     |  1,423 |  1,905,115
+    M20     |  1,571 |  2,032,230
+    M21     |  2,109 |  1,630,255
+    M22     |  2,367 |  1,248,605
+
+================================================================================
+
+--- Islam Session 1: CLEAR!! ---
+Pulls: 1,975 | Final BK: 2,782,700 | Max BK: 2,782,700
+
+  [HIGH-VALUE CATCH LOG - N=35]
+    Pull    23: ATT | Bet: 20000 | Pts:      0 | BK:   102,755 | sum_5: 11, acc_5:  3
+    Pull    65: ATT | Bet: 20000 | Pts:      0 | BK:   102,165 | sum_5: 12, acc_5:  3
+    Pull   140: ACC | Bet: 20000 | Pts: 200000 | BK:    58,700 | sum_5: 11, acc_5:  3
+    Pull   158: ATT | Bet: 20000 | Pts:      0 | BK:   288,460 | sum_5: 11, acc_5:  3
+    Pull   203: SHI | Bet: 20000 | Pts:      0 | BK:   266,995 | sum_5: 10, acc_5:  3
+    Pull   217: SHI | Bet: 20000 | Pts:      0 | BK:   246,345 | sum_5: 11, acc_5:  3
+    Pull   306: ACC | Bet: 20000 | Pts: 200000 | BK:   317,795 | sum_5: 13, acc_5:  3
+    Pull   307: STE | Bet: 20000 | Pts:      0 | BK:   547,795 | sum_5: 13, acc_5:  3
+    Pull   364: SHI | Bet: 20000 | Pts:      0 | BK:   387,210 | sum_5: 10, acc_5:  3
+    Pull   514: SHI | Bet: 20000 | Pts:      0 | BK:   522,160 | sum_5: 12, acc_5:  5
+    Pull   558: ACC | Bet: 20000 | Pts: 200000 | BK:   481,645 | sum_5: 11, acc_5:  5
+    Pull   671: SHI | Bet: 20000 | Pts:      0 | BK:   750,055 | sum_5: 12, acc_5:  4
+    Pull   780: ACC | Bet: 20000 | Pts: 200000 | BK:   611,405 | sum_5: 12, acc_5:  3
+    Pull  1033: ATT | Bet: 20000 | Pts:      0 | BK:   741,605 | sum_5: 10, acc_5:  3
+    Pull  1094: ACC | Bet: 20000 | Pts: 200000 | BK:   665,855 | sum_5: 10, acc_5:  4
+    Pull  1142: ACC | Bet: 20000 | Pts: 200000 | BK: 1,055,330 | sum_5: 11, acc_5:  3
+    Pull  1143: ATT | Bet: 20000 | Pts:      0 | BK: 1,035,330 | sum_5: 11, acc_5:  3
+    Pull  1219: ACC | Bet: 20000 | Pts: 200000 | BK:   913,125 | sum_5: 12, acc_5:  5
+    Pull  1221: SPI | Bet: 20000 | Pts:      0 | BK: 1,593,110 | sum_5: 10, acc_5:  3
+    Pull  1288: SPI | Bet: 20000 | Pts:      0 | BK: 1,752,285 | sum_5: 10, acc_5:  4
+    Pull  1325: ACC | Bet: 20000 | Pts: 200000 | BK: 1,690,585 | sum_5: 12, acc_5:  3
+    Pull  1342: ATT | Bet: 20000 | Pts:      0 | BK: 1,650,360 | sum_5: 10, acc_5:  3
+    Pull  1396: ATT | Bet: 20000 | Pts:      0 | BK: 2,138,860 | sum_5: 11, acc_5:  5
+    Pull  1427: ACC | Bet: 20000 | Pts: 200000 | BK: 2,095,110 | sum_5: 10, acc_5:  4
+    Pull  1430: SHI | Bet: 20000 | Pts:      0 | BK: 2,075,080 | sum_5: 10, acc_5:  4
+    Pull  1456: SHI | Bet: 20000 | Pts:      0 | BK: 2,054,705 | sum_5: 10, acc_5:  4
+    Pull  1517: SHI | Bet: 20000 | Pts:      0 | BK: 2,013,445 | sum_5: 11, acc_5:  4
+    Pull  1519: STE | Bet: 20000 | Pts:      0 | BK: 1,973,445 | sum_5: 12, acc_5:  4
+    Pull  1647: SHI | Bet: 20000 | Pts:      0 | BK: 1,830,380 | sum_5: 10, acc_5:  3
+    Pull  1714: ACC | Bet: 20000 | Pts: 200000 | BK: 1,792,730 | sum_5: 12, acc_5:  3
+    Pull  1777: SHI | Bet: 20000 | Pts:      0 | BK: 1,711,995 | sum_5: 11, acc_5:  4
+    Pull  1783: ACC | Bet: 20000 | Pts: 200000 | BK: 1,671,865 | sum_5: 11, acc_5:  3
+    Pull  1942: STE | Bet: 20000 | Pts:      0 | BK: 2,053,105 | sum_5: 10, acc_5:  3
+    Pull  1943: ACC | Bet: 20000 | Pts: 200000 | BK: 2,033,105 | sum_5: 11, acc_5:  4
+    Pull  1945: SPI | Bet: 20000 | Pts:      0 | BK: 2,193,105 | sum_5: 12, acc_5:  3
+
+  [GAP AUDIT / MISSION PROGRESS]
+    Mission |   Pull |   Bankroll
+    -----------------------------------
+    M 1     |      1 |    100,105
+    M 2     |      1 |    100,305
+    M 3     |     19 |    100,835
+    M 4     |     22 |     82,655
+    M 5     |     22 |     85,755
+    M 6     |     22 |     91,755
+    M 7     |     22 |    102,755
+    M 8     |     22 |    122,755
+    M 9     |     64 |    122,165
+    M10     |    140 |    118,700
+    M11     |    140 |    203,700
+    M12     |    140 |    328,700
+    M13     |    223 |    401,095
+    M14     |    306 |    567,795
+    M15     |    511 |    562,175
+    M16     |    669 |    790,055
+    M17     |    782 |    971,405
+    M18     |  1,094 |  1,115,855
+    M19     |  1,219 |  1,413,125
+    M20     |  1,395 |  2,158,860
+    M21     |  1,783 |  2,271,865
+    M22     |  1,975 |  2,782,700
+
+================================================================================
+
+--- Ahmed Session 0: CLEAR!! ---
+Pulls: 2,023 | Final BK: 3,032,110 | Max BK: 3,032,110
+
+  [HIGH-VALUE CATCH LOG - N=48]
+    Pull   129: SHI | Bet: 20000 | Pts:      0 | BK:   100,640 | sum_5: 10, acc_5:  3
+    Pull   182: ACC | Bet: 20000 | Pts: 200000 | BK:   133,400 | sum_5: 10, acc_5:  4
+    Pull   183: STE | Bet: 20000 | Pts:      0 | BK:   498,400 | sum_5: 12, acc_5:  4
+    Pull   193: ACC | Bet: 20000 | Pts: 200000 | BK:   418,460 | sum_5: 10, acc_5:  3
+    Pull   248: ACC | Bet: 20000 | Pts: 200000 | BK:   627,665 | sum_5: 10, acc_5:  6
+    Pull   336: ATT | Bet: 20000 | Pts:      0 | BK:   845,725 | sum_5: 11, acc_5:  3
+    Pull   418: ATT | Bet: 20000 | Pts:      0 | BK: 1,043,550 | sum_5: 10, acc_5:  3
+    Pull   420: SHI | Bet: 20000 | Pts:      0 | BK: 1,003,550 | sum_5: 11, acc_5:  3
+    Pull   519: SHI | Bet: 20000 | Pts:      0 | BK:   947,150 | sum_5: 10, acc_5:  3
+    Pull   579: SPI | Bet:  6000 | Pts:      0 | BK:   859,950 | sum_5:  9, acc_5:  2
+    Pull   583: STE | Bet:  6000 | Pts:      0 | BK:   835,950 | sum_5: 11, acc_5:  1
+    Pull   602: STE | Bet:  6000 | Pts:      0 | BK:   721,950 | sum_5:  9, acc_5:  0
+    Pull   605: ATT | Bet:  6000 | Pts:      0 | BK:   703,950 | sum_5: 11, acc_5:  0
+    Pull   607: SHI | Bet:  6000 | Pts:      0 | BK:   691,950 | sum_5: 11, acc_5:  0
+    Pull   612: ACC | Bet:  6000 | Pts:  60000 | BK:   661,950 | sum_5:  9, acc_5:  3
+    Pull   635: ATT | Bet: 20000 | Pts:      0 | BK:   641,620 | sum_5: 10, acc_5:  3
+    Pull   722: SPI | Bet: 20000 | Pts:      0 | BK:   793,110 | sum_5: 10, acc_5:  4
+    Pull   767: ATT | Bet: 20000 | Pts:      0 | BK: 1,125,610 | sum_5: 10, acc_5:  5
+    Pull   768: ATT | Bet: 20000 | Pts:      0 | BK: 1,105,610 | sum_5: 13, acc_5:  5
+    Pull   803: SHI | Bet: 20000 | Pts:      0 | BK: 1,045,130 | sum_5: 10, acc_5:  3
+    Pull   820: ACC | Bet: 20000 | Pts: 200000 | BK: 1,025,110 | sum_5: 10, acc_5:  3
+    Pull   824: ATT | Bet: 20000 | Pts:      0 | BK:   945,110 | sum_5: 11, acc_5:  4
+    Pull   891: ACC | Bet: 20000 | Pts: 200000 | BK:   923,920 | sum_5: 10, acc_5:  4
+    Pull   982: ATT | Bet: 20000 | Pts:      0 | BK: 1,270,190 | sum_5: 10, acc_5:  3
+    Pull   985: ATT | Bet: 20000 | Pts:      0 | BK: 1,210,190 | sum_5: 11, acc_5:  3
+    Pull  1089: SPI | Bet: 20000 | Pts:      0 | BK: 1,322,180 | sum_5: 11, acc_5:  3
+    Pull  1100: ACC | Bet: 20000 | Pts: 200000 | BK: 1,298,180 | sum_5: 11, acc_5:  3
+    Pull  1101: SHI | Bet: 20000 | Pts:      0 | BK: 1,778,180 | sum_5: 11, acc_5:  3
+    Pull  1104: STE | Bet: 20000 | Pts:      0 | BK: 1,718,180 | sum_5: 11, acc_5:  3
+    Pull  1213: SPI | Bet: 20000 | Pts:      0 | BK: 1,874,930 | sum_5: 10, acc_5:  3
+    Pull  1247: ACC | Bet: 20000 | Pts: 200000 | BK: 1,834,450 | sum_5: 12, acc_5:  6
+    Pull  1316: SHI | Bet: 20000 | Pts:      0 | BK: 1,753,180 | sum_5: 10, acc_5:  5
+    Pull  1337: SHI | Bet: 20000 | Pts:      0 | BK: 1,672,330 | sum_5: 10, acc_5:  3
+    Pull  1378: STE | Bet: 20000 | Pts:      0 | BK: 1,624,930 | sum_5: 10, acc_5:  4
+    Pull  1390: ATT | Bet: 20000 | Pts:      0 | BK: 1,580,930 | sum_5: 10, acc_5:  3
+    Pull  1405: ACC | Bet: 20000 | Pts: 200000 | BK: 1,552,030 | sum_5: 10, acc_5:  4
+    Pull  1408: ATT | Bet: 20000 | Pts:      0 | BK: 2,082,000 | sum_5: 11, acc_5:  4
+    Pull  1507: ACC | Bet: 20000 | Pts: 200000 | BK: 2,035,900 | sum_5: 10, acc_5:  6
+    Pull  1542: SPI | Bet: 20000 | Pts:      0 | BK: 2,135,450 | sum_5: 10, acc_5:  3
+    Pull  1621: ATT | Bet: 20000 | Pts:      0 | BK: 2,090,305 | sum_5: 10, acc_5:  4
+    Pull  1655: SPI | Bet: 20000 | Pts:      0 | BK: 2,269,810 | sum_5: 10, acc_5:  4
+    Pull  1666: STE | Bet: 20000 | Pts:      0 | BK: 2,249,660 | sum_5: 10, acc_5:  3
+    Pull  1763: SHI | Bet: 20000 | Pts:      0 | BK: 2,186,290 | sum_5: 10, acc_5:  3
+    Pull  1824: ACC | Bet: 20000 | Pts: 200000 | BK: 2,094,990 | sum_5: 11, acc_5:  4
+    Pull  1842: SHI | Bet: 20000 | Pts:      0 | BK: 2,614,780 | sum_5: 11, acc_5:  3
+    Pull  1893: ACC | Bet: 20000 | Pts: 200000 | BK: 2,573,785 | sum_5: 10, acc_5:  4
+    Pull  2020: ACC | Bet: 20000 | Pts: 200000 | BK: 2,442,110 | sum_5: 10, acc_5:  4
+    Pull  2021: ATT | Bet: 20000 | Pts:      0 | BK: 2,422,110 | sum_5: 11, acc_5:  4
+
+  [GAP AUDIT / MISSION PROGRESS]
+    Mission |   Pull |   Bankroll
+    -----------------------------------
+    M 1     |     17 |     99,865
+    M 2     |     38 |     99,750
+    M 3     |     46 |    100,430
+    M 4     |    128 |     80,540
+    M 5     |    128 |     83,640
+    M 6     |    128 |     89,640
+    M 7     |    128 |    100,640
+    M 8     |    128 |    120,640
+    M 9     |    162 |    118,140
+    M10     |    165 |    157,340
+    M11     |    182 |    218,400
+    M12     |    182 |    343,400
+    M13     |    182 |    518,400
+    M14     |    193 |    668,460
+    M15     |    248 |    927,665
+    M16     |    369 |  1,124,075
+    M17     |    739 |  1,166,710
+    M18     |    891 |  1,373,920
+    M19     |  1,100 |  1,798,180
+    M20     |  1,405 |  2,102,030
+    M21     |  1,824 |  2,694,990
+    M22     |  2,023 |  3,032,110
+
+================================================================================
+
+--- Ahmed Session 1: CLEAR!! ---
+Pulls: 2,624 | Final BK: 1,993,275 | Max BK: 1,993,275
+
+  [HIGH-VALUE CATCH LOG - N=48]
+    Pull    11: ATT | Bet: 20000 | Pts:      0 | BK:    79,970 | sum_5: 10, acc_5:  3
+    Pull    12: SHI | Bet: 20000 | Pts:      0 | BK:    59,970 | sum_5: 11, acc_5:  3
+    Pull    13: ATT | Bet:  6000 | Pts:      0 | BK:    53,970 | sum_5: 12, acc_5:  3
+    Pull    48: SPI | Bet:  6000 | Pts:      0 | BK:   108,425 | sum_5: 11, acc_5:  3
+    Pull    94: ATT | Bet: 20000 | Pts:      0 | BK:   109,565 | sum_5: 11, acc_5:  3
+    Pull   128: ACC | Bet: 20000 | Pts: 200000 | BK:    67,965 | sum_5: 10, acc_5:  3
+    Pull   252: ATT | Bet: 20000 | Pts:      0 | BK:   466,705 | sum_5: 10, acc_5:  3
+    Pull   265: ATT | Bet: 20000 | Pts:      0 | BK:   443,060 | sum_5: 11, acc_5:  3
+    Pull   347: ACC | Bet: 20000 | Pts: 200000 | BK:   361,385 | sum_5: 10, acc_5:  6
+    Pull   508: SHI | Bet: 20000 | Pts:      0 | BK:   670,360 | sum_5: 10, acc_5:  3
+    Pull   520: ATT | Bet:  6000 | Pts:      0 | BK:   638,860 | sum_5: 11, acc_5:  0
+    Pull   525: SHI | Bet:  6000 | Pts:      0 | BK:   608,860 | sum_5:  9, acc_5:  2
+    Pull   540: STE | Bet: 20000 | Pts:      0 | BK:   504,860 | sum_5: 10, acc_5:  3
+    Pull   541: ATT | Bet:  6000 | Pts:      0 | BK:   498,860 | sum_5: 11, acc_5:  1
+    Pull   543: ACC | Bet: 20000 | Pts: 200000 | BK:   472,860 | sum_5: 11, acc_5:  5
+    Pull   555: SHI | Bet: 20000 | Pts:      0 | BK:   782,710 | sum_5: 10, acc_5:  3
+    Pull   584: ATT | Bet: 20000 | Pts:      0 | BK:   762,290 | sum_5: 10, acc_5:  5
+    Pull   735: ACC | Bet: 20000 | Pts: 200000 | BK:   714,670 | sum_5: 12, acc_5:  3
+    Pull   747: STE | Bet: 20000 | Pts:      0 | BK: 1,014,565 | sum_5: 12, acc_5:  4
+    Pull   791: SHI | Bet: 20000 | Pts:      0 | BK:   913,630 | sum_5: 10, acc_5:  3
+    Pull   814: ACC | Bet: 20000 | Pts: 200000 | BK:   892,530 | sum_5: 12, acc_5:  3
+    Pull   817: SPI | Bet: 20000 | Pts:      0 | BK: 1,482,530 | sum_5: 10, acc_5:  5
+    Pull   824: ATT | Bet: 20000 | Pts:      0 | BK: 1,462,440 | sum_5: 10, acc_5:  3
+    Pull   915: STE | Bet: 20000 | Pts:      0 | BK: 1,418,770 | sum_5: 10, acc_5:  3
+    Pull   954: SHI | Bet: 20000 | Pts:      0 | BK: 1,398,315 | sum_5: 10, acc_5:  3
+    Pull  1174: ACC | Bet: 20000 | Pts: 200000 | BK: 1,206,380 | sum_5: 10, acc_5:  3
+    Pull  1282: ATT | Bet: 20000 | Pts:      0 | BK: 1,600,635 | sum_5: 11, acc_5:  3
+    Pull  1337: STE | Bet: 20000 | Pts:      0 | BK: 1,492,535 | sum_5: 11, acc_5:  3
+    Pull  1368: SHI | Bet: 20000 | Pts:      0 | BK: 1,336,520 | sum_5: 10, acc_5:  6
+    Pull  1437: ATT | Bet: 20000 | Pts:      0 | BK: 1,295,445 | sum_5: 10, acc_5:  4
+    Pull  1440: SPI | Bet: 20000 | Pts:      0 | BK: 1,455,395 | sum_5: 11, acc_5:  3
+    Pull  1491: STE | Bet: 20000 | Pts:      0 | BK: 1,427,900 | sum_5: 10, acc_5:  3
+    Pull  1545: ATT | Bet: 20000 | Pts:      0 | BK: 1,386,990 | sum_5: 11, acc_5:  4
+    Pull  1546: STE | Bet: 20000 | Pts:      0 | BK: 1,366,990 | sum_5: 12, acc_5:  4
+    Pull  1643: ATT | Bet: 20000 | Pts:      0 | BK: 1,262,925 | sum_5: 12, acc_5:  3
+    Pull  1659: SHI | Bet: 20000 | Pts:      0 | BK: 1,202,730 | sum_5: 10, acc_5:  3
+    Pull  1726: SHI | Bet: 20000 | Pts:      0 | BK: 1,120,500 | sum_5: 10, acc_5:  5
+    Pull  1867: ATT | Bet: 20000 | Pts:      0 | BK: 1,536,990 | sum_5: 11, acc_5:  3
+    Pull  1996: SHI | Bet: 20000 | Pts:      0 | BK: 1,453,330 | sum_5: 11, acc_5:  4
+    Pull  2082: ACC | Bet: 20000 | Pts: 200000 | BK: 1,359,880 | sum_5: 11, acc_5:  5
+    Pull  2108: STE | Bet: 20000 | Pts:      0 | BK: 1,239,580 | sum_5: 10, acc_5:  3
+    Pull  2393: SHI | Bet: 20000 | Pts:      0 | BK: 1,673,465 | sum_5: 10, acc_5:  3
+    Pull  2409: ATT | Bet: 20000 | Pts:      0 | BK: 1,613,950 | sum_5: 11, acc_5:  3
+    Pull  2410: ATT | Bet: 20000 | Pts:      0 | BK: 1,593,950 | sum_5: 13, acc_5:  3
+    Pull  2422: ACC | Bet: 20000 | Pts: 200000 | BK: 1,573,935 | sum_5: 10, acc_5:  3
+    Pull  2489: STE | Bet: 20000 | Pts:      0 | BK: 1,452,460 | sum_5: 10, acc_5:  3
+    Pull  2532: STE | Bet: 20000 | Pts:      0 | BK: 1,390,740 | sum_5: 10, acc_5:  3
+    Pull  2624: ACC | Bet: 20000 | Pts: 200000 | BK: 1,343,275 | sum_5: 10, acc_5:  3
+
+  [GAP AUDIT / MISSION PROGRESS]
+    Mission |   Pull |   Bankroll
+    -----------------------------------
+    M 1     |      3 |    100,075
+    M 2     |     21 |     54,050
+    M 3     |     44 |     54,470
+    M 4     |     55 |     90,035
+    M 5     |     55 |     93,135
+    M 6     |     55 |     99,135
+    M 7     |     55 |    110,135
+    M 8     |     55 |    130,135
+    M 9     |    128 |    107,965
+    M10     |    128 |    167,965
+    M11     |    128 |    252,965
+    M12     |    128 |    377,965
+    M13     |    167 |    492,575
+    M14     |    347 |    611,385
+    M15     |    351 |    831,385
+    M16     |    543 |    822,860
+    M17     |    735 |  1,114,670
+    M18     |    814 |  1,342,530
+    M19     |  1,174 |  1,706,380
+    M20     |  1,735 |  1,610,410
+    M21     |  2,329 |  1,732,265
+    M22     |  2,624 |  1,993,275
+
+================================================================================
+
+--- Nick Session 0: FAIL (17/22) ---
+Pulls: 976 | Final BK: 838,695 | Max BK: 1,030,755
+
+  [HIGH-VALUE CATCH LOG - N=25]
+    Pull    31: ATT | Bet: 20000 | Pts:      0 | BK:    80,020 | sum_5: 10, acc_5:  4
+    Pull    51: ACC | Bet: 20000 | Pts: 200000 | BK:    60,335 | sum_5: 11, acc_5:  3
+    Pull    70: ATT | Bet: 20000 | Pts:      0 | BK:   311,925 | sum_5: 12, acc_5:  3
+    Pull    89: SPI | Bet: 20000 | Pts:      0 | BK:   451,685 | sum_5: 10, acc_5:  5
+    Pull   140: SPI | Bet: 20000 | Pts:      0 | BK:   570,010 | sum_5: 12, acc_5:  3
+    Pull   278: ATT | Bet: 20000 | Pts:      0 | BK:   525,950 | sum_5: 11, acc_5:  4
+    Pull   292: ATT | Bet:  6000 | Pts:      0 | BK:   477,450 | sum_5: 12, acc_5:  0
+    Pull   293: STE | Bet:  6000 | Pts:      0 | BK:   471,450 | sum_5: 13, acc_5:  0
+    Pull   299: STE | Bet:  6000 | Pts:      0 | BK:   435,450 | sum_5: 10, acc_5:  0
+    Pull   307: ATT | Bet:  6000 | Pts:      0 | BK:   387,450 | sum_5:  8, acc_5:  0
+    Pull   317: SHI | Bet:  6000 | Pts:      0 | BK:   502,450 | sum_5:  8, acc_5:  4
+    Pull   329: ATT | Bet:  6000 | Pts:      0 | BK:   430,450 | sum_5: 11, acc_5:  0
+    Pull   333: ACC | Bet: 20000 | Pts: 200000 | BK:   392,450 | sum_5: 10, acc_5:  5
+    Pull   337: SHI | Bet: 20000 | Pts:      0 | BK:   622,405 | sum_5: 11, acc_5:  3
+    Pull   414: STE | Bet: 20000 | Pts:      0 | BK:   561,420 | sum_5: 10, acc_5:  3
+    Pull   473: SHI | Bet: 20000 | Pts:      0 | BK:   516,120 | sum_5: 11, acc_5:  4
+    Pull   474: SHI | Bet: 20000 | Pts:      0 | BK:   496,120 | sum_5: 12, acc_5:  4
+    Pull   554: ATT | Bet: 20000 | Pts:      0 | BK:   359,105 | sum_5: 12, acc_5:  3
+    Pull   555: ATT | Bet: 20000 | Pts:      0 | BK:   339,105 | sum_5: 13, acc_5:  3
+    Pull   653: STE | Bet: 20000 | Pts:      0 | BK:   476,400 | sum_5: 10, acc_5:  3
+    Pull   688: ACC | Bet: 20000 | Pts: 200000 | BK:   426,000 | sum_5: 11, acc_5:  5
+    Pull   770: STE | Bet: 20000 | Pts:      0 | BK:   675,005 | sum_5: 11, acc_5:  3
+    Pull   789: ATT | Bet: 20000 | Pts:      0 | BK:   654,105 | sum_5: 10, acc_5:  3
+    Pull   804: ACC | Bet: 20000 | Pts: 200000 | BK:   630,755 | sum_5: 11, acc_5:  3
+    Pull   947: ATT | Bet: 20000 | Pts:      0 | BK:   839,130 | sum_5: 12, acc_5:  3
+
+  [GAP AUDIT / MISSION PROGRESS]
+    Mission |   Pull |   Bankroll
+    -----------------------------------
+    M 1     |      2 |    100,090
+    M 2     |     15 |    100,095
+    M 3     |     46 |     80,535
+    M 4     |     51 |     62,035
+    M 5     |     51 |     65,135
+    M 6     |     51 |     71,135
+    M 7     |     51 |     82,135
+    M 8     |     51 |    102,135
+    M 9     |     51 |    142,135
+    M10     |     51 |    202,135
+    M11     |     51 |    287,135
+    M12     |     51 |    412,135
+    M13     |    310 |    544,450
+    M14     |    333 |    642,450
+    M15     |    556 |    619,105
+    M16     |    688 |    776,000
+    M17     |    804 |  1,030,755
+
+================================================================================
+
+--- Nick Session 1: FAIL (17/22) ---
+Pulls: 693 | Final BK: 988,310 | Max BK: 1,029,475
+
+  [HIGH-VALUE CATCH LOG - N=9]
+    Pull   131: ACC | Bet: 20000 | Pts: 200000 | BK:   126,060 | sum_5: 10, acc_5:  6
+    Pull   134: SHI | Bet: 20000 | Pts:      0 | BK:   451,060 | sum_5: 13, acc_5:  5
+    Pull   310: ACC | Bet: 20000 | Pts: 200000 | BK:   381,870 | sum_5: 10, acc_5:  3
+    Pull   312: ATT | Bet: 20000 | Pts:      0 | BK:   591,870 | sum_5: 11, acc_5:  3
+    Pull   391: STE | Bet: 20000 | Pts:      0 | BK:   430,150 | sum_5: 11, acc_5:  3
+    Pull   418: ACC | Bet: 20000 | Pts: 200000 | BK:   646,550 | sum_5: 11, acc_5:  4
+    Pull   601: SHI | Bet: 20000 | Pts:      0 | BK:   730,405 | sum_5: 10, acc_5:  4
+    Pull   616: SHI | Bet: 20000 | Pts:      0 | BK:   650,390 | sum_5: 11, acc_5:  3
+    Pull   646: ACC | Bet: 20000 | Pts: 200000 | BK:   629,475 | sum_5: 10, acc_5:  3
+
+  [GAP AUDIT / MISSION PROGRESS]
+    Mission |   Pull |   Bankroll
+    -----------------------------------
+    M 1     |      8 |    100,000
+    M 2     |     30 |     99,870
+    M 3     |     68 |     99,760
+    M 4     |     72 |     81,310
+    M 5     |     72 |     84,410
+    M 6     |     72 |     90,410
+    M 7     |     72 |    101,410
+    M 8     |     72 |    121,410
+    M 9     |     72 |    161,410
+    M10     |    103 |    196,060
+    M11     |    131 |    211,060
+    M12     |    131 |    336,060
+    M13     |    131 |    511,060
+    M14     |    310 |    631,870
+    M15     |    395 |    690,050
+    M16     |    428 |    896,475
+    M17     |    646 |  1,029,475
+
+================================================================================
+

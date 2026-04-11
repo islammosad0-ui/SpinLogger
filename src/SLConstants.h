@@ -66,6 +66,7 @@ static NSString *const kSLDefaultsPreset2          = @"Speeder_Preset2";
 //  File names
 // ---------------------------------------------------------------------------
 static NSString *const kSLSpinHistoryFile = @"spin_history.csv";
+static NSString *const kSLSignalCSVFile   = @"il2cpp_signals.csv";
 
 // ---------------------------------------------------------------------------
 //  NSNotification names & userInfo keys
@@ -73,6 +74,10 @@ static NSString *const kSLSpinHistoryFile = @"spin_history.csv";
 static NSString *const SLSpinReceivedNotification  = @"NetShearsSpinEvent";
 static NSString *const SLSpinDataKey               = @"SLSpinDataKey";
 static NSString *const SLNetworkRequestNotification = @"Name.NetShearsNewRequest";
+
+// Memory scanner notifications
+static NSString *const SLMemoryScanNotification    = @"SLMemoryScanEvent";
+static NSString *const SLScanSnapshotKey           = @"SLScanSnapshotKey";
 
 // ---------------------------------------------------------------------------
 //  SLTrackedSymbols

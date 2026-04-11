@@ -1,0 +1,208 @@
+================================================================================
+ESCALATOR SHIELD STRATEGY - FULL AUDIT REPORT
+================================================================================
+
+--- Islam Session 0: FAIL (11/22) ---
+Pulls: 2,053 | Final BK: 3,925 | Max BK: 178,475
+
+  [CATCH LOG (>=1500 bet) - N=19]
+    Pull   377: SPI | Bet:  1500 | Pts:      0 | BK:   104,120 | sa_spins: 146
+    Pull   378: SPI | Bet:  1500 | Pts:      0 | BK:   117,620 | sa_spins: 147
+    Pull   380: ACC | Bet:  1500 | Pts:  15000 | BK:   114,620 | sa_spins: 149
+    Pull   653: SHI | Bet:  1500 | Pts:      0 | BK:   145,030 | sa_spins: 140
+    Pull   659: ATT | Bet:  6000 | Pts:      0 | BK:   127,030 | sa_spins: 146
+    Pull   664: ACC | Bet:  1500 | Pts:  15000 | BK:   110,530 | sa_spins: 151
+    Pull  1422: ATT | Bet:  1500 | Pts:      0 | BK:   110,345 | sa_spins: 135
+    Pull  1423: ACC | Bet:  1500 | Pts:  15000 | BK:   108,845 | sa_spins: 136
+    Pull  1986: SHI | Bet:  6000 | Pts:      0 | BK:   152,425 | sa_spins: 146
+    Pull  1994: SHI | Bet:  1500 | Pts:      0 | BK:   113,425 | sa_spins: 154
+    Pull  1995: STE | Bet:  1500 | Pts:      0 | BK:   111,925 | sa_spins: 155
+    Pull  2011: SHI | Bet:  1500 | Pts:      0 | BK:    87,925 | sa_spins: 171
+    Pull  2021: ATT | Bet:  1500 | Pts:      0 | BK:    72,925 | sa_spins: 181
+    Pull  2024: STE | Bet:  1500 | Pts:      0 | BK:    68,425 | sa_spins: 184
+    Pull  2025: ATT | Bet:  1500 | Pts:      0 | BK:    66,925 | sa_spins: 185
+    Pull  2030: SPI | Bet:  1500 | Pts:      0 | BK:    74,425 | sa_spins: 190
+    Pull  2043: ATT | Bet:  1500 | Pts:      0 | BK:    54,925 | sa_spins: 203
+    Pull  2049: ATT | Bet:  6000 | Pts:      0 | BK:    27,925 | sa_spins: 209
+    Pull  2053: ATT | Bet:  6000 | Pts:      0 | BK:     3,925 | sa_spins: 213
+
+  [GAP AUDIT / MISSION PROGRESS]
+    Mission |   Pull |   Bankroll
+    -----------------------------------
+    M 1     |      6 |    100,030
+    M 2     |     28 |     99,900
+    M 3     |     57 |    100,915
+    M 4     |    128 |    101,210
+    M 5     |    157 |    101,810
+    M 6     |    172 |    101,810
+    M 7     |    339 |    106,520
+    M 8     |    380 |    134,620
+    M 9     |    646 |    151,130
+    M10     |  1,040 |    148,185
+    M11     |  1,934 |    178,475
+
+================================================================================
+
+--- Islam Session 1: FAIL (12/22) ---
+Pulls: 2,663 | Final BK: 180 | Max BK: 145,420
+
+  [CATCH LOG (>=1500 bet) - N=28]
+    Pull   295: ATT | Bet:  1500 | Pts:      0 | BK:    87,420 | sa_spins: 155
+    Pull   299: STE | Bet:  1500 | Pts:      0 | BK:    81,420 | sa_spins: 159
+    Pull   302: ATT | Bet:  1500 | Pts:      0 | BK:    76,920 | sa_spins: 162
+    Pull   303: SHI | Bet:  1500 | Pts:      0 | BK:    75,420 | sa_spins: 163
+    Pull   306: ACC | Bet:  1500 | Pts:  15000 | BK:    70,920 | sa_spins: 166
+    Pull   511: ACC | Bet:  1500 | Pts:  15000 | BK:    65,070 | sa_spins: 156
+    Pull   773: SHI | Bet:  1500 | Pts:      0 | BK:    90,010 | sa_spins: 145
+    Pull   774: ATT | Bet:  1500 | Pts:      0 | BK:    88,510 | sa_spins: 146
+    Pull   776: ATT | Bet:  1500 | Pts:      0 | BK:    85,510 | sa_spins: 148
+    Pull   777: SHI | Bet:  1500 | Pts:      0 | BK:    84,010 | sa_spins: 149
+    Pull   778: SHI | Bet:  1500 | Pts:      0 | BK:    82,510 | sa_spins: 150
+    Pull   780: ACC | Bet:  1500 | Pts:  15000 | BK:    79,510 | sa_spins: 152
+    Pull  1080: SHI | Bet:  6000 | Pts:      0 | BK:   133,120 | sa_spins: 145
+    Pull  1082: SHI | Bet:  6000 | Pts:      0 | BK:   121,120 | sa_spins: 147
+    Pull  1083: STE | Bet:  6000 | Pts:      0 | BK:   115,120 | sa_spins: 148
+    Pull  1087: SHI | Bet:  1500 | Pts:      0 | BK:   109,120 | sa_spins: 152
+    Pull  1094: ACC | Bet:  1500 | Pts:  15000 | BK:    98,620 | sa_spins: 159
+    Pull  1932: ATT | Bet:  1500 | Pts:      0 | BK:    30,660 | sa_spins: 149
+    Pull  1933: ATT | Bet:  1500 | Pts:      0 | BK:    29,160 | sa_spins: 150
+    Pull  1942: STE | Bet:  1500 | Pts:      0 | BK:    15,660 | sa_spins: 159
+    Pull  1943: ACC | Bet:  1500 | Pts:  15000 | BK:    14,160 | sa_spins: 160
+    Pull  2256: STE | Bet:  1500 | Pts:      0 | BK:   101,165 | sa_spins: 150
+    Pull  2268: ATT | Bet:  1500 | Pts:      0 | BK:    83,165 | sa_spins: 162
+    Pull  2270: SHI | Bet:  1500 | Pts:      0 | BK:    80,165 | sa_spins: 164
+    Pull  2277: SHI | Bet:  1500 | Pts:      0 | BK:    69,665 | sa_spins: 171
+    Pull  2279: ACC | Bet:  1500 | Pts:  15000 | BK:    66,665 | sa_spins: 173
+    Pull  2651: ATT | Bet:  1500 | Pts:      0 | BK:    18,180 | sa_spins: 169
+    Pull  2659: SHI | Bet:  1500 | Pts:      0 | BK:     6,180 | sa_spins: 177
+
+  [GAP AUDIT / MISSION PROGRESS]
+    Mission |   Pull |   Bankroll
+    -----------------------------------
+    M 1     |      1 |    100,105
+    M 2     |      1 |    100,305
+    M 3     |     19 |    100,835
+    M 4     |    108 |     98,735
+    M 5     |    108 |    101,835
+    M 6     |    108 |    107,835
+    M 7     |    239 |    110,020
+    M 8     |    291 |     93,420
+    M 9     |    463 |    104,070
+    M10     |    511 |    125,070
+    M11     |  1,063 |    142,620
+    M12     |  1,943 |    139,160
+
+================================================================================
+
+--- Ahmed Session 0: FAIL (10/22) ---
+Pulls: 604 | Final BK: 3,960 | Max BK: 114,210
+
+  [CATCH LOG (>=1500 bet) - N=15]
+    Pull   519: SHI | Bet:  1500 | Pts:      0 | BK:    92,260 | sa_spins: 151
+    Pull   521: ATT | Bet:  1500 | Pts:      0 | BK:    89,260 | sa_spins: 153
+    Pull   523: ATT | Bet:  1500 | Pts:      0 | BK:    86,260 | sa_spins: 155
+    Pull   525: STE | Bet:  1500 | Pts:      0 | BK:    83,260 | sa_spins: 157
+    Pull   555: STE | Bet:  1500 | Pts:      0 | BK:    96,960 | sa_spins: 187
+    Pull   556: SHI | Bet:  1500 | Pts:      0 | BK:    95,460 | sa_spins: 188
+    Pull   557: ATT | Bet:  1500 | Pts:      0 | BK:    93,960 | sa_spins: 189
+    Pull   564: STE | Bet:  1500 | Pts:      0 | BK:    83,460 | sa_spins: 196
+    Pull   568: ATT | Bet:  1500 | Pts:      0 | BK:    77,460 | sa_spins: 200
+    Pull   570: SHI | Bet:  1500 | Pts:      0 | BK:    74,460 | sa_spins: 202
+    Pull   571: ATT | Bet:  1500 | Pts:      0 | BK:    72,960 | sa_spins: 203
+    Pull   573: ATT | Bet:  1500 | Pts:      0 | BK:    69,960 | sa_spins: 205
+    Pull   579: SPI | Bet:  6000 | Pts:      0 | BK:    93,960 | sa_spins: 211
+    Pull   583: STE | Bet:  6000 | Pts:      0 | BK:    69,960 | sa_spins: 215
+    Pull   602: STE | Bet:  6000 | Pts:      0 | BK:    15,960 | sa_spins: 234
+
+  [GAP AUDIT / MISSION PROGRESS]
+    Mission |   Pull |   Bankroll
+    -----------------------------------
+    M 1     |     17 |     99,865
+    M 2     |     38 |     99,750
+    M 3     |     46 |    100,430
+    M 4     |    148 |     99,140
+    M 5     |    162 |    100,640
+    M 6     |    175 |    101,440
+    M 7     |    268 |    111,345
+    M 8     |    472 |    114,210
+    M 9     |    550 |    104,460
+    M10     |    586 |    111,960
+
+================================================================================
+
+--- Ahmed Session 1: FAIL (9/22) ---
+Pulls: 531 | Final BK: 5,320 | Max BK: 109,620
+
+  [CATCH LOG (>=1500 bet) - N=8]
+    Pull   503: STE | Bet:  1500 | Pts:      0 | BK:    70,320 | sa_spins: 156
+    Pull   508: SHI | Bet:  1500 | Pts:      0 | BK:    62,820 | sa_spins: 161
+    Pull   511: SHI | Bet:  1500 | Pts:      0 | BK:    58,320 | sa_spins: 164
+    Pull   512: ATT | Bet:  1500 | Pts:      0 | BK:    56,820 | sa_spins: 165
+    Pull   515: STE | Bet:  1500 | Pts:      0 | BK:    52,320 | sa_spins: 168
+    Pull   517: ATT | Bet:  1500 | Pts:      0 | BK:    49,320 | sa_spins: 170
+    Pull   520: ATT | Bet:  6000 | Pts:      0 | BK:    31,320 | sa_spins: 173
+    Pull   525: SHI | Bet:  6000 | Pts:      0 | BK:    41,320 | sa_spins: 178
+
+  [GAP AUDIT / MISSION PROGRESS]
+    Mission |   Pull |   Bankroll
+    -----------------------------------
+    M 1     |      3 |    100,075
+    M 2     |     21 |    100,005
+    M 3     |     44 |    100,425
+    M 4     |    105 |    100,975
+    M 5     |    192 |    101,870
+    M 6     |    250 |    103,020
+    M 7     |    261 |    109,620
+    M 8     |    484 |     98,820
+    M 9     |    522 |     59,320
+
+================================================================================
+
+--- Nick Session 0: FAIL (8/22) ---
+Pulls: 306 | Final BK: 505 | Max BK: 116,005
+
+  [CATCH LOG (>=1500 bet) - N=8]
+    Pull   262: ATT | Bet:  1500 | Pts:      0 | BK:    92,505 | sa_spins: 126
+    Pull   266: SPI | Bet:  1500 | Pts:      0 | BK:   101,505 | sa_spins: 130
+    Pull   278: ATT | Bet:  1500 | Pts:      0 | BK:   114,505 | sa_spins: 142
+    Pull   287: ATT | Bet:  1500 | Pts:      0 | BK:   101,005 | sa_spins: 151
+    Pull   290: ATT | Bet:  1500 | Pts:      0 | BK:    96,505 | sa_spins: 154
+    Pull   292: ATT | Bet:  6000 | Pts:      0 | BK:    84,505 | sa_spins: 156
+    Pull   293: STE | Bet:  6000 | Pts:      0 | BK:    78,505 | sa_spins: 157
+    Pull   299: STE | Bet:  6000 | Pts:      0 | BK:    42,505 | sa_spins: 163
+
+  [GAP AUDIT / MISSION PROGRESS]
+    Mission |   Pull |   Bankroll
+    -----------------------------------
+    M 1     |      2 |    100,090
+    M 2     |     15 |    100,095
+    M 3     |     46 |    100,520
+    M 4     |     97 |    101,430
+    M 5     |    136 |    102,975
+    M 6     |    136 |    108,975
+    M 7     |    268 |    109,505
+    M 8     |    277 |    116,005
+
+================================================================================
+
+--- Nick Session 1: FAIL (9/22) ---
+Pulls: 693 | Final BK: 117,790 | Max BK: 120,535
+
+  [CATCH LOG (>=1500 bet) - N=1]
+    Pull   567: ACC | Bet:  1500 | Pts:  15000 | BK:    80,535 | sa_spins: 149
+
+  [GAP AUDIT / MISSION PROGRESS]
+    Mission |   Pull |   Bankroll
+    -----------------------------------
+    M 1     |      8 |    100,000
+    M 2     |     30 |     99,870
+    M 3     |     68 |     99,760
+    M 4     |     92 |     99,910
+    M 5     |     99 |    100,210
+    M 6     |    110 |    101,810
+    M 7     |    130 |    104,810
+    M 8     |    294 |    115,895
+    M 9     |    567 |    120,535
+
+================================================================================
+
