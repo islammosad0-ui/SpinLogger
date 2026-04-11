@@ -428,89 +428,6 @@ static inline uint8_t readBool(void* obj, size_t offset) {
     return *(uint8_t*)((uint8_t*)obj + offset);
 }
 
-// ============================================================
-//  Read one reel bar's data
-// ============================================================
-- (void)readBar:(void*)bar
-      centerSym:(int32_t*)center topSym:(int32_t*)top botSym:(int32_t*)bot
-       stripIdx:(int32_t*)idx stripLen:(int32_t*)len {
-    *center = *top = *bot = -1;
-    *idx = *len = 0;
-    if (!bar) return;
-
-    *idx = readInt32(bar, fo_resultSymbolIndex);
-    *len = readInt32(bar, fo_numberOfSymbols);
-
-    // Try to read symbols from m_SymbolElements array
-    void* elements = readPtr(bar, fo_symbolElements);
-    if (elements && fo_slotSymbolBacking) {
-        void* centerElem = arrayElementPtr(elements, *idx);
-        void* topElem    = arrayElementPtr(elements, *idx - 1);
-        void* botElem    = arrayElementPtr(elements, *idx + 1);
-
-        if (centerElem) *center = readInt32(centerElem, fo_slotSymbolBacking);
-        if (topElem)    *top    = readInt32(topElem,    fo_slotSymbolBacking);
-        if (botElem)    *bot    = readInt32(botElem,    fo_slotSymbolBacking);
-    }
-}
-
-// ============================================================
-//  Phase 3+: Read full snapshot from the live instance
-// ============================================================
-- (SLScanSnapshot *)readSnapshotFromInstance:(void*)inst {
-    SLScanSnapshot *s = [[SLScanSnapshot alloc] init];
-    s.timestamp = [NSDate date];
-
-    // Direct fields on SlotMachineManager
-    s.spinning          = readBool(inst, fo_spinning);
-    s.betState          = readInt32(inst, fo_betState);
-    s.spinNumber        = readInt32(inst, fo_currentSpinNumber);
-    s.failCounter       = readInt32(inst, fo_failCounter);
-    s.failCounterGlobal = readInt32(inst, fo_failCounterGlobal);
-    s.failThreshold     = readInt32(inst, fo_failThreshold);
-    s.shields           = readInt32(inst, fo_lastBalShields);
-
-    // Boolean tell indicators (pointer != NULL means active)
-    s.hasDynamicResults = (readPtr(inst, fo_dynamicResults) != NULL);
-    s.hasFreezeContext  = (readPtr(inst, fo_freezeCtx)      != NULL);
-
-    // Read currentSlotResult → slotSymbols → symbol1/2/3 (payline)
-    void* slotResult = readPtr(inst, fo_currentSlotResult);
-    if (slotResult) {
-        void* sym3Obj = readPtr(slotResult, fo_slotSymbols);
-        if (sym3Obj) {
-            s.sym1 = readInt32(sym3Obj, fo_symbol1);
-            s.sym2 = readInt32(sym3Obj, fo_symbol2);
-            s.sym3 = readInt32(sym3Obj, fo_symbol3);
-        }
-    }
-
-    // Read 3×3 grid + strip data from the three reel bars
-    void* bar1 = readPtr(inst, fo_slotBar1);
-    void* bar2 = readPtr(inst, fo_slotBar2);
-    void* bar3 = readPtr(inst, fo_slotBar3);
-
-    int32_t c1, t1, b1, i1, l1;
-    int32_t c2, t2, b2, i2, l2;
-    int32_t c3, t3, b3, i3, l3;
-
-    [self readBar:bar1 centerSym:&c1 topSym:&t1 botSym:&b1 stripIdx:&i1 stripLen:&l1];
-    [self readBar:bar2 centerSym:&c2 topSym:&t2 botSym:&b2 stripIdx:&i2 stripLen:&l2];
-    [self readBar:bar3 centerSym:&c3 topSym:&t3 botSym:&b3 stripIdx:&i3 stripLen:&l3];
-
-    // Use bar symbols for top/bottom, payline from SlotSymbol3 (authoritative)
-    s.top1 = t1; s.top2 = t2; s.top3 = t3;
-    s.bot1 = b1; s.bot2 = b2; s.bot3 = b3;
-    s.stripIdx1 = i1; s.stripIdx2 = i2; s.stripIdx3 = i3;
-    s.stripLen1 = l1; s.stripLen2 = l2; s.stripLen3 = l3;
-
-    // Near-win check via BoardManager → m_DiceWinResultDictionary
-    void* boardMgr = readPtr(inst, fo_boardManager);
-    s.hasNearWin = (boardMgr && fo_diceWinDict && readPtr(boardMgr, fo_diceWinDict) != NULL);
-
-    return s;
-}
-
 /// Assemble one full trace record as an NSDictionary, ready for JSON encoding.
 /// Runs on the scanner thread — keep it fast (memcpy only, no formatting).
 - (NSDictionary *)buildTraceRecordForInstance:(void *)inst {
@@ -617,19 +534,23 @@ static inline uint8_t readBool(void* obj, size_t offset) {
 - (void)tick {
     switch (self.phase) {
         case ScanPhaseResolveAPIs:
+            self.currentPhaseName = @"resolveAPIs";
             if ([self resolveAPIs]) self.phase = ScanPhaseFindClasses;
             return;
 
         case ScanPhaseFindClasses:
+            self.currentPhaseName = @"findClasses";
             if ([self findClasses]) self.phase = ScanPhaseCacheOffsets;
             return;
 
         case ScanPhaseCacheOffsets:
+            self.currentPhaseName = @"cacheOffsets";
             if ([self cacheOffsets]) self.phase = ScanPhaseWaitInstance;
             return;
 
         case ScanPhaseWaitInstance: {
-            void* instance = NULL;
+            self.currentPhaseName = @"waitInstance";
+            void *instance = NULL;
             if (fh_Instance && _field_static_get_value) {
                 _field_static_get_value(fh_Instance, &instance);
             }
@@ -641,42 +562,57 @@ static inline uint8_t readBool(void* obj, size_t offset) {
         }
 
         case ScanPhaseActive:
-            [self activeScan];
+            self.currentPhaseName = @"active";
+            [self traceScan];
             return;
     }
 }
 
-- (void)activeScan {
+- (void)traceScan {
     // Read instance singleton
-    void* instance = NULL;
+    void *instance = NULL;
     _field_static_get_value(fh_Instance, &instance);
     if (!instance) return;
 
-    // Take snapshot
-    SLScanSnapshot *snap = [self readSnapshotFromInstance:instance];
+    // Build record on scanner thread (fast, memcpy-only)
+    NSDictionary *rec = [self buildTraceRecordForInstance:instance];
 
-    // Detect spin completion: spinning was YES, now NO
-    BOOL spinEnded = (self.prevSpinning && !snap.spinning);
-    self.prevSpinning = snap.spinning;
+    // Track spin-end for counter purposes
+    BOOL isSpinning = [rec[@"spinning"] boolValue];
+    BOOL spinEnded = (self.prevSpinning && !isSpinning);
+    self.prevSpinning = isSpinning;
+    if (spinEnded) self.spinsSeen++;
 
+    // Populate latestSnapshot minimally for HUD compatibility
     if (spinEnded) {
+        SLScanSnapshot *snap = [[SLScanSnapshot alloc] init];
+        snap.timestamp = [NSDate date];
+        snap.spinNumber = [rec[@"spin_num"] intValue];
+        snap.betState = [rec[@"bet_state"] intValue];
+        snap.spinning = isSpinning;
         self.latestSnapshot = snap;
-
-        // Write CSV on background thread
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            [self writeCSVRow:snap];
-        });
-
-        // Post notification on main thread
-        [[NSNotificationCenter defaultCenter]
-            postNotificationName:SLMemoryScanNotification
-                          object:nil
-                        userInfo:@{SLScanSnapshotKey: snap}];
-
-        NSLog(@"[SpinLogger] Spin #%d ended — [%d|%d|%d] bet×%d pity=%d/%d",
-              snap.spinNumber, snap.sym1, snap.sym2, snap.sym3,
-              snap.betState, snap.failCounterGlobal, snap.failThreshold);
     }
+
+    // Hand off to background queue for JSON encoding + file write
+    dispatch_async(self.traceWriteQueue, ^{
+        NSError *err = nil;
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:rec
+                                                           options:0
+                                                             error:&err];
+        if (!jsonData) {
+            NSLog(@"[SpinLogger] Trace JSON encode failed: %@", err);
+            return;
+        }
+        NSMutableData *line = [jsonData mutableCopy];
+        [line appendBytes:"\n" length:1];
+        @try {
+            [self.traceFileHandle writeData:line];
+            self.snapshotsWritten++;
+            self.bytesWritten += line.length;
+        } @catch (NSException *ex) {
+            NSLog(@"[SpinLogger] Trace write failed: %@", ex);
+        }
+    });
 }
 
 @end
