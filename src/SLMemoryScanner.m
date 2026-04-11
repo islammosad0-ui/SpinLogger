@@ -105,6 +105,58 @@ static inline void* arrayElementPtr(void* array, int32_t index) {
     return *(void**)((uint8_t*)array + kArrayHeaderSize + index * sizeof(void*));
 }
 
+/// Heuristic: does this pointer look like a valid IL2CPP heap address?
+/// ARM64 user-space heap is typically in 0x100000000–0x7FFFFFFFFF range.
+static inline BOOL looksLikeHeapPointer(void *p) {
+    uintptr_t addr = (uintptr_t)p;
+    if (addr < 0x100000000ULL) return NO;       // too low (nil / small int)
+    if (addr > 0x7FFFFFFFFFULL) return NO;      // too high (kernel / garbage)
+    if (addr & 0x7) return NO;                  // misaligned (not an object)
+    return YES;
+}
+
+/// Convert a byte buffer to lowercase hex string, no separators.
+static NSString *hexString(const void *buf, size_t len) {
+    if (!buf || len == 0) return @"";
+    static const char hexChars[] = "0123456789abcdef";
+    char *out = malloc(len * 2 + 1);
+    const uint8_t *in = (const uint8_t *)buf;
+    for (size_t i = 0; i < len; i++) {
+        out[i*2]     = hexChars[(in[i] >> 4) & 0xF];
+        out[i*2 + 1] = hexChars[in[i] & 0xF];
+    }
+    out[len*2] = 0;
+    NSString *s = [NSString stringWithUTF8String:out];
+    free(out);
+    return s;
+}
+
+/// Enumerate all fields on a class and read their raw 8 bytes from an instance.
+/// Returns an NSDictionary keyed by field name, each value a dict
+/// with keys "off" (NSNumber), "u64" (NSNumber), "i32" (NSNumber), "ptr" (NSString "0x...").
+static NSDictionary *dumpClassFields(void *klass, void *instance) {
+    if (!klass || !instance) return @{};
+    NSMutableDictionary *out = [NSMutableDictionary dictionary];
+    void *iter = NULL;
+    void *field = NULL;
+    while ((field = _class_get_fields(klass, &iter)) != NULL) {
+        const char *nm = _field_get_name(field);
+        if (!nm) continue;
+        size_t off = _field_get_offset(field);
+        if (off == 0) continue;  // static or invalid
+        uint64_t u64 = *(uint64_t *)((uint8_t *)instance + off);
+        int32_t  i32 = *(int32_t  *)((uint8_t *)instance + off);
+        void    *ptr = *(void   **)((uint8_t *)instance + off);
+        out[[NSString stringWithUTF8String:nm]] = @{
+            @"off": @(off),
+            @"u64": @(u64),
+            @"i32": @(i32),
+            @"ptr": [NSString stringWithFormat:@"0x%lx", (unsigned long)ptr]
+        };
+    }
+    return out;
+}
+
 // ============================================================
 //  SLScanSnapshot implementation
 // ============================================================
