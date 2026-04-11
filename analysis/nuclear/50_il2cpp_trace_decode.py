@@ -109,6 +109,76 @@ def stage2_payline_sanity(buckets: Dict[int, Spin], hist: pd.DataFrame) -> dict:
     }
 
 
+def stage3_field_change_map(buckets: Dict[int, Spin], hist: pd.DataFrame) -> list:
+    """For every (class, field) pair observed in settled snapshots, classify behavior."""
+    series: Dict[tuple, List[tuple]] = {}
+    for spin_num in sorted(buckets):
+        settled = buckets[spin_num].settled
+        if settled is None:
+            continue
+        for class_key, cls_fields in settled.fields.items():
+            class_name = class_key.split("@", 1)[0]
+            for fname, fdata in cls_fields.items():
+                if not isinstance(fdata, dict) or "i32" not in fdata:
+                    continue
+                series.setdefault((class_name, fname), []).append(
+                    (spin_num, fdata["i32"], fdata.get("u64", 0), fdata.get("ptr", "0x0"))
+                )
+
+    hist_lookup = hist.set_index("seq")
+
+    out = []
+    for (cls, fname), points in series.items():
+        vals = [p[1] for p in points]
+        uniq = set(vals)
+        is_constant = len(uniq) == 1
+        unique_count = len(uniq)
+
+        if is_constant:
+            type_guess = "constant"
+        elif all(0 <= v <= 1 for v in vals):
+            type_guess = "bool_like"
+        elif all(1 <= v <= 50 for v in vals):
+            type_guess = "symbol_like"
+        elif all(vals[i] <= vals[i + 1] for i in range(len(vals) - 1)):
+            type_guess = "counter_like"
+        elif any(vals[i] > vals[i + 1] for i in range(len(vals) - 1)):
+            type_guess = "resetting_counter"
+        else:
+            type_guess = "unknown"
+
+        correlations = {}
+        for col in ("r1", "r2", "r3", "is_triple", "sa_spins", "coins_won", "bet_level"):
+            if col not in hist_lookup.columns:
+                continue
+            matches = 0
+            checked = 0
+            for spin_num, i32, u64, ptr in points:
+                if spin_num not in hist_lookup.index:
+                    continue
+                checked += 1
+                gt = hist_lookup.loc[spin_num, col]
+                if gt == i32 or gt == u64:
+                    matches += 1
+            if checked:
+                correlations[col] = matches / checked
+
+        out.append({
+            "class": cls,
+            "field": fname,
+            "is_constant": is_constant,
+            "unique_count": unique_count,
+            "type_guess": type_guess,
+            "correlations": correlations,
+        })
+
+    out.sort(key=lambda r: (
+        r["is_constant"],
+        -max(r["correlations"].values()) if r["correlations"] else 0,
+    ))
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--trace", required=True, type=Path, help="Path to JSONL trace file")

@@ -36,3 +36,14 @@ def test_payline_sanity_matches_ground_truth():
     assert result["match_rate"] == 1.0
     assert result["n_spins_checked"] == 3
     assert result["mismatches"] == []
+
+
+def test_stage3_classifies_counter_field():
+    snaps = trace_decode.load_jsonl(FIX / "tiny_trace.jsonl")
+    buckets = trace_decode.segment_by_spin(snaps)
+    import pandas as pd
+    hist = pd.read_csv(FIX / "tiny_spin_history.csv")
+    report = trace_decode.stage3_field_change_map(buckets, hist)
+    entry = next(r for r in report if r["field"] == "m_SpinFailedCounterGlobal")
+    assert entry["type_guess"] in ("counter_like", "resetting_counter")
+    assert entry["unique_count"] >= 2
