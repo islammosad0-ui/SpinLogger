@@ -68,6 +68,14 @@ static NSString *const kSLDefaultsPreset2          = @"Speeder_Preset2";
 static NSString *const kSLSpinHistoryFile = @"spin_history.csv";
 static NSString *const kSLSignalCSVFile   = @"il2cpp_signals.csv";
 
+// IL2CPP trace mode (replaces signal CSV during reverse-engineering session)
+static NSString *const kSLTraceJSONLPrefix    = @"il2cpp_trace_";
+static NSString *const kSLTraceJSONLExtension = @".jsonl";
+#define kSLTraceHexWindowBar     256    // bytes per slotBar instance
+#define kSLTraceHexWindowResult  128    // bytes for currentSlotResult
+#define kSLTraceHexArrayMaxBytes 2048   // cap raw array payload dump
+#define kSLTracePointerFollowMaxDepth 1  // follow pointers one level only
+
 // ---------------------------------------------------------------------------
 //  NSNotification names & userInfo keys
 // ---------------------------------------------------------------------------
