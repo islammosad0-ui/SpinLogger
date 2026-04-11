@@ -247,6 +247,56 @@ def stage4_strip_decoder(buckets: Dict[int, Spin], hist: pd.DataFrame, reel: int
     return best
 
 
+def stage5_pity_counter_hunt(buckets: Dict[int, Spin], hist: pd.DataFrame, fail_threshold: int) -> list:
+    """Identify pity counter candidates by monotonic + reset behavior."""
+    hist_lookup = hist.set_index("seq")
+    ordered = sorted(buckets.keys())
+    triple_map = {s: bool(hist_lookup.loc[s, "is_triple"])
+                  for s in ordered if s in hist_lookup.index and "is_triple" in hist_lookup.columns}
+
+    series: Dict[tuple, List[tuple]] = {}
+    for spin_num in ordered:
+        settled = buckets[spin_num].settled
+        if settled is None or spin_num not in triple_map:
+            continue
+        for class_key, cls_fields in settled.fields.items():
+            class_name = class_key.split("@", 1)[0]
+            for fname, fdata in cls_fields.items():
+                if not isinstance(fdata, dict) or "i32" not in fdata:
+                    continue
+                series.setdefault((class_name, fname), []).append(
+                    (spin_num, fdata["i32"], triple_map[spin_num])
+                )
+
+    candidates = []
+    for (cls, fname), points in series.items():
+        vals = [p[1] for p in points]
+        if len(vals) < 3:
+            continue
+        if len(set(vals)) == 1:
+            continue
+
+        non_triple_vals = [v for (_, v, is_tr) in points if not is_tr]
+        monotonic = all(non_triple_vals[i] <= non_triple_vals[i + 1]
+                        for i in range(len(non_triple_vals) - 1))
+        resets = any(v == 0 for (_, v, is_tr) in points if is_tr)
+        max_val = max(vals)
+        near_threshold = max_val <= fail_threshold + 2
+
+        if monotonic and resets and near_threshold:
+            candidates.append({
+                "class": cls,
+                "field": fname,
+                "monotonic_between_triples": True,
+                "resets_on_triple": True,
+                "max_value": max_val,
+                "n_samples": len(points),
+            })
+
+    candidates.sort(key=lambda c: (-c["n_samples"], abs(c["max_value"] - fail_threshold)))
+    return candidates
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--trace", required=True, type=Path, help="Path to JSONL trace file")

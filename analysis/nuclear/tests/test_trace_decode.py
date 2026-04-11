@@ -58,3 +58,16 @@ def test_stage4_decodes_strip_stride_and_offset():
     assert result["stride"] == 8
     assert result["inner_offset"] == 0
     assert result["match_rate"] >= 0.9
+
+
+def test_stage5_identifies_pity_counter():
+    snaps = trace_decode.load_jsonl(FIX / "tiny_trace.jsonl")
+    buckets = trace_decode.segment_by_spin(snaps)
+    import pandas as pd
+    hist = pd.read_csv(FIX / "tiny_spin_history.csv")
+    report = trace_decode.stage5_pity_counter_hunt(buckets, hist, fail_threshold=8)
+    assert len(report) >= 1
+    top = report[0]
+    assert top["field"] == "m_SpinFailedCounterGlobal"
+    assert top["resets_on_triple"]
+    assert top["monotonic_between_triples"]
