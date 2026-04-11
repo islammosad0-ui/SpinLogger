@@ -47,3 +47,14 @@ def test_stage3_classifies_counter_field():
     entry = next(r for r in report if r["field"] == "m_SpinFailedCounterGlobal")
     assert entry["type_guess"] in ("counter_like", "resetting_counter")
     assert entry["unique_count"] >= 2
+
+
+def test_stage4_decodes_strip_stride_and_offset():
+    snaps = trace_decode.load_jsonl(FIX / "tiny_trace.jsonl")
+    buckets = trace_decode.segment_by_spin(snaps)
+    import pandas as pd
+    hist = pd.read_csv(FIX / "tiny_spin_history.csv")
+    result = trace_decode.stage4_strip_decoder(buckets, hist, reel=1)
+    assert result["stride"] == 8
+    assert result["inner_offset"] == 0
+    assert result["match_rate"] >= 0.9

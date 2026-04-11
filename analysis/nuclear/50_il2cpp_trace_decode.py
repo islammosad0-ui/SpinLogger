@@ -179,6 +179,74 @@ def stage3_field_change_map(buckets: Dict[int, Spin], hist: pd.DataFrame) -> lis
     return out
 
 
+def _unpack_array_bytes(hex_blob: dict, stride: int, inner_offset: int, array_len: int) -> List[int]:
+    """Return list of ints decoded from the array payload using (stride, inner_offset)."""
+    raw = bytes.fromhex(hex_blob["bytes"])
+    header = hex_blob["header_size"]
+    out = []
+    for i in range(array_len):
+        start = header + i * stride + inner_offset
+        if start + 4 > len(raw):
+            out.append(None)
+            continue
+        out.append(int.from_bytes(raw[start:start + 4], "little", signed=True))
+    return out
+
+
+def stage4_strip_decoder(buckets: Dict[int, Spin], hist: pd.DataFrame, reel: int) -> dict:
+    """Find (stride, inner_offset) for m_SymbolElements on bar<reel>."""
+    hist_lookup = hist.set_index("seq")
+    r_col = f"r{reel}"
+    candidates = [(s, o) for s in (4, 8, 12, 16, 24, 32) for o in (0, 4, 8, 12, 16)]
+
+    def score(stride: int, inner_offset: int):
+        hits = 0
+        checked = 0
+        for spin_num, spin in buckets.items():
+            if spin.settled is None or spin_num not in hist_lookup.index:
+                continue
+            gt = hist_lookup.loc[spin_num, r_col]
+            hex_key = next(
+                (k for k in spin.settled.hex if k.startswith(f"slotBar{reel}.m_SymbolElements@")),
+                None,
+            )
+            if hex_key is None:
+                continue
+            blob = spin.settled.hex[hex_key]
+            if not isinstance(blob, dict):
+                continue
+            bar_key = next(
+                (k for k in spin.settled.fields if k.startswith(f"SlotBarManager_{reel}@")),
+                None,
+            )
+            if bar_key is None:
+                continue
+            idx = spin.settled.fields[bar_key].get("resultSymbolIndex", {}).get("i32")
+            if idx is None:
+                continue
+            elements = _unpack_array_bytes(blob, stride, inner_offset, blob["array_len"])
+            if 0 <= idx < len(elements) and elements[idx] == gt:
+                hits += 1
+            checked += 1
+        return hits, checked
+
+    best = {"stride": None, "inner_offset": None, "match_rate": 0.0, "hits": 0, "checked": 0}
+    for stride, inner_offset in candidates:
+        hits, checked = score(stride, inner_offset)
+        if checked == 0:
+            continue
+        rate = hits / checked
+        if rate > best["match_rate"]:
+            best = {
+                "stride": stride,
+                "inner_offset": inner_offset,
+                "match_rate": rate,
+                "hits": hits,
+                "checked": checked,
+            }
+    return best
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--trace", required=True, type=Path, help="Path to JSONL trace file")
