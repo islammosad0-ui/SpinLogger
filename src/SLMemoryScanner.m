@@ -511,6 +511,106 @@ static inline uint8_t readBool(void* obj, size_t offset) {
     return s;
 }
 
+/// Assemble one full trace record as an NSDictionary, ready for JSON encoding.
+/// Runs on the scanner thread — keep it fast (memcpy only, no formatting).
+- (NSDictionary *)buildTraceRecordForInstance:(void *)inst {
+    NSMutableDictionary *rec = [NSMutableDictionary dictionary];
+
+    // Top-level quick-filter fields
+    rec[@"t"] = [[NSISO8601DateFormatter new] stringFromDate:[NSDate date]];
+    rec[@"mono_ms"] = @([self monotonicMillis] - self.traceStartMs);
+    rec[@"spin_num"] = @(readInt32(inst, fo_currentSpinNumber));
+    rec[@"spinning"] = @(readBool(inst, fo_spinning) != 0);
+    rec[@"bet_state"] = @(readInt32(inst, fo_betState));
+    rec[@"phase"] = self.currentPhaseName ?: @"?";
+    rec[@"instance_ptr"] = [NSString stringWithFormat:@"0x%lx", (unsigned long)inst];
+
+    // ----- β: field enumeration section -----
+    NSMutableDictionary *fields = [NSMutableDictionary dictionary];
+
+    // SlotMachineManager — direct
+    fields[@"SlotMachineManager"] = dumpClassFields(s_klass_Manager, inst);
+
+    // Follow currentSlotResult pointer one level
+    void *slotResult = readPtr(inst, fo_currentSlotResult);
+    if (looksLikeHeapPointer(slotResult) && s_klass_Result) {
+        NSString *key = [NSString stringWithFormat:@"SlotResult@0x%lx", (unsigned long)slotResult];
+        fields[key] = dumpClassFields(s_klass_Result, slotResult);
+
+        // Follow slotSymbols (SlotSymbol3) one more level — exception to depth=1
+        // because SlotResult is effectively a pass-through wrapper
+        void *sym3 = readPtr(slotResult, fo_slotSymbols);
+        if (looksLikeHeapPointer(sym3) && s_klass_Symbol3) {
+            NSString *sk = [NSString stringWithFormat:@"SlotSymbol3@0x%lx", (unsigned long)sym3];
+            fields[sk] = dumpClassFields(s_klass_Symbol3, sym3);
+        }
+    }
+
+    // Follow each slot bar pointer one level
+    void *bars[3] = {
+        readPtr(inst, fo_slotBar1),
+        readPtr(inst, fo_slotBar2),
+        readPtr(inst, fo_slotBar3)
+    };
+    for (int i = 0; i < 3; i++) {
+        if (looksLikeHeapPointer(bars[i]) && s_klass_BarManager) {
+            NSString *key = [NSString stringWithFormat:@"SlotBarManager_%d@0x%lx",
+                             i + 1, (unsigned long)bars[i]];
+            fields[key] = dumpClassFields(s_klass_BarManager, bars[i]);
+        }
+    }
+
+    // Follow BoardManager
+    void *board = readPtr(inst, fo_boardManager);
+    if (looksLikeHeapPointer(board) && s_klass_BoardMgr) {
+        NSString *key = [NSString stringWithFormat:@"BoardManager@0x%lx", (unsigned long)board];
+        fields[key] = dumpClassFields(s_klass_BoardMgr, board);
+    }
+
+    rec[@"fields"] = fields;
+
+    // ----- γ: targeted hex windows -----
+    NSMutableDictionary *hex = [NSMutableDictionary dictionary];
+
+    // Raw bytes at each bar instance
+    for (int i = 0; i < 3; i++) {
+        if (looksLikeHeapPointer(bars[i])) {
+            NSString *key = [NSString stringWithFormat:@"slotBar%d@0x%lx",
+                             i + 1, (unsigned long)bars[i]];
+            hex[key] = hexString(bars[i], kSLTraceHexWindowBar);
+        }
+    }
+
+    // Raw bytes at each bar's m_SymbolElements array payload
+    for (int i = 0; i < 3; i++) {
+        if (!looksLikeHeapPointer(bars[i])) continue;
+        void *elements = readPtr(bars[i], fo_symbolElements);
+        if (!looksLikeHeapPointer(elements)) continue;
+        int64_t len = *(int64_t *)((uint8_t *)elements + kArrayLengthOffset);
+        if (len <= 0 || len > 256) continue;   // sanity bound
+        size_t totalBytes = kArrayHeaderSize + (size_t)len * sizeof(void *);
+        // Also try a wider dump in case elements are larger structs
+        size_t dumpBytes = MIN(kSLTraceHexArrayMaxBytes, totalBytes + 128);
+        NSString *key = [NSString stringWithFormat:@"slotBar%d.m_SymbolElements@0x%lx",
+                         i + 1, (unsigned long)elements];
+        hex[key] = @{
+            @"array_len": @(len),
+            @"header_size": @(kArrayHeaderSize),
+            @"bytes": hexString(elements, dumpBytes)
+        };
+    }
+
+    // Raw bytes at currentSlotResult
+    if (looksLikeHeapPointer(slotResult)) {
+        NSString *key = [NSString stringWithFormat:@"currentSlotResult@0x%lx",
+                         (unsigned long)slotResult];
+        hex[key] = hexString(slotResult, kSLTraceHexWindowResult);
+    }
+
+    rec[@"hex"] = hex;
+    return rec;
+}
+
 // ============================================================
 //  Main timer tick — state machine
 // ============================================================
