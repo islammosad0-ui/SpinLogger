@@ -8,5 +8,6 @@
 - (void)resetAllCounters;
 - (void)resetCounterForSymbol:(NSString *)symbol;
 - (void)resetPositions;
+- (void)showTeaserAlert;
 - (NSDictionary<NSString *, NSNumber *> *)currentCounts;
 @end

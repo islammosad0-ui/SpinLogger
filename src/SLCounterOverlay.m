@@ -448,4 +448,21 @@ static const int kSymbolCount = 6;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
+- (void)showTeaserAlert {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIView *flashView = [[UIView alloc] initWithFrame:[UIScreen mainScreen].bounds];
+        flashView.backgroundColor = [[UIColor redColor] colorWithAlphaComponent:0.5];
+        flashView.userInteractionEnabled = NO;
+        UIWindow *window = [UIApplication sharedApplication].keyWindow;
+        [window addSubview:flashView];
+        
+        [UIView animateWithDuration:0.5 animations:^{
+            flashView.alpha = 0;
+        } completion:^(BOOL finished) {
+            [flashView removeFromSuperview];
+        }];
+        
+        NSLog(@"[SpinLogger] TEASER TRIGGER FLASHED!");
+    });
+}
 @end
