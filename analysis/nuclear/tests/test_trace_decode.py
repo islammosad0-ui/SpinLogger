@@ -71,3 +71,20 @@ def test_stage5_identifies_pity_counter():
     assert top["field"] == "m_SpinFailedCounterGlobal"
     assert top["resets_on_triple"]
     assert top["monotonic_between_triples"]
+
+
+def test_end_to_end_writes_report(tmp_path):
+    out = tmp_path / "report.md"
+    import sys
+    sys.argv = [
+        "trace_decode",
+        "--trace", str(FIX / "tiny_trace.jsonl"),
+        "--spin-history", str(FIX / "tiny_spin_history.csv"),
+        "--report", str(out),
+    ]
+    trace_decode.main()
+    assert out.exists()
+    body = out.read_text()
+    assert "# IL2CPP Layout Report" in body
+    assert "Stage 2" in body
+    assert "Stage 4" in body
