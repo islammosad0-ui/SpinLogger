@@ -1,0 +1,4 @@
+seq,timestamp,r1,r2,r3,reel_1,reel_2,reel_3,spin_result,is_triple
+64200,2026-04-11 05:13:25,1,1,4,coin,coin,steal,gold,false
+64201,2026-04-11 05:13:27,30,2,2,accumulation,goldSack,goldSack,gold,false
+64202,2026-04-11 05:13:29,3,3,3,attack,attack,attack,attack,true
