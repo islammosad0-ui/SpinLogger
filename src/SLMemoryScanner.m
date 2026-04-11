@@ -2,6 +2,7 @@
 #import "SLConstants.h"
 #include <dlfcn.h>
 #include <string.h>
+#include <mach/mach_time.h>
 
 // ============================================================
 //  IL2CPP API Type Definitions
@@ -134,8 +135,17 @@ typedef NS_ENUM(NSInteger, ScanPhase) {
 @property (nonatomic, assign) ScanPhase phase;
 @property (nonatomic, assign) void *domain;
 @property (nonatomic, assign) BOOL prevSpinning;
-@property (nonatomic, assign) BOOL csvHeaderWritten;
 @property (nonatomic, strong, readwrite) SLScanSnapshot *latestSnapshot;
+
+// Trace mode state
+@property (nonatomic, strong) dispatch_queue_t traceWriteQueue;
+@property (nonatomic, strong) NSFileHandle *traceFileHandle;
+@property (nonatomic, copy, readwrite) NSString *traceFilePath;
+@property (nonatomic, assign) uint64_t traceStartMs;
+@property (nonatomic, assign) int64_t spinsSeen;
+@property (nonatomic, assign) int64_t snapshotsWritten;
+@property (nonatomic, assign) int64_t bytesWritten;
+@property (nonatomic, copy, readwrite) NSString *currentPhaseName;
 @end
 
 @implementation SLMemoryScanner
@@ -151,19 +161,53 @@ typedef NS_ENUM(NSInteger, ScanPhase) {
     if (self.scanTimer) return;
     self.phase = ScanPhaseResolveAPIs;
     self.prevSpinning = NO;
-    self.csvHeaderWritten = NO;
+    self.currentPhaseName = @"resolveAPIs";
+    self.traceStartMs = [self monotonicMillis];
+
+    // Create serial background queue for file I/O
+    self.traceWriteQueue = dispatch_queue_create("com.spinlogger.trace.write",
+                                                  DISPATCH_QUEUE_SERIAL);
+
+    // Create trace file with timestamped filename
+    NSDateFormatter *fmt = [[NSDateFormatter alloc] init];
+    fmt.dateFormat = @"yyyyMMdd_HHmmss";
+    NSString *stamp = [fmt stringFromDate:[NSDate date]];
+    NSString *fileName = [NSString stringWithFormat:@"%@%@%@",
+                          kSLTraceJSONLPrefix, stamp, kSLTraceJSONLExtension];
+    NSString *docs = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
+                                                          NSUserDomainMask, YES).firstObject;
+    self.traceFilePath = [docs stringByAppendingPathComponent:fileName];
+
+    [[NSFileManager defaultManager] createFileAtPath:self.traceFilePath
+                                            contents:nil
+                                          attributes:nil];
+    self.traceFileHandle = [NSFileHandle fileHandleForWritingAtPath:self.traceFilePath];
 
     self.scanTimer = [NSTimer scheduledTimerWithTimeInterval:0.25
                                                      target:self
                                                    selector:@selector(tick)
                                                    userInfo:nil
                                                     repeats:YES];
-    NSLog(@"[SpinLogger] IL2CPP Live Scanner started (250ms poll)");
+    NSLog(@"[SpinLogger] IL2CPP Trace Scanner started → %@", self.traceFilePath);
 }
 
 - (void)stopScanning {
     [self.scanTimer invalidate];
     self.scanTimer = nil;
+    dispatch_sync(self.traceWriteQueue, ^{
+        [self.traceFileHandle synchronizeFile];
+        [self.traceFileHandle closeFile];
+        self.traceFileHandle = nil;
+    });
+    NSLog(@"[SpinLogger] IL2CPP Trace stopped. %lld snapshots, %lld bytes to %@",
+          self.snapshotsWritten, self.bytesWritten, self.traceFilePath);
+}
+
+- (uint64_t)monotonicMillis {
+    static mach_timebase_info_data_t tb;
+    if (tb.denom == 0) mach_timebase_info(&tb);
+    uint64_t nanos = mach_absolute_time() * tb.numer / tb.denom;
+    return nanos / 1000000ULL;
 }
 
 // ============================================================
@@ -413,49 +457,6 @@ static inline uint8_t readBool(void* obj, size_t offset) {
     s.hasNearWin = (boardMgr && fo_diceWinDict && readPtr(boardMgr, fo_diceWinDict) != NULL);
 
     return s;
-}
-
-// ============================================================
-//  CSV logging
-// ============================================================
-- (NSString *)csvPath {
-    NSString *docs = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
-    return [docs stringByAppendingPathComponent:kSLSignalCSVFile];
-}
-
-- (void)writeCSVHeader {
-    NSString *header = @"timestamp,spinNum,betState,sym1,sym2,sym3,"
-                        "top1,top2,top3,bot1,bot2,bot3,"
-                        "idx1,idx2,idx3,len1,len2,len3,"
-                        "failCount,failCountGlobal,failThreshold,"
-                        "hasDynamic,hasFreeze,nearWin,shields\n";
-    [header writeToFile:[self csvPath] atomically:YES encoding:NSUTF8StringEncoding error:nil];
-    self.csvHeaderWritten = YES;
-}
-
-- (void)writeCSVRow:(SLScanSnapshot *)s {
-    if (!self.csvHeaderWritten) [self writeCSVHeader];
-
-    NSDateFormatter *fmt = [[NSDateFormatter alloc] init];
-    fmt.dateFormat = @"yyyy-MM-dd'T'HH:mm:ss";
-    NSString *ts = [fmt stringFromDate:s.timestamp];
-
-    NSString *row = [NSString stringWithFormat:
-        @"%@,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
-        ts, s.spinNumber, s.betState,
-        s.sym1, s.sym2, s.sym3,
-        s.top1, s.top2, s.top3,
-        s.bot1, s.bot2, s.bot3,
-        s.stripIdx1, s.stripIdx2, s.stripIdx3,
-        s.stripLen1, s.stripLen2, s.stripLen3,
-        s.failCounter, s.failCounterGlobal, s.failThreshold,
-        (int)s.hasDynamicResults, (int)s.hasFreezeContext, (int)s.hasNearWin,
-        s.shields];
-
-    NSFileHandle *fh = [NSFileHandle fileHandleForWritingAtPath:[self csvPath]];
-    [fh seekToEndOfFile];
-    [fh writeData:[row dataUsingEncoding:NSUTF8StringEncoding]];
-    [fh closeFile];
 }
 
 // ============================================================
