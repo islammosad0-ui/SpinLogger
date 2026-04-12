@@ -214,13 +214,13 @@ static UIColor *tierColor(SLBetTier tier) {
 - (void)refreshLabels {
     SLIdxStrategy *s = [SLIdxStrategy shared];
 
-    SLTypeHeat heats[kTypeCount];
-    heats[0] = s.heatAccSpins;
-    heats[1] = s.heatShield;
-    heats[2] = s.heatAttack;
-    heats[3] = s.heatSteal;
-    heats[4] = s.heatCoin;
-    heats[5] = s.heatGoldSack;
+    // Copy into individual vars — C arrays can't be captured by blocks
+    SLTypeHeat h0 = s.heatAccSpins;
+    SLTypeHeat h1 = s.heatShield;
+    SLTypeHeat h2 = s.heatAttack;
+    SLTypeHeat h3 = s.heatSteal;
+    SLTypeHeat h4 = s.heatCoin;
+    SLTypeHeat h5 = s.heatGoldSack;
 
     NSString *tier = s.betTierString ?: @"---";
     UIColor *tColor = tierColor(s.betTier);
@@ -228,6 +228,8 @@ static UIColor *tierColor(SLBetTier tier) {
     int32_t r1 = s.lastR1Idx, r2 = s.lastR2Idx, r3 = s.lastR3Idx;
 
     dispatch_async(dispatch_get_main_queue(), ^{
+        SLTypeHeat heats[] = {h0, h1, h2, h3, h4, h5};
+
         // Header: primary target tier
         self.headerLabel.text = [NSString stringWithFormat:@"ACC+SP: %@ | %@", tier, reason];
         self.headerLabel.textColor = tColor;
