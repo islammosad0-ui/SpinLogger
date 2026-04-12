@@ -1,0 +1,116 @@
+=== PRNG CRYPTOGRAPHIC CONSTRAINT GENERATOR ===
+
+--- ACCOUNT: Islam ---
+Total Spins Logged: 12891
+Reel 1 Underlying Probability Distribution:
+  Symbol 'attack         ': 31.07%  [Range: 0.0000 to 0.3107]
+  Symbol 'accumulation   ': 23.42%  [Range: 0.3107 to 0.5449]
+  Symbol 'coin           ': 23.32%  [Range: 0.5449 to 0.7781]
+  Symbol 'steal          ':  7.90%  [Range: 0.7781 to 0.8570]
+  Symbol 'goldSack       ':  7.47%  [Range: 0.8570 to 0.9317]
+  Symbol 'shield         ':  5.45%  [Range: 0.9317 to 0.9862]
+  Symbol 'spins          ':  1.38%  [Range: 0.9862 to 1.0000]
+
+Sample Unbroken 20-Spin Target Sequence:
+  accumulation -> goldSack -> coin -> steal -> attack -> coin -> accumulation -> accumulation -> attack -> attack -> attack -> attack -> coin -> coin -> attack -> coin -> coin -> accumulation -> attack -> attack
+
+Resulting SMT Solver (Z3) Constraints (Pseudo-code):
+  Spin 01 (accumulation): PRNG_Output[0] / MAX >= 0.3107 AND PRNG_Output[0] / MAX < 0.5449
+  Spin 02 (goldSack  ): PRNG_Output[1] / MAX >= 0.8570 AND PRNG_Output[1] / MAX < 0.9317
+  Spin 03 (coin      ): PRNG_Output[2] / MAX >= 0.5449 AND PRNG_Output[2] / MAX < 0.7781
+  Spin 04 (steal     ): PRNG_Output[3] / MAX >= 0.7781 AND PRNG_Output[3] / MAX < 0.8570
+  Spin 05 (attack    ): PRNG_Output[4] / MAX >= 0.0000 AND PRNG_Output[4] / MAX < 0.3107
+  Spin 06 (coin      ): PRNG_Output[5] / MAX >= 0.5449 AND PRNG_Output[5] / MAX < 0.7781
+  Spin 07 (accumulation): PRNG_Output[6] / MAX >= 0.3107 AND PRNG_Output[6] / MAX < 0.5449
+  Spin 08 (accumulation): PRNG_Output[7] / MAX >= 0.3107 AND PRNG_Output[7] / MAX < 0.5449
+  Spin 09 (attack    ): PRNG_Output[8] / MAX >= 0.0000 AND PRNG_Output[8] / MAX < 0.3107
+  Spin 10 (attack    ): PRNG_Output[9] / MAX >= 0.0000 AND PRNG_Output[9] / MAX < 0.3107
+  Spin 11 (attack    ): PRNG_Output[10] / MAX >= 0.0000 AND PRNG_Output[10] / MAX < 0.3107
+  Spin 12 (attack    ): PRNG_Output[11] / MAX >= 0.0000 AND PRNG_Output[11] / MAX < 0.3107
+  Spin 13 (coin      ): PRNG_Output[12] / MAX >= 0.5449 AND PRNG_Output[12] / MAX < 0.7781
+  Spin 14 (coin      ): PRNG_Output[13] / MAX >= 0.5449 AND PRNG_Output[13] / MAX < 0.7781
+  Spin 15 (attack    ): PRNG_Output[14] / MAX >= 0.0000 AND PRNG_Output[14] / MAX < 0.3107
+  Spin 16 (coin      ): PRNG_Output[15] / MAX >= 0.5449 AND PRNG_Output[15] / MAX < 0.7781
+  Spin 17 (coin      ): PRNG_Output[16] / MAX >= 0.5449 AND PRNG_Output[16] / MAX < 0.7781
+  Spin 18 (accumulation): PRNG_Output[17] / MAX >= 0.3107 AND PRNG_Output[17] / MAX < 0.5449
+  Spin 19 (attack    ): PRNG_Output[18] / MAX >= 0.0000 AND PRNG_Output[18] / MAX < 0.3107
+  Spin 20 (attack    ): PRNG_Output[19] / MAX >= 0.0000 AND PRNG_Output[19] / MAX < 0.3107
+
+============================================================
+
+--- ACCOUNT: Nick ---
+Total Spins Logged: 3104
+Reel 1 Underlying Probability Distribution:
+  Symbol 'attack         ': 30.51%  [Range: 0.0000 to 0.3051]
+  Symbol 'coin           ': 23.78%  [Range: 0.3051 to 0.5428]
+  Symbol 'accumulation   ': 22.68%  [Range: 0.5428 to 0.7697]
+  Symbol 'steal          ':  8.09%  [Range: 0.7697 to 0.8505]
+  Symbol 'goldSack       ':  7.47%  [Range: 0.8505 to 0.9253]
+  Symbol 'shield         ':  5.54%  [Range: 0.9253 to 0.9807]
+  Symbol 'spins          ':  1.93%  [Range: 0.9807 to 1.0000]
+
+Sample Unbroken 20-Spin Target Sequence:
+  steal -> accumulation -> goldSack -> accumulation -> attack -> attack -> accumulation -> shield -> attack -> goldSack -> accumulation -> steal -> accumulation -> attack -> accumulation -> coin -> attack -> attack -> accumulation -> goldSack
+
+Resulting SMT Solver (Z3) Constraints (Pseudo-code):
+  Spin 01 (steal     ): PRNG_Output[0] / MAX >= 0.7697 AND PRNG_Output[0] / MAX < 0.8505
+  Spin 02 (accumulation): PRNG_Output[1] / MAX >= 0.5428 AND PRNG_Output[1] / MAX < 0.7697
+  Spin 03 (goldSack  ): PRNG_Output[2] / MAX >= 0.8505 AND PRNG_Output[2] / MAX < 0.9253
+  Spin 04 (accumulation): PRNG_Output[3] / MAX >= 0.5428 AND PRNG_Output[3] / MAX < 0.7697
+  Spin 05 (attack    ): PRNG_Output[4] / MAX >= 0.0000 AND PRNG_Output[4] / MAX < 0.3051
+  Spin 06 (attack    ): PRNG_Output[5] / MAX >= 0.0000 AND PRNG_Output[5] / MAX < 0.3051
+  Spin 07 (accumulation): PRNG_Output[6] / MAX >= 0.5428 AND PRNG_Output[6] / MAX < 0.7697
+  Spin 08 (shield    ): PRNG_Output[7] / MAX >= 0.9253 AND PRNG_Output[7] / MAX < 0.9807
+  Spin 09 (attack    ): PRNG_Output[8] / MAX >= 0.0000 AND PRNG_Output[8] / MAX < 0.3051
+  Spin 10 (goldSack  ): PRNG_Output[9] / MAX >= 0.8505 AND PRNG_Output[9] / MAX < 0.9253
+  Spin 11 (accumulation): PRNG_Output[10] / MAX >= 0.5428 AND PRNG_Output[10] / MAX < 0.7697
+  Spin 12 (steal     ): PRNG_Output[11] / MAX >= 0.7697 AND PRNG_Output[11] / MAX < 0.8505
+  Spin 13 (accumulation): PRNG_Output[12] / MAX >= 0.5428 AND PRNG_Output[12] / MAX < 0.7697
+  Spin 14 (attack    ): PRNG_Output[13] / MAX >= 0.0000 AND PRNG_Output[13] / MAX < 0.3051
+  Spin 15 (accumulation): PRNG_Output[14] / MAX >= 0.5428 AND PRNG_Output[14] / MAX < 0.7697
+  Spin 16 (coin      ): PRNG_Output[15] / MAX >= 0.3051 AND PRNG_Output[15] / MAX < 0.5428
+  Spin 17 (attack    ): PRNG_Output[16] / MAX >= 0.0000 AND PRNG_Output[16] / MAX < 0.3051
+  Spin 18 (attack    ): PRNG_Output[17] / MAX >= 0.0000 AND PRNG_Output[17] / MAX < 0.3051
+  Spin 19 (accumulation): PRNG_Output[18] / MAX >= 0.5428 AND PRNG_Output[18] / MAX < 0.7697
+  Spin 20 (goldSack  ): PRNG_Output[19] / MAX >= 0.8505 AND PRNG_Output[19] / MAX < 0.9253
+
+============================================================
+
+--- ACCOUNT: Ahmed ---
+Total Spins Logged: 12928
+Reel 1 Underlying Probability Distribution:
+  Symbol 'attack         ': 30.60%  [Range: 0.0000 to 0.3060]
+  Symbol 'accumulation   ': 23.56%  [Range: 0.3060 to 0.5416]
+  Symbol 'coin           ': 22.88%  [Range: 0.5416 to 0.7704]
+  Symbol 'steal          ':  8.85%  [Range: 0.7704 to 0.8589]
+  Symbol 'goldSack       ':  7.43%  [Range: 0.8589 to 0.9332]
+  Symbol 'shield         ':  5.37%  [Range: 0.9332 to 0.9869]
+  Symbol 'spins          ':  1.31%  [Range: 0.9869 to 1.0000]
+
+Sample Unbroken 20-Spin Target Sequence:
+  coin -> steal -> goldSack -> attack -> shield -> steal -> attack -> goldSack -> coin -> coin -> attack -> coin -> attack -> coin -> attack -> steal -> accumulation -> attack -> coin -> coin
+
+Resulting SMT Solver (Z3) Constraints (Pseudo-code):
+  Spin 01 (coin      ): PRNG_Output[0] / MAX >= 0.5416 AND PRNG_Output[0] / MAX < 0.7704
+  Spin 02 (steal     ): PRNG_Output[1] / MAX >= 0.7704 AND PRNG_Output[1] / MAX < 0.8589
+  Spin 03 (goldSack  ): PRNG_Output[2] / MAX >= 0.8589 AND PRNG_Output[2] / MAX < 0.9332
+  Spin 04 (attack    ): PRNG_Output[3] / MAX >= 0.0000 AND PRNG_Output[3] / MAX < 0.3060
+  Spin 05 (shield    ): PRNG_Output[4] / MAX >= 0.9332 AND PRNG_Output[4] / MAX < 0.9869
+  Spin 06 (steal     ): PRNG_Output[5] / MAX >= 0.7704 AND PRNG_Output[5] / MAX < 0.8589
+  Spin 07 (attack    ): PRNG_Output[6] / MAX >= 0.0000 AND PRNG_Output[6] / MAX < 0.3060
+  Spin 08 (goldSack  ): PRNG_Output[7] / MAX >= 0.8589 AND PRNG_Output[7] / MAX < 0.9332
+  Spin 09 (coin      ): PRNG_Output[8] / MAX >= 0.5416 AND PRNG_Output[8] / MAX < 0.7704
+  Spin 10 (coin      ): PRNG_Output[9] / MAX >= 0.5416 AND PRNG_Output[9] / MAX < 0.7704
+  Spin 11 (attack    ): PRNG_Output[10] / MAX >= 0.0000 AND PRNG_Output[10] / MAX < 0.3060
+  Spin 12 (coin      ): PRNG_Output[11] / MAX >= 0.5416 AND PRNG_Output[11] / MAX < 0.7704
+  Spin 13 (attack    ): PRNG_Output[12] / MAX >= 0.0000 AND PRNG_Output[12] / MAX < 0.3060
+  Spin 14 (coin      ): PRNG_Output[13] / MAX >= 0.5416 AND PRNG_Output[13] / MAX < 0.7704
+  Spin 15 (attack    ): PRNG_Output[14] / MAX >= 0.0000 AND PRNG_Output[14] / MAX < 0.3060
+  Spin 16 (steal     ): PRNG_Output[15] / MAX >= 0.7704 AND PRNG_Output[15] / MAX < 0.8589
+  Spin 17 (accumulation): PRNG_Output[16] / MAX >= 0.3060 AND PRNG_Output[16] / MAX < 0.5416
+  Spin 18 (attack    ): PRNG_Output[17] / MAX >= 0.0000 AND PRNG_Output[17] / MAX < 0.3060
+  Spin 19 (coin      ): PRNG_Output[18] / MAX >= 0.5416 AND PRNG_Output[18] / MAX < 0.7704
+  Spin 20 (coin      ): PRNG_Output[19] / MAX >= 0.5416 AND PRNG_Output[19] / MAX < 0.7704
+
+============================================================
+

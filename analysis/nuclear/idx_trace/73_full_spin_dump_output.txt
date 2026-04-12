@@ -1,0 +1,1134 @@
+  row   spin#  idx(r1,r2,r3)  reel1 reel2 reel3  tri  flags
+==============================================================================================================
+    0       1        (7,3,6)      -     -     -       
+    1   65215        (5,1,0)   coin  coin  coin   3x  (triple: coin)
+    2   65216        (3,3,8)  attac  coin  coin       
+    3   65217        (4,4,1)  accum goldS goldS       
+    4   65218        (1,1,1)   coin steal steal       
+    5   65219        (3,3,8)   coin  coin  coin   3x  (triple: coin)
+    6   65220        (5,8,8)  accum goldS goldS       
+    7   65222        (7,6,4)   coin  coin  coin   3x  (triple: coin)
+    8   65224        (0,0,0)  steal spins goldS       
+    9   65226        (2,2,2)   coin  coin  coin   3x  (triple: coin)
+   10   65227        (0,0,0)  shiel shiel shiel   3x  (triple: shield)
+   11   65228        (7,7,8)  attac attac attac   3x  (triple: attack)
+   12   65230        (3,7,8)  attac  coin shiel       
+   13   65232        (6,6,1)   coin steal spins       
+   14   65233        (3,0,0)   coin spins spins       
+   15   65236        (0,0,0)  attac attac goldS       
+   16   65237        (5,1,0)  attac attac attac   3x  (triple: attack)
+   17   65239        (2,2,2)  steal spins goldS       
+   18   65240        (5,8,8)  shiel shiel shiel   3x  (triple: shield)
+   19   65241        (3,4,0)  accum accum  coin       
+   20   65242        (3,4,0)  attac steal goldS       
+   21   65243        (2,2,2)  attac steal goldS       
+   22   65244        (3,4,0)  shiel shiel shiel   3x  (triple: shield)
+   23   65245        (3,7,8)  attac steal goldS       
+   24   65247        (7,0,0)   coin steal steal       
+   25   65248        (3,3,8)  attac attac goldS       
+   26   65249        (6,6,6)  accum goldS goldS       >>> MAX BET (6,6,6) <<<
+   27   65250        (2,1,0)  spins spins spins   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#1 SPN** (gap=27)
+   28   65251        (5,1,5)  attac  coin shiel       
+   29   65252        (3,3,8)   coin  coin  coin   3x  (triple: coin)
+   30   65253        (4,4,1)  accum goldS goldS       
+   31   65255        (1,8,8)   coin  coin  coin   3x  (triple: coin)
+   32   65256        (7,3,8)  accum accum  coin       
+   33   65257        (3,7,3)  accum goldS goldS       
+   34   65258        (6,1,1)  goldS goldS goldS   3x  (triple: goldSack)
+   35   65259        (3,7,8)   coin  coin spins       
+   36   65263        (7,7,8)   coin shiel shiel       
+   37   65266        (3,3,8)  attac attac goldS       
+   38   65267        (6,1,1)  accum goldS goldS       
+   39   65269        (2,4,1)  attac steal goldS       
+   40   65271        (6,1,5)   coin  coin  coin   3x  (triple: coin)
+   41   65272        (3,3,8)   coin  coin spins       
+   42   65273        (6,4,5)  accum goldS goldS       
+   43   65275        (7,4,0)   coin spins spins       
+   44   65276        (4,4,4)  attac steal goldS       
+   45   65277        (5,1,5)  steal steal steal   3x  (triple: steal)
+   46   65278        (5,1,5)   coin  coin  coin   3x  (triple: coin)
+   47   65279        (6,4,1)   coin  coin  coin   3x  (triple: coin)
+   48   65281        (5,8,8)   coin spins spins       
+   49   65282        (3,7,8)  accum accum  coin       
+   50   65286        (4,4,4)   coin steal spins       
+   51   65287        (6,5,5)  steal steal steal   3x  (triple: steal)
+   52   65288        (7,7,8)   coin  coin spins       
+   53   65291        (8,8,8)   coin steal steal       >>> MAX BET (8,8,8) <<<
+                                                      --- gap 2: 26 spins ---
+   54   65292        (3,7,8)  accum accum accum   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#2 ACC** (gap=26)
+   55   65293        (3,7,7)  accum goldS goldS       
+   56   65295        (3,4,0)  shiel goldS goldS       
+   57   65296        (2,2,2)  attac steal goldS       
+   58   65297        (7,3,8)  shiel shiel shiel   3x  (triple: shield)
+   59   65298        (3,3,8)  accum goldS goldS       
+   60   65299        (0,0,0)  accum goldS goldS       
+   61   65300        (0,0,0)  attac attac attac   3x  (triple: attack)
+   62   65301        (5,8,8)  attac attac attac   3x  (triple: attack)
+   63   65302        (2,2,2)  accum accum  coin       
+   64   65303        (7,3,7)  shiel shiel shiel   3x  (triple: shield)
+   65   65306        (3,6,0)  attac attac goldS       
+   66   65307        (3,7,3)  attac spins goldS       
+   67   65309        (0,0,0)   coin spins spins       
+   68   65312        (7,7,8)  attac steal goldS       
+   69   65313        (4,4,4)  accum goldS goldS       
+   70   65314        (0,0,0)  steal steal steal   3x  (triple: steal)
+   71   65315        (7,7,3)  attac attac attac   3x  (triple: attack)
+   72   65316        (6,1,1)  goldS goldS goldS   3x  (triple: goldSack)
+   73   65317        (0,0,0)   coin  coin spins       
+   74   65318        (1,5,1)  attac attac attac   3x  (triple: attack)
+   75   65320        (6,5,5)   coin  coin spins       
+   76   65321        (0,0,0)   coin  coin spins       
+   77   65322        (0,0,0)  attac attac attac   3x  (triple: attack)
+   78   65323        (7,0,0)  attac attac attac   3x  (triple: attack)
+   79   65324        (6,4,1)  attac attac goldS       
+   80   65328        (7,4,0)   coin  coin spins       
+   81   65329        (3,7,8)  attac steal goldS       
+   82   65330        (5,8,8)  accum goldS goldS       
+   83   65332        (0,8,8)  attac steal goldS       
+   84   65333        (3,4,0)  accum accum attac       
+   85   65335        (7,7,8)   coin steal shiel       
+   86   65336        (6,5,5)  accum goldS goldS       
+   87   65341        (3,3,7)  attac steal goldS       
+   88   65344        (0,0,0)  attac steal goldS       
+   89   65346        (7,3,3)   coin  coin  coin   3x  (triple: coin)
+   90   65347        (3,0,0)  goldS goldS goldS   3x  (triple: goldSack)
+   91   65348        (3,4,0)  attac attac goldS       
+   92   65349        (8,8,8)  attac steal goldS       >>> MAX BET (8,8,8) <<<
+   93   65351        (3,3,8)   coin spins spins       <-- NEXT SPIN AFTER SIGNAL
+   94   65352        (7,0,0)  accum goldS goldS       
+   95   65356        (4,4,4)  attac attac goldS       
+   96   65357        (7,7,8)  steal steal steal   3x  (triple: steal)
+   97   65360        (0,0,0)  attac steal goldS       
+   98   65361        (0,0,0)  attac attac attac   3x  (triple: attack)
+   99   65362        (3,7,8)  attac attac attac   3x  (triple: attack)
+  100   65363        (3,3,8)  accum goldS goldS       
+  101   65364        (5,8,8)  accum goldS goldS       
+  102   65365        (3,3,8)  accum accum  coin       
+  103   65366        (1,1,1)  accum goldS goldS       
+  104   65367        (3,4,0)   coin  coin  coin   3x  (triple: coin)
+  105   65368        (7,4,0)  attac steal goldS       
+  106   65369        (7,6,0)  attac steal goldS       
+  107   65371        (3,4,0)   coin steal steal       
+  108   65373        (3,4,0)  attac  coin shiel       
+  109   65374        (7,7,8)  attac steal goldS       
+  110   65375        (7,7,8)  accum goldS goldS       
+  111   65376        (6,4,1)  accum goldS goldS       
+  112   65377        (3,0,0)   coin steal spins       
+  113   65379        (2,2,2)   coin  coin spins       
+  114   65380        (7,4,0)  shiel shiel shiel   3x  (triple: shield)
+  115   65382        (3,3,8)  attac  coin  coin       
+  116   65383        (7,3,8)  accum goldS goldS       
+  117   65384        (5,5,1)  accum goldS goldS       
+  118   65386        (6,1,1)   coin spins spins       
+  119   65388        (0,0,0)   coin  coin  coin   3x  (triple: coin)
+  120   65389        (2,2,2)  attac attac attac   3x  (triple: attack)
+  121   65391        (4,4,4)  attac  coin  coin       
+  122   65392        (6,5,1)  steal steal steal   3x  (triple: steal)
+  123   65393        (7,7,8)   coin  coin spins       
+  124   65394        (3,3,8)  accum goldS goldS       
+  125   65395        (0,0,0)  accum goldS goldS       
+  126   65397        (2,2,2)   coin steal spins       
+  127   65399        (6,4,5)   coin steal spins       
+  128   65400        (6,5,1)   coin steal spins       
+  129   65401        (7,7,8)   coin  coin spins       
+  130   65404        (2,2,5)  shiel goldS goldS       
+  131   65405        (4,4,1)   coin shiel shiel       
+  132   65406        (1,8,8)   coin steal steal       
+  133   65409        (5,8,8)  goldS goldS goldS   3x  (triple: goldSack)
+  134   65411        (0,0,0)  goldS goldS goldS   3x  (triple: goldSack)
+  135   65414        (1,8,8)   coin  coin  coin   3x  (triple: coin)
+  136   65415        (4,4,1)  accum accum  coin       
+  137   65417        (3,4,0)  goldS goldS goldS   3x  (triple: goldSack)
+  138   65418        (2,2,2)  attac steal goldS       
+  139   65419        (7,3,8)  shiel shiel shiel   3x  (triple: shield)
+  140   65421        (3,7,8)  attac  coin shiel       
+  141   65422        (3,3,3)  accum goldS goldS       
+  142   65423        (3,7,8)  goldS goldS goldS   3x  (triple: goldSack)
+  143   65424        (3,3,7)  accum goldS goldS       
+  144   65427        (4,4,4)  goldS goldS goldS   3x  (triple: goldSack)
+  145   65430        (6,4,5)  attac steal goldS       
+  146   65432        (6,6,6)  attac attac goldS       >>> MAX BET (6,6,6) <<<
+                                                      --- gap 3: 92 spins ---
+  147   65433        (3,3,8)  spins spins spins   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#3 SPN** (gap=92)
+  148   65434        (5,8,8)  accum goldS goldS       
+  149   65435        (5,8,8)  accum accum  coin       
+  150   65436        (0,0,0)  accum accum  coin       
+  151   65438        (5,5,5)  attac  coin shiel       
+  152   65439        (3,3,8)   coin  coin  coin   3x  (triple: coin)
+  153   65440        (3,4,0)  accum goldS goldS       
+  154   65442        (4,1,5)  attac spins goldS       
+  155   65444        (4,4,5)   coin spins spins       
+  156   65445        (4,4,5)   coin steal steal       
+  157   65446        (1,0,0)   coin steal steal       
+  158   65448        (7,6,4)   coin  coin  coin   3x  (triple: coin)
+  159   65449        (3,6,0)  steal spins goldS       
+  160   65450        (7,3,7)  attac spins goldS       
+  161   65452        (3,7,8)  goldS goldS goldS   3x  (triple: goldSack)
+  162   65453        (0,0,0)  accum goldS goldS       
+  163   65455        (0,0,0)  attac spins goldS       
+  164   65456        (3,7,8)  attac attac attac   3x  (triple: attack)
+  165   65457        (5,8,8)  accum goldS goldS       
+  166   65459        (3,6,0)  goldS goldS goldS   3x  (triple: goldSack)
+  167   65461        (7,3,8)   coin  coin  coin   3x  (triple: coin)
+  168   65462        (2,2,2)  accum goldS goldS       
+  169   65463        (2,2,2)  shiel shiel shiel   3x  (triple: shield)
+  170   65464        (7,6,0)  shiel shiel shiel   3x  (triple: shield)
+  171   65465        (2,1,0)  attac spins goldS       
+  172   65466        (3,6,0)  attac  coin shiel       
+  173   65468        (7,4,0)  goldS goldS goldS   3x  (triple: goldSack)
+  174   65469        (4,5,1)  attac steal goldS       
+  175   65471        (3,3,8)  attac attac  coin       
+  176   65472        (3,7,8)  accum goldS goldS       
+  177   65474        (4,1,5)  attac spins goldS       
+  178   65475        (7,3,8)   coin  coin steal       
+  179   65476        (6,6,1)  accum goldS goldS       
+  180   65477        (0,0,0)   coin spins spins       
+  181   65478        (0,0,0)  attac attac attac   3x  (triple: attack)
+  182   65479        (4,1,5)  attac attac attac   3x  (triple: attack)
+  183   65480        (3,3,8)   coin  coin steal       
+  184   65481        (4,5,5)  accum goldS goldS       
+  185   65483        (7,6,0)  attac  coin shiel       
+  186   65485        (2,2,2)   coin steal steal       
+  187   65487        (4,4,4)  attac attac  coin       
+  188   65490        (3,6,4)  goldS goldS goldS   3x  (triple: goldSack)
+  189   65491        (7,4,0)  steal spins goldS       
+  190   65492        (7,7,8)  attac steal goldS       
+  191   65493        (4,1,1)  accum goldS goldS       
+  192   65494        (7,6,4)   coin  coin steal       
+  193   65495        (2,5,0)  steal spins goldS       
+  194   65496        (1,8,8)  attac  coin shiel       
+  195   65497        (3,7,8)  accum accum  coin       
+  196   65499        (6,6,6)   coin  coin  coin   3x  >>> MAX BET (6,6,6) <<<  (triple: coin)
+                                                      --- gap 4: 49 spins ---
+  197   65500        (8,8,8)  spins spins spins   3x  >>> MAX BET (8,8,8) <<<  <-- NEXT SPIN AFTER SIGNAL  **VT#4 SPN** (gap=49)
+                                                      --- gap 5: 0 spins ---
+  198   65501        (7,3,8)  accum accum accum   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#5 ACC** (gap=0)
+  199   65502        (3,3,8)  accum goldS goldS       
+  200   65504        (1,8,8)  attac spins goldS       
+  201   65505        (0,0,0)  accum accum  coin       
+  202   65506        (4,4,4)  attac attac attac   3x  (triple: attack)
+  203   65509        (1,5,1)  goldS goldS goldS   3x  (triple: goldSack)
+  204   65510        (2,2,5)   coin  coin  coin   3x  (triple: coin)
+  205   65511        (7,0,0)   coin shiel shiel       
+  206   65512        (2,2,2)  attac attac goldS       
+  207   65514        (3,7,8)  goldS goldS goldS   3x  (triple: goldSack)
+  208   65517        (5,8,8)  goldS goldS goldS   3x  (triple: goldSack)
+  209   65520        (0,8,8)   coin  coin steal       
+  210   65521        (4,4,4)  accum accum attac       
+  211   65522        (5,8,8)  steal steal steal   3x  (triple: steal)
+  212   65523        (7,7,8)  accum accum  coin       
+  213   65525        (0,0,0)   coin  coin  coin   3x  (triple: coin)
+  214   65527        (7,6,0)  attac spins goldS       
+  215   65528        (3,6,4)  attac spins goldS       
+  216   65529        (0,0,0)  steal spins goldS       
+  217   65532        (3,7,8)   coin  coin steal       
+  218   65533        (6,6,1)  accum goldS goldS       
+  219   65534        (3,7,8)   coin spins spins       
+  220   65536        (4,4,1)  attac  coin shiel       
+  221   65538        (7,7,2)  attac attac  coin       
+  222   65539        (6,6,6)  shiel goldS goldS       >>> MAX BET (6,6,6) <<<
+  223   65541        (0,0,0)  goldS goldS goldS   3x  <-- NEXT SPIN AFTER SIGNAL  (triple: goldSack)
+  224   65545        (3,3,8)  attac attac goldS       
+  225   65546        (2,1,0)  accum goldS goldS       
+  226   65547        (8,8,8)  attac  coin shiel       >>> MAX BET (8,8,8) <<<
+  227   65549        (3,7,8)   coin  coin steal       <-- NEXT SPIN AFTER SIGNAL
+  228   65550        (4,1,5)  accum goldS goldS       
+  229   65551        (0,0,0)   coin  coin steal       
+  230   65552        (2,5,0)  attac attac attac   3x  (triple: attack)
+  231   65555        (3,4,4)   coin  coin  coin   3x  (triple: coin)
+  232   65556        (3,3,8)  steal steal goldS       
+  233   65557        (2,5,0)  accum goldS goldS       
+  234   65558        (7,4,4)  attac  coin shiel       
+  235   65559        (7,3,8)  steal steal goldS       
+  236   65561        (2,2,2)  attac spins goldS       
+  237   65562        (2,2,2)  shiel shiel shiel   3x  (triple: shield)
+  238   65563        (4,5,1)  shiel shiel shiel   3x  (triple: shield)
+  239   65565        (7,7,8)  spins spins goldS       
+  240   65567        (7,6,6)  attac  coin shiel       
+  241   65569        (3,3,8)   coin  coin  coin   3x  (triple: coin)
+  242   65571        (2,5,0)   coin steal spins       
+  243   65572        (7,7,8)  attac  coin shiel       
+  244   65573        (3,8,8)  accum goldS goldS       
+  245   65574        (2,1,0)  accum accum goldS       
+  246   65575        (3,8,8)  attac  coin shiel       
+  247   65576        (7,7,7)  accum accum goldS       
+  248   65577        (3,6,0)  goldS goldS goldS   3x  (triple: goldSack)
+  249   65579        (7,7,8)  goldS goldS goldS   3x  (triple: goldSack)
+  250   65580        (7,6,0)  accum goldS goldS       
+  251   65581        (0,0,0)  attac spins goldS       
+  252   65582        (3,7,8)  attac attac attac   3x  (triple: attack)
+  253   65583        (3,8,8)  accum goldS goldS       
+  254   65584        (2,2,2)  accum accum goldS       
+  255   65585        (4,4,4)  shiel shiel shiel   3x  (triple: shield)
+  256   65586        (0,0,0)  steal steal steal   3x  (triple: steal)
+  257   65588        (4,5,5)   coin steal spins       
+  258   65590        (2,2,2)  goldS goldS goldS   3x  (triple: goldSack)
+  259   65591        (7,7,8)  shiel shiel shiel   3x  (triple: shield)
+  260   65592        (6,5,0)  accum goldS goldS       
+  261   65593        (6,4,1)  attac  coin spins       
+  262   65595        (7,8,8)   coin steal spins       
+  263   65597        (7,3,8)  goldS goldS goldS   3x  (triple: goldSack)
+  264   65600        (3,8,8)   coin  coin  coin   3x  (triple: coin)
+  265   65602        (3,4,4)   coin steal spins       
+  266   65604        (4,1,1)  goldS goldS goldS   3x  (triple: goldSack)
+  267   65605        (7,7,7)   coin  coin steal       
+  268   65606        (6,4,1)  goldS goldS goldS   3x  (triple: goldSack)
+  269   65607        (6,1,0)   coin steal spins       
+  270   65608        (4,4,4)  attac  coin spins       
+  271   65610        (4,5,5)  attac attac goldS       
+  272   65611        (0,8,8)   coin  coin steal       
+  273   65613        (7,0,0)   coin  coin steal       
+  274   65615        (7,3,8)  attac spins goldS       
+  275   65616        (4,4,4)  accum goldS goldS       
+  276   65617        (0,0,0)  steal steal steal   3x  (triple: steal)
+  277   65618        (3,3,8)  attac attac attac   3x  (triple: attack)
+  278   65619        (2,5,0)  accum goldS goldS       
+  279   65620        (3,7,8)  attac  coin shiel       
+  280   65623        (4,1,1)   coin  coin  coin   3x  (triple: coin)
+  281   65625        (1,5,1)   coin  coin steal       
+  282   65627        (0,0,0)  spins spins goldS       
+  283   65630        (2,1,0)  attac attac goldS       
+  284   65631        (0,0,0)  attac  coin shiel       
+  285   65634        (1,1,1)   coin  coin steal       
+  286   65635        (7,7,8)   coin  coin  coin   3x  (triple: coin)
+  287   65637        (3,0,0)  attac  coin spins       
+  288   65638        (7,3,8)  attac attac goldS       
+  289   65640        (2,1,0)   coin shiel shiel       
+  290   65641        (3,3,7)  attac  coin shiel       
+  291   65642        (4,4,4)  goldS goldS goldS   3x  (triple: goldSack)
+  292   65643        (1,1,5)  steal steal steal   3x  (triple: steal)
+  293   65644        (7,6,0)   coin  coin  coin   3x  (triple: coin)
+  294   65645        (0,0,0)  attac spins goldS       
+  295   65647        (6,6,5)   coin steal spins       
+  296   65648        (6,4,5)   coin spins spins       
+  297   65649        (4,4,1)   coin steal spins       
+  298   65651        (5,1,1)   coin  coin steal       
+  299   65652        (7,7,8)   coin  coin  coin   3x  (triple: coin)
+  300   65653        (5,8,8)  accum goldS goldS       
+  301   65654        (7,4,0)  accum accum  coin       
+  302   65655        (4,5,5)  attac steal goldS       
+  303   65656        (3,7,8)   coin  coin steal       
+  304   65657        (3,7,8)  accum goldS goldS       
+  305   65659        (0,0,0)  attac spins goldS       
+  306   65662        (1,8,8)   coin spins spins       
+  307   65663        (2,2,2)  accum accum  coin       
+  308   65664        (2,2,2)  shiel shiel shiel   3x  (triple: shield)
+  309   65666        (2,2,2)  attac  coin shiel       
+  310   65667        (0,0,0)  shiel shiel shiel   3x  (triple: shield)
+  311   65668        (3,7,3)  attac attac attac   3x  (triple: attack)
+  312   65670        (4,1,1)  attac  coin shiel       
+  313   65671        (0,8,8)   coin  coin steal       
+  314   65674        (4,4,5)  attac steal goldS       
+  315   65675        (0,0,0)   coin steal steal       
+  316   65680        (3,7,8)  attac spins goldS       
+  317   65681        (4,5,1)  accum goldS goldS       
+  318   65682        (0,0,0)   coin  coin steal       
+  319   65684        (3,6,0)  attac spins goldS       
+  320   65685        (5,8,8)  attac spins goldS       
+  321   65688        (6,6,6)  attac attac goldS       >>> MAX BET (6,6,6) <<<
+                                                      --- gap 6: 123 spins ---
+  322   65689        (3,3,8)  spins spins spins   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#6 SPN** (gap=123)
+  323   65690        (3,3,8)  accum goldS goldS       
+  324   65691        (4,4,4)  accum goldS goldS       
+  325   65692        (3,3,8)  steal steal steal   3x  (triple: steal)
+  326   65693        (7,6,0)  accum goldS goldS       
+  327   65694        (1,5,5)  attac spins goldS       
+  328   65695        (3,4,0)   coin  coin  coin   3x  (triple: coin)
+  329   65696        (4,1,5)  attac steal goldS       
+  330   65697        (4,4,4)   coin  coin steal       
+  331   65698        (2,2,2)  steal steal steal   3x  (triple: steal)
+  332   65699        (7,7,8)  shiel shiel shiel   3x  (triple: shield)
+  333   65701        (3,0,0)   coin spins spins       
+  334   65703        (1,1,1)   coin steal spins       
+  335   65704        (2,2,2)   coin  coin  coin   3x  (triple: coin)
+  336   65705        (4,4,1)  shiel shiel shiel   3x  (triple: shield)
+  337   65707        (4,1,1)   coin  coin steal       
+  338   65711        (0,0,0)  attac spins goldS       
+  339   65712        (3,7,8)  attac attac attac   3x  (triple: attack)
+  340   65713        (3,3,3)  accum goldS goldS       
+  341   65714        (3,3,8)  goldS goldS goldS   3x  (triple: goldSack)
+  342   65715        (1,1,5)  accum goldS goldS       
+  343   65717        (3,7,8)   coin  coin  coin   3x  (triple: coin)
+  344   65720        (0,0,0)   coin  coin steal       
+  345   65722        (3,3,8)   coin  coin  coin   3x  (triple: coin)
+  346   65723        (1,8,8)  accum goldS goldS       
+  347   65724        (3,3,3)  accum accum  coin       
+  348   65725        (3,3,8)  goldS goldS goldS   3x  (triple: goldSack)
+  349   65726        (7,0,0)  accum goldS goldS       
+  350   65727        (7,6,0)  attac attac goldS       
+  351   65731        (3,7,8)   coin steal steal       
+  352   65732        (3,0,0)  accum goldS goldS       
+  353   65733        (5,8,8)  attac attac goldS       
+  354   65736        (7,7,8)  attac attac goldS       
+  355   65737        (7,3,8)  accum goldS goldS       
+  356   65738        (8,8,8)  accum goldS goldS       >>> MAX BET (8,8,8) <<<
+  357   65741        (1,1,1)  attac attac goldS       <-- NEXT SPIN AFTER SIGNAL
+  358   65744        (7,4,0)   coin  coin spins       
+  359   65745        (7,3,7)  attac steal goldS       
+  360   65746        (7,3,8)  goldS goldS goldS   3x  (triple: goldSack)
+  361   65747        (3,7,8)  accum goldS goldS       
+  362   65748        (7,4,0)  accum goldS goldS       
+  363   65750        (6,4,5)   coin spins spins       
+  364   65751        (6,5,5)   coin steal spins       
+  365   65753        (4,4,5)   coin steal steal       
+  366   65755        (2,2,2)   coin  coin  coin   3x  (triple: coin)
+  367   65756        (0,8,8)  shiel shiel shiel   3x  (triple: shield)
+  368   65757        (0,0,0)  accum accum attac       
+  369   65758        (3,7,8)  attac attac attac   3x  (triple: attack)
+  370   65759        (4,4,4)  accum goldS goldS       
+  371   65762        (0,0,0)  attac steal goldS       
+  372   65763        (6,5,5)  attac attac attac   3x  (triple: attack)
+  373   65764        (7,7,8)   coin  coin spins       
+  374   65767        (3,3,8)   coin  coin spins       
+  375   65768        (6,4,1)  accum goldS goldS       
+  376   65769        (6,4,1)   coin steal spins       
+  377   65770        (7,7,3)   coin steal spins       
+  378   65771        (0,0,0)  goldS goldS goldS   3x  (triple: goldSack)
+  379   65773        (3,7,3)   coin shiel shiel       
+  380   65774        (3,0,0)  goldS goldS goldS   3x  (triple: goldSack)
+  381   65776        (4,4,4)  attac steal goldS       
+  382   65777        (3,4,0)  steal steal steal   3x  (triple: steal)
+  383   65778        (7,2,0)  attac steal goldS       
+  384   65779        (3,0,0)  attac shiel goldS       
+  385   65783        (1,5,5)  attac shiel goldS       
+  386   65784        (1,1,5)   coin  coin  coin   3x  (triple: coin)
+  387   65785        (2,2,2)   coin  coin  coin   3x  (triple: coin)
+  388   65786        (3,3,8)  shiel shiel shiel   3x  (triple: shield)
+  389   65787        (2,5,0)  accum goldS goldS       
+  390   65789        (1,8,8)  attac steal goldS       
+  391   65790        (7,7,8)  accum accum  coin       
+  392   65791        (1,1,5)  accum goldS goldS       
+  393   65792        (4,4,4)   coin  coin  coin   3x  (triple: coin)
+  394   65793        (6,1,1)  steal steal steal   3x  (triple: steal)
+  395   65794        (0,0,0)   coin  coin spins       
+  396   65795        (6,4,1)  attac attac attac   3x  (triple: attack)
+  397   65797        (3,4,0)   coin  coin spins       
+  398   65799        (8,8,8)   coin  coin  coin   3x  >>> MAX BET (8,8,8) <<<  (triple: coin)
+                                                      --- gap 7: 76 spins ---
+  399   65800        (5,8,8)  accum accum accum   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#7 ACC** (gap=76)
+  400   65801        (1,1,1)  accum accum  coin       
+  401   65802        (2,1,0)   coin  coin  coin   3x  (triple: coin)
+  402   65803        (6,6,6)  attac  coin shiel       >>> MAX BET (6,6,6) <<<
+  403   65805        (6,6,5)   coin  coin spins       <-- NEXT SPIN AFTER SIGNAL
+  404   65806        (6,5,1)   coin spins spins       
+  405   65807        (3,3,7)   coin  coin spins       
+  406   65810        (0,0,0)  shiel goldS goldS       
+  407   65811        (7,4,0)  attac attac attac   3x  (triple: attack)
+  408   65812        (7,0,0)  attac steal goldS       
+  409   65813        (7,7,3)  attac attac goldS       
+  410   65814        (3,7,8)  goldS goldS goldS   3x  (triple: goldSack)
+  411   65815        (3,7,8)  accum goldS goldS       
+  412   65816        (7,7,8)  accum goldS goldS       
+  413   65817        (3,3,8)  accum goldS goldS       
+  414   65818        (1,8,8)  accum goldS goldS       
+  415   65819        (0,0,0)  accum accum  coin       
+  416   65820        (2,1,0)  attac attac attac   3x  (triple: attack)
+  417   65822        (3,3,8)  attac steal goldS       
+  418   65823        (1,8,8)  accum goldS goldS       
+  419   65825        (0,0,0)  goldS goldS goldS   3x  (triple: goldSack)
+  420   65826        (2,2,2)  attac attac attac   3x  (triple: attack)
+  421   65827        (5,8,8)  shiel shiel shiel   3x  (triple: shield)
+  422   65828        (7,7,8)  accum accum  coin       
+  423   65829        (7,7,8)  accum goldS goldS       
+  424   65832        (2,2,2)   coin steal spins       
+  425   65835        (3,7,7)   coin steal spins       
+  426   65836        (3,0,0)  goldS goldS goldS   3x  (triple: goldSack)
+  427   65837        (3,3,8)  attac attac goldS       
+  428   65838        (7,3,8)  accum goldS goldS       
+  429   65839        (3,7,8)  accum goldS goldS       
+  430   65840        (4,4,4)  accum goldS goldS       
+  431   65842        (0,0,0)  attac  coin shiel       
+  432   65844        (3,6,0)  attac spins goldS       
+  433   65845        (5,8,8)  attac spins goldS       
+  434   65846        (7,6,0)  accum accum  coin       
+  435   65849        (7,3,8)  attac spins goldS       
+  436   65850        (2,2,2)  accum goldS goldS       
+  437   65851        (3,7,3)  shiel shiel shiel   3x  (triple: shield)
+  438   65852        (8,8,8)  goldS goldS goldS   3x  >>> MAX BET (8,8,8) <<<  (triple: goldSack)
+                                                      --- gap 8: 39 spins ---
+  439   65853        (7,3,8)  accum accum accum   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#8 ACC** (gap=39)
+  440   65854        (2,2,2)  accum goldS goldS       
+  441   65856        (3,6,0)  attac steal goldS       
+  442   65857        (7,3,7)  attac spins goldS       
+  443   65859        (4,1,5)  goldS goldS goldS   3x  (triple: goldSack)
+  444   65860        (3,7,8)   coin  coin steal       
+  445   65863        (7,3,8)   coin  coin  coin   3x  (triple: coin)
+  446   65864        (6,6,6)  accum goldS goldS       >>> MAX BET (6,6,6) <<<
+                                                      --- gap 9: 7 spins ---
+  447   65865        (3,7,8)  spins spins spins   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#9 SPN** (gap=7)
+  448   65866        (3,3,8)  accum goldS goldS       
+  449   65869        (1,8,8)   coin  coin steal       
+  450   65871        (7,3,8)   coin  coin steal       
+  451   65873        (1,0,0)  attac spins goldS       
+  452   65874        (4,4,4)  attac attac  coin       
+  453   65875        (7,7,8)  steal steal steal   3x  (triple: steal)
+  454   65878        (4,1,1)  attac spins goldS       
+  455   65879        (7,3,8)   coin  coin steal       
+  456   65883        (2,2,2)  attac attac goldS       
+  457   65885        (7,6,0)  attac spins goldS       
+  458   65886        (3,6,0)  attac spins goldS       
+  459   65887        (1,8,8)  attac spins goldS       
+  460   65889        (1,0,0)  attac  coin shiel       
+  461   65890        (3,7,7)  attac attac  coin       
+  462   65891        (7,7,8)  goldS goldS goldS   3x  (triple: goldSack)
+  463   65893        (1,0,0)   coin spins spins       
+  464   65894        (0,0,0)  attac attac  coin       
+  465   65895        (5,8,8)  attac attac attac   3x  (triple: attack)
+  466   65896        (4,1,1)  accum accum  coin       
+  467   65897        (3,7,2)   coin  coin steal       
+  468   65898        (5,8,8)  shiel goldS goldS       
+  469   65899        (3,3,8)  accum accum  coin       
+  470   65900        (0,0,0)  accum goldS goldS       
+  471   65901        (1,1,1)  attac attac attac   3x  (triple: attack)
+  472   65902        (0,0,0)   coin  coin  coin   3x  (triple: coin)
+  473   65903        (4,4,1)  attac attac attac   3x  (triple: attack)
+  474   65907        (5,1,1)   coin  coin  coin   3x  (triple: coin)
+  475   65909        (3,7,8)   coin steal steal       
+  476   65912        (6,6,1)  attac  coin shiel       
+  477   65915        (7,6,4)   coin  coin steal       
+  478   65918        (0,0,0)   coin spins spins       
+  479   65920        (7,7,8)  steal spins goldS       
+  480   65923        (7,6,4)  attac steal goldS       
+  481   65924        (0,0,0)  steal spins goldS       
+  482   65925        (0,0,0)  attac attac attac   3x  (triple: attack)
+  483   65927        (2,2,2)   coin steal steal       
+  484   65928        (1,8,8)  shiel shiel shiel   3x  (triple: shield)
+  485   65930        (3,6,0)  goldS goldS goldS   3x  (triple: goldSack)
+  486   65931        (4,5,1)  attac spins goldS       
+  487   65933        (7,3,8)   coin  coin  coin   3x  (triple: coin)
+  488   65934        (3,7,8)  accum goldS goldS       
+  489   65937        (1,1,5)   coin  coin steal       
+  490   65938        (4,4,4)   coin  coin  coin   3x  (triple: coin)
+  491   65939        (3,0,0)  steal steal steal   3x  (triple: steal)
+  492   65941        (1,1,1)  attac  coin shiel       
+  493   65942        (1,1,5)   coin  coin  coin   3x  (triple: coin)
+  494   65943        (3,7,3)   coin  coin  coin   3x  (triple: coin)
+  495   65944        (1,5,1)  goldS goldS goldS   3x  (triple: goldSack)
+  496   65946        (2,2,5)  attac  coin shiel       
+  497   65947        (7,7,8)   coin shiel shiel       
+  498   65948        (4,5,5)  accum goldS goldS       
+  499   65949        (7,6,4)   coin  coin steal       
+  500   65951        (4,4,4)  shiel goldS goldS       
+  501   65952        (4,1,5)  steal steal steal   3x  (triple: steal)
+  502   65953        (2,2,2)   coin  coin steal       
+  503   65954        (8,8,8)  shiel shiel shiel   3x  >>> MAX BET (8,8,8) <<<  (triple: shield)
+  504   65956        (7,7,8)  attac  coin shiel       <-- NEXT SPIN AFTER SIGNAL
+  505   65960        (6,6,6)  steal spins goldS       >>> MAX BET (6,6,6) <<<
+                                                      --- gap 10: 58 spins ---
+  506   65961        (2,5,0)  spins spins spins   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#10 SPN** (gap=58)
+  507   65962        (3,6,0)  attac  coin shiel       
+  508   65964        (0,8,8)  goldS goldS goldS   3x  (triple: goldSack)
+  509   65966        (7,7,8)   coin steal steal       
+  510   65967        (0,0,0)  accum goldS goldS       
+  511   65968        (7,3,8)  attac attac attac   3x  (triple: attack)
+  512   65969        (3,7,3)  accum goldS goldS       
+  513   65970        (3,6,0)  goldS goldS goldS   3x  (triple: goldSack)
+  514   65971        (7,6,4)  attac spins goldS       
+  515   65972        (4,5,0)  steal spins goldS       
+  516   65974        (3,3,8)  goldS goldS goldS   3x  (triple: goldSack)
+  517   65977        (5,8,8)   coin steal spins       
+  518   65978        (3,3,8)  accum accum  coin       
+  519   65979        (3,3,8)  accum goldS goldS       
+  520   65980        (7,7,8)  accum goldS goldS       
+  521   65981        (4,1,1)  accum goldS goldS       
+  522   65983        (3,6,0)  attac  coin shiel       
+  523   65984        (1,8,8)  attac spins goldS       
+  524   65986        (3,7,8)  goldS goldS goldS   3x  (triple: goldSack)
+  525   65988        (3,7,8)   coin spins spins       
+  526   65990        (4,4,1)   coin  coin  coin   3x  (triple: coin)
+  527   65995        (4,4,4)  attac  coin shiel       
+  528   65996        (3,6,0)  steal steal steal   3x  (triple: steal)
+  529   65997        (2,2,2)  attac spins goldS       
+  530   65998        (1,1,1)  shiel shiel shiel   3x  (triple: shield)
+  531   65999        (5,8,8)   coin  coin  coin   3x  (triple: coin)
+  532   66000        (2,2,2)  accum accum  coin       
+  533   66002        (2,1,0)  attac spins goldS       
+  534   66003        (0,0,0)  attac  coin shiel       
+  535   66008        (2,2,2)  attac spins goldS       
+  536   66010        (3,7,8)   coin  coin steal       
+  537   66011        (0,0,0)  accum goldS goldS       
+  538   66012        (2,1,0)  attac attac attac   3x  (triple: attack)
+  539   66013        (3,7,8)  attac  coin shiel       
+  540   66014        (0,0,0)  accum goldS goldS       
+  541   66019        (3,7,8)  attac attac goldS       
+  542   66021        (0,0,0)  attac attac goldS       
+  543   66022        (3,7,8)  attac attac attac   3x  (triple: attack)
+  544   66023        (7,7,8)  accum goldS goldS       
+  545   66024        (4,1,1)  accum goldS goldS       
+  546   66025        (1,8,8)   coin  coin steal       
+  547   66026        (3,6,0)  accum accum  coin       
+  548   66028        (7,3,8)   coin  coin  coin   3x  (triple: coin)
+  549   66029        (4,4,4)  accum goldS goldS       
+  550   66030        (4,1,5)  steal steal steal   3x  (triple: steal)
+  551   66031        (7,6,0)   coin  coin steal       
+  552   66032        (6,6,1)  attac spins goldS       
+  553   66033        (3,7,3)   coin spins spins       
+  554   66034        (7,6,4)  goldS goldS goldS   3x  (triple: goldSack)
+  555   66035        (0,0,0)  steal spins goldS       
+  556   66038        (5,8,8)   coin  coin  coin   3x  (triple: coin)
+  557   66039        (2,2,2)  accum accum  coin       
+  558   66040        (7,2,0)  shiel shiel shiel   3x  (triple: shield)
+  559   66042        (6,4,1)  goldS goldS goldS   3x  (triple: goldSack)
+  560   66044        (0,8,8)   coin  coin steal       
+  561   66045        (6,6,1)  accum accum attac       
+  562   66046        (1,8,8)   coin spins spins       
+  563   66047        (7,3,3)  accum accum  coin       
+  564   66049        (3,7,8)   coin  coin  coin   3x  (triple: coin)
+  565   66050        (7,0,0)  accum goldS goldS       
+  566   66051        (6,6,5)  attac attac goldS       
+  567   66053        (7,3,8)  attac  coin  coin       
+  568   66055        (3,6,0)   coin  coin  coin   3x  (triple: coin)
+  569   66057        (0,0,0)   coin  coin steal       
+  570   66059        (3,7,8)  goldS goldS goldS   3x  (triple: goldSack)
+  571   66060        (3,3,8)  accum goldS goldS       
+  572   66061        (3,2,0)  accum goldS goldS       
+  573   66062        (5,8,8)  attac shiel goldS       
+  574   66063        (1,5,5)  accum accum  coin       
+  575   66065        (7,6,0)  goldS goldS goldS   3x  (triple: goldSack)
+  576   66066        (7,3,8)  attac spins goldS       
+  577   66067        (0,0,0)  accum goldS goldS       
+  578   66069        (0,0,0)  attac attac goldS       
+  579   66071        (3,7,3)   coin steal steal       
+  580   66072        (4,4,1)  goldS goldS goldS   3x  (triple: goldSack)
+  581   66074        (6,4,5)  attac  coin  coin       
+  582   66077        (2,2,2)  attac spins goldS       
+  583   66078        (1,8,8)  shiel shiel shiel   3x  (triple: shield)
+  584   66079        (7,3,8)  accum accum  coin       
+  585   66080        (7,3,8)  accum goldS goldS       
+  586   66081        (4,4,4)  accum goldS goldS       
+  587   66083        (3,7,8)   coin  coin steal       
+  588   66084        (7,7,8)  accum goldS goldS       
+  589   66085        (8,8,8)  accum goldS goldS       >>> MAX BET (8,8,8) <<<
+  590   66087        (1,1,5)   coin  coin  coin   3x  <-- NEXT SPIN AFTER SIGNAL  (triple: coin)
+  591   66088        (1,5,0)   coin  coin  coin   3x  (triple: coin)
+  592   66089        (2,2,2)  attac  coin  coin       
+  593   66090        (2,2,1)  shiel shiel shiel   3x  (triple: shield)
+  594   66091        (7,7,8)   coin shiel shiel       
+  595   66092        (3,3,8)  accum goldS goldS       
+  596   66095        (5,1,5)  attac attac goldS       
+  597   66096        (3,0,0)   coin  coin  coin   3x  (triple: coin)
+  598   66097        (3,3,3)  attac attac goldS       
+  599   66099        (3,6,0)   coin  coin steal       
+  600   66100        (4,4,4)  attac spins goldS       
+  601   66101        (1,1,5)  steal steal steal   3x  (triple: steal)
+  602   66102        (0,0,0)   coin  coin  coin   3x  (triple: coin)
+  603   66103        (3,7,8)  attac attac attac   3x  (triple: attack)
+  604   66104        (0,0,0)  accum goldS goldS       
+  605   66105        (0,0,0)  attac attac attac   3x  (triple: attack)
+  606   66106        (1,8,8)  attac attac attac   3x  (triple: attack)
+  607   66107        (6,6,6)  accum accum  coin       >>> MAX BET (6,6,6) <<<
+                                                      --- gap 11: 101 spins ---
+  608   66108        (1,1,0)  spins spins spins   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#11 SPN** (gap=101)
+  609   66111        (4,4,5)   coin  coin steal       
+  610   66113        (1,8,8)   coin steal spins       
+  611   66114        (7,2,0)  accum accum  coin       
+  612   66116        (3,3,8)  attac steal goldS       
+  613   66120        (3,7,8)   coin steal spins       
+  614   66122        (3,3,8)  attac steal goldS       
+  615   66124        (0,0,0)  attac spins goldS       
+  616   66126        (7,6,0)   coin steal spins       
+  617   66127        (6,4,5)  attac spins goldS       
+  618   66128        (6,6,5)   coin steal spins       
+  619   66130        (3,7,3)   coin steal spins       
+  620   66132        (6,4,1)  attac spins goldS       
+  621   66133        (3,3,8)   coin steal spins       
+  622   66135        (2,2,2)  attac attac goldS       
+  623   66137        (4,4,4)  attac steal goldS       
+  624   66140        (3,3,3)  attac  coin  coin       
+  625   66141        (3,3,8)  goldS goldS goldS   3x  (triple: goldSack)
+  626   66142        (1,8,8)  accum goldS goldS       
+  627   66143        (0,0,0)  accum accum  coin       
+  628   66146        (1,1,0)   coin  coin  coin   3x  (triple: coin)
+  629   66147        (0,0,0)  attac  coin  coin       
+  630   66148        (1,5,5)  attac attac attac   3x  (triple: attack)
+  631   66151        (0,0,0)   coin steal steal       
+  632   66154        (3,7,8)   coin steal steal       
+  633   66155        (3,6,4)  accum goldS goldS       
+  634   66157        (7,7,8)  goldS goldS goldS   3x  (triple: goldSack)
+  635   66159        (5,1,1)  goldS goldS goldS   3x  (triple: goldSack)
+  636   66160        (7,6,4)   coin  coin  coin   3x  (triple: coin)
+  637   66161        (3,6,4)  steal spins goldS       
+  638   66163        (3,7,8)   coin  coin  coin   3x  (triple: coin)
+  639   66164        (3,3,8)  accum goldS goldS       
+  640   66165        (8,8,8)  accum goldS goldS       >>> MAX BET (8,8,8) <<<
+                                                      --- gap 12: 32 spins ---
+  641   66166        (5,0,0)  accum accum accum   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#12 ACC** (gap=32)
+  642   66167        (3,6,4)  attac attac  coin       
+  643   66170        (1,5,0)   coin  coin  coin   3x  (triple: coin)
+  644   66172        (7,7,8)  attac attac  coin       
+  645   66173        (7,6,4)  accum goldS goldS       
+  646   66174        (3,7,8)  steal spins goldS       
+  647   66176        (3,3,3)  steal spins goldS       
+  648   66177        (5,8,8)  goldS goldS goldS   3x  (triple: goldSack)
+  649   66179        (3,4,0)  goldS goldS goldS   3x  (triple: goldSack)
+  650   66180        (7,7,8)  attac steal goldS       
+  651   66181        (7,3,8)  accum goldS goldS       
+  652   66182        (1,8,8)  accum goldS goldS       
+  653   66183        (4,4,4)  accum accum  coin       
+  654   66185        (7,6,4)  attac attac  coin       
+  655   66186        (2,2,2)  steal spins goldS       
+  656   66187        (7,3,2)  shiel shiel shiel   3x  (triple: shield)
+  657   66188        (1,5,0)  shiel goldS goldS       
+  658   66189        (2,2,2)  attac  coin  coin       
+  659   66190        (4,4,1)  shiel shiel shiel   3x  (triple: shield)
+  660   66191        (2,2,2)   coin steal steal       
+  661   66192        (2,2,5)  shiel shiel shiel   3x  (triple: shield)
+  662   66193        (7,7,8)   coin shiel shiel       
+  663   66194        (7,3,8)  accum goldS goldS       
+  664   66198        (4,4,4)  goldS goldS goldS   3x  (triple: goldSack)
+  665   66199        (0,0,0)  steal steal steal   3x  (triple: steal)
+  666   66201        (7,3,8)  attac spins goldS       
+  667   66202        (5,1,0)  accum goldS goldS       
+  668   66205        (7,2,0)  goldS goldS goldS   3x  (triple: goldSack)
+  669   66206        (3,3,8)  attac shiel goldS       
+  670   66207        (1,5,0)  accum goldS goldS       
+  671   66212        (6,6,6)   coin spins spins       >>> MAX BET (6,6,6) <<<
+                                                      --- gap 13: 30 spins ---
+  672   66213        (3,4,0)  spins spins spins   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#13 SPN** (gap=30)
+  673   66214        (7,3,8)  attac steal goldS       
+  674   66216        (2,1,0)   coin  coin  coin   3x  (triple: coin)
+  675   66217        (1,1,0)  attac  coin shiel       
+  676   66218        (4,4,4)  attac  coin  coin       
+  677   66219        (7,2,0)  steal steal steal   3x  (triple: steal)
+  678   66221        (3,3,8)  steal spins goldS       
+  679   66222        (1,8,8)  accum goldS goldS       
+  680   66223        (1,8,8)  accum accum  coin       
+  681   66224        (7,6,4)  accum accum  coin       
+  682   66225        (0,0,0)  steal spins goldS       
+  683   66226        (0,0,0)  attac attac attac   3x  (triple: attack)
+  684   66227        (5,1,5)  attac attac attac   3x  (triple: attack)
+  685   66229        (5,8,8)  steal spins goldS       
+  686   66230        (3,3,3)  accum accum  coin       
+  687   66232        (3,3,8)  attac attac  coin       
+  688   66233        (6,6,6)  accum goldS goldS       >>> MAX BET (6,6,6) <<<
+                                                      --- gap 14: 16 spins ---
+  689   66234        (2,2,2)  spins spins spins   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#14 SPN** (gap=16)
+  690   66236        (3,6,4)  attac  coin  coin       
+  691   66237        (6,6,1)  steal spins goldS       
+  692   66239        (7,0,0)  attac  coin  coin       
+  693   66240        (3,7,8)  attac attac goldS       
+  694   66241        (3,7,8)  accum goldS goldS       
+  695   66242        (6,4,1)  accum goldS goldS       
+  696   66245        (3,7,8)  attac  coin  coin       
+  697   66252        (7,7,8)  attac  coin steal       
+  698   66254        (1,1,0)  attac  coin  coin       
+  699   66256        (5,8,8)  attac  coin steal       
+  700   66258        (1,5,5)   coin steal steal       
+  701   66260        (1,5,5)  steal spins goldS       
+  702   66262        (7,0,0)  goldS goldS goldS   3x  (triple: goldSack)
+  703   66263        (3,3,8)  attac attac goldS       
+  704   66265        (6,4,5)  steal spins goldS       
+  705   66266        (2,2,2)   coin steal spins       
+  706   66267        (0,0,0)  shiel shiel shiel   3x  (triple: shield)
+  707   66268        (7,3,8)  attac attac attac   3x  (triple: attack)
+  708   66269        (7,7,3)  accum goldS goldS       
+  709   66270        (0,0,0)  goldS goldS goldS   3x  (triple: goldSack)
+  710   66271        (5,8,8)  attac attac attac   3x  (triple: attack)
+  711   66272        (5,8,8)  accum accum  coin       
+  712   66273        (4,4,4)  accum accum  coin       
+  713   66274        (7,0,0)  steal steal steal   3x  (triple: steal)
+  714   66275        (7,7,8)  attac attac goldS       
+  715   66276        (0,0,0)  accum goldS goldS       
+  716   66279        (3,7,8)  goldS goldS goldS   3x  (triple: goldSack)
+  717   66282        (3,3,8)   coin steal spins       
+  718   66283        (1,8,8)  accum goldS goldS       
+  719   66287        (4,4,4)   coin  coin  coin   3x  (triple: coin)
+  720   66288        (2,2,2)  steal steal steal   3x  (triple: steal)
+  721   66290        (7,0,0)  goldS goldS goldS   3x  (triple: goldSack)
+  722   66293        (7,6,4)  attac shiel goldS       
+  723   66294        (4,1,0)  steal spins goldS       
+  724   66295        (3,6,4)  attac  coin steal       
+  725   66296        (8,8,8)  steal spins goldS       >>> MAX BET (8,8,8) <<<
+                                                      --- gap 15: 36 spins ---
+  726   66297        (3,7,8)  accum accum accum   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#15 ACC** (gap=36)
+  727   66300        (4,4,5)   coin shiel shiel       
+  728   66302        (3,6,4)   coin steal spins       
+  729   66303        (4,1,0)  steal spins goldS       
+  730   66304        (6,6,6)  attac  coin steal       >>> MAX BET (6,6,6) <<<
+  731   66307        (2,2,2)  attac spins goldS       <-- NEXT SPIN AFTER SIGNAL
+  732   66310        (4,4,1)  attac spins goldS       
+  733   66311        (1,8,8)   coin steal steal       
+  734   66312        (3,3,8)  accum accum  coin       
+  735   66316        (0,0,0)  steal spins goldS       
+  736   66317        (3,7,8)  attac attac attac   3x  (triple: attack)
+  737   66319        (3,3,8)   coin  coin  coin   3x  (triple: coin)
+  738   66320        (0,0,0)  accum goldS goldS       
+  739   66321        (7,3,8)  attac attac attac   3x  (triple: attack)
+  740   66323        (4,4,4)  attac  coin  coin       
+  741   66324        (2,2,2)  steal steal steal   3x  (triple: steal)
+  742   66325        (5,8,8)  shiel shiel shiel   3x  (triple: shield)
+  743   66328        (3,7,8)  attac  coin  coin       
+  744   66329        (4,1,0)  accum goldS goldS       
+  745   66331        (3,7,8)  attac  coin  coin       
+  746   66332        (0,0,0)  accum goldS goldS       
+  747   66336        (7,3,2)  spins spins goldS       
+  748   66337        (0,0,0)  shiel goldS goldS       
+  749   66338        (7,7,3)  attac attac attac   3x  (triple: attack)
+  750   66339        (3,7,7)  goldS goldS goldS   3x  (triple: goldSack)
+  751   66343        (7,3,8)  attac  coin  coin       
+  752   66347        (7,7,7)  attac attac goldS       
+  753   66348        (1,5,0)  goldS goldS goldS   3x  (triple: goldSack)
+  754   66349        (3,7,8)  attac  coin  coin       
+  755   66350        (2,2,2)  accum goldS goldS       
+  756   66351        (0,0,0)  shiel shiel shiel   3x  (triple: shield)
+  757   66352        (7,2,0)  attac attac attac   3x  (triple: attack)
+  758   66354        (7,0,0)   coin steal spins       
+  759   66358        (5,1,1)   coin steal spins       
+  760   66359        (3,8,8)   coin  coin  coin   3x  (triple: coin)
+  761   66360        (4,5,1)  accum accum goldS       
+  762   66361        (7,7,8)   coin  coin steal       
+  763   66362        (2,2,2)  accum goldS goldS       
+  764   66363        (0,0,0)  shiel shiel shiel   3x  (triple: shield)
+  765   66364        (3,7,8)  attac attac attac   3x  (triple: attack)
+  766   66366        (3,3,2)   coin  coin steal       
+  767   66368        (7,0,0)   coin  coin  coin   3x  (triple: coin)
+  768   66370        (2,2,2)   coin spins spins       
+  769   66371        (7,3,8)  shiel shiel shiel   3x  (triple: shield)
+  770   66372        (3,7,8)  accum goldS goldS       
+  771   66373        (6,4,5)  accum goldS goldS       
+  772   66374        (7,7,8)   coin steal spins       
+  773   66377        (7,2,0)  attac shiel goldS       
+  774   66378        (0,0,0)  attac shiel goldS       
+  775   66379        (3,7,8)  attac attac attac   3x  (triple: attack)
+  776   66380        (0,8,8)  accum goldS goldS       
+  777   66381        (3,3,8)  accum accum attac       
+  778   66383        (3,3,8)  goldS goldS goldS   3x  (triple: goldSack)
+  779   66384        (3,7,8)  accum goldS goldS       
+  780   66385        (5,5,0)  accum goldS goldS       
+  781   66386        (7,7,8)  attac  coin  coin       
+  782   66388        (6,6,6)  shiel shiel goldS       >>> MAX BET (6,6,6) <<<
+                                                      --- gap 16: 56 spins ---
+  783   66389        (6,6,5)  spins spins spins   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#16 SPN** (gap=56)
+  784   66390        (6,4,5)   coin spins spins       
+  785   66396        (6,4,1)  goldS goldS goldS   3x  (triple: goldSack)
+  786   66397        (7,8,8)   coin steal spins       
+  787   66400        (6,4,5)  attac  coin shiel       
+  788   66402        (6,4,1)   coin  coin  coin   3x  (triple: coin)
+  789   66403        (6,4,1)   coin steal spins       
+  790   66404        (3,8,8)   coin steal spins       
+  791   66405        (4,4,4)  accum accum goldS       
+  792   66406        (3,0,0)  steal steal steal   3x  (triple: steal)
+  793   66408        (3,7,8)  attac shiel goldS       
+  794   66409        (4,4,4)  accum goldS goldS       
+  795   66411        (7,4,4)  attac  coin shiel       
+  796   66412        (3,3,7)  steal steal goldS       
+  797   66415        (7,4,4)   coin steal spins       
+  798   66416        (8,8,8)  steal steal goldS       >>> MAX BET (8,8,8) <<<
+                                                      --- gap 17: 15 spins ---
+  799   66417        (5,1,1)  accum accum accum   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#17 ACC** (gap=15)
+  800   66420        (7,0,0)   coin steal spins       
+  801   66421        (4,4,4)  attac attac goldS       
+  802   66422        (5,1,0)  steal steal steal   3x  (triple: steal)
+  803   66424        (3,3,8)   coin steal spins       
+  804   66425        (7,3,8)  accum goldS goldS       
+  805   66426        (0,8,8)  accum goldS goldS       
+  806   66428        (0,0,0)  attac  coin  coin       
+  807   66429        (3,2,0)  attac attac attac   3x  (triple: attack)
+  808   66430        (0,0,0)  attac shiel goldS       
+  809   66433        (7,8,8)  attac shiel goldS       
+  810   66434        (6,6,5)  accum accum goldS       
+  811   66435        (3,3,8)   coin spins spins       
+  812   66436        (0,0,0)  accum goldS goldS       
+  813   66437        (2,2,2)  attac attac attac   3x  (triple: attack)
+  814   66439        (4,1,5)  attac  coin  coin       
+  815   66440        (5,5,1)   coin  coin steal       
+  816   66441        (3,6,0)   coin  coin  coin   3x  (triple: coin)
+  817   66443        (1,1,1)  attac attac  coin       
+  818   66444        (7,3,8)   coin  coin  coin   3x  (triple: coin)
+  819   66445        (7,4,0)  accum goldS goldS       
+  820   66446        (5,0,0)  attac steal goldS       
+  821   66451        (7,7,3)  attac spins goldS       
+  822   66452        (1,0,0)  goldS goldS goldS   3x  (triple: goldSack)
+  823   66453        (4,4,5)  attac attac  coin       
+  824   66455        (3,4,0)   coin spins spins       
+  825   66459        (4,4,4)   coin  coin  coin   3x  (triple: coin)
+  826   66460        (6,4,1)  steal steal steal   3x  (triple: steal)
+  827   66461        (2,2,2)   coin steal spins       
+  828   66463        (7,6,0)  attac spins goldS       
+  829   66464        (1,8,8)  attac spins goldS       
+  830   66465        (0,0,0)  accum accum  coin       
+  831   66466        (7,7,8)  attac attac attac   3x  (triple: attack)
+  832   66467        (3,3,8)  accum goldS goldS       
+  833   66469        (7,7,8)  attac spins goldS       
+  834   66470        (4,5,5)  accum goldS goldS       
+  835   66471        (6,6,6)   coin  coin steal       >>> MAX BET (6,6,6) <<<
+                                                      --- gap 18: 36 spins ---
+  836   66472        (1,8,8)  spins spins spins   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#18 SPN** (gap=36)
+  837   66473        (3,3,8)  accum accum  coin       
+  838   66474        (7,7,8)  accum goldS goldS       
+  839   66475        (3,3,8)  accum goldS goldS       
+  840   66476        (3,3,8)  accum goldS goldS       
+  841   66479        (7,6,0)  attac spins goldS       
+  842   66481        (7,3,8)  goldS goldS goldS   3x  (triple: goldSack)
+  843   66482        (4,5,1)  accum goldS goldS       
+  844   66483        (2,2,2)   coin  coin steal       
+  845   66486        (2,2,2)  attac spins goldS       
+  846   66488        (7,7,3)   coin  coin steal       
+  847   66489        (2,2,1)  goldS goldS goldS   3x  (triple: goldSack)
+  848   66490        (4,4,4)   coin shiel shiel       
+  849   66491        (1,8,8)  steal steal steal   3x  (triple: steal)
+  850   66492        (5,1,1)  accum accum  coin       
+  851   66493        (7,7,8)   coin  coin  coin   3x  (triple: coin)
+  852   66494        (1,8,8)  accum goldS goldS       
+  853   66495        (0,0,0)  accum accum  coin       
+  854   66499        (1,8,8)   coin  coin  coin   3x  (triple: coin)
+  855   66500        (3,7,2)  accum accum  coin       
+  856   66501        (7,7,8)  shiel goldS goldS       
+  857   66503        (0,0,0)   coin steal steal       
+  858   66504        (0,0,0)  attac attac attac   3x  (triple: attack)
+  859   66508        (2,4,5)   coin  coin  coin   3x  (triple: coin)
+  860   66509        (2,2,2)   coin steal shiel       
+  861   66510        (3,3,8)  shiel shiel shiel   3x  (triple: shield)
+  862   66511        (5,8,8)  accum goldS goldS       
+  863   66514        (0,0,0)  attac spins goldS       
+  864   66515        (3,3,8)  attac attac attac   3x  (triple: attack)
+  865   66516        (2,4,5)  accum goldS goldS       
+  866   66518        (3,6,0)  attac steal goldS       
+  867   66520        (3,7,8)   coin  coin steal       
+  868   66521        (8,8,8)  accum goldS goldS       >>> MAX BET (8,8,8) <<<
+                                                      --- gap 19: 32 spins ---
+  869   66522        (4,4,4)  accum accum accum   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#19 ACC** (gap=32)
+  870   66525        (3,7,8)  attac steal goldS       
+  871   66527        (2,2,2)   coin steal steal       
+  872   66528        (3,6,0)  shiel shiel shiel   3x  (triple: shield)
+  873   66529        (3,7,8)  attac spins goldS       
+  874   66531        (4,5,5)   coin  coin  coin   3x  (triple: coin)
+  875   66532        (0,0,0)   coin  coin steal       
+  876   66533        (0,0,0)  attac attac attac   3x  (triple: attack)
+  877   66534        (6,6,5)  attac attac attac   3x  (triple: attack)
+  878   66536        (6,6,1)  attac attac goldS       
+  879   66539        (2,5,0)   coin  coin steal       
+  880   66541        (3,7,7)   coin  coin  coin   3x  (triple: coin)
+  881   66542        (1,8,8)  goldS goldS goldS   3x  (triple: goldSack)
+  882   66544        (0,0,0)  attac  coin  coin       
+  883   66545        (6,6,6)  attac attac attac   3x  >>> MAX BET (6,6,6) <<<  (triple: attack)
+                                                      --- gap 20: 14 spins ---
+  884   66546        (0,0,0)  spins spins spins   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#20 SPN** (gap=14)
+  885   66547        (0,0,0)  attac attac attac   3x  (triple: attack)
+  886   66548        (1,8,8)  attac attac attac   3x  (triple: attack)
+  887   66549        (7,7,8)  accum accum  coin       
+  888   66551        (7,3,3)  shiel goldS goldS       
+  889   66552        (0,0,0)  goldS goldS goldS   3x  (triple: goldSack)
+  890   66553        (5,5,0)  attac attac attac   3x  (triple: attack)
+  891   66554        (3,3,8)  attac  coin  coin       
+  892   66556        (4,4,4)  steal spins goldS       
+  893   66557        (2,2,2)  steal steal steal   3x  (triple: steal)
+  894   66558        (1,1,5)  shiel shiel shiel   3x  (triple: shield)
+  895   66561        (5,5,0)  attac steal goldS       
+  896   66562        (5,8,8)  attac  coin  coin       
+  897   66564        (7,3,3)  steal spins goldS       
+  898   66565        (7,6,4)  goldS goldS goldS   3x  (triple: goldSack)
+  899   66566        (8,8,8)  steal spins goldS       >>> MAX BET (8,8,8) <<<
+                                                      --- gap 21: 15 spins ---
+  900   66567        (0,0,0)  accum accum accum   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#21 ACC** (gap=15)
+  901   66572        (5,8,8)  steal spins goldS       
+  902   66573        (7,3,8)  accum accum  coin       
+  903   66576        (1,1,5)  attac attac goldS       
+  904   66577        (6,4,5)   coin  coin  coin   3x  (triple: coin)
+  905   66580        (7,0,0)  attac spins goldS       
+  906   66582        (7,3,8)   coin steal spins       
+  907   66584        (2,2,1)  goldS goldS goldS   3x  (triple: goldSack)
+  908   66587        (3,3,8)  attac  coin shiel       
+  909   66588        (5,8,8)  accum goldS goldS       
+  910   66590        (3,6,0)  goldS goldS goldS   3x  (triple: goldSack)
+  911   66591        (0,0,0)  attac spins goldS       
+  912   66592        (7,3,8)  attac attac attac   3x  (triple: attack)
+  913   66593        (6,6,5)  accum goldS goldS       
+  914   66594        (7,0,0)   coin spins spins       
+  915   66595        (1,8,8)  attac attac goldS       
+  916   66596        (0,0,0)  accum accum  coin       
+  917   66597        (6,1,1)  attac attac attac   3x  (triple: attack)
+  918   66599        (6,4,1)   coin  coin  coin   3x  (triple: coin)
+  919   66600        (3,7,8)   coin steal spins       
+  920   66601        (3,4,0)  accum goldS goldS       
+  921   66603        (4,4,4)   coin  coin  coin   3x  (triple: coin)
+  922   66604        (5,8,8)  steal steal steal   3x  (triple: steal)
+  923   66605        (6,1,5)  accum accum  coin       
+  924   66608        (7,0,0)   coin spins spins       
+  925   66609        (1,8,8)  attac attac goldS       
+  926   66611        (3,7,8)  attac steal goldS       
+  927   66613        (6,1,5)   coin  coin  coin   3x  (triple: coin)
+  928   66614        (0,8,8)   coin  coin spins       
+  929   66616        (3,3,8)   coin steal steal       
+  930   66617        (3,3,8)  accum goldS goldS       
+  931   66619        (0,0,0)   coin steal spins       
+  932   66622        (0,0,0)  attac steal goldS       
+  933   66623        (6,6,6)  attac attac attac   3x  >>> MAX BET (6,6,6) <<<  (triple: attack)
+                                                      --- gap 22: 33 spins ---
+  934   66624        (0,0,0)  spins spins spins   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#22 SPN** (gap=33)
+  935   66626        (1,8,8)   coin  coin spins       
+  936   66627        (4,4,4)  accum accum  coin       
+  937   66631        (0,0,0)  attac attac goldS       
+  938   66632        (3,4,0)  attac attac attac   3x  (triple: attack)
+  939   66634        (8,8,8)   coin  coin  coin   3x  >>> MAX BET (8,8,8) <<<  (triple: coin)
+                                                      --- gap 23: 5 spins ---
+  940   66635        (6,4,5)  accum accum accum   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#23 ACC** (gap=5)
+  941   66636        (3,4,0)   coin steal spins       
+  942   66637        (0,0,0)  attac steal goldS       
+  943   66640        (4,4,5)   coin  coin  coin   3x  (triple: coin)
+  944   66643        (6,1,5)  goldS goldS goldS   3x  (triple: goldSack)
+  945   66646        (7,7,8)  shiel goldS goldS       
+  946   66647        (2,5,0)  accum goldS goldS       
+  947   66651        (2,1,0)  attac attac goldS       
+  948   66654        (2,2,2)   coin  coin  coin   3x  (triple: coin)
+  949   66657        (7,7,8)  attac steal goldS       
+  950   66658        (7,3,3)  accum goldS goldS       
+  951   66659        (4,4,5)  goldS goldS goldS   3x  (triple: goldSack)
+  952   66660        (1,1,5)   coin steal steal       
+  953   66662        (3,3,8)  attac  coin shiel       
+  954   66664        (4,4,4)   coin  coin spins       
+  955   66666        (3,3,3)   coin shiel shiel       
+  956   66667        (2,2,2)  goldS goldS goldS   3x  (triple: goldSack)
+  957   66668        (6,5,1)  shiel shiel shiel   3x  (triple: shield)
+  958   66670        (3,7,8)  attac steal goldS       
+  959   66671        (6,1,5)  accum goldS goldS       
+  960   66672        (7,7,8)   coin  coin spins       
+  961   66673        (3,4,0)  accum goldS goldS       
+  962   66674        (2,2,2)  attac steal goldS       
+  963   66675        (7,4,0)  shiel shiel shiel   3x  (triple: shield)
+  964   66676        (3,3,3)  attac steal goldS       
+  965   66678        (3,3,7)  attac steal goldS       
+  966   66679        (5,5,1)  goldS goldS goldS   3x  (triple: goldSack)
+  967   66680        (3,3,8)   coin  coin  coin   3x  (triple: coin)
+  968   66681        (3,7,8)  accum goldS goldS       
+  969   66682        (6,4,1)  accum goldS goldS       
+  970   66683        (3,7,8)   coin steal spins       
+  971   66684        (7,7,8)  accum goldS goldS       
+  972   66685        (3,3,8)  accum goldS goldS       
+  973   66686        (3,3,8)  accum goldS goldS       
+  974   66687        (2,2,2)  accum goldS goldS       
+  975   66691        (6,4,1)   coin steal steal       
+  976   66692        (7,6,0)   coin steal spins       
+  977   66693        (3,3,3)  attac spins goldS       
+  978   66696        (1,8,8)   coin steal steal       
+  979   66697        (3,3,8)  accum accum  coin       
+  980   66700        (7,7,8)  steal spins goldS       
+  981   66702        (0,0,0)  attac  coin  coin       
+  982   66703        (2,2,2)  attac attac attac   3x  (triple: attack)
+  983   66704        (3,4,0)  shiel shiel shiel   3x  (triple: shield)
+  984   66705        (3,3,8)  attac steal goldS       
+  985   66706        (8,8,8)  accum goldS goldS       >>> MAX BET (8,8,8) <<<
+                                                      --- gap 24: 45 spins ---
+  986   66707        (3,7,8)  accum accum accum   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#24 ACC** (gap=45)
+  987   66709        (4,4,1)  goldS goldS goldS   3x  (triple: goldSack)
+  988   66710        (2,2,1)   coin steal steal       
+  989   66712        (3,6,4)  attac  coin  coin       
+  990   66714        (3,3,8)  attac steal goldS       
+  991   66715        (1,5,0)  accum goldS goldS       
+  992   66716        (3,3,8)  attac  coin  coin       
+  993   66717        (3,3,8)  accum goldS goldS       
+  994   66718        (4,4,4)  accum goldS goldS       
+  995   66719        (7,6,4)  steal steal steal   3x  (triple: steal)
+  996   66720        (7,6,4)  steal spins goldS       
+  997   66721        (1,8,8)  steal spins goldS       
+  998   66722        (7,7,8)  accum accum  coin       
+  999   66723        (2,2,2)  accum goldS goldS       
+ 1000   66724        (0,0,0)  shiel shiel shiel   3x  (triple: shield)
+ 1001   66725        (4,4,4)  attac attac attac   3x  (triple: attack)
+ 1002   66726        (7,4,0)  steal steal steal   3x  (triple: steal)
+ 1003   66727        (7,7,7)  attac steal goldS       
+ 1004   66728        (6,4,5)  goldS goldS goldS   3x  (triple: goldSack)
+ 1005   66729        (2,5,0)   coin steal spins       
+ 1006   66730        (7,6,4)  attac  coin shiel       
+ 1007   66731        (7,3,8)  steal spins goldS       
+ 1008   66732        (6,4,1)  accum goldS goldS       
+ 1009   66733        (3,0,0)   coin steal spins       
+ 1010   66734        (7,0,0)  attac attac goldS       
+ 1011   66735        (2,1,0)  attac attac goldS       
+ 1012   66737        (7,7,8)  steal spins goldS       
+ 1013   66739        (0,0,0)  goldS goldS goldS   3x  (triple: goldSack)
+ 1014   66742        (5,5,1)  steal spins goldS       
+ 1015   66743        (7,4,0)   coin  coin  coin   3x  (triple: coin)
+ 1016   66745        (2,2,2)  attac  coin  coin       
+ 1017   66746        (1,8,8)  shiel shiel shiel   3x  (triple: shield)
+ 1018   66748        (5,5,1)  attac  coin shiel       
+ 1019   66750        (7,7,8)   coin spins spins       
+ 1020   66752        (3,3,8)  attac attac goldS       
+ 1021   66754        (2,2,2)  attac  coin  coin       
+ 1022   66755        (5,8,8)  shiel shiel shiel   3x  (triple: shield)
+ 1023   66756        (7,6,4)  accum accum  coin       
+ 1024   66757        (3,6,4)  steal spins goldS       
+ 1025   66761        (0,0,0)  attac  coin  coin       
+ 1026   66764        (5,8,8)   coin spins spins       
+ 1027   66766        (6,4,5)   coin  coin  coin   3x  (triple: coin)
+ 1028   66767        (6,6,6)   coin steal spins       >>> MAX BET (6,6,6) <<<
+ 1029   66769        (1,1,0)  goldS goldS goldS   3x  <-- NEXT SPIN AFTER SIGNAL  (triple: goldSack)
+ 1030   66770        (7,3,3)  attac  coin  coin       
+ 1031   66771        (6,6,6)  goldS goldS goldS   3x  >>> MAX BET (6,6,6) <<<  (triple: goldSack)
+                                                      --- gap 25: 45 spins ---
+ 1032   66772        (6,4,1)  spins spins spins   3x  <-- NEXT SPIN AFTER SIGNAL  **VT#25 SPN** (gap=45)
+ 1033   66775        (3,3,8)   coin spins spins       
+ 1034   66777        (3,3,2)  goldS goldS goldS   3x  (triple: goldSack)
+ 1035   66778        (0,0,0)  shiel goldS goldS       
+ 1036   66779        (3,3,8)  attac attac attac   3x  (triple: attack)
+ 1037   66780        (7,0,0)  accum goldS goldS       
+ 1038   66781        (7,3,8)  attac attac goldS       
+ 1039   66782        (4,4,4)  accum goldS goldS       
+ 1040   66784        (0,0,0)  attac  coin  coin       
+ 1041   66785        (1,8,8)  attac attac attac   3x  (triple: attack)
+ 1042   66786        (0,0,0)  accum accum  coin       
+ 1043   66787        (3,3,8)  attac attac attac   3x  (triple: attack)
+ 1044   66788        (4,5,5)  accum goldS goldS       
+ 1045   66789        (7,7,8)   coin  coin steal       
+ 1046   66791        (3,6,0)   coin  coin steal       
+ 1047   66792        (7,7,3)  attac spins goldS       
+ 1048   66793        (4,4,4)  goldS goldS goldS   3x  (triple: goldSack)
+ 1049   66795        (0,0,0)  steal spins goldS       
+ 1050   66796        (3,3,8)  attac attac attac   3x  (triple: attack)
+ 1051   66798        (0,0,0)  attac spins goldS       
+ 1052   66800        (2,2,1)  attac  coin steal       
+ 1053   66802        (4,1,0)  attac attac goldS       
+ 1054   66803        (3,7,8)  attac  coin steal       
+ 1055   66804        (3,6,0)  accum goldS goldS       
+ 1056   66805        (4,1,5)  attac spins goldS       
+ 1057   66809        (4,4,4)   coin spins spins       
+ 1058   66810        (7,3,2)  steal steal steal   3x  (triple: steal)
+ 1059   66811        (6,1,1)  shiel goldS goldS       
+ 1060   66813        (1,8,8)   coin  coin  coin   3x  (triple: coin)
+ 1061   66814        (7,6,0)  accum accum  coin       
+ 1062   66815        (1,8,8)  attac spins goldS       
+ 1063   66816        (7,0,0)  accum accum  coin       
+ 1064   66817        (3,7,3)  attac attac goldS       
+ 1065   66818        (4,4,5)  goldS goldS goldS   3x  (triple: goldSack)
+ 1066   66819        (2,2,2)   coin steal steal       
+ 1067   66820        (4,5,1)  shiel shiel shiel   3x  (triple: shield)
+ 1068   66823        (3,3,8)   coin  coin  coin   3x  (triple: coin)
+ 1069   66824        (3,6,0)  accum goldS goldS       
+ 1070   66825        (7,3,7)  attac spins goldS       
+ 1071   66826        (3,3,8)  goldS goldS goldS   3x  (triple: goldSack)
+ 1072   66827        (0,0,0)  accum goldS goldS       
+ 1073   66828        (2,2,2)  attac attac attac   3x  (triple: attack)
+ 1074   66829        (0,0,0)  shiel shiel shiel   3x  (triple: shield)
+ 1075   66830        (0,0,0)  attac attac attac   3x  (triple: attack)
+ 1076   66831        (2,2,2)  attac attac attac   3x  (triple: attack)
+ 1077   66832        (7,3,8)  shiel shiel shiel   3x  (triple: shield)
+ 1078   66833        (3,7,8)  accum goldS goldS       
+ 1079   66834        (6,6,5)  accum goldS goldS       
+ 1080   66835        (7,3,3)   coin spins spins       
+ 1081   66836        (4,5,0)  goldS goldS goldS   3x  (triple: goldSack)
+ 1082   66837        (7,7,3)  attac  coin steal       
+ 1083   66839        (3,6,0)  attac attac goldS       
+ 1084   66840        (0,0,0)  attac spins goldS       
+ 1085   66841        (3,3,8)  attac attac attac   3x  (triple: attack)
+ 1086   66844        (3,7,7)  attac spins goldS       
+ 1087   66845        (3,6,0)  goldS goldS goldS   3x  (triple: goldSack)
+ 1088   66846        (3,7,8)  attac spins goldS       
+ 1089   66847        (8,8,8)  accum goldS goldS       >>> MAX BET (8,8,8) <<<
+ 1090   66849        (1,8,8)  attac  coin shiel       <-- NEXT SPIN AFTER SIGNAL
+ 1091   66853        (2,2,2)  attac spins goldS       
+ 1092   66854        (3,6,4)  shiel shiel shiel   3x  (triple: shield)
+ 1093   66855        (5,8,8)  steal spins goldS       
+ 1094   66856        (2,1,0)  accum accum  coin       
+ 1095   66857        (7,3,8)  attac  coin shiel       
+ 1096   66858        (7,3,8)  accum goldS goldS       
+ 1097   66859        (3,7,8)  accum goldS goldS       
+ 1098   66860        (5,5,1)  accum goldS goldS       
+ 1099   66861        (2,1,0)   coin  coin  coin   3x  (triple: coin)
+ 1100   66862        (4,1,0)  attac  coin shiel       
+ 1101   66863        (4,1,5)  attac  coin steal       
+ 1102   66865        (2,2,2)  attac spins goldS       
+ 1103   66869        (3,7,8)  goldS goldS goldS   3x  (triple: goldSack)
+ 1104   66870        (7,0,0)  accum goldS goldS       
+ 1105   66872        (7,3,8)  steal spins goldS       
+ 1106   66877        (0,0,0)   coin steal steal       
+ 1107   66878        (7,3,8)  attac attac attac   3x  (triple: attack)

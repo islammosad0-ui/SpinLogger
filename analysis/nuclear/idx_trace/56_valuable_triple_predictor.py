@@ -79,7 +79,7 @@ except Exception as e:
     log(f"sklearn unavailable: {e}")
     SKLEARN_OK = False
 
-REPO = Path(__file__).resolve().parents[2]
+REPO = Path(__file__).resolve().parents[3]
 DATA = REPO / "data" / "Ahmed" / "spin_history_Ahmed_enriched.csv"
 
 

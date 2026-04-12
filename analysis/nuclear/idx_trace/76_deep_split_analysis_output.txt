@@ -1,0 +1,607 @@
+Total data: 1107 spins with idx
+VTs: 35 total (17 ACC, 18 SPN)
+
+######################################################################
+  ALL VTs COMBINED
+  1107 spins, 35 targets, baseline=3.16%
+######################################################################
+
+  --- A. GAP LENGTHS ---
+  34 gaps: min=0, max=94, mean=30.3, median=32, std=22.5
+  All: [26, 38, 53, 49, 0, 24, 3, 94, 34, 41, 3, 35, 7, 56, 1, 83, 17, 32, 30, 16, 36, 4, 51, 15, 36, 32, 14, 15, 33, 5, 45, 42, 2, 57]
+
+  --- B. OTHER TRIPLES IN GAPS ---
+  Triples per gap: mean=9.7, min=0, max=30
+  Triple types in gaps: {'attack': 113, 'shield': 64, 'goldSack': 58, 'steal': 48, 'coin': 47}
+  Distance from last triple to VT: mean=2.5, min=0, max=8
+  All: [2, 2, 1, 8, 5, 2, 2, 8, 2, 1, 0, 3, 0, 2, 1, 4, 5, 1, 4, 7, 1, 4, 4, 0, 1, 0, 1, 2, 2, 0, 2]
+
+  Triple density by gap position (thirds):
+    First third: 91/332 = 27.4%
+    Middle:      133/362 = 36.7%
+    Last third:  105/332 = 31.6%
+
+  Previous spin triple type -> target VT next spin:
+  triple_type     then_vt    total     rate    lift
+  attack                2      117   1.71%   0.54x
+  shield                1       69   1.45%   0.46x
+  goldSack              2       58   3.45%   1.09x
+  coin                  0       49   0.00%   0.00x
+  steal                 0       48   0.00%   0.00x
+  spins                 1       18   5.56%   1.76x
+  accumulation          0       17   0.00%   0.00x
+
+  Previous spin symbol (non-triple) -> target VT next spin:
+  reel_1          then_vt    total     rate    lift
+  accumulation         15      362   4.14%   1.31x
+  attack                7      182   3.85%   1.22x
+  coin                  3      143   2.10%   0.66x
+  steal                 3       34   8.82%   2.79x
+  shield                1        8  12.50%   3.95x
+  spins                 0        1   0.00%   0.00x
+
+  --- C. CUMULATIVE IDX THROUGH GAPS ---
+  Position through gap -> cumulative averages:
+     pos   cum_sum   cum_r1   cum_r2   cum_r3  tri_rate  inst_sum   r3_avg
+    0-10%     11.28     3.36     3.76     4.16    0.245     11.26     4.16
+   10-20%     11.69     3.65     3.75     4.29    0.235     12.11     4.42
+   20-30%     12.01     3.69     4.03     4.29    0.251     12.68     4.22
+   30-40%     11.76     3.65     3.98     4.13    0.284     11.03     3.70
+   40-50%     11.67     3.67     3.94     4.06    0.297     10.50     3.30
+   50-60%     11.52     3.67     3.91     3.94    0.309     11.42     3.57
+   60-70%     11.35     3.68     3.85     3.82    0.318     10.10     3.29
+   70-80%     11.28     3.62     3.82     3.83    0.328     11.62     4.24
+   80-90%     11.43     3.65     3.88     3.90    0.326     12.26     4.20
+   90-100%     11.50     3.65     3.92     3.93    0.321     12.36     4.39
+
+  --- D. IDX MOMENTUM (spin-to-spin changes) ---
+  delta   bef_vt_mean  overall_mean   ratio
+  dr1           0.657        -0.005  -145.23
+  dr2           0.343        -0.001  -378.86
+  dr3           0.886         0.000     inf
+  dsum          1.886        -0.005  -347.29
+
+  Absolute momentum (|delta|):
+  delta   bef_vt_mean  overall_mean   ratio
+  dr1           1.686         2.602   0.65x
+  dr2           2.457         3.109   0.79x
+  dr3           3.400         3.805   0.89x
+  dsum          6.229         7.642   0.82x
+
+  --- E. SYMBOL STREAKS BEFORE VT ---
+  streak   bef_vt  overall   vt_rate    lift
+       1       26      850    3.06%   0.97x
+       2        8      187    4.28%   1.35x
+       3        1       52    1.92%   0.61x
+       4        0       12    0.00%   0.00x
+       5        0        5    0.00%   0.00x
+
+  --- F. REEL COMBINATION PATTERNS ---
+  combo    bef_vt  overall   vt_rate    lift
+  HHH           5      102    4.90%   1.55x <--
+  HHL           1       26    3.85%   1.22x
+  HHM           1       36    2.78%   0.88x
+  HLL           0       37    0.00%   0.00x
+  HMH           2       51    3.92%   1.24x
+  HML           0       42    0.00%   0.00x
+  HMM           4       30   13.33%   4.21x <--
+  LHH           1       52    1.92%   0.61x
+  LLL           5      226    2.21%   0.70x
+  LLM           0       15    0.00%   0.00x
+  LML           1       21    4.76%   1.50x
+  MHH           4      126    3.17%   1.00x
+  MHL           0       28    0.00%   0.00x
+  MHM           2       22    9.09%   2.87x <--
+  MLL           1       41    2.44%   0.77x
+  MLM           0       16    0.00%   0.00x
+  MMH           4       88    4.55%   1.44x
+  MML           3       55    5.45%   1.72x <--
+  MMM           1       79    1.27%   0.40x
+
+  --- G. NON-VT TRIPLE AS SIGNAL (bet N spins after it) ---
+  Bet 1 after non-VT triple: 341 bets, 5 hits, prec=1.47%, catch=14.3%, bets/hit=68.2
+  Bet 2 after non-VT triple: 681 bets, 14 hits, prec=2.06%, catch=40.0%, bets/hit=48.6
+  Bet 3 after non-VT triple: 1021 bets, 29 hits, prec=2.84%, catch=82.9%, bets/hit=35.2
+  Bet 5 after non-VT triple: 1701 bets, 48 hits, prec=2.82%, catch=137.1%, bets/hit=35.4
+
+  --- H. SPINS SINCE LAST NON-VT TRIPLE -> VT RATE ---
+     range    vts    total     rate    lift
+    1-  2     12      392   3.06%   0.97x
+    3-  5     16      244   6.56%   2.07x
+    6- 10      7      109   6.42%   2.03x
+   11- 15      0       17   0.00%   0.00x
+   16- 20      0        1   0.00%   0.00x
+
+  --- I. PITY TIMER (spins since last target VT) ---
+     range    vts    total     rate    lift
+    1-  5      6      164   3.66%   1.16x
+    6- 10      2      139   1.44%   0.45x
+   11- 15      1      135   0.74%   0.23x
+   16- 20      4      115   3.48%   1.10x
+   21- 30      2      202   0.99%   0.31x
+   31- 40      9      145   6.21%   1.96x
+   41- 50      4       81   4.94%   1.56x
+   51- 60      4       41   9.76%   3.08x
+   61- 80      0       40   0.00%   0.00x
+   81-100      2       19  10.53%   3.33x
+
+  --- J. STRATEGY SIMULATIONS ---
+
+  strategy                        bets   caught   missed   catch%    prec%  bets/hit   saved%
+  ------------------------------------------------------------------------------------------------
+  Always_bet                      1106       35        0   100.0%     3.2%      31.6     0.0%
+  gap_vt>=20                       555       23       12    65.7%     4.1%      24.1    49.8%
+  gap_vt>=30                       345       20       15    57.1%     5.8%      17.2    68.8%
+  gap_vt>=40                       191       11       24    31.4%     5.8%      17.4    82.7%
+  gap_vt>=50                       107        7       28    20.0%     6.5%      15.3    90.3%
+  gap_vt>=30+sum>=15               133       10       25    28.6%     7.5%      13.3    88.0%
+  gap_vt>=30+r3>=5                 168       13       22    37.1%     7.7%      12.9    84.8%
+  gap_vt>=30+all_diff              114       10       25    28.6%     8.8%      11.4    89.7%
+  gap_vt>=30+any_8                 123        9       26    25.7%     7.3%      13.7    88.9%
+  gap_vt>=20+sum>=15               197       12       23    34.3%     6.1%      16.4    82.2%
+  gap_vt>=20+r3>=5                 251       15       20    42.9%     6.0%      16.7    77.3%
+  gap_tri>=5                       196        6       29    17.1%     3.1%      32.7    82.3%
+  gap_tri>=10                       17        0       35     0.0%     0.0%       inf    98.5%
+  gap_vt>=30+gap_tri>=5             71        5       30    14.3%     7.0%      14.2    93.6%
+  gap_vt>=20+spread<=4             340       14       21    40.0%     4.1%      24.3    69.3%
+  gap_vt>=30+spread<=4             216       13       22    37.1%     6.0%      16.6    80.5%
+  gap_vt>=30+r2>=5                 165       11       24    31.4%     6.7%      15.0    85.1%
+  gap_vt>=30+r1>=5                 124        7       28    20.0%     5.6%      17.7    88.8%
+
+  --- K. PER-REEL idx N-1 -> target VT rate ---
+
+  r1:
+  val   bef_vt    total     rate    lift
+    0        2      127   1.57%   0.50x
+    1        2       89   2.25%   0.71x
+    2        3      106   2.83%   0.89x
+    3       12      277   4.33%   1.37x
+    4        2      113   1.77%   0.56x
+    5        1       65   1.54%   0.49x
+    6        3       93   3.23%   1.02x
+    7       10      219   4.57%   1.44x
+    8        0       17   0.00%   0.00x
+
+  r2:
+  val   bef_vt    total     rate    lift
+    0        2      159   1.26%   0.40x
+    1        3       94   3.19%   1.01x
+    2        1       87   1.15%   0.36x
+    3        7      161   4.35%   1.37x
+    4        6      150   4.00%   1.26x
+    5        2       63   3.17%   1.00x
+    6        3      108   2.78%   0.88x
+    7        9      168   5.36%   1.69x <--
+    8        2      116   1.72%   0.54x
+
+  r3:
+  val   bef_vt    total     rate    lift
+    0        9      299   3.01%   0.95x
+    1        0      100   0.00%   0.00x
+    2        2       77   2.60%   0.82x
+    3        2       37   5.41%   1.71x <--
+    4        3       82   3.66%   1.16x
+    5        3       92   3.26%   1.03x
+    6        1       19   5.26%   1.66x
+    7        0       21   0.00%   0.00x
+    8       15      379   3.96%   1.25x
+
+  --- L. 2-SPIN LOOKBACK (r3[N-2], r3[N-1]) -> target VT ---
+  (r3_n2,r3_n1)      bef_vt    total     rate    lift
+  (1, 2)                  1        6  16.67%   5.27x
+  (4, 5)                  1        8  12.50%   3.95x
+  (8, 6)                  1        9  11.11%   3.51x
+  (5, 2)                  1        9  11.11%   3.51x
+  (3, 8)                  1       10  10.00%   3.16x
+  (1, 0)                  2       27   7.41%   2.34x
+  (8, 5)                  2       32   6.25%   1.97x
+  (0, 3)                  1       16   6.25%   1.97x
+  (0, 8)                  7      116   6.03%   1.91x
+  (0, 4)                  1       21   4.76%   1.50x
+  (0, 0)                  3       66   4.55%   1.44x
+  (8, 8)                  6      135   4.44%   1.40x
+  (5, 8)                  1       23   4.35%   1.37x
+  (4, 0)                  1       31   3.23%   1.02x
+  (8, 0)                  3       99   3.03%   0.96x
+
+######################################################################
+  ACC VTs ONLY
+  1107 spins, 17 targets, baseline=1.54%
+######################################################################
+
+  --- A. GAP LENGTHS ---
+  16 gaps: min=28, max=129, mean=63.8, median=64, std=29.3
+  All: [38, 104, 28, 129, 41, 39, 64, 85, 50, 84, 72, 69, 30, 39, 45, 103]
+
+  --- B. OTHER TRIPLES IN GAPS ---
+  Triples per gap: mean=21.3, min=9, max=42
+  Triple types in gaps: {'attack': 113, 'shield': 64, 'goldSack': 57, 'steal': 46, 'coin': 44, 'spins': 17}
+  Distance from last triple to VT: mean=2.2, min=0, max=8
+  All: [2, 0, 2, 8, 2, 0, 0, 2, 4, 4, 1, 4, 1, 1, 2, 2]
+
+  Triple density by gap position (thirds):
+    First third: 106/336 = 31.5%
+    Middle:      121/348 = 34.8%
+    Last third:  114/336 = 33.9%
+
+  Previous spin triple type -> target VT next spin:
+  triple_type     then_vt    total     rate    lift
+  attack                0      117   0.00%   0.00x
+  shield                1       69   1.45%   0.94x
+  goldSack              1       58   1.72%   1.12x
+  coin                  0       49   0.00%   0.00x
+  steal                 0       48   0.00%   0.00x
+  spins                 1       18   5.56%   3.61x
+  accumulation          0       17   0.00%   0.00x
+
+  Previous spin symbol (non-triple) -> target VT next spin:
+  reel_1          then_vt    total     rate    lift
+  accumulation          7      362   1.93%   1.26x
+  attack                4      182   2.20%   1.43x
+  coin                  0      143   0.00%   0.00x
+  steal                 3       34   8.82%   5.74x
+  shield                0        8   0.00%   0.00x
+  spins                 0        1   0.00%   0.00x
+
+  --- C. CUMULATIVE IDX THROUGH GAPS ---
+  Position through gap -> cumulative averages:
+     pos   cum_sum   cum_r1   cum_r2   cum_r3  tri_rate  inst_sum   r3_avg
+    0-10%     11.87     3.72     3.88     4.27    0.276     12.13     4.41
+   10-20%     12.20     3.81     4.08     4.31    0.268     11.92     3.95
+   20-30%     11.83     3.81     3.95     4.07    0.295     11.10     3.59
+   30-40%     11.70     3.80     3.94     3.96    0.318     11.68     3.94
+   40-50%     11.55     3.71     3.93     3.92    0.317     11.10     3.91
+   50-60%     11.51     3.68     3.90     3.93    0.334     11.77     3.88
+   60-70%     11.54     3.71     3.93     3.91    0.332     10.92     3.59
+   70-80%     11.58     3.67     3.96     3.95    0.326     12.06     4.43
+   80-90%     11.52     3.64     3.95     3.94    0.334     10.72     3.73
+   90-100%     11.50     3.64     3.93     3.93    0.338     12.21     4.10
+
+  --- D. IDX MOMENTUM (spin-to-spin changes) ---
+  delta   bef_vt_mean  overall_mean   ratio
+  dr1           0.529        -0.005  -117.00
+  dr2           0.882        -0.001  -975.00
+  dr3           0.941         0.000     inf
+  dsum          2.353        -0.005  -433.33
+
+  Absolute momentum (|delta|):
+  delta   bef_vt_mean  overall_mean   ratio
+  dr1           1.353         2.602   0.52x
+  dr2           2.294         3.109   0.74x
+  dr3           2.941         3.805   0.77x
+  dsum          5.529         7.642   0.72x
+
+  --- E. SYMBOL STREAKS BEFORE VT ---
+  streak   bef_vt  overall   vt_rate    lift
+       1       12      850    1.41%   0.92x
+       2        4      187    2.14%   1.39x
+       3        1       52    1.92%   1.25x
+       4        0       12    0.00%   0.00x
+       5        0        5    0.00%   0.00x
+
+  --- F. REEL COMBINATION PATTERNS ---
+  combo    bef_vt  overall   vt_rate    lift
+  HHH           3      102    2.94%   1.91x <--
+  HHL           0       26    0.00%   0.00x
+  HHM           1       36    2.78%   1.81x
+  HLL           0       37    0.00%   0.00x
+  HMH           1       51    1.96%   1.28x
+  HML           0       42    0.00%   0.00x
+  HMM           1       30    3.33%   2.17x
+  LHH           0       52    0.00%   0.00x
+  LLL           2      226    0.88%   0.58x
+  LLM           0       15    0.00%   0.00x
+  LML           0       21    0.00%   0.00x
+  MHH           2      126    1.59%   1.03x
+  MHL           0       28    0.00%   0.00x
+  MHM           2       22    9.09%   5.91x <--
+  MLL           0       41    0.00%   0.00x
+  MLM           0       16    0.00%   0.00x
+  MMH           2       88    2.27%   1.48x
+  MML           3       55    5.45%   3.55x <--
+  MMM           0       79    0.00%   0.00x
+
+  --- G. NON-VT TRIPLE AS SIGNAL (bet N spins after it) ---
+  Bet 1 after non-VT triple: 341 bets, 2 hits, prec=0.59%, catch=11.8%, bets/hit=170.5
+  Bet 2 after non-VT triple: 681 bets, 6 hits, prec=0.88%, catch=35.3%, bets/hit=113.5
+  Bet 3 after non-VT triple: 1021 bets, 15 hits, prec=1.47%, catch=88.2%, bets/hit=68.1
+  Bet 5 after non-VT triple: 1701 bets, 26 hits, prec=1.53%, catch=152.9%, bets/hit=65.4
+
+  --- H. SPINS SINCE LAST NON-VT TRIPLE -> VT RATE ---
+     range    vts    total     rate    lift
+    1-  2      5      392   1.28%   0.83x
+    3-  5     10      244   4.10%   2.67x
+    6- 10      2      109   1.83%   1.19x
+   11- 15      0       17   0.00%   0.00x
+   16- 20      0        1   0.00%   0.00x
+
+  --- I. PITY TIMER (spins since last target VT) ---
+     range    vts    total     rate    lift
+    1-  5      0       85   0.00%   0.00x
+    6- 10      0       85   0.00%   0.00x
+   11- 15      0       85   0.00%   0.00x
+   16- 20      0       83   0.00%   0.00x
+   21- 30      1      159   0.63%   0.41x
+   31- 40      4      140   2.86%   1.86x
+   41- 50      2       98   2.04%   1.33x
+   51- 60      1       81   1.23%   0.80x
+   61- 80      3      128   2.34%   1.52x
+   81-100      2       71   2.82%   1.83x
+  101-150      3       39   7.69%   5.00x
+
+  --- J. STRATEGY SIMULATIONS ---
+
+  strategy                        bets   caught   missed   catch%    prec%  bets/hit   saved%
+  ------------------------------------------------------------------------------------------------
+  Always_bet                      1106       17        0   100.0%     1.5%      65.1     0.0%
+  gap_vt>=20                       765       17        0   100.0%     2.2%      45.0    30.8%
+  gap_vt>=30                       595       16        1    94.1%     2.7%      37.2    46.2%
+  gap_vt>=40                       443       12        5    70.6%     2.7%      36.9    59.9%
+  gap_vt>=50                       331       10        7    58.8%     3.0%      33.1    70.1%
+  gap_vt>=30+sum>=15               213        8        9    47.1%     3.8%      26.6    80.7%
+  gap_vt>=30+r3>=5                 283        8        9    47.1%     2.8%      35.4    74.4%
+  gap_vt>=30+all_diff              184        8        9    47.1%     4.3%      23.0    83.4%
+  gap_vt>=30+any_8                 211        7       10    41.2%     3.3%      30.1    80.9%
+  gap_vt>=20+sum>=15               269        8        9    47.1%     3.0%      33.6    75.7%
+  gap_vt>=20+r3>=5                 354        8        9    47.1%     2.3%      44.2    68.0%
+  gap_tri>=5                       196        2       15    11.8%     1.0%      98.0    82.3%
+  gap_tri>=10                       17        0       17     0.0%     0.0%       inf    98.5%
+  gap_vt>=30+gap_tri>=5            113        2       15    11.8%     1.8%      56.5    89.8%
+  gap_vt>=20+spread<=4             470       12        5    70.6%     2.6%      39.2    57.5%
+  gap_vt>=30+spread<=4             371       11        6    64.7%     3.0%      33.7    66.5%
+  gap_vt>=30+r2>=5                 253        8        9    47.1%     3.2%      31.6    77.1%
+  gap_vt>=30+r1>=5                 211        6       11    35.3%     2.8%      35.2    80.9%
+
+  --- K. PER-REEL idx N-1 -> target VT rate ---
+
+  r1:
+  val   bef_vt    total     rate    lift
+    0        0      127   0.00%   0.00x
+    1        0       89   0.00%   0.00x
+    2        2      106   1.89%   1.23x
+    3        9      277   3.25%   2.11x <--
+    4        0      113   0.00%   0.00x
+    5        0       65   0.00%   0.00x
+    6        1       93   1.08%   0.70x
+    7        5      219   2.28%   1.49x
+    8        0       17   0.00%   0.00x
+
+  r2:
+  val   bef_vt    total     rate    lift
+    0        0      159   0.00%   0.00x
+    1        1       94   1.06%   0.69x
+    2        1       87   1.15%   0.75x
+    3        3      161   1.86%   1.21x
+    4        4      150   2.67%   1.73x <--
+    5        0       63   0.00%   0.00x
+    6        3      108   2.78%   1.81x <--
+    7        5      168   2.98%   1.94x <--
+    8        0      116   0.00%   0.00x
+
+  r3:
+  val   bef_vt    total     rate    lift
+    0        4      299   1.34%   0.87x
+    1        0      100   0.00%   0.00x
+    2        1       77   1.30%   0.84x
+    3        1       37   2.70%   1.76x
+    4        3       82   3.66%   2.38x <--
+    5        0       92   0.00%   0.00x
+    6        1       19   5.26%   3.42x
+    7        0       21   0.00%   0.00x
+    8        7      379   1.85%   1.20x
+
+  --- L. 2-SPIN LOOKBACK (r3[N-2], r3[N-1]) -> target VT ---
+  (r3_n2,r3_n1)      bef_vt    total     rate    lift
+  (8, 6)                  1        9  11.11%   7.23x
+  (5, 2)                  1        9  11.11%   7.23x
+  (0, 4)                  1       21   4.76%   3.10x
+  (5, 8)                  1       23   4.35%   2.83x
+  (1, 0)                  1       27   3.70%   2.41x
+  (0, 0)                  2       66   3.03%   1.97x
+  (0, 8)                  3      116   2.59%   1.68x
+  (8, 8)                  3      135   2.22%   1.45x
+  (8, 0)                  1       99   1.01%   0.66x
+
+######################################################################
+  SPN VTs ONLY
+  1107 spins, 18 targets, baseline=1.63%
+######################################################################
+
+  --- A. GAP LENGTHS ---
+  17 gaps: min=2, max=119, mean=58.1, median=51, std=30.5
+  All: [119, 49, 25, 98, 80, 43, 58, 101, 63, 16, 41, 51, 52, 47, 49, 94, 2]
+
+  --- B. OTHER TRIPLES IN GAPS ---
+  Triples per gap: mean=19.1, min=1, max=42
+  Triple types in gaps: {'attack': 104, 'shield': 61, 'goldSack': 52, 'coin': 47, 'steal': 45, 'accumulation': 16}
+  Distance from last triple to VT: mean=2.6, min=0, max=8
+  All: [1, 8, 5, 2, 1, 3, 1, 1, 5, 1, 4, 7, 4, 0, 0, 2, 0]
+
+  Triple density by gap position (thirds):
+    First third: 105/322 = 32.6%
+    Middle:      109/342 = 31.9%
+    Last third:  110/322 = 34.2%
+
+  Previous spin triple type -> target VT next spin:
+  triple_type     then_vt    total     rate    lift
+  attack                2      117   1.71%   1.05x
+  shield                0       69   0.00%   0.00x
+  goldSack              1       58   1.72%   1.06x
+  coin                  0       49   0.00%   0.00x
+  steal                 0       48   0.00%   0.00x
+  spins                 0       18   0.00%   0.00x
+  accumulation          0       17   0.00%   0.00x
+
+  Previous spin symbol (non-triple) -> target VT next spin:
+  reel_1          then_vt    total     rate    lift
+  accumulation          8      362   2.21%   1.36x
+  attack                3      182   1.65%   1.01x
+  coin                  3      143   2.10%   1.29x
+  steal                 0       34   0.00%   0.00x
+  shield                1        8  12.50%   7.68x
+  spins                 0        1   0.00%   0.00x
+
+  --- C. CUMULATIVE IDX THROUGH GAPS ---
+  Position through gap -> cumulative averages:
+     pos   cum_sum   cum_r1   cum_r2   cum_r3  tri_rate  inst_sum   r3_avg
+    0-10%     11.49     3.21     3.97     4.30    0.278     12.25     4.53
+   10-20%     12.06     3.77     3.96     4.32    0.244     11.82     3.92
+   20-30%     12.14     3.75     4.08     4.31    0.296     12.00     4.40
+   30-40%     11.74     3.62     3.96     4.15    0.331     10.97     3.80
+   40-50%     11.89     3.68     4.01     4.20    0.334     12.36     4.20
+   50-60%     11.89     3.74     4.02     4.13    0.326     11.92     3.95
+   60-70%     11.82     3.70     4.01     4.11    0.322     11.64     3.87
+   70-80%     11.75     3.74     3.98     4.03    0.327     10.58     3.18
+   80-90%     11.73     3.75     3.98     4.00    0.330     12.27     4.21
+   90-100%     11.76     3.74     4.00     4.02    0.330     11.78     4.29
+
+  --- D. IDX MOMENTUM (spin-to-spin changes) ---
+  delta   bef_vt_mean  overall_mean   ratio
+  dr1           0.778        -0.005  -171.89
+  dr2          -0.167        -0.001  184.17
+  dr3           0.833         0.000     inf
+  dsum          1.444        -0.005  -266.02
+
+  Absolute momentum (|delta|):
+  delta   bef_vt_mean  overall_mean   ratio
+  dr1           2.000         2.602   0.77x
+  dr2           2.611         3.109   0.84x
+  dr3           3.833         3.805   1.01x
+  dsum          6.889         7.642   0.90x
+
+  --- E. SYMBOL STREAKS BEFORE VT ---
+  streak   bef_vt  overall   vt_rate    lift
+       1       14      850    1.65%   1.01x
+       2        4      187    2.14%   1.31x
+       3        0       52    0.00%   0.00x
+       4        0       12    0.00%   0.00x
+       5        0        5    0.00%   0.00x
+
+  --- F. REEL COMBINATION PATTERNS ---
+  combo    bef_vt  overall   vt_rate    lift
+  HHH           2      102    1.96%   1.20x
+  HHL           1       26    3.85%   2.36x
+  HHM           0       36    0.00%   0.00x
+  HLL           0       37    0.00%   0.00x
+  HMH           1       51    1.96%   1.20x
+  HML           0       42    0.00%   0.00x
+  HMM           3       30   10.00%   6.14x <--
+  LHH           1       52    1.92%   1.18x
+  LLL           3      226    1.33%   0.82x
+  LLM           0       15    0.00%   0.00x
+  LML           1       21    4.76%   2.93x
+  MHH           2      126    1.59%   0.98x
+  MHL           0       28    0.00%   0.00x
+  MHM           0       22    0.00%   0.00x
+  MLL           1       41    2.44%   1.50x
+  MLM           0       16    0.00%   0.00x
+  MMH           2       88    2.27%   1.40x
+  MML           0       55    0.00%   0.00x
+  MMM           1       79    1.27%   0.78x
+
+  --- G. NON-VT TRIPLE AS SIGNAL (bet N spins after it) ---
+  Bet 1 after non-VT triple: 341 bets, 3 hits, prec=0.88%, catch=16.7%, bets/hit=113.7
+  Bet 2 after non-VT triple: 681 bets, 8 hits, prec=1.17%, catch=44.4%, bets/hit=85.1
+  Bet 3 after non-VT triple: 1021 bets, 14 hits, prec=1.37%, catch=77.8%, bets/hit=72.9
+  Bet 5 after non-VT triple: 1701 bets, 22 hits, prec=1.29%, catch=122.2%, bets/hit=77.3
+
+  --- H. SPINS SINCE LAST NON-VT TRIPLE -> VT RATE ---
+     range    vts    total     rate    lift
+    1-  2      7      392   1.79%   1.10x
+    3-  5      6      244   2.46%   1.51x
+    6- 10      5      109   4.59%   2.82x
+   11- 15      0       17   0.00%   0.00x
+   16- 20      0        1   0.00%   0.00x
+
+  --- I. PITY TIMER (spins since last target VT) ---
+     range    vts    total     rate    lift
+    1-  5      1       88   1.14%   0.70x
+    6- 10      0       85   0.00%   0.00x
+   11- 15      0       85   0.00%   0.00x
+   16- 20      1       82   1.22%   0.75x
+   21- 30      1      156   0.64%   0.39x
+   31- 40      0      150   0.00%   0.00x
+   41- 50      5      134   3.73%   2.29x
+   51- 60      3       84   3.57%   2.19x
+   61- 80      1      120   0.83%   0.51x
+   81-100      3       75   4.00%   2.46x
+  101-150      2       22   9.09%   5.59x
+
+  --- J. STRATEGY SIMULATIONS ---
+
+  strategy                        bets   caught   missed   catch%    prec%  bets/hit   saved%
+  ------------------------------------------------------------------------------------------------
+  Always_bet                      1106       18        0   100.0%     1.6%      61.4     0.0%
+  gap_vt>=20                       762       16        2    88.9%     2.1%      47.6    31.1%
+  gap_vt>=30                       599       14        4    77.8%     2.3%      42.8    45.8%
+  gap_vt>=40                       449       14        4    77.8%     3.1%      32.1    59.4%
+  gap_vt>=50                       312        9        9    50.0%     2.9%      34.7    71.8%
+  gap_vt>=30+sum>=15               218        8       10    44.4%     3.7%      27.2    80.3%
+  gap_vt>=30+r3>=5                 272        9        9    50.0%     3.3%      30.2    75.4%
+  gap_vt>=30+all_diff              205        7       11    38.9%     3.4%      29.3    81.5%
+  gap_vt>=30+any_8                 194        6       12    33.3%     3.1%      32.3    82.5%
+  gap_vt>=20+sum>=15               274        9        9    50.0%     3.3%      30.4    75.2%
+  gap_vt>=20+r3>=5                 346       10        8    55.6%     2.9%      34.6    68.7%
+  gap_tri>=5                       196        4       14    22.2%     2.0%      49.0    82.3%
+  gap_tri>=10                       17        0       18     0.0%     0.0%       inf    98.5%
+  gap_vt>=30+gap_tri>=5            110        3       15    16.7%     2.7%      36.7    90.1%
+  gap_vt>=20+spread<=4             469       10        8    55.6%     2.1%      46.9    57.6%
+  gap_vt>=30+spread<=4             373       10        8    55.6%     2.7%      37.3    66.3%
+  gap_vt>=30+r2>=5                 259        7       11    38.9%     2.7%      37.0    76.6%
+  gap_vt>=30+r1>=5                 221        6       12    33.3%     2.7%      36.8    80.0%
+
+  --- K. PER-REEL idx N-1 -> target VT rate ---
+
+  r1:
+  val   bef_vt    total     rate    lift
+    0        2      127   1.57%   0.97x
+    1        2       89   2.25%   1.38x
+    2        1      106   0.94%   0.58x
+    3        3      277   1.08%   0.67x
+    4        2      113   1.77%   1.09x
+    5        1       65   1.54%   0.95x
+    6        2       93   2.15%   1.32x
+    7        5      219   2.28%   1.40x
+    8        0       17   0.00%   0.00x
+
+  r2:
+  val   bef_vt    total     rate    lift
+    0        2      159   1.26%   0.77x
+    1        2       94   2.13%   1.31x
+    2        0       87   0.00%   0.00x
+    3        4      161   2.48%   1.53x <--
+    4        2      150   1.33%   0.82x
+    5        2       63   3.17%   1.95x <--
+    6        0      108   0.00%   0.00x
+    7        4      168   2.38%   1.46x
+    8        2      116   1.72%   1.06x
+
+  r3:
+  val   bef_vt    total     rate    lift
+    0        5      299   1.67%   1.03x
+    1        0      100   0.00%   0.00x
+    2        1       77   1.30%   0.80x
+    3        1       37   2.70%   1.66x
+    4        0       82   0.00%   0.00x
+    5        3       92   3.26%   2.00x <--
+    6        0       19   0.00%   0.00x
+    7        0       21   0.00%   0.00x
+    8        8      379   2.11%   1.30x
+
+  --- L. 2-SPIN LOOKBACK (r3[N-2], r3[N-1]) -> target VT ---
+  (r3_n2,r3_n1)      bef_vt    total     rate    lift
+  (1, 2)                  1        6  16.67%  10.24x
+  (4, 5)                  1        8  12.50%   7.68x
+  (3, 8)                  1       10  10.00%   6.14x
+  (8, 5)                  2       32   6.25%   3.84x
+  (0, 3)                  1       16   6.25%   3.84x
+  (1, 0)                  1       27   3.70%   2.28x
+  (0, 8)                  4      116   3.45%   2.12x
+  (4, 0)                  1       31   3.23%   1.98x
+  (8, 8)                  3      135   2.22%   1.37x
+  (8, 0)                  2       99   2.02%   1.24x
+  (0, 0)                  1       66   1.52%   0.93x
+
+######################################################################
+  ALL ANALYSES COMPLETE
+######################################################################

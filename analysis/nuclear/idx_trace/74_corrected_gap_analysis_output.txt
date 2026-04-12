@@ -1,0 +1,208 @@
+Corrected data: 1107 spins with idx, 35 VTs
+Baseline VT rate: 3.16%
+Baseline: 1106 bets -> 35 VTs = 31.6 bets/hit
+
+======================================================================
+  ANALYSIS 1: IDX OF REAL PREVIOUS SPIN BEFORE EACH VT
+======================================================================
+  VT spin= 65250 SPN  prev_idx=(3, 3, 8)  prev_triple=False  prev_reel1=accumulation
+  VT spin= 65292 ACC  prev_idx=(7, 7, 8)  prev_triple=False  prev_reel1=accumulation
+  VT spin= 65350 ACC  prev_idx=(3, 4, 0)  prev_triple=False  prev_reel1=attack
+  VT spin= 65433 SPN  prev_idx=(6, 4, 5)  prev_triple=False  prev_reel1=coin
+  VT spin= 65500 SPN  prev_idx=(3, 7, 8)  prev_triple=False  prev_reel1=accumulation
+  VT spin= 65501 ACC  prev_idx=(6, 6, 6)  prev_triple=True  prev_reel1=spins
+  VT spin= 65540 SPN  prev_idx=(7, 7, 2)  prev_triple=False  prev_reel1=shield
+  VT spin= 65548 ACC  prev_idx=(2, 1, 0)  prev_triple=False  prev_reel1=attack
+  VT spin= 65689 SPN  prev_idx=(5, 8, 8)  prev_triple=False  prev_reel1=accumulation
+  VT spin= 65739 ACC  prev_idx=(7, 3, 8)  prev_triple=False  prev_reel1=accumulation
+  VT spin= 65800 ACC  prev_idx=(3, 4, 0)  prev_triple=False  prev_reel1=attack
+  VT spin= 65804 SPN  prev_idx=(2, 1, 0)  prev_triple=False  prev_reel1=attack
+  VT spin= 65853 ACC  prev_idx=(3, 7, 3)  prev_triple=True  prev_reel1=goldSack
+  VT spin= 65865 SPN  prev_idx=(7, 3, 8)  prev_triple=False  prev_reel1=accumulation
+  VT spin= 65955 ACC  prev_idx=(2, 2, 2)  prev_triple=True  prev_reel1=shield
+  VT spin= 65961 SPN  prev_idx=(7, 7, 8)  prev_triple=False  prev_reel1=accumulation
+  VT spin= 66086 ACC  prev_idx=(7, 7, 8)  prev_triple=False  prev_reel1=accumulation
+  VT spin= 66108 SPN  prev_idx=(1, 8, 8)  prev_triple=False  prev_reel1=accumulation
+  VT spin= 66166 ACC  prev_idx=(3, 3, 8)  prev_triple=False  prev_reel1=accumulation
+  VT spin= 66213 SPN  prev_idx=(1, 5, 0)  prev_triple=False  prev_reel1=attack
+  VT spin= 66234 SPN  prev_idx=(3, 3, 8)  prev_triple=False  prev_reel1=accumulation
+  VT spin= 66297 ACC  prev_idx=(3, 6, 4)  prev_triple=False  prev_reel1=steal
+  VT spin= 66305 SPN  prev_idx=(4, 1, 0)  prev_triple=False  prev_reel1=attack
+  VT spin= 66389 SPN  prev_idx=(7, 7, 8)  prev_triple=False  prev_reel1=accumulation
+  VT spin= 66417 ACC  prev_idx=(7, 4, 4)  prev_triple=False  prev_reel1=steal
+  VT spin= 66472 SPN  prev_idx=(4, 5, 5)  prev_triple=False  prev_reel1=coin
+  VT spin= 66522 ACC  prev_idx=(3, 7, 8)  prev_triple=False  prev_reel1=accumulation
+  VT spin= 66546 SPN  prev_idx=(0, 0, 0)  prev_triple=True  prev_reel1=attack
+  VT spin= 66567 ACC  prev_idx=(7, 6, 4)  prev_triple=False  prev_reel1=steal
+  VT spin= 66624 SPN  prev_idx=(0, 0, 0)  prev_triple=True  prev_reel1=attack
+  VT spin= 66635 ACC  prev_idx=(3, 4, 0)  prev_triple=False  prev_reel1=attack
+  VT spin= 66707 ACC  prev_idx=(3, 3, 8)  prev_triple=False  prev_reel1=accumulation
+  VT spin= 66768 SPN  prev_idx=(6, 4, 5)  prev_triple=False  prev_reel1=coin
+  VT spin= 66772 SPN  prev_idx=(7, 3, 3)  prev_triple=True  prev_reel1=goldSack
+  VT spin= 66848 ACC  prev_idx=(3, 7, 8)  prev_triple=False  prev_reel1=accumulation
+
+Pre-VT idx tuple counts:
+  (3, 3, 8): 4 (11.4%)
+  (7, 7, 8): 4 (11.4%)
+  (3, 4, 0): 3 (8.6%)
+  (3, 7, 8): 3 (8.6%)
+  (6, 4, 5): 2 (5.7%)
+  (2, 1, 0): 2 (5.7%)
+  (7, 3, 8): 2 (5.7%)
+  (0, 0, 0): 2 (5.7%)
+  (6, 6, 6): 1 (2.9%)
+  (7, 7, 2): 1 (2.9%)
+  (5, 8, 8): 1 (2.9%)
+  (3, 7, 3): 1 (2.9%)
+  (2, 2, 2): 1 (2.9%)
+  (1, 8, 8): 1 (2.9%)
+  (1, 5, 0): 1 (2.9%)
+  (3, 6, 4): 1 (2.9%)
+  (4, 1, 0): 1 (2.9%)
+  (7, 4, 4): 1 (2.9%)
+  (4, 5, 5): 1 (2.9%)
+  (7, 6, 4): 1 (2.9%)
+
+======================================================================
+  ANALYSIS 2: PER-REEL IDX BEFORE VT vs OVERALL
+======================================================================
+
+  r1:
+  val   pre_vt   pre%  overall   ovr%    lift
+    0        2   5.7%      127  11.5%   0.50x
+    1        2   5.7%       89   8.0%   0.71x
+    2        3   8.6%      106   9.6%   0.89x
+    3       12  34.3%      277  25.0%   1.37x
+    4        2   5.7%      113  10.2%   0.56x
+    5        1   2.9%       65   5.9%   0.49x
+    6        3   8.6%       93   8.4%   1.02x
+    7       10  28.6%      219  19.8%   1.44x
+    8        0   0.0%       17   1.5%   0.00x
+
+  r2:
+  val   pre_vt   pre%  overall   ovr%    lift
+    0        2   5.7%      159  14.4%   0.40x
+    1        3   8.6%       94   8.5%   1.01x
+    2        1   2.9%       87   7.9%   0.36x
+    3        7  20.0%      161  14.6%   1.37x
+    4        6  17.1%      150  13.6%   1.26x
+    5        2   5.7%       63   5.7%   1.00x
+    6        3   8.6%      108   9.8%   0.88x
+    7        9  25.7%      168  15.2%   1.69x
+    8        2   5.7%      116  10.5%   0.54x
+
+  r3:
+  val   pre_vt   pre%  overall   ovr%    lift
+    0        9  25.7%      299  27.0%   0.95x
+    1        0   0.0%      100   9.0%   0.00x
+    2        2   5.7%       77   7.0%   0.82x
+    3        2   5.7%       37   3.3%   1.71x
+    4        3   8.6%       82   7.4%   1.16x
+    5        3   8.6%       92   8.3%   1.03x
+    6        1   2.9%       19   1.7%   1.66x
+    7        0   0.0%       21   1.9%   0.00x
+    8       15  42.9%      379  34.3%   1.25x
+
+======================================================================
+  ANALYSIS 3: WINDOW PATTERNS BEFORE VT (N=3,5,10)
+======================================================================
+
+  --- Window size: 3 ---
+  VT windows: 35, non-VT: 1069
+  feature                vt_mean  non_vt_mean   ratio
+  has_6or8                  1.49         1.48   1.00x
+  max_spread                4.83         5.15   0.94x
+  mean_r1                   3.70         3.74   0.99x
+  mean_r2                   4.29         3.99   1.07x
+  mean_r3                   4.38         4.01   1.09x
+  same_idx_count            0.69         0.80   0.86x
+  sum_idx                  37.09        35.23   1.05x
+  triple_count              0.91         1.02   0.89x
+  vt_count                  0.09         0.10   0.90x
+
+  --- Window size: 5 ---
+  VT windows: 35, non-VT: 1067
+  feature                vt_mean  non_vt_mean   ratio
+  has_6or8                  2.57         2.46   1.04x
+  max_spread                5.51         5.84   0.94x
+  mean_r1                   3.80         3.74   1.02x
+  mean_r2                   4.24         3.99   1.06x
+  mean_r3                   4.32         4.01   1.08x
+  same_idx_count            1.17         1.33   0.88x
+  sum_idx                  61.80        58.73   1.05x
+  triple_count              1.54         1.71   0.90x
+  vt_count                  0.17         0.16   1.08x
+
+  --- Window size: 10 ---
+  VT windows: 35, non-VT: 1062
+  feature                vt_mean  non_vt_mean   ratio
+  has_6or8                  5.00         4.94   1.01x
+  max_spread                6.37         6.49   0.98x
+  mean_r1                   3.71         3.74   0.99x
+  mean_r2                   4.18         4.00   1.05x
+  mean_r3                   4.11         4.02   1.02x
+  same_idx_count            2.49         2.66   0.93x
+  sum_idx                 119.94       117.65   1.02x
+  triple_count              3.31         3.41   0.97x
+  vt_count                  0.23         0.32   0.71x
+
+======================================================================
+  ANALYSIS 4: STRATEGY SIMULATIONS (CORRECTED)
+======================================================================
+
+  strategy                  bets   caught   missed   catch%    prec%  bets/hit   saved%
+  ------------------------------------------------------------------------------------------
+  Always_bet                1106       35        0   100.0%     3.2%      31.6     0.0%
+  same_idx(any)              294        4       31    11.4%     1.4%      73.5    73.4%
+  same_idx_6or8               35        1       34     2.9%     2.9%      35.0    96.8%
+  same_idx_not_6or8          259        3       32     8.6%     1.2%      86.3    76.6%
+  r1==r2                     527       13       22    37.1%     2.5%      40.5    52.4%
+  r1==r3                     319        5       30    14.3%     1.6%      63.8    71.2%
+  r2==r3                     495        9       26    25.7%     1.8%      55.0    55.2%
+  any_pair_same              753       19       16    54.3%     2.5%      39.6    31.9%
+  no_pair_same               353       16       19    45.7%     4.5%      22.1    68.1%
+  r1_in_6or8                 110        3       32     8.6%     2.7%      36.7    90.1%
+  r2_in_6or8                 224        5       30    14.3%     2.2%      44.8    79.7%
+  r3_in_6or8                 398       16       19    45.7%     4.0%      24.9    64.0%
+  any_reel_6or8              545       20       15    57.1%     3.7%      27.2    50.7%
+  no_reel_6or8               561       15       20    42.9%     2.7%      37.4    49.3%
+  all_reels_6or8              35        1       34     2.9%     2.9%      35.0    96.8%
+  sum>=18                    268       11       24    31.4%     4.1%      24.4    75.8%
+  sum>=15                    392       17       18    48.6%     4.3%      23.1    64.6%
+  sum<=6                     267        7       28    20.0%     2.6%      38.1    75.9%
+  sum<=3                     165        4       31    11.4%     2.4%      41.2    85.1%
+  spread<=2                  438       13       22    37.1%     3.0%      33.7    60.4%
+  spread>=6                  140        1       34     2.9%     0.7%     140.0    87.3%
+  is_triple_csv              376        6       29    17.1%     1.6%      62.7    66.0%
+  is_triple_not_vt           341        5       30    14.3%     1.5%      68.2    69.2%
+  r1>=5                      394       14       21    40.0%     3.6%      28.1    64.4%
+  r2>=5                      455       16       19    45.7%     3.5%      28.4    58.9%
+  r3>=5                      511       19       16    54.3%     3.7%      26.9    53.8%
+  r1<=2                      322        7       28    20.0%     2.2%      46.0    70.9%
+  r2<=2                      340        6       29    17.1%     1.8%      56.7    69.3%
+  r3<=2                      476       11       24    31.4%     2.3%      43.3    57.0%
+
+======================================================================
+  ANALYSIS 5: CSV TRIPLE -> NEXT SPIN IS VT?
+======================================================================
+  After triple:     6/376 VTs = 1.60%
+  After non-triple: 29/730 VTs = 3.97%
+  Baseline:         35/1106 = 3.16%
+
+======================================================================
+  ANALYSIS 6: GAP LENGTH DISTRIBUTION (corrected)
+======================================================================
+  34 gaps, min=0, max=94, mean=30.3, median=32
+
+  Gap distribution:
+       0-9:   8 ########
+     10-19:   5 #####
+     20-29:   2 ##
+     30-39:   9 #########
+     40-49:   4 ####
+     50-74:   4 ####
+       75+:   2 ##
+
+======================================================================
+  DONE
+======================================================================
