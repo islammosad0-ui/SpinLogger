@@ -48,7 +48,17 @@ static void* s_klass_Result      = NULL;  // SlotResult
 static void* s_klass_Symbol3     = NULL;  // SlotSymbol3
 static void* s_klass_BarManager  = NULL;  // SlotBarManager
 static void* s_klass_BarSymInfo  = NULL;  // SlotBarSymbolInfo
-static void* s_klass_BoardMgr   = NULL;  // SlotMachine.BoardManager
+static void* s_klass_BoardMgr    = NULL;  // SlotMachine.BoardManager (legacy)
+
+// Scanner v2 — pre-commitment state classes
+static void* s_klass_Board3D     = NULL;  // SlotMachine.Dice.Board3DManager
+static void* s_klass_ReplSvc     = NULL;  // SlotSymbolReplacementService (singleton)
+static void* s_klass_BarRepl     = NULL;  // SlotBarSymbolReplacer (per-reel)
+static void* s_klass_WinComp     = NULL;  // SlotMachineWinBehaviourComposite
+static void* s_klass_ScenBhv     = NULL;  // ScenarioSlotMachineWinBehaviour
+static void* s_klass_DataProv    = NULL;  // SlotDataProvider
+static void* s_klass_PvpSlots    = NULL;  // PvpBaseCompetitorSlotsController (RNG ref)
+static void* s_klass_BaseSymCtrl = NULL;  // BaseSlotSymbolController (back-ref path)
 
 // ============================================================
 //  Cached field handles & offsets
@@ -84,12 +94,52 @@ static size_t fo_symbol3             = 0;
 static size_t fo_resultSymbolIndex   = 0;
 static size_t fo_numberOfSymbols     = 0;
 static size_t fo_symbolElements      = 0;      // m_SymbolElements array
+static size_t fo_slotObjects         = 0;      // slotObjects (GameObject[] alt strip access)
 
 // SlotBarSymbolInfo
 static size_t fo_slotSymbolBacking   = 0;      // <SlotSymbol>k__BackingField
 
 // BoardManager
 static size_t fo_diceWinDict         = 0;      // m_DiceWinResultDictionary
+
+// Scanner v2 — new Manager fields
+static size_t fo_specialEvents       = 0;      // m_SpecialEventsContainers
+static size_t fo_animSpeedBacking    = 0;      // <SlotMachineAnimationSpeed>k__BackingField
+static size_t fo_winBehaviours       = 0;      // m_WinBehaviours (on Manager, if present)
+
+// Board3DManager fields
+static size_t fo_nearWinSymbol       = 0;      // m_NearWinSymbol
+static size_t fo_throwScenarios      = 0;      // m_ThrowDiceScenarios
+static size_t fo_nearWinScenarios    = 0;      // m_DiceNearWinThrowScenarios
+
+// SlotBarSymbolReplacer fields
+static size_t fo_replMap             = 0;      // m_Replacements
+static size_t fo_replBarMgr          = 0;      // m_BarManager (back-ref to which reel)
+
+// SlotSymbolReplacementService
+static void*  fh_ReplSvcInstance     = NULL;   // static Instance handle
+static size_t fo_persistentRepl      = 0;      // persistentReplacements
+
+// SlotMachineWinBehaviourComposite
+static size_t fo_compWinBehaviours   = 0;      // m_WinBehaviours
+
+// ScenarioSlotMachineWinBehaviour
+static size_t fo_scenScenario        = 0;      // m_Scenario
+
+// SlotDataProvider
+static size_t fo_dataProvFailCounter = 0;      // SpinFailedCounter (alt ref)
+
+// PvpBaseCompetitorSlotsController — RNG reference
+static size_t fo_pvpRandom           = 0;      // m_Random
+
+// BaseSlotSymbolController — back-ref from symbol controllers up to Manager
+static size_t fo_baseSymMgrRef       = 0;      // m_SlotMachineManager
+
+// SlotMachineManager — static weight tables
+// Stored as field handles (not offsets) since they are static fields read
+// via _field_static_get_value into a pointer target.
+static void*  fh_WeightsIdentical    = NULL;   // WEIGHTS_IDENTICAL_SYMBOLS
+static void*  fh_WeightsNonIdentical = NULL;   // WEIGHTS_NON_IDENTICAL_SYMBOLS
 
 // ============================================================
 //  IL2CPP array layout constants (arm64)
@@ -326,14 +376,43 @@ typedef NS_ENUM(NSInteger, ScanPhase) {
                 s_klass_BarSymInfo = klass;
             else if (strcmp(name, "BoardManager") == 0 && strcmp(ns, "SlotMachine") == 0)
                 s_klass_BoardMgr = klass;
+            // Scanner v2 — pre-commitment state classes.
+            // For these we don't know the exact namespace for sure; take the
+            // first match by name. If there are multiple CM-owned classes with
+            // the same name (unlikely for these specific names), we'll pick
+            // one deterministically by iteration order.
+            else if (strcmp(name, "Board3DManager") == 0 && !s_klass_Board3D)
+                s_klass_Board3D = klass;
+            else if (strcmp(name, "SlotSymbolReplacementService") == 0 && !s_klass_ReplSvc)
+                s_klass_ReplSvc = klass;
+            else if (strcmp(name, "SlotBarSymbolReplacer") == 0 && !s_klass_BarRepl)
+                s_klass_BarRepl = klass;
+            else if (strcmp(name, "SlotMachineWinBehaviourComposite") == 0 && !s_klass_WinComp)
+                s_klass_WinComp = klass;
+            else if (strcmp(name, "ScenarioSlotMachineWinBehaviour") == 0 && !s_klass_ScenBhv)
+                s_klass_ScenBhv = klass;
+            else if (strcmp(name, "SlotDataProvider") == 0 && !s_klass_DataProv)
+                s_klass_DataProv = klass;
+            else if (strcmp(name, "PvpBaseCompetitorSlotsController") == 0 && !s_klass_PvpSlots)
+                s_klass_PvpSlots = klass;
+            else if (strcmp(name, "BaseSlotSymbolController") == 0 && !s_klass_BaseSymCtrl)
+                s_klass_BaseSymCtrl = klass;
         }
     }
 
     BOOL ok = (s_klass_Manager && s_klass_Result && s_klass_Symbol3 && s_klass_BarManager);
-    if (ok) NSLog(@"[SpinLogger] Core classes found: Manager=%p Result=%p Sym3=%p Bar=%p BarInfo=%p Board=%p",
-                  s_klass_Manager, s_klass_Result, s_klass_Symbol3,
-                  s_klass_BarManager, s_klass_BarSymInfo, s_klass_BoardMgr);
-    else    NSLog(@"[SpinLogger] Some classes not found, retrying...");
+    if (ok) {
+        NSLog(@"[SpinLogger] Core classes: Manager=%p Result=%p Sym3=%p Bar=%p BarInfo=%p Board=%p",
+              s_klass_Manager, s_klass_Result, s_klass_Symbol3,
+              s_klass_BarManager, s_klass_BarSymInfo, s_klass_BoardMgr);
+        NSLog(@"[SpinLogger] v2 classes:  Board3D=%p ReplSvc=%p BarRepl=%p WinComp=%p ScenBhv=%p DataProv=%p",
+              s_klass_Board3D, s_klass_ReplSvc, s_klass_BarRepl,
+              s_klass_WinComp, s_klass_ScenBhv, s_klass_DataProv);
+        NSLog(@"[SpinLogger] v2 extras:   PvpSlots=%p BaseSymCtrl=%p",
+              s_klass_PvpSlots, s_klass_BaseSymCtrl);
+    } else {
+        NSLog(@"[SpinLogger] Some classes not found, retrying...");
+    }
     return ok;
 }
 
@@ -386,6 +465,7 @@ static void* fieldHandleFor(void* klass, const char* fieldName) {
     fo_resultSymbolIndex = offsetFor(s_klass_BarManager, "resultSymbolIndex", "SlotBarManager");
     fo_numberOfSymbols   = offsetFor(s_klass_BarManager, "m_NumberOfSymbols", "SlotBarManager");
     fo_symbolElements    = offsetFor(s_klass_BarManager, "m_SymbolElements",  "SlotBarManager");
+    fo_slotObjects       = offsetFor(s_klass_BarManager, "slotObjects",       "SlotBarManager");
 
     // SlotBarSymbolInfo (optional)
     if (s_klass_BarSymInfo) {
@@ -396,6 +476,81 @@ static void* fieldHandleFor(void* klass, const char* fieldName) {
     // BoardManager (optional)
     if (s_klass_BoardMgr) {
         fo_diceWinDict = offsetFor(s_klass_BoardMgr, "m_DiceWinResultDictionary", "BoardManager");
+    }
+
+    // Scanner v2 — additional Manager fields (all optional; offsetFor returns 0
+    // and logs a warning on missing fields, which is fine)
+    fo_specialEvents    = offsetFor(s_klass_Manager, "m_SpecialEventsContainers",        "SlotMachineManager");
+    fo_animSpeedBacking = offsetFor(s_klass_Manager,
+                                    "<SlotMachineAnimationSpeed>k__BackingField",
+                                    "SlotMachineManager");
+    fo_winBehaviours    = offsetFor(s_klass_Manager, "m_WinBehaviours",                  "SlotMachineManager");
+
+    // Board3DManager fields (only if the class was resolved)
+    if (s_klass_Board3D) {
+        fo_nearWinSymbol    = offsetFor(s_klass_Board3D, "m_NearWinSymbol",              "Board3DManager");
+        fo_throwScenarios   = offsetFor(s_klass_Board3D, "m_ThrowDiceScenarios",         "Board3DManager");
+        fo_nearWinScenarios = offsetFor(s_klass_Board3D, "m_DiceNearWinThrowScenarios",  "Board3DManager");
+    }
+
+    // SlotBarSymbolReplacer fields
+    if (s_klass_BarRepl) {
+        fo_replMap    = offsetFor(s_klass_BarRepl, "m_Replacements", "SlotBarSymbolReplacer");
+        fo_replBarMgr = offsetFor(s_klass_BarRepl, "m_BarManager",   "SlotBarSymbolReplacer");
+    }
+
+    // SlotSymbolReplacementService — singleton with a static Instance handle
+    if (s_klass_ReplSvc) {
+        fh_ReplSvcInstance = fieldHandleFor(s_klass_ReplSvc, "Instance");
+        fo_persistentRepl  = offsetFor(s_klass_ReplSvc, "persistentReplacements",
+                                       "SlotSymbolReplacementService");
+        if (_runtime_class_init) _runtime_class_init(s_klass_ReplSvc);
+    }
+
+    // SlotMachineWinBehaviourComposite
+    if (s_klass_WinComp) {
+        fo_compWinBehaviours = offsetFor(s_klass_WinComp, "m_WinBehaviours",
+                                         "SlotMachineWinBehaviourComposite");
+    }
+
+    // ScenarioSlotMachineWinBehaviour
+    if (s_klass_ScenBhv) {
+        fo_scenScenario = offsetFor(s_klass_ScenBhv, "m_Scenario",
+                                    "ScenarioSlotMachineWinBehaviour");
+    }
+
+    // SlotDataProvider — alternative fail counter reference
+    if (s_klass_DataProv) {
+        fo_dataProvFailCounter = offsetFor(s_klass_DataProv, "SpinFailedCounter",
+                                           "SlotDataProvider");
+    }
+
+    // PvpBaseCompetitorSlotsController — direct RNG instance reference.
+    // No reachable instance path from Manager yet; cache the offset so we can
+    // dump it if we later find one, and Python can still decode a captured
+    // hex window if the class turns up in discovery.
+    if (s_klass_PvpSlots) {
+        fo_pvpRandom = offsetFor(s_klass_PvpSlots, "m_Random",
+                                 "PvpBaseCompetitorSlotsController");
+    }
+
+    // BaseSlotSymbolController — back-ref to Manager (useful for future
+    // instance-walks from symbol controllers).
+    if (s_klass_BaseSymCtrl) {
+        fo_baseSymMgrRef = offsetFor(s_klass_BaseSymCtrl, "m_SlotMachineManager",
+                                     "BaseSlotSymbolController");
+    }
+
+    // SlotMachineManager static weight tables — read as static fields.
+    // These are `int[]` (managed arrays), so the static getter fills a void*
+    // pointing at the array object, which we then hex-dump in the trace.
+    fh_WeightsIdentical    = fieldHandleFor(s_klass_Manager, "WEIGHTS_IDENTICAL_SYMBOLS");
+    fh_WeightsNonIdentical = fieldHandleFor(s_klass_Manager, "WEIGHTS_NON_IDENTICAL_SYMBOLS");
+    if (!fh_WeightsIdentical) {
+        NSLog(@"[SpinLogger] WARNING: WEIGHTS_IDENTICAL_SYMBOLS not found on Manager");
+    }
+    if (!fh_WeightsNonIdentical) {
+        NSLog(@"[SpinLogger] WARNING: WEIGHTS_NON_IDENTICAL_SYMBOLS not found on Manager");
     }
 
     if (!fh_Instance || !fo_spinning || !fo_currentSlotResult) {
@@ -477,11 +632,80 @@ static inline uint8_t readBool(void* obj, size_t offset) {
         }
     }
 
-    // Follow BoardManager
+    // Follow BoardManager (and try Board3DManager fields too — they may share
+    // a base class, or m_BoardManager may actually point at a Board3DManager
+    // instance. We dump both sets and let the Python decoder compare.)
     void *board = readPtr(inst, fo_boardManager);
-    if (looksLikeHeapPointer(board) && s_klass_BoardMgr) {
-        NSString *key = [NSString stringWithFormat:@"BoardManager@0x%lx", (unsigned long)board];
-        fields[key] = dumpClassFields(s_klass_BoardMgr, board);
+    if (looksLikeHeapPointer(board)) {
+        if (s_klass_BoardMgr) {
+            NSString *key = [NSString stringWithFormat:@"BoardManager@0x%lx",
+                             (unsigned long)board];
+            fields[key] = dumpClassFields(s_klass_BoardMgr, board);
+        }
+        if (s_klass_Board3D) {
+            NSString *key = [NSString stringWithFormat:@"Board3DManager@0x%lx",
+                             (unsigned long)board];
+            fields[key] = dumpClassFields(s_klass_Board3D, board);
+        }
+    }
+
+    // Scanner v2 — DynamicSlotResults target object
+    if (fo_dynamicResults) {
+        void *dyn = readPtr(inst, fo_dynamicResults);
+        if (looksLikeHeapPointer(dyn)) {
+            // Dump first 128 bytes as hex; we don't know the class yet.
+            // Python can inspect via the hex section below.
+            fields[[NSString stringWithFormat:@"DynamicSlotResults@0x%lx", (unsigned long)dyn]] =
+                @{ @"ptr": [NSString stringWithFormat:@"0x%lx", (unsigned long)dyn] };
+        }
+    }
+
+    // Scanner v2 — FreezeResolveContext target object
+    if (fo_freezeCtx) {
+        void *frz = readPtr(inst, fo_freezeCtx);
+        if (looksLikeHeapPointer(frz)) {
+            fields[[NSString stringWithFormat:@"FreezeResolveContext@0x%lx", (unsigned long)frz]] =
+                @{ @"ptr": [NSString stringWithFormat:@"0x%lx", (unsigned long)frz] };
+        }
+    }
+
+    // Scanner v2 — SpecialEventsContainers target object
+    if (fo_specialEvents) {
+        void *sp = readPtr(inst, fo_specialEvents);
+        if (looksLikeHeapPointer(sp)) {
+            fields[[NSString stringWithFormat:@"SpecialEventsContainers@0x%lx", (unsigned long)sp]] =
+                @{ @"ptr": [NSString stringWithFormat:@"0x%lx", (unsigned long)sp] };
+        }
+    }
+
+    // Scanner v2 — SlotSymbolReplacementService singleton
+    if (s_klass_ReplSvc && fh_ReplSvcInstance && _field_static_get_value) {
+        void *svc = NULL;
+        _field_static_get_value(fh_ReplSvcInstance, &svc);
+        if (looksLikeHeapPointer(svc)) {
+            NSString *key = [NSString stringWithFormat:@"SlotSymbolReplacementService@0x%lx",
+                             (unsigned long)svc];
+            fields[key] = dumpClassFields(s_klass_ReplSvc, svc);
+        }
+    }
+
+    // Scanner v2 — PvpBaseCompetitorSlotsController and BaseSlotSymbolController
+    // are not yet reachable via a known pointer chain from Manager. Record the
+    // class metadata (presence + resolved field offset) so the analysis side
+    // knows whether the scanner saw the class at startup.
+    if (s_klass_PvpSlots) {
+        fields[@"PvpBaseCompetitorSlotsController"] = @{
+            @"klass_ptr": [NSString stringWithFormat:@"%p", s_klass_PvpSlots],
+            @"off_m_Random": @(fo_pvpRandom),
+            @"instance": @"none_reachable_from_manager"
+        };
+    }
+    if (s_klass_BaseSymCtrl) {
+        fields[@"BaseSlotSymbolController"] = @{
+            @"klass_ptr": [NSString stringWithFormat:@"%p", s_klass_BaseSymCtrl],
+            @"off_m_SlotMachineManager": @(fo_baseSymMgrRef),
+            @"instance": @"none_reachable_from_manager"
+        };
     }
 
     rec[@"fields"] = fields;
@@ -498,22 +722,53 @@ static inline uint8_t readBool(void* obj, size_t offset) {
         }
     }
 
-    // Raw bytes at each bar's m_SymbolElements array payload
+    // Scanner v2 — raw bytes at each bar's slotObjects array (GameObject[] —
+    // alternative strip access path if m_SymbolElements decode is still flaky).
+    if (fo_slotObjects) {
+        for (int i = 0; i < 3; i++) {
+            if (!looksLikeHeapPointer(bars[i])) continue;
+            void *so = readPtr(bars[i], fo_slotObjects);
+            if (!looksLikeHeapPointer(so)) continue;
+            uint8_t *e = (uint8_t *)so;
+            uint64_t len_at16 = *(uint64_t *)(e + 16);
+            uint64_t len_at20 = *(uint32_t *)(e + 20);
+            uint64_t len_at24 = *(uint64_t *)(e + 24);
+            NSString *key = [NSString stringWithFormat:@"slotBar%d.slotObjects@0x%lx",
+                             i + 1, (unsigned long)so];
+            hex[key] = @{
+                @"candidate_len_at16": @(len_at16),
+                @"candidate_len_at20": @(len_at20),
+                @"candidate_len_at24": @(len_at24),
+                @"dump_bytes": @(kSLTraceHexArrayMaxBytes),
+                @"bytes": hexString(so, kSLTraceHexArrayMaxBytes)
+            };
+        }
+    }
+
+    // Raw bytes at each bar's m_SymbolElements array payload.
+    //
+    // v2 change: the old length-gate (`len <= 0 || len > 256`) rejected every
+    // array because kArrayHeaderSize/kArrayLengthOffset are wrong for this
+    // Coin Master IL2CPP build. Instead, dump a fixed-size window
+    // (kSLTraceHexArrayMaxBytes) at the element pointer and let the Python
+    // decoder search for the correct header layout offline. Report three
+    // candidate length reads (at +16, +20, +24) so the decoder can pick.
     for (int i = 0; i < 3; i++) {
         if (!looksLikeHeapPointer(bars[i])) continue;
         void *elements = readPtr(bars[i], fo_symbolElements);
         if (!looksLikeHeapPointer(elements)) continue;
-        int64_t len = *(int64_t *)((uint8_t *)elements + kArrayLengthOffset);
-        if (len <= 0 || len > 256) continue;   // sanity bound
-        size_t totalBytes = kArrayHeaderSize + (size_t)len * sizeof(void *);
-        // Also try a wider dump in case elements are larger structs
-        size_t dumpBytes = MIN(kSLTraceHexArrayMaxBytes, totalBytes + 128);
+        uint8_t *e = (uint8_t *)elements;
+        uint64_t len_at16 = *(uint64_t *)(e + 16);
+        uint64_t len_at20 = *(uint32_t *)(e + 20);
+        uint64_t len_at24 = *(uint64_t *)(e + 24);
         NSString *key = [NSString stringWithFormat:@"slotBar%d.m_SymbolElements@0x%lx",
                          i + 1, (unsigned long)elements];
         hex[key] = @{
-            @"array_len": @(len),
-            @"header_size": @(kArrayHeaderSize),
-            @"bytes": hexString(elements, dumpBytes)
+            @"candidate_len_at16": @(len_at16),
+            @"candidate_len_at20": @(len_at20),
+            @"candidate_len_at24": @(len_at24),
+            @"dump_bytes": @(kSLTraceHexArrayMaxBytes),
+            @"bytes": hexString(elements, kSLTraceHexArrayMaxBytes)
         };
     }
 
@@ -522,6 +777,83 @@ static inline uint8_t readBool(void* obj, size_t offset) {
         NSString *key = [NSString stringWithFormat:@"currentSlotResult@0x%lx",
                          (unsigned long)slotResult];
         hex[key] = hexString(slotResult, kSLTraceHexWindowResult);
+    }
+
+    // Scanner v2 — raw hex windows on Manager pointer targets so Python can
+    // decode the class-of-unknown-layout without forcing the scanner to know it.
+    {
+        void *dyn = fo_dynamicResults ? readPtr(inst, fo_dynamicResults) : NULL;
+        if (looksLikeHeapPointer(dyn)) {
+            NSString *key = [NSString stringWithFormat:@"DynamicSlotResults@0x%lx",
+                             (unsigned long)dyn];
+            hex[key] = hexString(dyn, 256);
+        }
+        void *frz = fo_freezeCtx ? readPtr(inst, fo_freezeCtx) : NULL;
+        if (looksLikeHeapPointer(frz)) {
+            NSString *key = [NSString stringWithFormat:@"FreezeResolveContext@0x%lx",
+                             (unsigned long)frz];
+            hex[key] = hexString(frz, 256);
+        }
+        void *sp = fo_specialEvents ? readPtr(inst, fo_specialEvents) : NULL;
+        if (looksLikeHeapPointer(sp)) {
+            NSString *key = [NSString stringWithFormat:@"SpecialEventsContainers@0x%lx",
+                             (unsigned long)sp];
+            hex[key] = hexString(sp, 256);
+        }
+        // BoardManager/Board3DManager — dump a wider hex window so Python can
+        // decode either class layout.
+        if (looksLikeHeapPointer(board)) {
+            NSString *key = [NSString stringWithFormat:@"BoardManager@0x%lx",
+                             (unsigned long)board];
+            hex[key] = hexString(board, 512);
+        }
+    }
+
+    // Scanner v2 — static weight tables on SlotMachineManager.
+    // Each is an int[] stored as a managed-array pointer in a static field.
+    // Read the pointer via field_static_get_value, then hex-dump ~256B at
+    // the array object so Python can pull out the length + int32 elements.
+    if (_field_static_get_value) {
+        if (fh_WeightsIdentical) {
+            void *arr = NULL;
+            _field_static_get_value(fh_WeightsIdentical, &arr);
+            if (looksLikeHeapPointer(arr)) {
+                uint8_t *e = (uint8_t *)arr;
+                uint64_t len_at16 = *(uint64_t *)(e + 16);
+                uint64_t len_at20 = *(uint32_t *)(e + 20);
+                uint64_t len_at24 = *(uint64_t *)(e + 24);
+                NSString *key = [NSString stringWithFormat:
+                                 @"WEIGHTS_IDENTICAL_SYMBOLS@0x%lx",
+                                 (unsigned long)arr];
+                hex[key] = @{
+                    @"candidate_len_at16": @(len_at16),
+                    @"candidate_len_at20": @(len_at20),
+                    @"candidate_len_at24": @(len_at24),
+                    @"dump_bytes": @(256),
+                    @"bytes": hexString(arr, 256)
+                };
+            }
+        }
+        if (fh_WeightsNonIdentical) {
+            void *arr = NULL;
+            _field_static_get_value(fh_WeightsNonIdentical, &arr);
+            if (looksLikeHeapPointer(arr)) {
+                uint8_t *e = (uint8_t *)arr;
+                uint64_t len_at16 = *(uint64_t *)(e + 16);
+                uint64_t len_at20 = *(uint32_t *)(e + 20);
+                uint64_t len_at24 = *(uint64_t *)(e + 24);
+                NSString *key = [NSString stringWithFormat:
+                                 @"WEIGHTS_NON_IDENTICAL_SYMBOLS@0x%lx",
+                                 (unsigned long)arr];
+                hex[key] = @{
+                    @"candidate_len_at16": @(len_at16),
+                    @"candidate_len_at20": @(len_at20),
+                    @"candidate_len_at24": @(len_at24),
+                    @"dump_bytes": @(256),
+                    @"bytes": hexString(arr, 256)
+                };
+            }
+        }
     }
 
     rec[@"hex"] = hex;
