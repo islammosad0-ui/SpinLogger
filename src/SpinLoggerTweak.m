@@ -6,6 +6,7 @@
 #import "SLNetworkMonitor.h"
 #import "SLDebtMonitor.h"
 #import "SLMemoryScanner.h"
+#import "SLIdxStrategy.h"
 #import "SLSignalPanel.h"
 
 extern void SLJailbreakBypassInstall(void);

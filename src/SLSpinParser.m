@@ -1,5 +1,6 @@
 #import "SLSpinParser.h"
 #import "SLSpinStore.h"
+#import "SLIdxStrategy.h"
 #import "SLConstants.h"
 
 @implementation SLSpinResult
@@ -221,7 +222,12 @@ void SLParseSpinAPIResponseWithBet(NSData *responseData, NSInteger betMultiplier
     result.eventBarMissions = [barMissions copy];
     result.eventBarAmounts  = [barAmounts copy];
 
-    SLSpinStoreAppend(result);
+    // Defer CSV write — the strategy engine holds the result until the
+    // memory scanner settles and provides strip idx values.
+    // Queue on main thread so the flush timer works (NSTimer needs a run loop).
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[SLIdxStrategy shared] queueResult:result];
+    });
 
     NSLog(@"[SpinLogger] SPIN seq=%ld: r[%ld,%ld,%ld] -> %@ | bet=%ld shields=%ld/%ld accum=%ld/%ld slot2=[%@,%@,%@]",
           (long)result.seq,
@@ -231,7 +237,7 @@ void SLParseSpinAPIResponseWithBet(NSData *responseData, NSInteger betMultiplier
           (long)result.accumCurrent, (long)result.accumTotal,
           result.slot2Reel1 ?: @"", result.slot2Reel2 ?: @"", result.slot2Reel3 ?: @"");
 
-    // Notify on main queue (UI updates)
+    // Notify on main queue (UI updates — counters, overlays, etc.)
     dispatch_async(dispatch_get_main_queue(), ^{
         [[NSNotificationCenter defaultCenter]
             postNotificationName:SLSpinReceivedNotification

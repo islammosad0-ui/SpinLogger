@@ -51,6 +51,16 @@
 @property (nonatomic, copy) NSString *attackTarget;  // who was attacked (from messages)
 @property (nonatomic, copy) NSString *stealTarget;   // who was raided
 
+// --- Strip idx (populated by scanner on spin-end, -1 if unavailable) ---
+@property (nonatomic, assign) int32_t r1Idx;
+@property (nonatomic, assign) int32_t r2Idx;
+@property (nonatomic, assign) int32_t r3Idx;
+
+// --- Strategy engine output (populated before CSV write) ---
+@property (nonatomic, assign) BOOL isValuableTriple;
+@property (nonatomic, copy) NSString *strategyTier;
+@property (nonatomic, assign) NSInteger strategyScore;
+
 // --- Legacy fields (strack compat) ---
 @property (nonatomic, copy) NSString *betType;
 @property (nonatomic, assign) BOOL autoSpin;

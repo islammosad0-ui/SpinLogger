@@ -1,4 +1,5 @@
 #import "SLMemoryScanner.h"
+#import "SLIdxStrategy.h"
 #import "SLConstants.h"
 #include <dlfcn.h>
 #include <string.h>
@@ -1039,20 +1040,39 @@ static inline uint8_t readBool(void* obj, size_t offset) {
     // Build record on scanner thread (fast, memcpy-only)
     NSDictionary *rec = [self buildTraceRecordForInstance:instance];
 
-    // Track spin-end for counter purposes
-    BOOL isSpinning = [rec[@"spinning"] boolValue];
+    // Track spin-end — read idx from bars and settle strategy engine
+    BOOL isSpinning = (readBool(instance, fo_spinning) != 0);
     BOOL spinEnded = (self.prevSpinning && !isSpinning);
     self.prevSpinning = isSpinning;
     if (spinEnded) self.spinsSeen++;
 
-    // Populate latestSnapshot minimally for HUD compatibility
     if (spinEnded) {
+        // Read strip idx from each bar's resultSymbolIndex
+        void *bar1 = readPtr(instance, fo_slotBar1);
+        void *bar2 = readPtr(instance, fo_slotBar2);
+        void *bar3 = readPtr(instance, fo_slotBar3);
+
+        int32_t idx1 = (bar1 && fo_resultSymbolIndex) ? readInt32(bar1, fo_resultSymbolIndex) : -1;
+        int32_t idx2 = (bar2 && fo_resultSymbolIndex) ? readInt32(bar2, fo_resultSymbolIndex) : -1;
+        int32_t idx3 = (bar3 && fo_resultSymbolIndex) ? readInt32(bar3, fo_resultSymbolIndex) : -1;
+
+        // Populate snapshot with idx
         SLScanSnapshot *snap = [[SLScanSnapshot alloc] init];
         snap.timestamp = [NSDate date];
-        snap.spinNumber = [rec[@"spin_num"] intValue];
-        snap.betState = [rec[@"bet_state"] intValue];
+        snap.spinNumber = readInt32(instance, fo_currentSpinNumber);
+        snap.betState = readInt32(instance, fo_betState);
         snap.spinning = isSpinning;
+        snap.stripIdx1 = idx1;
+        snap.stripIdx2 = idx2;
+        snap.stripIdx3 = idx3;
         self.latestSnapshot = snap;
+
+        // Settle pending result on main thread (triggers CSV write + strategy compute)
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [[SLIdxStrategy shared] settlePendingWithR1Idx:idx1 r2Idx:idx2 r3Idx:idx3];
+        });
+
+        NSLog(@"[SpinLogger] Spin settled: idx=(%d, %d, %d)", idx1, idx2, idx3);
     }
 
     // Hand off to background queue for JSON encoding + file write
