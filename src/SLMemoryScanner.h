@@ -41,28 +41,22 @@
 @end
 
 // ---------------------------------------------------------------------------
-//  SLMemoryScanner — IL2CPP trace-mode dumper
+//  SLMemoryScanner — IL2CPP memory scanner
 // ---------------------------------------------------------------------------
 @interface SLMemoryScanner : NSObject
 
 + (instancetype)shared;
 
-/// Latest spin-end snapshot, kept for HUD compatibility during trace mode.
-/// Populated from the most recent settled record.
+/// Latest spin-end snapshot for HUD display.
 @property (nonatomic, strong, readonly) SLScanSnapshot *latestSnapshot;
 
-/// Trace mode live counters — updated on scanner thread, read on main.
-/// Use these to decide when to stop the capture session.
 @property (nonatomic, readonly) int64_t spinsSeen;
-@property (nonatomic, readonly) int64_t snapshotsWritten;
-@property (nonatomic, readonly) int64_t bytesWritten;
 @property (nonatomic, readonly, copy) NSString *currentPhaseName;
-@property (nonatomic, readonly, copy) NSString *traceFilePath;
 
-/// Start IL2CPP live scanner in trace mode (250 ms poll)
+/// Start IL2CPP live scanner (250 ms poll)
 - (void)startScanning;
 
-/// Stop scanning and flush the trace file
+/// Stop scanning
 - (void)stopScanning;
 
 @end
