@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 *.pyo
 .pytest_cache/
+
+# Large IL2CPP trace files (too big for GitHub, keep local)
+data/Ahmed/il2cpp_trace_*.jsonl
