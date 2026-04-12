@@ -61,6 +61,7 @@ static NSString *const kSLDefaultsTrisMonitor      = @"Speeder_TrisMonitor";
 static NSString *const kSLDefaultsNetworkEnabled   = @"Speeder_Network";
 static NSString *const kSLDefaultsPreset1          = @"Speeder_Preset1";
 static NSString *const kSLDefaultsPreset2          = @"Speeder_Preset2";
+static NSString *const kSLDefaultsThreshProfile    = @"Speeder_ThreshProfile";
 
 // ---------------------------------------------------------------------------
 //  File names

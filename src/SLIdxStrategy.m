@@ -2,6 +2,16 @@
 #import "SLSpinStore.h"
 #import "SLConstants.h"
 
+// ---------------------------------------------------------------------------
+//  Ring buffer for Layer 2 window scoring
+// ---------------------------------------------------------------------------
+#define kSLHistoryMax 20
+
+typedef struct {
+    int32_t r1, r2, r3;
+    int32_t symR1;      // raw symbol code for reel 1 (4=steal)
+} SLSpinRecord;
+
 @interface SLIdxStrategy ()
 @property (nonatomic, strong) SLSpinResult *pendingResult;
 @property (nonatomic, strong) NSTimer *flushTimer;
@@ -18,7 +28,13 @@
 @property (nonatomic, readwrite) SLBetTier betTier;
 @property (nonatomic, readwrite, copy) NSString *betTierString;
 @property (nonatomic, readwrite) NSInteger compositeScore;
+@property (nonatomic, readwrite) NSInteger layer1Score;
+@property (nonatomic, readwrite) NSInteger layer2Score;
 @property (nonatomic, readwrite, copy) NSString *signalReason;
+
+// Threshold profile
+@property (nonatomic, readwrite) SLThresholdProfile thresholdProfile;
+@property (nonatomic, readwrite, copy) NSString *profileName;
 
 // Last settled idx
 @property (nonatomic, readwrite) int32_t lastR1Idx;
@@ -26,7 +42,11 @@
 @property (nonatomic, readwrite) int32_t lastR3Idx;
 @end
 
-@implementation SLIdxStrategy
+@implementation SLIdxStrategy {
+    SLSpinRecord _history[kSLHistoryMax];
+    int _historyCount;   // total spins pushed (may exceed kSLHistoryMax)
+    int _historyHead;    // next write position (circular)
+}
 
 + (instancetype)shared {
     static SLIdxStrategy *instance;
@@ -41,10 +61,26 @@
         _betTier = SLBetTierNORMAL;
         _betTierString = @"NORMAL";
         _compositeScore = 0;
+        _layer1Score = 0;
+        _layer2Score = 0;
         _signalReason = @"no data";
         _lastR1Idx = -1;
         _lastR2Idx = -1;
         _lastR3Idx = -1;
+
+        _historyCount = 0;
+        _historyHead = 0;
+        memset(_history, 0, sizeof(_history));
+
+        // Load saved threshold profile
+        NSInteger saved = [[NSUserDefaults standardUserDefaults]
+                           integerForKey:kSLDefaultsThreshProfile];
+        if (saved >= 0 && saved < SLThresholdProfileCount) {
+            _thresholdProfile = (SLThresholdProfile)saved;
+        } else {
+            _thresholdProfile = SLThresholdProfileBalanced;
+        }
+        _profileName = [self nameForProfile:_thresholdProfile];
 
         SLTypeHeat zero = {0, 0};
         _heatAccSpins = zero;
@@ -100,6 +136,10 @@
     self.lastR2Idx = r2;
     self.lastR3Idx = r3;
 
+    // Push into ring buffer for Layer 2 window scoring
+    int32_t symR1 = self.pendingResult ? (int32_t)self.pendingResult.rawR1 : -1;
+    [self pushHistoryR1:r1 r2:r2 r3:r3 symR1:symR1];
+
     if (self.pendingResult) {
         self.pendingResult.r1Idx = r1;
         self.pendingResult.r2Idx = r2;
@@ -112,7 +152,7 @@
         BOOL isValuable = isTriple && (self.pendingResult.rawR1 == 30 ||
                                         self.pendingResult.rawR1 == 6);
 
-        // Compute per-type strategy for NEXT spin
+        // Compute combined L1+L2 strategy for NEXT spin
         [self computeAllSignals];
 
         // Attach strategy recommendation to result
@@ -129,7 +169,17 @@
 }
 
 // ---------------------------------------------------------------------------
+//  Ring buffer management
+// ---------------------------------------------------------------------------
+- (void)pushHistoryR1:(int32_t)r1 r2:(int32_t)r2 r3:(int32_t)r3 symR1:(int32_t)sym {
+    _history[_historyHead] = (SLSpinRecord){r1, r2, r3, sym};
+    _historyHead = (_historyHead + 1) % kSLHistoryMax;
+    _historyCount++;
+}
+
+// ---------------------------------------------------------------------------
 //  Per-type signal computation — all CV-validated from 62_per_type_signals.py
+//  Combined scoring: Layer 1 (single-spin idx) + Layer 2 (10-spin window)
 // ---------------------------------------------------------------------------
 
 - (void)computeAllSignals {
@@ -137,6 +187,7 @@
     int32_t r2 = self.lastR2Idx;
     int32_t r3 = self.lastR3Idx;
 
+    // Per-type heat bars (Layer 1 only — for individual display)
     self.heatAccSpins  = [self scoreAccSpinsR1:r1 r2:r2 r3:r3];
     self.heatShield    = [self scoreShieldR1:r1 r2:r2 r3:r3];
     self.heatAttack    = [self scoreAttackR1:r1 r2:r2 r3:r3];
@@ -144,22 +195,39 @@
     self.heatCoin      = [self scoreCoinR1:r1 r2:r2 r3:r3];
     self.heatGoldSack  = [self scoreGoldSackR1:r1 r2:r2 r3:r3];
 
-    // Overall tier based on acc+spins (primary target)
-    NSInteger score = self.heatAccSpins.score;
-    self.compositeScore = score;
+    // Layer 1: acc+spins single-spin score
+    NSInteger l1 = self.heatAccSpins.score;
+    // Layer 2: 10-spin window patterns
+    NSInteger l2 = [self scoreLayer2];
+    // Combined
+    NSInteger combined = l1 + l2;
+
+    self.layer1Score = l1;
+    self.layer2Score = l2;
+    self.compositeScore = combined;
+
+    // Tier from combined score using active profile thresholds
+    int maxThresh, bigThresh;
+    switch (self.thresholdProfile) {
+        case SLThresholdProfileBalanced: maxThresh = 4;  bigThresh = 2;  break;
+        case SLThresholdProfileTight:    maxThresh = 6;  bigThresh = 3;  break;
+        case SLThresholdProfileUltra:    maxThresh = 8;  bigThresh = 4;  break;
+        case SLThresholdProfileSniper:   maxThresh = 10; bigThresh = 6;  break;
+        default:                         maxThresh = 4;  bigThresh = 2;  break;
+    }
 
     SLBetTier tier;
     NSString *tierStr;
-    if (score >= 4)       { tier = SLBetTierMAX;    tierStr = @"MAX"; }
-    else if (score >= 2)  { tier = SLBetTierBIG;    tierStr = @"BIG"; }
-    else if (score <= -3) { tier = SLBetTierMIN;    tierStr = @"MIN"; }
-    else if (score <= -1) { tier = SLBetTierSMALL;  tierStr = @"SMALL"; }
-    else                  { tier = SLBetTierNORMAL;  tierStr = @"NORMAL"; }
+    if (combined >= maxThresh)      { tier = SLBetTierMAX;    tierStr = @"MAX"; }
+    else if (combined >= bigThresh) { tier = SLBetTierBIG;    tierStr = @"BIG"; }
+    else if (combined <= -3)        { tier = SLBetTierMIN;    tierStr = @"MIN"; }
+    else if (combined <= -1)        { tier = SLBetTierSMALL;  tierStr = @"SMALL"; }
+    else                            { tier = SLBetTierNORMAL; tierStr = @"NORMAL"; }
 
     self.betTier = tier;
     self.betTierString = tierStr;
 
-    // Build reason string from acc+spins signals
+    // Build reason string: L1 signals + L2 summary
     NSMutableString *reason = [NSMutableString string];
     if (r2 == 7) [reason appendString:@"r2=7★ "];
     if (r1 == 7) [reason appendString:@"r1=7 "];
@@ -168,15 +236,169 @@
     if (r1 == 7 && r2 == 7) [reason appendString:@"77P "];
     if (r3 == 1) [reason appendString:@"r3=1✗ "];
     if (r2 == 0) [reason appendString:@"r2=0✗ "];
+    if (l2 != 0) [reason appendFormat:@"W%+ld ", (long)l2];
     self.signalReason = reason.length > 0 ? [reason stringByTrimmingCharactersInSet:
                         [NSCharacterSet whitespaceCharacterSet]] : @"-";
 
-    NSLog(@"[SLIdxStrategy] idx=(%d,%d,%d) accSp=%d shld=%d atk=%d stl=%d coin=%d gold=%d -> %@",
-          r1, r2, r3,
-          self.heatAccSpins.score, self.heatShield.score,
-          self.heatAttack.score, self.heatSteal.score,
-          self.heatCoin.score, self.heatGoldSack.score,
-          tierStr);
+    NSLog(@"[SLIdxStrategy] idx=(%d,%d,%d) L1=%+ld L2=%+ld =%+ld [%@] -> %@",
+          r1, r2, r3, (long)l1, (long)l2, (long)combined,
+          self.profileName, tierStr);
+}
+
+// ---------------------------------------------------------------------------
+//  Layer 2: 10-spin window pattern scorer (from 65_combined_scorer.py)
+//  Signals A-J validated on 1,107 spins with 5-fold CV
+// ---------------------------------------------------------------------------
+- (NSInteger)scoreLayer2 {
+    int available = MIN(_historyCount, kSLHistoryMax);
+    if (available < 3) return 0;
+
+    // Flatten ring buffer into chronological order
+    SLSpinRecord win[kSLHistoryMax];
+    for (int i = 0; i < available; i++) {
+        int bufIdx = (_historyHead - available + i + kSLHistoryMax) % kSLHistoryMax;
+        win[i] = _history[bufIdx];
+    }
+
+    int windowSize = MIN(available, 10);
+    int windowStart = available - windowSize;
+    int score = 0;
+
+    // --- Signal A: steal count on reel_1 in 10-spin window ---
+    // Symbol code 4 = steal (from SLConstants.h)
+    int stealR1Count = 0;
+    for (int i = windowStart; i < available; i++) {
+        if (win[i].symR1 == 4) stealR1Count++;
+    }
+    if (stealR1Count >= 2) score += 1;
+
+    // --- Signal B: r3==4 count in 10-spin window (VT 12.0% vs base 6.4%) ---
+    int r3_4_count = 0;
+    for (int i = windowStart; i < available; i++) {
+        if (win[i].r3 == 4) r3_4_count++;
+    }
+    if (r3_4_count >= 2) score += 1;
+
+    // --- Signal C: r3 bigram (0->8) in window ---
+    for (int i = windowStart + 1; i < available; i++) {
+        if (win[i-1].r3 == 0 && win[i].r3 == 8) {
+            score += 1;
+            break;
+        }
+    }
+
+    // --- Signal D: r3 bigram (8->4) or (4->4) in window ---
+    for (int i = windowStart + 1; i < available; i++) {
+        if ((win[i-1].r3 == 8 && win[i].r3 == 4) ||
+            (win[i-1].r3 == 4 && win[i].r3 == 4)) {
+            score += 1;
+            break;
+        }
+    }
+
+    // --- Signal E: r2==6 gap <= 7 (appeared recently = good) ---
+    // Look back up to 20 spins
+    int r2_6_gap = -1;
+    for (int lookback = 1; lookback <= available; lookback++) {
+        int idx = available - lookback;
+        if (win[idx].r2 == 6) {
+            r2_6_gap = lookback;
+            break;
+        }
+    }
+    if (r2_6_gap > 0 && r2_6_gap <= 7) score += 1;
+
+    // --- Signal F: r3==1 gap > 10 (absent = good for VT) ---
+    // --- Signal G: r3==1 gap <= 3 (very recent = BAD) ---
+    int r3_1_gap = -1;
+    for (int lookback = 1; lookback <= available; lookback++) {
+        int idx = available - lookback;
+        if (win[idx].r3 == 1) {
+            r3_1_gap = lookback;
+            break;
+        }
+    }
+    if (r3_1_gap < 0 || r3_1_gap > 10) score += 1;   // F: absent = good
+    if (r3_1_gap > 0 && r3_1_gap <= 3)  score -= 2;   // G: very recent = dead zone
+
+    // --- Signal H: tuple (3,6,4) in window ---
+    for (int i = windowStart; i < available; i++) {
+        if (win[i].r1 == 3 && win[i].r2 == 6 && win[i].r3 == 4) {
+            score += 1;
+            break;
+        }
+    }
+
+    // --- Signal I: r3 variety (low dup rate = good) ---
+    if (windowSize > 1) {
+        int r3_dups = 0;
+        for (int i = windowStart + 1; i < available; i++) {
+            if (win[i].r3 == win[i-1].r3) r3_dups++;
+        }
+        float dup_rate = (float)r3_dups / (float)(windowSize - 1);
+        if (dup_rate < 0.15f) score += 1;
+    }
+
+    // --- Signal J: r1 bigram (3,3) in window ---
+    for (int i = windowStart + 1; i < available; i++) {
+        if (win[i-1].r1 == 3 && win[i].r1 == 3) {
+            score += 1;
+            break;
+        }
+    }
+
+    return score;
+}
+
+// ---------------------------------------------------------------------------
+//  Profile cycling + persistence
+// ---------------------------------------------------------------------------
+- (void)cycleProfile {
+    NSInteger next = ((NSInteger)self.thresholdProfile + 1) % SLThresholdProfileCount;
+    self.thresholdProfile = (SLThresholdProfile)next;
+    self.profileName = [self nameForProfile:self.thresholdProfile];
+
+    [[NSUserDefaults standardUserDefaults] setInteger:next forKey:kSLDefaultsThreshProfile];
+
+    // Recompute tier with new thresholds (using existing idx)
+    if (self.lastR1Idx >= 0) {
+        [self computeAllSignals];
+    }
+
+    NSLog(@"[SLIdxStrategy] Profile -> %@ (thresh MAX>=%d BIG>=%d)",
+          self.profileName,
+          [self maxThreshForProfile:self.thresholdProfile],
+          [self bigThreshForProfile:self.thresholdProfile]);
+}
+
+- (NSString *)nameForProfile:(SLThresholdProfile)p {
+    switch (p) {
+        case SLThresholdProfileBalanced: return @"BAL";
+        case SLThresholdProfileTight:    return @"TGT";
+        case SLThresholdProfileUltra:    return @"ULT";
+        case SLThresholdProfileSniper:   return @"SNP";
+        default: return @"BAL";
+    }
+}
+
+- (int)maxThreshForProfile:(SLThresholdProfile)p {
+    switch (p) {
+        case SLThresholdProfileBalanced: return 4;
+        case SLThresholdProfileTight:    return 6;
+        case SLThresholdProfileUltra:    return 8;
+        case SLThresholdProfileSniper:   return 10;
+        default: return 4;
+    }
+}
+
+- (int)bigThreshForProfile:(SLThresholdProfile)p {
+    switch (p) {
+        case SLThresholdProfileBalanced: return 2;
+        case SLThresholdProfileTight:    return 3;
+        case SLThresholdProfileUltra:    return 4;
+        case SLThresholdProfileSniper:   return 6;
+        default: return 2;
+    }
 }
 
 // ---------------------------------------------------------------------------

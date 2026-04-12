@@ -123,9 +123,13 @@ static UIColor *tierColor(SLBetTier tier) {
     arrow.tag = 99;
     [header addSubview:arrow];
 
-    // Tap / pan gestures
+    // Tap / long-press / pan gestures
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(toggleExpand)];
     [header addGestureRecognizer:tap];
+    UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc]
+                                                initWithTarget:self action:@selector(cycleProfile:)];
+    longPress.minimumPressDuration = 0.5;
+    [header addGestureRecognizer:longPress];
     UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
     [vc.view addGestureRecognizer:pan];
 
@@ -225,13 +229,17 @@ static UIColor *tierColor(SLBetTier tier) {
     NSString *tier = s.betTierString ?: @"---";
     UIColor *tColor = tierColor(s.betTier);
     NSString *reason = s.signalReason ?: @"-";
+    NSString *profile = s.profileName ?: @"BAL";
+    NSInteger l1 = s.layer1Score;
+    NSInteger l2 = s.layer2Score;
+    NSInteger combined = s.compositeScore;
     int32_t r1 = s.lastR1Idx, r2 = s.lastR2Idx, r3 = s.lastR3Idx;
 
     dispatch_async(dispatch_get_main_queue(), ^{
         SLTypeHeat heats[] = {h0, h1, h2, h3, h4, h5};
 
-        // Header: primary target tier
-        self.headerLabel.text = [NSString stringWithFormat:@"ACC+SP: %@ | %@", tier, reason];
+        // Header: [PROFILE] TIER | reason
+        self.headerLabel.text = [NSString stringWithFormat:@"[%@] %@ | %@", profile, tier, reason];
         self.headerLabel.textColor = tColor;
 
         // Per-type heat bars
@@ -270,8 +278,9 @@ static UIColor *tierColor(SLBetTier tier) {
                                            [UIColor colorWithWhite:0.5 alpha:1];
         }
 
-        // Footer: idx
-        self.idxLabel.text = [NSString stringWithFormat:@"idx: (%d, %d, %d)", r1, r2, r3];
+        // Footer: L1/L2 breakdown + idx
+        self.idxLabel.text = [NSString stringWithFormat:@"L1:%+ld L2:%+ld =%+ld | (%d,%d,%d)",
+                              (long)l1, (long)l2, (long)combined, r1, r2, r3];
     });
 }
 
@@ -322,6 +331,29 @@ static UIColor *tierColor(SLBetTier tier) {
     lbl.textColor = color;
     lbl.backgroundColor = [UIColor clearColor];
     return lbl;
+}
+
+// ============================================================
+//  Profile cycling (long-press on header)
+// ============================================================
+- (void)cycleProfile:(UILongPressGestureRecognizer *)gesture {
+    if (gesture.state != UIGestureRecognizerStateBegan) return;
+
+    SLIdxStrategy *s = [SLIdxStrategy shared];
+    [s cycleProfile];
+
+    // Flash feedback
+    UIView *flash = self.headerBar;
+    [UIView animateWithDuration:0.1 animations:^{
+        flash.backgroundColor = [UIColor colorWithWhite:0.3 alpha:1];
+    } completion:^(BOOL finished) {
+        [UIView animateWithDuration:0.2 animations:^{
+            flash.backgroundColor = [UIColor colorWithRed:0.08 green:0.10 blue:0.16 alpha:1];
+        }];
+    }];
+
+    // Force immediate refresh
+    [self refreshLabels];
 }
 
 - (void)dealloc {

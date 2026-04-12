@@ -24,6 +24,16 @@ typedef NS_ENUM(NSInteger, SLBetTier) {
     SLBetTierMAX
 };
 
+/// Threshold profiles for combined (L1+L2) scoring.
+/// Each profile trades catch-rate for precision.
+typedef NS_ENUM(NSInteger, SLThresholdProfile) {
+    SLThresholdProfileBalanced = 0,   // >=4 MAX, >=2 BIG  (74% caught, 18 bets/VT)
+    SLThresholdProfileTight,          // >=6 MAX, >=3 BIG  (60% caught, 13 bets/VT)
+    SLThresholdProfileUltra,          // >=8 MAX, >=4 BIG  (34% caught, 10.5 bets/VT)
+    SLThresholdProfileSniper,         // >=10 MAX, >=6 BIG (20% caught, 6.7 bets/VT)
+    SLThresholdProfileCount
+};
+
 /// Per-type heat score + signal info
 typedef struct {
     int score;        // composite score (higher = hotter)
@@ -52,12 +62,22 @@ typedef struct {
 @property (nonatomic, readonly) SLTypeHeat heatCoin;
 @property (nonatomic, readonly) SLTypeHeat heatGoldSack;
 
-// ------ Overall recommendation (based on acc+spins, primary target) ------
+// ------ Overall recommendation (combined L1+L2 scoring) ------
 
 @property (nonatomic, readonly) SLBetTier betTier;
 @property (nonatomic, readonly, copy) NSString *betTierString;
-@property (nonatomic, readonly) NSInteger compositeScore;
+@property (nonatomic, readonly) NSInteger compositeScore;   // L1 + L2 combined
+@property (nonatomic, readonly) NSInteger layer1Score;      // single-spin idx signals
+@property (nonatomic, readonly) NSInteger layer2Score;      // 10-spin window patterns
 @property (nonatomic, readonly, copy) NSString *signalReason;
+
+// ------ Threshold profile (configurable from HUD) ------
+
+@property (nonatomic, readonly) SLThresholdProfile thresholdProfile;
+@property (nonatomic, readonly, copy) NSString *profileName;  // BAL/TGT/ULT/SNP
+
+/// Cycle to the next threshold profile (persisted to UserDefaults)
+- (void)cycleProfile;
 
 // ------ Last settled idx (for display / logging) ------
 
