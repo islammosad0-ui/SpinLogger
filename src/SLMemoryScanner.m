@@ -239,6 +239,7 @@ typedef NS_ENUM(NSInteger, ScanPhase) {
 @property (nonatomic, assign) ScanPhase phase;
 @property (nonatomic, assign) void *domain;
 @property (nonatomic, assign) BOOL prevSpinning;
+@property (nonatomic, assign) int32_t prevSpinNumber;
 @property (nonatomic, strong, readwrite) SLScanSnapshot *latestSnapshot;
 
 // Trace mode state
@@ -265,6 +266,7 @@ typedef NS_ENUM(NSInteger, ScanPhase) {
     if (self.scanTimer) return;
     self.phase = ScanPhaseResolveAPIs;
     self.prevSpinning = NO;
+    self.prevSpinNumber = 0;
     self.currentPhaseName = @"resolveAPIs";
     self.traceStartMs = [self monotonicMillis];
 
@@ -1044,6 +1046,15 @@ static inline uint8_t readBool(void* obj, size_t offset) {
     BOOL isSpinning = (readBool(instance, fo_spinning) != 0);
     BOOL spinEnded = (self.prevSpinning && !isSpinning);
     self.prevSpinning = isSpinning;
+
+    // Fallback: during autospin the spinning flag may never appear as NO
+    // (transitions faster than our 250ms poll). Detect via spin number change.
+    int32_t spinNum = readInt32(instance, fo_currentSpinNumber);
+    if (!spinEnded && self.prevSpinNumber > 0 && spinNum != self.prevSpinNumber) {
+        spinEnded = YES;
+    }
+    self.prevSpinNumber = spinNum;
+
     if (spinEnded) self.spinsSeen++;
 
     if (spinEnded) {
