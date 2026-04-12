@@ -243,6 +243,10 @@ typedef struct {
     NSLog(@"[SLIdxStrategy] idx=(%d,%d,%d) L1=%+ld L2=%+ld =%+ld [%@] -> %@",
           r1, r2, r3, (long)l1, (long)l2, (long)combined,
           self.profileName, tierStr);
+
+    // Notify HUD immediately — no polling delay
+    [[NSNotificationCenter defaultCenter] postNotificationName:SLStrategyUpdatedNotification
+                                                        object:self];
 }
 
 // ---------------------------------------------------------------------------

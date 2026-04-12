@@ -57,7 +57,6 @@ static UIColor *tierColor(SLBetTier tier) {
 // Footer: idx display
 @property (nonatomic, strong) UILabel *idxLabel;
 
-@property (nonatomic, strong) NSTimer *refreshTimer;
 @end
 
 @implementation SLSignalPanel
@@ -202,14 +201,13 @@ static UIColor *tierColor(SLBetTier tier) {
     win.hidden = NO;
     self.window = win;
 
-    // 1 Hz refresh
-    self.refreshTimer = [NSTimer scheduledTimerWithTimeInterval:1.0
-                                                          target:self
-                                                        selector:@selector(refreshLabels)
-                                                        userInfo:nil
-                                                         repeats:YES];
+    // Instant refresh on strategy update — no polling delay
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(refreshLabels)
+                                                 name:SLStrategyUpdatedNotification
+                                               object:nil];
 
-    NSLog(@"[SpinLogger] Signal Panel installed (per-type heat mode)");
+    NSLog(@"[SpinLogger] Signal Panel installed (notification-driven refresh)");
 }
 
 // ============================================================
@@ -357,8 +355,7 @@ static UIColor *tierColor(SLBetTier tier) {
 }
 
 - (void)dealloc {
-    [self.refreshTimer invalidate];
-    self.refreshTimer = nil;
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 @end

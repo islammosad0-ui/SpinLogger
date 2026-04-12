@@ -88,6 +88,9 @@ static NSString *const SLNetworkRequestNotification = @"Name.NetShearsNewRequest
 static NSString *const SLMemoryScanNotification    = @"SLMemoryScanEvent";
 static NSString *const SLScanSnapshotKey           = @"SLScanSnapshotKey";
 
+// Strategy engine notification (fired after every computeAllSignals)
+static NSString *const SLStrategyUpdatedNotification = @"SLStrategyUpdated";
+
 // ---------------------------------------------------------------------------
 //  SLTrackedSymbols
 // ---------------------------------------------------------------------------
