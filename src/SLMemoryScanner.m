@@ -95,6 +95,7 @@ static size_t fo_resultSymbolIndex   = 0;
 static size_t fo_numberOfSymbols     = 0;
 static size_t fo_symbolElements      = 0;      // m_SymbolElements array
 static size_t fo_slotObjects         = 0;      // slotObjects (GameObject[] alt strip access)
+static size_t fo_symbolReplacer      = 0;      // m_SymbolReplacer → SlotBarSymbolReplacer
 
 // SlotBarSymbolInfo
 static size_t fo_slotSymbolBacking   = 0;      // <SlotSymbol>k__BackingField
@@ -466,6 +467,7 @@ static void* fieldHandleFor(void* klass, const char* fieldName) {
     fo_numberOfSymbols   = offsetFor(s_klass_BarManager, "m_NumberOfSymbols", "SlotBarManager");
     fo_symbolElements    = offsetFor(s_klass_BarManager, "m_SymbolElements",  "SlotBarManager");
     fo_slotObjects       = offsetFor(s_klass_BarManager, "slotObjects",       "SlotBarManager");
+    fo_symbolReplacer    = offsetFor(s_klass_BarManager, "m_SymbolReplacer",  "SlotBarManager");
 
     // SlotBarSymbolInfo (optional)
     if (s_klass_BarSymInfo) {
@@ -649,6 +651,20 @@ static inline uint8_t readBool(void* obj, size_t offset) {
         }
     }
 
+    // Scanner v2 — walk each bar's m_SymbolReplacer → SlotBarSymbolReplacer.
+    // This is the active replacement map that explains reel 1/3 ambiguity.
+    if (s_klass_BarRepl && fo_symbolReplacer) {
+        for (int i = 0; i < 3; i++) {
+            if (!looksLikeHeapPointer(bars[i])) continue;
+            void *repl = readPtr(bars[i], fo_symbolReplacer);
+            if (!looksLikeHeapPointer(repl)) continue;
+            NSString *key = [NSString stringWithFormat:
+                             @"SlotBarSymbolReplacer_%d@0x%lx",
+                             i + 1, (unsigned long)repl];
+            fields[key] = dumpClassFields(s_klass_BarRepl, repl);
+        }
+    }
+
     // Scanner v2 — DynamicSlotResults target object
     if (fo_dynamicResults) {
         void *dyn = readPtr(inst, fo_dynamicResults);
@@ -689,6 +705,64 @@ static inline uint8_t readBool(void* obj, size_t offset) {
         }
     }
 
+    // Scanner v2 — walk m_WinBehaviours → WinBehaviourComposite → inner list.
+    // This is the path to m_Scenario on ScenarioSlotMachineWinBehaviour.
+    if (fo_winBehaviours) {
+        void *winBhv = readPtr(inst, fo_winBehaviours);
+        if (looksLikeHeapPointer(winBhv)) {
+            if (s_klass_WinComp) {
+                NSString *key = [NSString stringWithFormat:
+                                 @"SlotMachineWinBehaviourComposite@0x%lx",
+                                 (unsigned long)winBhv];
+                fields[key] = dumpClassFields(s_klass_WinComp, winBhv);
+
+                // Walk the Composite's inner m_WinBehaviours list.
+                // C# List<T> has: _items (array ref), _size (int32).
+                // We try reading _items first, then fall back to m_WinBehaviours
+                // as a direct array reference.
+                if (fo_compWinBehaviours) {
+                    void *innerList = readPtr(winBhv, fo_compWinBehaviours);
+                    if (looksLikeHeapPointer(innerList)) {
+                        // Could be a List<T> object — read _items at +16, _size at +24
+                        void *items = readPtr(innerList, 16);
+                        int32_t listSize = readInt32(innerList, 24);
+                        if (looksLikeHeapPointer(items) && listSize > 0 && listSize < 64) {
+                            for (int32_t bi = 0; bi < listSize && bi < 16; bi++) {
+                                void *bhvItem = arrayElementPtr(items, bi);
+                                if (!looksLikeHeapPointer(bhvItem)) continue;
+                                if (s_klass_ScenBhv) {
+                                    NSString *sk = [NSString stringWithFormat:
+                                                    @"ScenarioWinBehaviour[%d]@0x%lx",
+                                                    bi, (unsigned long)bhvItem];
+                                    fields[sk] = dumpClassFields(s_klass_ScenBhv, bhvItem);
+                                }
+                            }
+                        }
+                        // Also try treating innerList itself as an array
+                        for (int32_t bi = 0; bi < 8; bi++) {
+                            void *bhvItem = arrayElementPtr(innerList, bi);
+                            if (!looksLikeHeapPointer(bhvItem)) continue;
+                            if (s_klass_ScenBhv) {
+                                NSString *sk = [NSString stringWithFormat:
+                                                @"ScenarioWinBehaviourDirect[%d]@0x%lx",
+                                                bi, (unsigned long)bhvItem];
+                                fields[sk] = dumpClassFields(s_klass_ScenBhv, bhvItem);
+                            }
+                        }
+                    }
+                }
+            }
+            // Also try dumping as ScenarioBhv directly (in case WinBehaviours
+            // points at a single ScenarioWinBehaviour, not a Composite)
+            if (s_klass_ScenBhv) {
+                NSString *key = [NSString stringWithFormat:
+                                 @"ScenarioSlotMachineWinBehaviour@0x%lx",
+                                 (unsigned long)winBhv];
+                fields[key] = dumpClassFields(s_klass_ScenBhv, winBhv);
+            }
+        }
+    }
+
     // Scanner v2 — PvpBaseCompetitorSlotsController and BaseSlotSymbolController
     // are not yet reachable via a known pointer chain from Manager. Record the
     // class metadata (presence + resolved field offset) so the analysis side
@@ -708,6 +782,20 @@ static inline uint8_t readBool(void* obj, size_t offset) {
         };
     }
 
+    // Diagnostic: record which v2 classes were NOT found so we can debug
+    NSMutableArray *missingClasses = [NSMutableArray array];
+    if (!s_klass_Board3D)    [missingClasses addObject:@"Board3DManager"];
+    if (!s_klass_ReplSvc)    [missingClasses addObject:@"SlotSymbolReplacementService"];
+    if (!s_klass_BarRepl)    [missingClasses addObject:@"SlotBarSymbolReplacer"];
+    if (!s_klass_WinComp)    [missingClasses addObject:@"SlotMachineWinBehaviourComposite"];
+    if (!s_klass_ScenBhv)    [missingClasses addObject:@"ScenarioSlotMachineWinBehaviour"];
+    if (!s_klass_DataProv)   [missingClasses addObject:@"SlotDataProvider"];
+    if (!s_klass_PvpSlots)   [missingClasses addObject:@"PvpBaseCompetitorSlotsController"];
+    if (!s_klass_BaseSymCtrl)[missingClasses addObject:@"BaseSlotSymbolController"];
+    if (missingClasses.count > 0) {
+        rec[@"v2_missing_classes"] = missingClasses;
+    }
+
     rec[@"fields"] = fields;
 
     // ----- γ: targeted hex windows -----
@@ -719,6 +807,28 @@ static inline uint8_t readBool(void* obj, size_t offset) {
             NSString *key = [NSString stringWithFormat:@"slotBar%d@0x%lx",
                              i + 1, (unsigned long)bars[i]];
             hex[key] = hexString(bars[i], kSLTraceHexWindowBar);
+        }
+    }
+
+    // Scanner v2 — hex dump of each bar's SlotBarSymbolReplacer (m_Replacements dict)
+    if (fo_symbolReplacer) {
+        for (int i = 0; i < 3; i++) {
+            if (!looksLikeHeapPointer(bars[i])) continue;
+            void *repl = readPtr(bars[i], fo_symbolReplacer);
+            if (!looksLikeHeapPointer(repl)) continue;
+            NSString *key = [NSString stringWithFormat:@"slotBar%d.SymbolReplacer@0x%lx",
+                             i + 1, (unsigned long)repl];
+            hex[key] = hexString(repl, 256);
+
+            if (fo_replMap) {
+                void *replDict = readPtr(repl, fo_replMap);
+                if (looksLikeHeapPointer(replDict)) {
+                    NSString *dk = [NSString stringWithFormat:
+                                    @"slotBar%d.m_Replacements@0x%lx",
+                                    i + 1, (unsigned long)replDict];
+                    hex[dk] = hexString(replDict, 512);
+                }
+            }
         }
     }
 
@@ -806,6 +916,26 @@ static inline uint8_t readBool(void* obj, size_t offset) {
             NSString *key = [NSString stringWithFormat:@"BoardManager@0x%lx",
                              (unsigned long)board];
             hex[key] = hexString(board, 512);
+        }
+    }
+
+    // Scanner v2 — m_WinBehaviours and inner list hex windows
+    if (fo_winBehaviours) {
+        void *winBhv = readPtr(inst, fo_winBehaviours);
+        if (looksLikeHeapPointer(winBhv)) {
+            NSString *key = [NSString stringWithFormat:@"WinBehaviours@0x%lx",
+                             (unsigned long)winBhv];
+            hex[key] = hexString(winBhv, 512);
+
+            if (s_klass_WinComp && fo_compWinBehaviours) {
+                void *innerList = readPtr(winBhv, fo_compWinBehaviours);
+                if (looksLikeHeapPointer(innerList)) {
+                    NSString *lk = [NSString stringWithFormat:
+                                    @"WinBehaviours.innerList@0x%lx",
+                                    (unsigned long)innerList];
+                    hex[lk] = hexString(innerList, 512);
+                }
+            }
         }
     }
 
