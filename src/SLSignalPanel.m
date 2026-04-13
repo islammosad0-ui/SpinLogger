@@ -9,8 +9,9 @@
 static const CGFloat kPanelW = 200;
 static const CGFloat kHeaderH = 28;
 static const CGFloat kRowH = 20;
-static const int kTypeCount = 6;
-static const CGFloat kExpandedH = 28 + (20 * 6) + 28;  // header + 6 rows + idx footer
+static const int kTypeCount = 4;   // ACC+SP, SHIELD, ATTACK, STEAL
+static const CGFloat kReasonRowH = 16;
+static const CGFloat kExpandedH = 28 + (20 * 4) + 16 + 24;  // header + 4 rows + reason + idx footer
 
 // Heat bar colors
 static UIColor *colorForHeat(int score, int maxScore) {
@@ -54,8 +55,15 @@ static UIColor *tierColor(SLBetTier tier) {
 @property (nonatomic, strong) NSArray<UIView *> *heatBarFills;
 @property (nonatomic, strong) NSArray<UILabel *> *scoreLabels;
 
-// Footer: idx display
+// Reason + footer
+@property (nonatomic, strong) UILabel *reasonLabel;
 @property (nonatomic, strong) UILabel *idxLabel;
+
+// Settings overlay
+@property (nonatomic, strong) UIView *settingsView;
+@property (nonatomic, strong) UILabel *scorerValueLabel;
+@property (nonatomic, strong) UILabel *profileValueLabel;
+@property (nonatomic, assign) BOOL settingsShown;
 
 @end
 
@@ -89,12 +97,13 @@ static UIColor *tierColor(SLBetTier tier) {
     win.frame = CGRectMake(startX, startY, kPanelW, kHeaderH);
     win.windowLevel = UIWindowLevelAlert + 200;
     win.backgroundColor = [UIColor clearColor];
+    win.clipsToBounds = YES;
     UIViewController *vc = [[UIViewController alloc] init];
     vc.view.backgroundColor = [UIColor clearColor];
     win.rootViewController = vc;
 
-    // Container
-    UIView *container = [[UIView alloc] initWithFrame:CGRectMake(0, 0, kPanelW, kExpandedH)];
+    // Container — starts at header-only height, resizes on expand
+    UIView *container = [[UIView alloc] initWithFrame:CGRectMake(0, 0, kPanelW, kHeaderH)];
     container.backgroundColor = [UIColor colorWithRed:0.05 green:0.07 blue:0.12 alpha:0.95];
     container.layer.cornerRadius = 10;
     container.layer.borderWidth = 1;
@@ -109,10 +118,12 @@ static UIColor *tierColor(SLBetTier tier) {
     [container addSubview:header];
     self.headerBar = header;
 
-    // Header: "ACC+SP: [TIER]"
+    // Header: "[V2/SNP] MAX  L1:+8 L2:+3 =+11"
     UILabel *headerLbl = [self makeLbl:CGRectMake(8, 0, kPanelW - 30, kHeaderH)
                                   size:11 bold:YES color:[UIColor colorWithWhite:0.7 alpha:1]];
-    headerLbl.text = @"SIGNALS: ---";
+    headerLbl.text = @"--- | 0";
+    headerLbl.adjustsFontSizeToFitWidth = YES;
+    headerLbl.minimumScaleFactor = 0.7;
     [header addSubview:headerLbl];
     self.headerLabel = headerLbl;
 
@@ -126,7 +137,7 @@ static UIColor *tierColor(SLBetTier tier) {
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(toggleExpand)];
     [header addGestureRecognizer:tap];
     UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc]
-                                                initWithTarget:self action:@selector(cycleProfile:)];
+                                                initWithTarget:self action:@selector(toggleSettings:)];
     longPress.minimumPressDuration = 0.5;
     [header addGestureRecognizer:longPress];
     UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
@@ -138,7 +149,7 @@ static UIColor *tierColor(SLBetTier tier) {
     self.bodyView = body;
     body.hidden = YES;
 
-    NSArray *typeNames = @[@"ACC+SP", @"SHIELD", @"ATTACK", @"STEAL", @"COIN", @"GOLD"];
+    NSArray *typeNames = @[@"ACC+SP", @"SHIELD", @"ATTACK", @"STEAL"];
     NSMutableArray *tLabels = [NSMutableArray array];
     NSMutableArray *bars = [NSMutableArray array];
     NSMutableArray *fills = [NSMutableArray array];
@@ -191,12 +202,71 @@ static UIColor *tierColor(SLBetTier tier) {
     self.heatBarFills = fills;
     self.scoreLabels = sLabels;
 
+    // Reason row: which signals fired
+    CGFloat reasonY = kTypeCount * kRowH + 2;
+    self.reasonLabel = [self makeLbl:CGRectMake(6, reasonY, kPanelW - 12, kReasonRowH)
+                                size:8 bold:NO color:[UIColor colorWithWhite:0.4 alpha:1]];
+    self.reasonLabel.text = @"-";
+    self.reasonLabel.adjustsFontSizeToFitWidth = YES;
+    self.reasonLabel.minimumScaleFactor = 0.6;
+    [body addSubview:self.reasonLabel];
+
     // Footer: idx display
-    CGFloat footerY = kTypeCount * kRowH + 4;
+    CGFloat footerY = reasonY + kReasonRowH + 2;
     self.idxLabel = [self makeLbl:CGRectMake(6, footerY, kPanelW - 12, 20)
                              size:9 bold:NO color:[UIColor colorWithWhite:0.4 alpha:1]];
     self.idxLabel.text = @"idx: (-,-,-)";
     [body addSubview:self.idxLabel];
+
+    // Settings overlay (hidden by default, shown on long-press)
+    CGFloat settingsH = 2 * kRowH + 12;
+    UIView *settings = [[UIView alloc] initWithFrame:CGRectMake(0, kHeaderH, kPanelW, settingsH)];
+    settings.backgroundColor = [UIColor colorWithRed:0.10 green:0.08 blue:0.18 alpha:0.98];
+    settings.hidden = YES;
+    [container addSubview:settings];
+    self.settingsView = settings;
+    self.settingsShown = NO;
+
+    // Settings row 1: Scorer
+    UILabel *scorerLbl = [self makeLbl:CGRectMake(10, 4, 70, kRowH)
+                                   size:10 bold:YES color:[UIColor colorWithWhite:0.55 alpha:1]];
+    scorerLbl.text = @"SCORER";
+    [settings addSubview:scorerLbl];
+
+    UILabel *scorerVal = [self makeLbl:CGRectMake(kPanelW - 60, 4, 50, kRowH)
+                                   size:10 bold:YES color:[UIColor colorWithRed:0.5 green:0.8 blue:1.0 alpha:1]];
+    scorerVal.text = [SLIdxStrategy shared].scorerName ?: @"V1";
+    scorerVal.textAlignment = NSTextAlignmentRight;
+    scorerVal.userInteractionEnabled = YES;
+    [settings addSubview:scorerVal];
+    self.scorerValueLabel = scorerVal;
+
+    UITapGestureRecognizer *tapScorer = [[UITapGestureRecognizer alloc]
+                                          initWithTarget:self action:@selector(settingsTapScorer)];
+    [scorerVal addGestureRecognizer:tapScorer];
+
+    // Settings row 2: Profile
+    UILabel *profileLbl = [self makeLbl:CGRectMake(10, 4 + kRowH, 70, kRowH)
+                                    size:10 bold:YES color:[UIColor colorWithWhite:0.55 alpha:1]];
+    profileLbl.text = @"PROFILE";
+    [settings addSubview:profileLbl];
+
+    UILabel *profileVal = [self makeLbl:CGRectMake(kPanelW - 60, 4 + kRowH, 50, kRowH)
+                                    size:10 bold:YES color:[UIColor colorWithRed:1.0 green:0.7 blue:0.3 alpha:1]];
+    profileVal.text = [SLIdxStrategy shared].profileName ?: @"BAL";
+    profileVal.textAlignment = NSTextAlignmentRight;
+    profileVal.userInteractionEnabled = YES;
+    [settings addSubview:profileVal];
+    self.profileValueLabel = profileVal;
+
+    UITapGestureRecognizer *tapProfile = [[UITapGestureRecognizer alloc]
+                                           initWithTarget:self action:@selector(settingsTapProfile)];
+    [profileVal addGestureRecognizer:tapProfile];
+
+    // Separator line
+    UIView *sep = [[UIView alloc] initWithFrame:CGRectMake(10, kRowH + 3, kPanelW - 20, 0.5)];
+    sep.backgroundColor = [UIColor colorWithWhite:0.25 alpha:1];
+    [settings addSubview:sep];
 
     win.hidden = NO;
     self.window = win;
@@ -221,12 +291,11 @@ static UIColor *tierColor(SLBetTier tier) {
     SLTypeHeat h1 = s.heatShield;
     SLTypeHeat h2 = s.heatAttack;
     SLTypeHeat h3 = s.heatSteal;
-    SLTypeHeat h4 = s.heatCoin;
-    SLTypeHeat h5 = s.heatGoldSack;
 
     NSString *tier = s.betTierString ?: @"---";
     UIColor *tColor = tierColor(s.betTier);
     NSString *reason = s.signalReason ?: @"-";
+    NSString *scorer = s.scorerName ?: @"V1";
     NSString *profile = s.profileName ?: @"BAL";
     NSInteger l1 = s.layer1Score;
     NSInteger l2 = s.layer2Score;
@@ -234,13 +303,14 @@ static UIColor *tierColor(SLBetTier tier) {
     int32_t r1 = s.lastR1Idx, r2 = s.lastR2Idx, r3 = s.lastR3Idx;
 
     dispatch_async(dispatch_get_main_queue(), ^{
-        SLTypeHeat heats[] = {h0, h1, h2, h3, h4, h5};
+        SLTypeHeat heats[] = {h0, h1, h2, h3};
 
-        // Header: [PROFILE] TIER | reason
-        self.headerLabel.text = [NSString stringWithFormat:@"[%@] %@ | %@", profile, tier, reason];
+        // Header: "[V2/SNP] MAX  L1:+8 L2:+3 =+11"
+        self.headerLabel.text = [NSString stringWithFormat:@"[%@/%@] %@  L1:%+ld L2:%+ld =%+ld",
+                                  scorer, profile, tier, (long)l1, (long)l2, (long)combined];
         self.headerLabel.textColor = tColor;
 
-        // Per-type heat bars
+        // Per-type heat bars (4 rows: ACC+SP, SHIELD, ATTACK, STEAL)
         CGFloat barW = 80;
         for (int i = 0; i < kTypeCount; i++) {
             SLTypeHeat h = heats[i];
@@ -276,9 +346,11 @@ static UIColor *tierColor(SLBetTier tier) {
                                            [UIColor colorWithWhite:0.5 alpha:1];
         }
 
-        // Footer: L1/L2 breakdown + idx
-        self.idxLabel.text = [NSString stringWithFormat:@"L1:%+ld L2:%+ld =%+ld | (%d,%d,%d)",
-                              (long)l1, (long)l2, (long)combined, r1, r2, r3];
+        // Reason row: which signals fired
+        self.reasonLabel.text = reason;
+
+        // Footer: idx
+        self.idxLabel.text = [NSString stringWithFormat:@"idx: (%d,%d,%d)", r1, r2, r3];
     });
 }
 
@@ -286,16 +358,26 @@ static UIColor *tierColor(SLBetTier tier) {
 //  Expand / Collapse
 // ============================================================
 - (void)toggleExpand {
+    // If settings are showing, dismiss them first
+    if (self.settingsShown) {
+        [self dismissSettings];
+        return;
+    }
+
     self.expanded = !self.expanded;
-    CGRect f = self.window.frame;
-    f.size.height = self.expanded ? kExpandedH : kHeaderH;
+    CGFloat h = self.expanded ? kExpandedH : kHeaderH;
+    CGRect wf = self.window.frame;
+    wf.size.height = h;
     self.bodyView.hidden = !self.expanded;
 
     UILabel *arrow = [self.headerBar viewWithTag:99];
     arrow.text = self.expanded ? @"\u25B2" : @"\u25BC";
 
     [UIView animateWithDuration:0.2 animations:^{
-        self.window.frame = f;
+        self.window.frame = wf;
+        CGRect cf = self.container.frame;
+        cf.size.height = h;
+        self.container.frame = cf;
     }];
 }
 
@@ -332,26 +414,97 @@ static UIColor *tierColor(SLBetTier tier) {
 }
 
 // ============================================================
-//  Profile cycling (long-press on header)
+//  Settings overlay (long-press on header)
 // ============================================================
-- (void)cycleProfile:(UILongPressGestureRecognizer *)gesture {
+- (void)toggleSettings:(UILongPressGestureRecognizer *)gesture {
     if (gesture.state != UIGestureRecognizerStateBegan) return;
 
-    SLIdxStrategy *s = [SLIdxStrategy shared];
-    [s cycleProfile];
+    self.settingsShown = !self.settingsShown;
 
-    // Flash feedback
-    UIView *flash = self.headerBar;
-    [UIView animateWithDuration:0.1 animations:^{
-        flash.backgroundColor = [UIColor colorWithWhite:0.3 alpha:1];
-    } completion:^(BOOL finished) {
+    if (self.settingsShown) {
+        // Sync labels with current values
+        SLIdxStrategy *s = [SLIdxStrategy shared];
+        self.scorerValueLabel.text = s.scorerName ?: @"V1";
+        self.profileValueLabel.text = s.profileName ?: @"BAL";
+
+        // Hide body, show settings
+        self.bodyView.hidden = YES;
+        self.settingsView.hidden = NO;
+
+        CGFloat settingsH = 2 * kRowH + 12;
+        CGFloat totalH = kHeaderH + settingsH;
+        CGRect wf = self.window.frame;
+        wf.size.height = totalH;
+
         [UIView animateWithDuration:0.2 animations:^{
-            flash.backgroundColor = [UIColor colorWithRed:0.08 green:0.10 blue:0.16 alpha:1];
+            self.window.frame = wf;
+            CGRect cf = self.container.frame;
+            cf.size.height = totalH;
+            self.container.frame = cf;
         }];
+
+        // Flash header purple
+        UIView *flash = self.headerBar;
+        [UIView animateWithDuration:0.1 animations:^{
+            flash.backgroundColor = [UIColor colorWithRed:0.15 green:0.10 blue:0.25 alpha:1];
+        } completion:^(BOOL finished) {
+            [UIView animateWithDuration:0.3 animations:^{
+                flash.backgroundColor = [UIColor colorWithRed:0.08 green:0.10 blue:0.16 alpha:1];
+            }];
+        }];
+    } else {
+        [self dismissSettings];
+    }
+}
+
+- (void)dismissSettings {
+    self.settingsShown = NO;
+    self.settingsView.hidden = YES;
+
+    // Restore body visibility based on expanded state
+    self.bodyView.hidden = !self.expanded;
+    CGFloat h = self.expanded ? kExpandedH : kHeaderH;
+    CGRect wf = self.window.frame;
+    wf.size.height = h;
+
+    [UIView animateWithDuration:0.2 animations:^{
+        self.window.frame = wf;
+        CGRect cf = self.container.frame;
+        cf.size.height = h;
+        self.container.frame = cf;
     }];
 
-    // Force immediate refresh
     [self refreshLabels];
+}
+
+- (void)settingsTapScorer {
+    SLIdxStrategy *s = [SLIdxStrategy shared];
+    [s cycleScorer];
+    self.scorerValueLabel.text = s.scorerName;
+
+    // Quick flash
+    [UIView animateWithDuration:0.08 animations:^{
+        self.scorerValueLabel.alpha = 0.3;
+    } completion:^(BOOL finished) {
+        [UIView animateWithDuration:0.15 animations:^{
+            self.scorerValueLabel.alpha = 1.0;
+        }];
+    }];
+}
+
+- (void)settingsTapProfile {
+    SLIdxStrategy *s = [SLIdxStrategy shared];
+    [s cycleProfile];
+    self.profileValueLabel.text = s.profileName;
+
+    // Quick flash
+    [UIView animateWithDuration:0.08 animations:^{
+        self.profileValueLabel.alpha = 0.3;
+    } completion:^(BOOL finished) {
+        [UIView animateWithDuration:0.15 animations:^{
+            self.profileValueLabel.alpha = 1.0;
+        }];
+    }];
 }
 
 - (void)dealloc {

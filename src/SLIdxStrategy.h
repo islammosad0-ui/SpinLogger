@@ -34,6 +34,13 @@ typedef NS_ENUM(NSInteger, SLThresholdProfile) {
     SLThresholdProfileCount
 };
 
+/// Scorer configuration: V1 (original 1,107-spin), V2 (enhanced 3,864-spin)
+typedef NS_ENUM(NSInteger, SLScorerConfig) {
+    SLScorerConfigV1 = 0,   // original signals from 1,107 spins
+    SLScorerConfigV2,        // enhanced: merged 3,864 spins + multi-lag + dead tuples
+    SLScorerConfigCount
+};
+
 /// Per-type heat score + signal info
 typedef struct {
     int score;        // composite score (higher = hotter)
@@ -78,6 +85,14 @@ typedef struct {
 
 /// Cycle to the next threshold profile (persisted to UserDefaults)
 - (void)cycleProfile;
+
+// ------ Scorer config (V1 / V2, configurable from HUD) ------
+
+@property (nonatomic, readonly) SLScorerConfig scorerConfig;
+@property (nonatomic, readonly, copy) NSString *scorerName;  // V1/V2
+
+/// Cycle to the next scorer config (persisted to UserDefaults)
+- (void)cycleScorer;
 
 // ------ Last settled idx (for display / logging) ------
 

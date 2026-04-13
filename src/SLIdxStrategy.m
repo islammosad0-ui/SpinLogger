@@ -36,6 +36,10 @@ typedef struct {
 @property (nonatomic, readwrite) SLThresholdProfile thresholdProfile;
 @property (nonatomic, readwrite, copy) NSString *profileName;
 
+// Scorer config
+@property (nonatomic, readwrite) SLScorerConfig scorerConfig;
+@property (nonatomic, readwrite, copy) NSString *scorerName;
+
 // Last settled idx
 @property (nonatomic, readwrite) int32_t lastR1Idx;
 @property (nonatomic, readwrite) int32_t lastR2Idx;
@@ -81,6 +85,16 @@ typedef struct {
             _thresholdProfile = SLThresholdProfileBalanced;
         }
         _profileName = [self nameForProfile:_thresholdProfile];
+
+        // Load saved scorer config
+        NSInteger savedScorer = [[NSUserDefaults standardUserDefaults]
+                                  integerForKey:kSLDefaultsScorerConfig];
+        if (savedScorer >= 0 && savedScorer < SLScorerConfigCount) {
+            _scorerConfig = (SLScorerConfig)savedScorer;
+        } else {
+            _scorerConfig = SLScorerConfigV1;
+        }
+        _scorerName = [self nameForScorer:_scorerConfig];
 
         SLTypeHeat zero = {0, 0};
         _heatAccSpins = zero;
@@ -178,8 +192,9 @@ typedef struct {
 }
 
 // ---------------------------------------------------------------------------
-//  Per-type signal computation — all CV-validated from 62_per_type_signals.py
+//  Per-type signal computation — all CV-validated
 //  Combined scoring: Layer 1 (single-spin idx) + Layer 2 (10-spin window)
+//  Scorer V1 (1,107-spin) vs V2 (3,864-spin enhanced + multi-lag)
 // ---------------------------------------------------------------------------
 
 - (void)computeAllSignals {
@@ -187,18 +202,59 @@ typedef struct {
     int32_t r2 = self.lastR2Idx;
     int32_t r3 = self.lastR3Idx;
 
+    BOOL v2 = (self.scorerConfig == SLScorerConfigV2);
+
     // Per-type heat bars (Layer 1 only — for individual display)
-    self.heatAccSpins  = [self scoreAccSpinsR1:r1 r2:r2 r3:r3];
+    self.heatAccSpins  = v2 ? [self scoreAccSpinsV2R1:r1 r2:r2 r3:r3]
+                            : [self scoreAccSpinsR1:r1 r2:r2 r3:r3];
     self.heatShield    = [self scoreShieldR1:r1 r2:r2 r3:r3];
     self.heatAttack    = [self scoreAttackR1:r1 r2:r2 r3:r3];
     self.heatSteal     = [self scoreStealR1:r1 r2:r2 r3:r3];
-    self.heatCoin      = [self scoreCoinR1:r1 r2:r2 r3:r3];
-    self.heatGoldSack  = [self scoreGoldSackR1:r1 r2:r2 r3:r3];
 
     // Layer 1: acc+spins single-spin score
     NSInteger l1 = self.heatAccSpins.score;
+
+    // Multi-lag + sequence + pattern bonuses (V2 only): read from ring buffer
+    NSInteger multiLag = 0;
+    BOOL patA = NO, patD = NO, patF = NO;
+    if (v2) {
+        // Pattern D: sum of current idx == 15 (no history needed)
+        if (r1 + r2 + r3 == 15) { multiLag += 1; patD = YES; }
+
+        int available = MIN(_historyCount, kSLHistoryMax);
+        if (available >= 2) {
+            // prev = previous spin (head-1 is current, head-2 is previous)
+            int idxPrev = (_historyHead - 2 + kSLHistoryMax) % kSLHistoryMax;
+            SLSpinRecord prev = _history[idxPrev];
+
+            // Sequence patterns (prev r3 -> current r3)
+            if (prev.r3 == r3)              multiLag += 1;   // dr3=+0: back-to-back same r3, 1.6x lift
+            if (prev.r3 == 5 && r3 == 5)    multiLag += 1;   // r3:(5,5) 4.4x lift (stacks with dr3=+0)
+            if (prev.r3 == 8 && r3 == 5)    multiLag += 1;   // r3:(8,5) 2.7x lift
+
+            // Pattern A: back-to-back same r1
+            if (prev.r1 == r1) { multiLag += 1; patA = YES; }
+
+            // Pattern F: cross-reel prev.r2==7 -> current r3==8
+            if (prev.r2 == 7 && r3 == 8) { multiLag += 1; patF = YES; }
+
+            // Lag-2 penalties
+            if (prev.r3 == 6)  multiLag -= 1;   // lag-2 r3=6: dead (0/57, 5/5 CV)
+            if (prev.r3 == 2)  multiLag -= 1;   // lag-2 r3=2: -1.76pp, 5/5 CV
+            if (prev.r1 == 2)  multiLag -= 1;   // lag-2 r1=2: -1.56pp, 5/5 CV
+        }
+        if (available >= 3) {
+            int idx3 = (_historyHead - 3 + kSLHistoryMax) % kSLHistoryMax;
+            SLSpinRecord prev3 = _history[idx3];
+            if (prev3.r3 == 4)  multiLag += 1;   // lag-3 r3=4: +2.68pp, 4/5 CV
+            if (prev3.r1 == 8)  multiLag -= 1;   // lag-3 r1=8: dead (0/39, 5/5 CV)
+        }
+        l1 += multiLag;
+    }
+
     // Layer 2: 10-spin window patterns
-    NSInteger l2 = [self scoreLayer2];
+    NSInteger l2 = v2 ? [self scoreLayer2V2] : [self scoreLayer2];
+
     // Combined
     NSInteger combined = l1 + l2;
 
@@ -227,22 +283,46 @@ typedef struct {
     self.betTier = tier;
     self.betTierString = tierStr;
 
-    // Build reason string: L1 signals + L2 summary
+    // Build reason string
     NSMutableString *reason = [NSMutableString string];
-    if (r2 == 7) [reason appendString:@"r2=7★ "];
-    if (r1 == 7) [reason appendString:@"r1=7 "];
-    if (r2 == 3) [reason appendString:@"r2=3 "];
-    if (r1 == 3) [reason appendString:@"r1=3 "];
-    if (r1 == 7 && r2 == 7) [reason appendString:@"77P "];
-    if (r3 == 1) [reason appendString:@"r3=1✗ "];
-    if (r2 == 0) [reason appendString:@"r2=0✗ "];
+    if (v2) {
+        if (r2 == 7) [reason appendString:@"r2=7* "];
+        if (r1 == 7) [reason appendString:@"r1=7 "];
+        if (r2 == 3) [reason appendString:@"r2=3 "];
+        if (r1 == 3) [reason appendString:@"r1=3 "];
+        if (r3 == 3) [reason appendString:@"r3=3 "];
+        if (r3 == 8) [reason appendString:@"r3=8 "];
+        if (r1 == 7 && r2 == 7) [reason appendString:@"77P "];
+        if (r1 == 7 && r2 == 3) [reason appendString:@"73P "];
+        if (r3 == 1) [reason appendString:@"r3=1X "];
+        if (r2 == 5) [reason appendString:@"r2=5X "];
+        if (patA) [reason appendString:@"A "];
+        if (patD) [reason appendString:@"D "];
+        if (patF) [reason appendString:@"F "];
+        if (multiLag != 0) [reason appendFormat:@"ML%+ld ", (long)multiLag];
+    } else {
+        if (r2 == 7) [reason appendString:@"r2=7\u2605 "];
+        if (r1 == 7) [reason appendString:@"r1=7 "];
+        if (r2 == 3) [reason appendString:@"r2=3 "];
+        if (r1 == 3) [reason appendString:@"r1=3 "];
+        if (r1 == 7 && r2 == 7) [reason appendString:@"77P "];
+        if (r3 == 1) [reason appendString:@"r3=1\u2717 "];
+        if (r2 == 0) [reason appendString:@"r2=0\u2717 "];
+    }
     if (l2 != 0) [reason appendFormat:@"W%+ld ", (long)l2];
     self.signalReason = reason.length > 0 ? [reason stringByTrimmingCharactersInSet:
                         [NSCharacterSet whitespaceCharacterSet]] : @"-";
 
-    NSLog(@"[SLIdxStrategy] idx=(%d,%d,%d) L1=%+ld L2=%+ld =%+ld [%@] -> %@",
-          r1, r2, r3, (long)l1, (long)l2, (long)combined,
-          self.profileName, tierStr);
+    if (v2) {
+        NSLog(@"[SLIdxStrategy] idx=(%d,%d,%d) L1=%+ld ML=%+ld%s%s%s L2=%+ld =%+ld [%@/%@] -> %@",
+              r1, r2, r3, (long)(l1 - multiLag), (long)multiLag,
+              patA ? "+A" : "", patD ? "+D" : "", patF ? "+F" : "",
+              (long)l2, (long)combined, self.scorerName, self.profileName, tierStr);
+    } else {
+        NSLog(@"[SLIdxStrategy] idx=(%d,%d,%d) L1=%+ld L2=%+ld =%+ld [%@/%@] -> %@",
+              r1, r2, r3, (long)l1, (long)l2, (long)combined,
+              self.scorerName, self.profileName, tierStr);
+    }
 
     // Notify HUD immediately — no polling delay
     [[NSNotificationCenter defaultCenter] postNotificationName:SLStrategyUpdatedNotification
@@ -250,14 +330,13 @@ typedef struct {
 }
 
 // ---------------------------------------------------------------------------
-//  Layer 2: 10-spin window pattern scorer (from 65_combined_scorer.py)
+//  Layer 2 V1: 10-spin window pattern scorer (from 65_combined_scorer.py)
 //  Signals A-J validated on 1,107 spins with 5-fold CV
 // ---------------------------------------------------------------------------
 - (NSInteger)scoreLayer2 {
     int available = MIN(_historyCount, kSLHistoryMax);
     if (available < 3) return 0;
 
-    // Flatten ring buffer into chronological order
     SLSpinRecord win[kSLHistoryMax];
     for (int i = 0; i < available; i++) {
         int bufIdx = (_historyHead - available + i + kSLHistoryMax) % kSLHistoryMax;
@@ -269,7 +348,6 @@ typedef struct {
     int score = 0;
 
     // --- Signal A: steal count on reel_1 in 10-spin window ---
-    // Symbol code 4 = steal (from SLConstants.h)
     int stealR1Count = 0;
     for (int i = windowStart; i < available; i++) {
         if (win[i].symR1 == 4) stealR1Count++;
@@ -301,7 +379,6 @@ typedef struct {
     }
 
     // --- Signal E: r2==6 gap <= 7 (appeared recently = good) ---
-    // Look back up to 20 spins
     int r2_6_gap = -1;
     for (int lookback = 1; lookback <= available; lookback++) {
         int idx = available - lookback;
@@ -347,6 +424,91 @@ typedef struct {
     for (int i = windowStart + 1; i < available; i++) {
         if (win[i-1].r1 == 3 && win[i].r1 == 3) {
             score += 1;
+            break;
+        }
+    }
+
+    return score;
+}
+
+// ---------------------------------------------------------------------------
+//  Layer 2 V2: re-validated on 3,864 spins (merged Ahmed+Nick)
+//  Dropped E (2/5 CV), I (2/5 CV). Flipped J to -1 (4/5 CV negative).
+// ---------------------------------------------------------------------------
+- (NSInteger)scoreLayer2V2 {
+    int available = MIN(_historyCount, kSLHistoryMax);
+    if (available < 3) return 0;
+
+    SLSpinRecord win[kSLHistoryMax];
+    for (int i = 0; i < available; i++) {
+        int bufIdx = (_historyHead - available + i + kSLHistoryMax) % kSLHistoryMax;
+        win[i] = _history[bufIdx];
+    }
+
+    int windowSize = MIN(available, 10);
+    int windowStart = available - windowSize;
+    int score = 0;
+
+    // --- Signal A: steal count on reel_1 >= 2 (5/5 CV, +2.36pp) ---
+    int stealR1Count = 0;
+    for (int i = windowStart; i < available; i++) {
+        if (win[i].symR1 == 4) stealR1Count++;
+    }
+    if (stealR1Count >= 2) score += 1;
+
+    // --- Signal B: r3==4 count >= 2 (5/5 CV, +2.36pp) ---
+    int r3_4_count = 0;
+    for (int i = windowStart; i < available; i++) {
+        if (win[i].r3 == 4) r3_4_count++;
+    }
+    if (r3_4_count >= 2) score += 1;
+
+    // --- Signal C: r3 bigram (0->8) (4/5 CV, +0.21pp) ---
+    for (int i = windowStart + 1; i < available; i++) {
+        if (win[i-1].r3 == 0 && win[i].r3 == 8) {
+            score += 1;
+            break;
+        }
+    }
+
+    // --- Signal D: r3 bigram (8->4) or (4->4) (4/5 CV, +1.62pp) ---
+    for (int i = windowStart + 1; i < available; i++) {
+        if ((win[i-1].r3 == 8 && win[i].r3 == 4) ||
+            (win[i-1].r3 == 4 && win[i].r3 == 4)) {
+            score += 1;
+            break;
+        }
+    }
+
+    // Signal E: REMOVED — r2=6 gap (2/5 CV, not validated for VT)
+
+    // --- Signal F: r3==1 absent (4/5 CV, +0.41pp) ---
+    // --- Signal G: r3==1 recent (5/5 CV, -0.92pp) ---
+    int r3_1_gap = -1;
+    for (int lookback = 1; lookback <= available; lookback++) {
+        int idx = available - lookback;
+        if (win[idx].r3 == 1) {
+            r3_1_gap = lookback;
+            break;
+        }
+    }
+    if (r3_1_gap < 0 || r3_1_gap > 10) score += 1;   // F: absent = good
+    if (r3_1_gap > 0 && r3_1_gap <= 3)  score -= 2;   // G: very recent = dead
+
+    // --- Signal H: tuple (3,6,4) in window (4/5 CV, +1.58pp) ---
+    for (int i = windowStart; i < available; i++) {
+        if (win[i].r1 == 3 && win[i].r2 == 6 && win[i].r3 == 4) {
+            score += 1;
+            break;
+        }
+    }
+
+    // Signal I: REMOVED — r3 variety (2/5 CV, not validated for VT)
+
+    // --- Signal J: r1 bigram (3,3) — FLIPPED to -1 (4/5 CV, -0.06pp) ---
+    for (int i = windowStart + 1; i < available; i++) {
+        if (win[i-1].r1 == 3 && win[i].r1 == 3) {
+            score -= 1;
             break;
         }
     }
@@ -406,16 +568,38 @@ typedef struct {
 }
 
 // ---------------------------------------------------------------------------
-//  ACC+SPINS — 35 hits / 1107 spins (3.16%)
-//  Primary target. Positive: r2=7(5/5), r1=7(4/5), r2=3(4/5), r1=3(4/5)
-//  Pairs: r1=7,r2=7(4/5), r1=7,r3=8(4/5), r2=7,r3=8(4/5), r2=3,r3=8(4/5),
-//         r1=3,r3=8(4/5), r1=3,r2=7(4/5), r1=3,r2=3(4/5)
-//  Negative: r3=1(5/5 0-hit), r2=2(4/5), r2=0(5/5), r1=5(4/5), r1=0(4/5)
-//  Dead pairs: r1=4,r2=4(0/71), r1=4,r3=4(0/48), r1=7,r3=0(0/60), etc.
+//  Scorer config cycling + persistence
+// ---------------------------------------------------------------------------
+- (void)cycleScorer {
+    NSInteger next = ((NSInteger)self.scorerConfig + 1) % SLScorerConfigCount;
+    self.scorerConfig = (SLScorerConfig)next;
+    self.scorerName = [self nameForScorer:self.scorerConfig];
+
+    [[NSUserDefaults standardUserDefaults] setInteger:next forKey:kSLDefaultsScorerConfig];
+
+    // Recompute with new scorer (using existing idx)
+    if (self.lastR1Idx >= 0) {
+        [self computeAllSignals];
+    }
+
+    NSLog(@"[SLIdxStrategy] Scorer -> %@", self.scorerName);
+}
+
+- (NSString *)nameForScorer:(SLScorerConfig)s {
+    switch (s) {
+        case SLScorerConfigV1: return @"V1";
+        case SLScorerConfigV2: return @"V2";
+        default: return @"V1";
+    }
+}
+
+// ---------------------------------------------------------------------------
+//  ACC+SPINS V1 — 35 hits / 1107 spins (3.16%)
+//  Original scorer from 62_per_type_signals.py
 // ---------------------------------------------------------------------------
 - (SLTypeHeat)scoreAccSpinsR1:(int32_t)r1 r2:(int32_t)r2 r3:(int32_t)r3 {
     int score = 0;
-    int maxScore = 10;  // theoretical max if all positives align
+    int maxScore = 10;
 
     // Individual signals
     if (r2 == 7) score += 2;   // 5/5 CV, +2.2pp (star signal)
@@ -441,6 +625,67 @@ typedef struct {
     if (r1 == 4 && r2 == 4) score -= 2;   // 0/71, 5/5 CV dead
     if (r1 == 7 && r3 == 0) score -= 2;   // 0/60, 5/5 CV dead
     if (r1 == 4 && r3 == 4) score -= 1;   // 0/48, 5/5 CV dead
+
+    return (SLTypeHeat){score, maxScore};
+}
+
+// ---------------------------------------------------------------------------
+//  ACC+SPINS V2 — 86 hits / 3864 spins (2.23%), merged Ahmed+Nick
+//  Enhanced: 8.9 bets/hit at >=10, 5.1x lift, p=0.0001
+//  + r3 signals, new pairs, dead pairs (n>=50), dead tuples
+// ---------------------------------------------------------------------------
+- (SLTypeHeat)scoreAccSpinsV2R1:(int32_t)r1 r2:(int32_t)r2 r3:(int32_t)r3 {
+    int score = 0;
+    int maxScore = 12;
+
+    // --- Individual signals (lag-1) ---
+    if (r2 == 7) score += 2;   // 5/5 CV, +1.11pp (star signal)
+    if (r1 == 7) score += 1;   // 5/5 CV, +1.03pp
+    if (r2 == 3) score += 1;   // 4/5 CV, +1.04pp
+    if (r1 == 3) score += 1;   // 4/5 CV, +0.39pp
+    if (r3 == 3) score += 1;   // 4/5 CV, +1.80pp
+    if (r3 == 5) score += 1;   // 4/5 CV, +0.75pp
+    if (r3 == 8) score += 1;   // 5/5 CV, +0.71pp
+
+    // --- Negative signals ---
+    if (r3 == 1) score -= 2;   // 5/5 CV, 3/480 (0.6%) — hard dead zone
+    if (r2 == 5) score -= 2;   // 5/5 CV, 3/306 (1.0%) — strong negative
+    if (r3 == 7) score -= 1;   // 4/5 CV, 1/118 (0.8%)
+    if (r2 == 0) score -= 1;   // 5/5 CV
+    if (r2 == 2) score -= 1;   // 4/5 CV
+    if (r1 == 5) score -= 1;   // 4/5 CV
+    if (r1 == 0) score -= 1;   // 4/5 CV
+
+    // --- Pair bonuses ---
+    if (r1 == 7 && r2 == 7) score += 2;   // 4/5 CV, 7/201, +1.26pp
+    if (r1 == 7 && r3 == 8) score += 1;   // 4/5 CV, 13/309, +1.98pp
+    if (r2 == 7 && r3 == 8) score += 1;   // 4/5 CV, 11/330, +1.11pp
+    if (r1 == 3 && r2 == 7) score += 1;   // 4/5 CV, 9/279, +1.00pp
+    if (r1 == 3 && r2 == 4) score += 1;   // kept from v1 (acc-specific)
+    if (r1 == 7 && r2 == 3) score += 2;   // 5/5 CV, 10/238, +1.98pp
+    if (r2 == 4 && r3 == 5) score += 1;   // 4/5 CV, 6/105, +3.49pp
+    if (r2 == 3 && r3 == 8) score += 1;   // 4/5 CV, 14/375, +1.51pp
+    if (r1 == 6 && r3 == 5) score += 1;   // 4/5 CV, 4/117, +1.19pp
+    if (r1 == 3 && r3 == 0) score += 1;   // 4/5 CV, 9/332, +0.48pp
+
+    // --- Dead pairs (n>=50, 0 hits) ---
+    if (r1 == 4 && r2 == 4) score -= 2;   // 0/71
+    if (r1 == 7 && r3 == 0) score -= 2;   // 0/60
+    if (r1 == 4 && r3 == 4) score -= 1;   // 0/48
+    if (r2 == 5 && r3 == 1) score -= 2;   // 0/105
+    if (r1 == 1 && r3 == 1) score -= 1;   // 0/77
+    if (r1 == 5 && r2 == 5) score -= 1;   // 0/70
+    if (r2 == 3 && r3 == 7) score -= 1;   // 0/60
+    if (r1 == 7 && r3 == 7) score -= 1;   // 0/57
+    if (r2 == 6 && r3 == 1) score -= 1;   // 0/56
+    if (r1 == 6 && r2 == 5) score -= 1;   // 0/53
+    if (r1 == 5 && r3 == 1) score -= 1;   // 0/58
+
+    // --- Dead tuples ---
+    if (r1 == 4 && r2 == 4 && r3 == 4) score -= 2;   // 0/136 mega-dead
+    if (r1 == 7 && r2 == 6 && r3 == 0) score -= 1;   // 0/86
+    if (r1 == 6 && r2 == 4 && r3 == 1) score -= 1;   // 0/77
+    if (r1 == 1 && r2 == 1 && r3 == 1) score -= 1;   // 0/58
 
     return (SLTypeHeat){score, maxScore};
 }
