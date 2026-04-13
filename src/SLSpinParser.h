@@ -60,6 +60,9 @@
 @property (nonatomic, assign) BOOL isValuableTriple;
 @property (nonatomic, copy) NSString *strategyTier;
 @property (nonatomic, assign) NSInteger strategyScore;
+@property (nonatomic, assign) NSInteger l1Score;       // Layer 1: single-spin idx signals
+@property (nonatomic, assign) NSInteger l2Score;       // Layer 2: 10-spin window patterns
+@property (nonatomic, copy) NSString *scorerCfg;       // V1 or V2
 
 // --- Legacy fields (strack compat) ---
 @property (nonatomic, copy) NSString *betType;

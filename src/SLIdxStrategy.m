@@ -173,6 +173,9 @@ typedef struct {
         self.pendingResult.isValuableTriple = isValuable;
         self.pendingResult.strategyTier = self.betTierString;
         self.pendingResult.strategyScore = self.compositeScore;
+        self.pendingResult.l1Score = self.layer1Score;
+        self.pendingResult.l2Score = self.layer2Score;
+        self.pendingResult.scorerCfg = self.scorerName;
 
         SLSpinStoreAppend(self.pendingResult);
         self.pendingResult = nil;
