@@ -169,7 +169,9 @@
     if (!scene) return;
 
     CGRect screen = scene.coordinateSpace.bounds;
-    CGFloat w = MIN(screen.size.width - 20, 320);
+    NSInteger colCount = [self visibleColumnCount];
+    CGFloat colW = 53;  // ~320/6 per column
+    CGFloat w = colCount * colW + 2;
     CGFloat h = screen.size.height * 0.25;
 
     // Restore saved position, fallback to center
@@ -347,7 +349,29 @@
     _visibleColumns ^= colBit;
     if (_visibleColumns == 0) _visibleColumns = colBit; // don't allow hiding all
     [[NSUserDefaults standardUserDefaults] setInteger:_visibleColumns forKey:@"Speeder_TrisVisibleCols"];
-    if (self.trisWindow && !self.trisWindow.hidden) [self refreshTrisHTML];
+    if (self.trisWindow && !self.trisWindow.hidden) {
+        [self resizeToFitColumns];
+        [self refreshTrisHTML];
+    }
+}
+
+- (NSInteger)visibleColumnCount {
+    NSInteger count = 0;
+    for (int i = 0; i < 6; i++) {
+        if (_visibleColumns & (1 << i)) count++;
+    }
+    return count;
+}
+
+- (void)resizeToFitColumns {
+    if (!self.trisWindow) return;
+    NSInteger count = [self visibleColumnCount];
+    CGFloat colW = 53;  // ~320/6 per column
+    CGFloat newW = count * colW + 2; // +2 for border
+    CGRect f = self.trisWindow.frame;
+    f.size.width = newW;
+    self.trisWindow.frame = f;
+    self.trisWebView.frame = CGRectMake(0, 0, newW, f.size.height);
 }
 
 - (void)setLockTarget:(NSString *)lockTarget {
