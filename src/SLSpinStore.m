@@ -82,7 +82,8 @@ static NSString *const kCSVHeader =
      "event_bars,"
      "sa_spins,sa_atk,sa_stl,sa_shd,sa_spn,sa_acc,sa_3x_atk,sa_3x_stl,sa_3x_shd,"
      "ss_spins,ss_atk,ss_stl,ss_shd,ss_spn,ss_acc,ss_3x_atk,ss_3x_stl,ss_3x_shd,"
-     "r1_idx,r2_idx,r3_idx,is_valuable,strategy_tier,strategy_score";
+     "r1_idx,r2_idx,r3_idx,is_valuable,strategy_tier,strategy_score,cm_balance,"
+     "profile_name,slot_prob_seg";
 
 // Session date stored in UserDefaults — determines which CSV file to write to
 static NSString *sSessionDate = nil;
@@ -207,6 +208,8 @@ void SLSpinStoreAppend(SLSpinResult *result) {
     // Valuable triple: shield(5), spins(6), accumulation(30)
     BOOL isValuable = result.isValuableTriple;
 
+    long long cmBal = SLLatestCmBalance();
+
     NSString *row = [NSString stringWithFormat:
         @"%ld,%@,%ld,%ld,%ld,%@,%@,%@,%@,%ld,%@,"
          "%lld,%@,%@,"
@@ -218,7 +221,8 @@ void SLSpinStoreAppend(SLSpinResult *result) {
          "%@,"
          "%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,"
          "%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,"
-         "%d,%d,%d,%@,%@,%ld\n",
+         "%d,%d,%d,%@,%@,%ld,%lld,"
+         "%@,%@\n",
         (long)result.seq, ts,
         (long)r1, (long)r2, (long)r3,
         result.reel1 ?: @"", result.reel2 ?: @"", result.reel3 ?: @"",
@@ -242,7 +246,11 @@ void SLSpinStoreAppend(SLSpinResult *result) {
         (int)result.r1Idx, (int)result.r2Idx, (int)result.r3Idx,
         isValuable ? @"true" : @"false",
         result.strategyTier ?: @"",
-        (long)result.strategyScore];
+        (long)result.strategyScore,
+        cmBal,
+        // A/B test segments (from client_error on app start)
+        SLSessionProfileName(),
+        SLSessionSlotProbSeg()];
 
     // --- Reset counters AFTER writing (so the triple row shows the final count) ---
     if (isTriple && r1 == 30) {

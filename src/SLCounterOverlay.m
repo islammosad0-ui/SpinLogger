@@ -72,6 +72,7 @@ static const int kSymbolCount = 6;
         state[[t.symbolKey stringByAppendingString:@"_d"]] = @(t.distance);
         state[[t.symbolKey stringByAppendingString:@"_s"]] = @(t.singleCount);
         state[[t.symbolKey stringByAppendingString:@"_sa"]] = @(t.singleCountSinceAcc);
+        state[[t.symbolKey stringByAppendingString:@"_v"]] = @(t.visible);
         // Save position
         state[[t.symbolKey stringByAppendingString:@"_x"]] = @(t.window.frame.origin.x);
         state[[t.symbolKey stringByAppendingString:@"_y"]] = @(t.window.frame.origin.y);
@@ -87,6 +88,11 @@ static const int kSymbolCount = 6;
         t.distance    = [state[[t.symbolKey stringByAppendingString:@"_d"]] integerValue];
         t.singleCount = [state[[t.symbolKey stringByAppendingString:@"_s"]] integerValue];
         t.singleCountSinceAcc = [state[[t.symbolKey stringByAppendingString:@"_sa"]] integerValue];
+        NSNumber *vis = state[[t.symbolKey stringByAppendingString:@"_v"]];
+        if (vis) {
+            t.visible = vis.boolValue;
+            t.window.hidden = !t.visible;
+        }
         t.tripleLabel.text = [NSString stringWithFormat:@"%ld", (long)t.distance];
         t.singleLabel.text = [NSString stringWithFormat:@"1X:%ld", (long)t.singleCount];
         t.accLabel.text    = [NSString stringWithFormat:@"⭐:%ld", (long)t.singleCountSinceAcc];
@@ -138,7 +144,11 @@ static const int kSymbolCount = 6;
         tile.distance = 0;
         tile.singleCount = 0;
         tile.singleCountSinceAcc = 0;
-        tile.visible = YES;
+        // Default: hide potion, shield, steal — user can toggle them on in settings
+        BOOL defaultHidden = (strcmp(def.key, "potion") == 0 ||
+                              strcmp(def.key, "shield") == 0 ||
+                              strcmp(def.key, "steal") == 0);
+        tile.visible = !defaultHidden;
 
         UIWindow *win = [[UIWindow alloc] initWithWindowScene:scene];
         win.frame = CGRectMake(x, startY, tileW, tileH);
@@ -206,7 +216,7 @@ static const int kSymbolCount = 6;
         [vc.view addGestureRecognizer:pan];
         vc.view.tag = i;
 
-        win.hidden = NO;
+        win.hidden = !tile.visible;
         tile.window = win;
         [self.tiles addObject:tile];
     }
@@ -442,6 +452,13 @@ static const int kSymbolCount = 6;
     NSMutableDictionary *d = [NSMutableDictionary dictionary];
     for (SLCounterTile *t in self.tiles) d[t.symbolKey] = @(t.distance);
     return d;
+}
+
+- (BOOL)isSymbolVisible:(NSString *)symbol {
+    for (SLCounterTile *t in self.tiles) {
+        if ([t.symbolKey isEqualToString:symbol]) return t.visible;
+    }
+    return YES;
 }
 
 - (void)dealloc {

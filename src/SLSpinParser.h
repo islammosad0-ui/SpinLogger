@@ -76,3 +76,14 @@ void SLParseSpinAPIResponseWithBet(NSData *responseData, NSInteger betMultiplier
 
 // Parse strack NDJSON body (legacy/backup)
 void SLParseStrackBody(NSString *body);
+
+// Extract cm_balance from strack spin events (request body).
+// Stores the latest value in a static — read via SLLatestCmBalance().
+void SLParseStrackForBalance(NSData *body);
+long long SLLatestCmBalance(void);
+
+// Extract testSegments + ProfileName from client_error request body.
+// Called once on app start. Read via SLSessionProfileName() / SLSessionSlotProbSeg().
+void SLParseClientErrorForSegments(NSData *body);
+NSString *SLSessionProfileName(void);
+NSString *SLSessionSlotProbSeg(void);

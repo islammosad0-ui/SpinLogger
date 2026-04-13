@@ -1,0 +1,465 @@
+================================================================================
+  57_FULL_NUCLEAR — Exhaustive 1,107-spin analysis
+================================================================================
+
+Loaded 1107 spins from enriched CSV
+Base rates: triple=376/1107 (34.0%), valuable=87/1107 (7.9%)
+
+================================================================================
+  SECTION 1: All 9 grid cells -> next-1/3/5/7 triple & valuable
+================================================================================
+
+Cell       Idx       N | next1_T% next3_T% next5_T% next7_T% | next3_V% next7_V%
+-----------------------------------------------------------------------------------------------
+R1_top     0        89 |    44.9%    83.1%    94.4%    96.6% |    24.7%    49.4%
+R1_top     1       106 |    31.1%    62.3%    86.8%    93.4% |    18.9%    38.7%
+R1_top     2       277 |    34.3%    72.6%    89.5%    94.6% |    20.9%    47.3%
+R1_top     3       113 |    38.9%    76.1%    90.3%    96.5% |    28.3%    50.4%
+R1_top     4        65 |    24.6%    69.2%    90.8%    93.8% |    27.7%    43.1%
+R1_top     5        93 |    24.7%    62.4%    80.6%    90.3% |    16.1%    35.5%
+R1_top     6       220 |    34.7%    73.5%    86.8%    95.9% |    21.0%    47.9%
+R1_top     8       127 |    34.6%    71.7%    90.6%    97.6% |    23.6%    52.0%
+R2_top     0        94 |    36.2%    67.0%    89.4%    94.7% |    21.3%    38.3%
+R2_top     1        87 |    29.9%    58.6%    87.4%    94.3% |    14.9%    36.8%
+R2_top     2       162 |    35.4%    77.0%    90.1%    96.3% |    21.1%    46.0%
+R2_top     3       150 |    34.7%    71.3%    86.7%    96.0% |    25.3%    48.0%
+R2_top     4        63 |    27.0%    71.4%    85.7%    92.1% |    31.7%    54.0%
+R2_top     5       108 |    34.3%    71.3%    84.3%    89.8% |    15.7%    45.4%
+R2_top     6       168 |    30.4%    71.4%    88.7%    95.2% |    21.4%    49.4%
+R2_top     7       116 |    37.1%    81.0%    94.0%    96.6% |    25.0%    44.8%
+R2_top     8       159 |    37.1%    71.7%    89.3%    96.9% |    24.5%    50.9%
+R3_top     0       100 |    23.0%    63.0%    85.0%    94.0% |    19.0%    40.0%
+R3_top     1        77 |    33.8%    62.3%    85.7%    93.5% |    18.2%    39.0%
+R3_top     2        37 |    29.7%    75.7%    83.8%    91.9% |    18.9%    37.8%
+R3_top     3        82 |    39.0%    73.2%    89.0%    93.9% |    24.4%    48.8%
+R3_top     4        92 |    33.7%    72.8%    89.1%    94.6% |    25.0%    48.9%
+R3_top     7       380 |    34.8%    75.7%    91.3%    96.3% |    22.2%    47.8%
+R3_top     8       299 |    36.8%    72.2%    88.3%    95.7% |    23.7%    50.2%
+R1_ctr     0       127 |    34.6%    71.7%    90.6%    97.6% |    23.6%    52.0%
+R1_ctr     1        89 |    44.9%    83.1%    94.4%    96.6% |    24.7%    49.4%
+R1_ctr     2       106 |    31.1%    62.3%    86.8%    93.4% |    18.9%    38.7%
+R1_ctr     3       277 |    34.3%    72.6%    89.5%    94.6% |    20.9%    47.3%
+R1_ctr     4       113 |    38.9%    76.1%    90.3%    96.5% |    28.3%    50.4%
+R1_ctr     5        65 |    24.6%    69.2%    90.8%    93.8% |    27.7%    43.1%
+R1_ctr     6        93 |    24.7%    62.4%    80.6%    90.3% |    16.1%    35.5%
+R1_ctr     7       220 |    34.7%    73.5%    86.8%    95.9% |    21.0%    47.9%
+R2_ctr     0       159 |    37.1%    71.7%    89.3%    96.9% |    24.5%    50.9%
+R2_ctr     1        94 |    36.2%    67.0%    89.4%    94.7% |    21.3%    38.3%
+R2_ctr     2        87 |    29.9%    58.6%    87.4%    94.3% |    14.9%    36.8%
+R2_ctr     3       162 |    35.4%    77.0%    90.1%    96.3% |    21.1%    46.0%
+R2_ctr     4       150 |    34.7%    71.3%    86.7%    96.0% |    25.3%    48.0%
+R2_ctr     5        63 |    27.0%    71.4%    85.7%    92.1% |    31.7%    54.0%
+R2_ctr     6       108 |    34.3%    71.3%    84.3%    89.8% |    15.7%    45.4%
+R2_ctr     7       168 |    30.4%    71.4%    88.7%    95.2% |    21.4%    49.4%
+R2_ctr     8       116 |    37.1%    81.0%    94.0%    96.6% |    25.0%    44.8%
+R3_ctr     0       299 |    36.8%    72.2%    88.3%    95.7% |    23.7%    50.2%
+R3_ctr     1       100 |    23.0%    63.0%    85.0%    94.0% |    19.0%    40.0%
+R3_ctr     2        77 |    33.8%    62.3%    85.7%    93.5% |    18.2%    39.0%
+R3_ctr     3        37 |    29.7%    75.7%    83.8%    91.9% |    18.9%    37.8%
+R3_ctr     4        82 |    39.0%    73.2%    89.0%    93.9% |    24.4%    48.8%
+R3_ctr     5        92 |    33.7%    72.8%    89.1%    94.6% |    25.0%    48.9%
+R3_ctr     8       380 |    34.8%    75.7%    91.3%    96.3% |    22.2%    47.8%
+R1_bot     1       127 |    34.6%    71.7%    90.6%    97.6% |    23.6%    52.0%
+R1_bot     2        89 |    44.9%    83.1%    94.4%    96.6% |    24.7%    49.4%
+R1_bot     3       106 |    31.1%    62.3%    86.8%    93.4% |    18.9%    38.7%
+R1_bot     4       277 |    34.3%    72.6%    89.5%    94.6% |    20.9%    47.3%
+R1_bot     5       113 |    38.9%    76.1%    90.3%    96.5% |    28.3%    50.4%
+R1_bot     6        65 |    24.6%    69.2%    90.8%    93.8% |    27.7%    43.1%
+R1_bot     7        93 |    24.7%    62.4%    80.6%    90.3% |    16.1%    35.5%
+R1_bot     8       220 |    34.7%    73.5%    86.8%    95.9% |    21.0%    47.9%
+R2_bot     0       116 |    37.1%    81.0%    94.0%    96.6% |    25.0%    44.8%
+R2_bot     1       159 |    37.1%    71.7%    89.3%    96.9% |    24.5%    50.9%
+R2_bot     2        94 |    36.2%    67.0%    89.4%    94.7% |    21.3%    38.3%
+R2_bot     3        87 |    29.9%    58.6%    87.4%    94.3% |    14.9%    36.8%
+R2_bot     4       162 |    35.4%    77.0%    90.1%    96.3% |    21.1%    46.0%
+R2_bot     5       150 |    34.7%    71.3%    86.7%    96.0% |    25.3%    48.0%
+R2_bot     6        63 |    27.0%    71.4%    85.7%    92.1% |    31.7%    54.0%
+R2_bot     7       108 |    34.3%    71.3%    84.3%    89.8% |    15.7%    45.4%
+R2_bot     8       168 |    30.4%    71.4%    88.7%    95.2% |    21.4%    49.4%
+R3_bot     0       380 |    34.8%    75.7%    91.3%    96.3% |    22.2%    47.8%
+R3_bot     1       299 |    36.8%    72.2%    88.3%    95.7% |    23.7%    50.2%
+R3_bot     2       100 |    23.0%    63.0%    85.0%    94.0% |    19.0%    40.0%
+R3_bot     3        77 |    33.8%    62.3%    85.7%    93.5% |    18.2%    39.0%
+R3_bot     4        37 |    29.7%    75.7%    83.8%    91.9% |    18.9%    37.8%
+R3_bot     5        82 |    39.0%    73.2%    89.0%    93.9% |    24.4%    48.8%
+R3_bot     6        92 |    33.7%    72.8%    89.1%    94.6% |    25.0%    48.9%
+
+--- Significant cells (|lift| > 5pp triple or 3pp valuable, n>=50) ---
+  R2_top idx=1 -> next3_T: 58.6% (base 71.9%, lift -13.3pp, n=87)
+  R2_ctr idx=2 -> next3_T: 58.6% (base 71.9%, lift -13.3pp, n=87)
+  R2_bot idx=3 -> next3_T: 58.6% (base 71.9%, lift -13.3pp, n=87)
+  R2_top idx=4 -> next5_V: 47.6% (base 35.0%, lift +12.6pp, n=63)
+  R2_ctr idx=5 -> next5_V: 47.6% (base 35.0%, lift +12.6pp, n=63)
+  R2_bot idx=6 -> next5_V: 47.6% (base 35.0%, lift +12.6pp, n=63)
+  R1_top idx=0 -> next3_T: 83.1% (base 71.9%, lift +11.3pp, n=89)
+  R1_ctr idx=1 -> next3_T: 83.1% (base 71.9%, lift +11.3pp, n=89)
+  R1_bot idx=2 -> next3_T: 83.1% (base 71.9%, lift +11.3pp, n=89)
+  R3_top idx=0 -> next1_T: 23.0% (base 34.0%, lift -11.0pp, n=100)
+  R3_ctr idx=1 -> next1_T: 23.0% (base 34.0%, lift -11.0pp, n=100)
+  R3_bot idx=2 -> next1_T: 23.0% (base 34.0%, lift -11.0pp, n=100)
+  R1_top idx=0 -> next1_T: 44.9% (base 34.0%, lift +10.9pp, n=89)
+  R1_ctr idx=1 -> next1_T: 44.9% (base 34.0%, lift +10.9pp, n=89)
+  R1_bot idx=2 -> next1_T: 44.9% (base 34.0%, lift +10.9pp, n=89)
+  R1_top idx=5 -> next7_V: 35.5% (base 46.4%, lift -10.9pp, n=93)
+  R1_ctr idx=6 -> next7_V: 35.5% (base 46.4%, lift -10.9pp, n=93)
+  R1_bot idx=7 -> next7_V: 35.5% (base 46.4%, lift -10.9pp, n=93)
+  R2_top idx=1 -> next5_V: 25.3% (base 35.0%, lift -9.7pp, n=87)
+  R2_ctr idx=2 -> next5_V: 25.3% (base 35.0%, lift -9.7pp, n=87)
+  R2_bot idx=3 -> next5_V: 25.3% (base 35.0%, lift -9.7pp, n=87)
+  R1_top idx=1 -> next3_T: 62.3% (base 71.9%, lift -9.6pp, n=106)
+  R1_ctr idx=2 -> next3_T: 62.3% (base 71.9%, lift -9.6pp, n=106)
+  R1_bot idx=3 -> next3_T: 62.3% (base 71.9%, lift -9.6pp, n=106)
+  R2_top idx=1 -> next7_V: 36.8% (base 46.4%, lift -9.6pp, n=87)
+  R2_ctr idx=2 -> next7_V: 36.8% (base 46.4%, lift -9.6pp, n=87)
+  R2_bot idx=3 -> next7_V: 36.8% (base 46.4%, lift -9.6pp, n=87)
+  R3_top idx=1 -> next3_T: 62.3% (base 71.9%, lift -9.5pp, n=77)
+  R3_ctr idx=2 -> next3_T: 62.3% (base 71.9%, lift -9.5pp, n=77)
+  R3_bot idx=3 -> next3_T: 62.3% (base 71.9%, lift -9.5pp, n=77)
+
+================================================================================
+  SECTION 2: Zoki's specific cells — top-left (R1_top) & bottom-right (R3_bot)
+================================================================================
+
+  R1_top (Zoki top-left):
+    idx=0 (      attack) n=  89 | triple 83.1% (+11.3pp) valuable 24.7% (+2.5pp)
+    idx=1 (        coin) n= 106 | triple 62.3% (-9.6pp) valuable 18.9% (-3.4pp)
+    idx=2 (      shield) n= 277 | triple 72.6% (+0.7pp) valuable 20.9% (-1.3pp)
+    idx=3 (    goldSack) n= 113 | triple 76.1% (+4.2pp) valuable 28.3% (+6.1pp)
+    idx=4 (       steal) n=  65 | triple 69.2% (-2.6pp) valuable 27.7% (+5.4pp)
+    idx=5 (        coin) n=  93 | triple 62.4% (-9.5pp) valuable 16.1% (-6.1pp)
+    idx=6 (       spins) n= 220 | triple 73.5% (+1.6pp) valuable 21.0% (-1.2pp)
+    idx=7 (    goldSack) n=  17 | triple 76.5% (+4.6pp) valuable 29.4% (+7.2pp)
+    idx=8 (accumulation) n= 127 | triple 71.7% (-0.2pp) valuable 23.6% (+1.4pp)
+
+  R3_bot (Zoki bottom-right):
+    idx=0 (      attack) n= 380 | triple 75.7% (+3.8pp) valuable 22.2% (-0.1pp)
+    idx=1 (        coin) n= 299 | triple 72.2% (+0.4pp) valuable 23.7% (+1.5pp)
+    idx=2 (      shield) n= 100 | triple 63.0% (-8.9pp) valuable 19.0% (-3.2pp)
+    idx=3 (    goldSack) n=  77 | triple 62.3% (-9.5pp) valuable 18.2% (-4.1pp)
+    idx=4 (       steal) n=  37 | triple 75.7% (+3.8pp) valuable 18.9% (-3.3pp)
+    idx=5 (        coin) n=  82 | triple 73.2% (+1.3pp) valuable 24.4% (+2.1pp)
+    idx=6 (       spins) n=  92 | triple 72.8% (+0.9pp) valuable 25.0% (+2.8pp)
+    idx=7 (    goldSack) n=  19 | triple 52.6% (-19.2pp) valuable 15.8% (-6.5pp)
+    idx=8 (accumulation) n=  21 | triple 76.2% (+4.3pp) valuable 23.8% (+1.6pp)
+
+================================================================================
+  SECTION 3: Cell-pair interactions (best pairs for next-3 triple/valuable)
+================================================================================
+
+--- Top 20 pairs by |valuable lift| (next-3, n>=25) ---
+Pair                       v1  v2    n |     T%   T_lift |     V%   V_lift
+R1_topxR3_top               3   4   29 |  75.9%    +4.0pp |  34.5%   +12.2pp
+R1_topxR3_ctr               3   5   29 |  75.9%    +4.0pp |  34.5%   +12.2pp
+R1_topxR3_bot               3   6   29 |  75.9%    +4.0pp |  34.5%   +12.2pp
+R3_topxR1_ctr               4   4   29 |  75.9%    +4.0pp |  34.5%   +12.2pp
+R3_topxR1_bot               4   5   29 |  75.9%    +4.0pp |  34.5%   +12.2pp
+R1_ctrxR3_ctr               4   5   29 |  75.9%    +4.0pp |  34.5%   +12.2pp
+R1_ctrxR3_bot               4   6   29 |  75.9%    +4.0pp |  34.5%   +12.2pp
+R3_ctrxR1_bot               5   5   29 |  75.9%    +4.0pp |  34.5%   +12.2pp
+R1_botxR3_bot               5   6   29 |  75.9%    +4.0pp |  34.5%   +12.2pp
+R1_topxR3_top               5   0   39 |  61.5%   -10.3pp |  10.3%   -12.0pp
+R1_topxR3_ctr               5   1   39 |  61.5%   -10.3pp |  10.3%   -12.0pp
+R1_topxR3_bot               5   2   39 |  61.5%   -10.3pp |  10.3%   -12.0pp
+R3_topxR1_ctr               0   6   39 |  61.5%   -10.3pp |  10.3%   -12.0pp
+R3_topxR1_bot               0   7   39 |  61.5%   -10.3pp |  10.3%   -12.0pp
+R1_ctrxR3_ctr               6   1   39 |  61.5%   -10.3pp |  10.3%   -12.0pp
+R1_ctrxR3_bot               6   2   39 |  61.5%   -10.3pp |  10.3%   -12.0pp
+R3_ctrxR1_bot               1   7   39 |  61.5%   -10.3pp |  10.3%   -12.0pp
+R1_botxR3_bot               7   2   39 |  61.5%   -10.3pp |  10.3%   -12.0pp
+R1_topxR2_top               2   5   37 |  73.0%    +1.1pp |  10.8%   -11.4pp
+R1_topxR2_ctr               2   6   37 |  73.0%    +1.1pp |  10.8%   -11.4pp
+
+--- Top 20 pairs by |triple lift| (next-3, n>=25) ---
+Pair                       v1  v2    n |     T%   T_lift |     V%   V_lift
+R2_topxR3_top               0   0   32 |  50.0%   -21.9pp |  15.6%    -6.6pp
+R2_topxR3_ctr               0   1   32 |  50.0%   -21.9pp |  15.6%    -6.6pp
+R2_topxR3_bot               0   2   32 |  50.0%   -21.9pp |  15.6%    -6.6pp
+R3_topxR2_ctr               0   1   32 |  50.0%   -21.9pp |  15.6%    -6.6pp
+R3_topxR2_bot               0   2   32 |  50.0%   -21.9pp |  15.6%    -6.6pp
+R2_ctrxR3_ctr               1   1   32 |  50.0%   -21.9pp |  15.6%    -6.6pp
+R2_ctrxR3_bot               1   2   32 |  50.0%   -21.9pp |  15.6%    -6.6pp
+R3_ctrxR2_bot               1   2   32 |  50.0%   -21.9pp |  15.6%    -6.6pp
+R2_botxR3_bot               2   2   32 |  50.0%   -21.9pp |  15.6%    -6.6pp
+R1_topxR2_top               1   1   78 |  57.7%   -14.2pp |  15.4%    -6.9pp
+R1_topxR2_ctr               1   2   78 |  57.7%   -14.2pp |  15.4%    -6.9pp
+R1_topxR2_bot               1   3   78 |  57.7%   -14.2pp |  15.4%    -6.9pp
+R2_topxR1_ctr               1   2   78 |  57.7%   -14.2pp |  15.4%    -6.9pp
+R2_topxR1_bot               1   3   78 |  57.7%   -14.2pp |  15.4%    -6.9pp
+R1_ctrxR2_ctr               2   2   78 |  57.7%   -14.2pp |  15.4%    -6.9pp
+R1_ctrxR2_bot               2   3   78 |  57.7%   -14.2pp |  15.4%    -6.9pp
+R2_ctrxR1_bot               2   3   78 |  57.7%   -14.2pp |  15.4%    -6.9pp
+R1_botxR2_bot               3   3   78 |  57.7%   -14.2pp |  15.4%    -6.9pp
+R1_topxR2_top               0   7   42 |  85.7%   +13.8pp |  23.8%    +1.6pp
+R1_topxR3_top               0   7   42 |  85.7%   +13.8pp |  23.8%    +1.6pp
+
+================================================================================
+  SECTION 4: Transition matrix — (prev_idx_triple -> next triple)
+================================================================================
+
+Base: next-1 triple=34.0%, valuable=7.9%
+Total unique states: 77
+
+--- Top 10 states -> highest next-1 triple rate (n>=5) ---
+  state=(3, 3, 7) n=6 triple=83% (+49pp) valuable=0% (-8pp)
+  state=(1, 0, 0) n=5 triple=60% (+26pp) valuable=0% (-8pp)
+  state=(1, 1, 0) n=5 triple=60% (+26pp) valuable=0% (-8pp)
+  state=(4, 1, 5) n=11 triple=55% (+21pp) valuable=18% (+10pp)
+  state=(3, 0, 0) n=13 triple=54% (+20pp) valuable=8% (-0pp)
+  state=(3, 8, 8) n=6 triple=50% (+16pp) valuable=17% (+9pp)
+  state=(1, 5, 5) n=6 triple=50% (+16pp) valuable=0% (-8pp)
+  state=(1, 5, 0) n=6 triple=50% (+16pp) valuable=50% (+42pp)
+  state=(2, 1, 0) n=15 triple=47% (+13pp) valuable=13% (+5pp)
+  state=(7, 3, 8) n=46 triple=46% (+12pp) valuable=13% (+5pp)
+
+--- Bottom 10 states -> lowest next-1 triple rate (n>=5) ---
+  state=(6, 1, 5) n=5 triple=0% (-34pp) valuable=0% (-8pp)
+  state=(3, 7, 7) n=6 triple=0% (-34pp) valuable=0% (-8pp)
+  state=(7, 3, 7) n=5 triple=0% (-34pp) valuable=0% (-8pp)
+  state=(5, 5, 1) n=6 triple=0% (-34pp) valuable=0% (-8pp)
+  state=(5, 1, 1) n=6 triple=0% (-34pp) valuable=0% (-8pp)
+  state=(6, 4, 1) n=20 triple=10% (-24pp) valuable=5% (-3pp)
+  state=(2, 5, 0) n=10 triple=10% (-24pp) valuable=0% (-8pp)
+  state=(7, 2, 0) n=7 triple=14% (-20pp) valuable=0% (-8pp)
+  state=(5, 1, 5) n=5 triple=20% (-14pp) valuable=0% (-8pp)
+  state=(3, 3, 3) n=10 triple=20% (-14pp) valuable=10% (+2pp)
+
+--- Top 10 states -> highest next-1 VALUABLE rate (n>=5) ---
+  state=(1, 5, 0) n=6 triple=50% (+16pp) valuable=50% (+42pp)
+  state=(6, 4, 5) n=15 triple=27% (-7pp) valuable=27% (+19pp)
+  state=(4, 5, 5) n=8 triple=38% (+4pp) valuable=25% (+17pp)
+  state=(4, 1, 0) n=5 triple=20% (-14pp) valuable=20% (+12pp)
+  state=(4, 4, 5) n=10 triple=40% (+6pp) valuable=20% (+12pp)
+  state=(3, 4, 0) n=22 triple=45% (+11pp) valuable=18% (+10pp)
+  state=(4, 1, 5) n=11 triple=55% (+21pp) valuable=18% (+10pp)
+  state=(3, 8, 8) n=6 triple=50% (+16pp) valuable=17% (+9pp)
+  state=(7, 3, 3) n=7 triple=29% (-5pp) valuable=14% (+6pp)
+  state=(4, 5, 1) n=7 triple=29% (-5pp) valuable=14% (+6pp)
+
+================================================================================
+  SECTION 5: Gap structure — inter-triple and inter-valuable gaps
+================================================================================
+
+Triple gaps: n=375, mean=2.9, median=2, min=1, max=15
+
+Triple gap distribution (gap -> count):
+  gap=  1:  123 ###########################################################################################################################
+  gap=  2:   87 #######################################################################################
+  gap=  3:   51 ###################################################
+  gap=  4:   43 ###########################################
+  gap=  5:   28 ############################
+  gap=  6:   15 ###############
+  gap=  7:    7 #######
+  gap=  8:    5 #####
+  gap=  9:    7 #######
+  gap= 10:    5 #####
+  gap= 11:    3 ###
+  gap= 15:    1 #
+
+Valuable gaps: n=86, mean=12.7, median=10, min=1, max=50
+
+Geometric fit test (triple):
+  Estimated p = 0.3403
+    Gap   Observed   Expected    Ratio
+      1        123      127.6     0.96
+      2         87       84.2     1.03
+      3         51       55.5     0.92
+      4         43       36.6     1.17
+      5         28       24.2     1.16
+      6         15       15.9     0.94
+      7          7       10.5     0.67
+      8          5        6.9     0.72
+      9          7        4.6     1.53
+     10          5        3.0     1.66
+
+--- Gap length -> next triple type ---
+    Gap |   acc spins attack steal shield gSack  coin |  valuable%
+      1 |     3     3     44    12     24    15    22 |       4.9%
+      2 |     3     5     23     9     19    18    10 |       9.2%
+      3 |     7     2     17     7      7     7     4 |      17.6%
+      4 |     0     1     16     7      8     6     5 |       2.3%
+      5 |     3     3      5     5      4     4     4 |      21.4%
+      6 |     0     2      5     3      2     2     1 |      13.3%
+      7 |     0     0      1     1      2     2     1 |       0.0%
+      8 |     0     1      3     0      1     0     0 |      20.0%
+      9 |     1     1      0     2      1     2     0 |      28.6%
+     10 |     0     0      3     2      1     2     1 |       0.0%
+
+================================================================================
+  SECTION 6: Regime detection — rolling triple/valuable rates
+================================================================================
+
+  Window=20: triple rate range [10.0%, 65.0%] valuable range [0.0%, 20.0%]
+  Hottest 20-spin block starts at spin #74: 65.0% triple
+  Coldest 20-spin block starts at spin #525: 10.0% triple
+  Hottest valuable block starts at #26: 20.0%
+  Coldest valuable block starts at #46: 0.0%
+
+  Window=50: triple rate range [22.0%, 48.0%] valuable range [2.0%, 14.0%]
+  Hottest 50-spin block starts at spin #92: 48.0% triple
+  Coldest 50-spin block starts at spin #681: 22.0% triple
+  Hottest valuable block starts at #768: 14.0%
+  Coldest valuable block starts at #107: 2.0%
+
+  Window=100: triple rate range [26.0%, 41.0%] valuable range [5.0%, 11.0%]
+  Hottest 100-spin block starts at spin #406: 41.0% triple
+  Coldest 100-spin block starts at spin #246: 26.0% triple
+  Hottest valuable block starts at #741: 11.0%
+  Coldest valuable block starts at #109: 5.0%
+
+================================================================================
+  SECTION 7: Rolling window features -> next triple/valuable prediction
+================================================================================
+
+--- Rolling triple rate -> next-1 triple ---
+  window=5: HIGH tri_rate -> 32.1% triple, 7.1% valuable (n=240)
+             LOW tri_rate -> 34.6% triple, 8.1% valuable (n=862)
+             spread: triple=-2.5pp, valuable=-1.0pp
+  window=10: HIGH tri_rate -> 33.3% triple, 6.3% valuable (n=541)
+             LOW tri_rate -> 34.5% triple, 9.4% valuable (n=556)
+             spread: triple=-1.3pp, valuable=-3.1pp
+  window=20: HIGH tri_rate -> 32.3% triple, 6.6% valuable (n=378)
+             LOW tri_rate -> 35.0% triple, 8.5% valuable (n=709)
+             spread: triple=-2.7pp, valuable=-1.8pp
+
+================================================================================
+  SECTION 8: Hex byte-level features from trace
+================================================================================
+
+Loading trace hex windows...
+Loaded 1665 trace snapshots
+Matched 1107/1107 spins to trace data
+
+  slotBar1@ (1107 spins, 128 bytes)
+  Variable bytes: 11 / 128
+  Top 5 most variable: [(122, 7), (120, 5), (121, 5), (72, 4), (123, 4)]
+    ** byte[122] (7 vals): HIGH->triple 23.4% LOW->42.0% (D=-18.7pp) | valuable HIGH 0.0% LOW 13.9% (D=-13.9pp)
+    ** byte[120] (5 vals): HIGH->triple 15.9% LOW->45.7% (D=-29.8pp) | valuable HIGH 4.1% LOW 10.3% (D=-6.1pp)
+    ** byte[121] (5 vals): HIGH->triple 13.8% LOW->44.1% (D=-30.3pp) | valuable HIGH 4.9% LOW 9.4% (D=-4.5pp)
+    ** byte[72] (4 vals): HIGH->triple 32.4% LOW->34.6% (D=-2.2pp) | valuable HIGH 5.7% LOW 8.8% (D=-3.1pp)
+    ** byte[123] (4 vals): HIGH->triple 19.7% LOW->41.9% (D=-22.1pp) | valuable HIGH 4.6% LOW 9.7% (D=-5.1pp)
+    ** byte[73] (3 vals): HIGH->triple 32.4% LOW->34.6% (D=-2.2pp) | valuable HIGH 5.7% LOW 8.8% (D=-3.1pp)
+    ** byte[127] (3 vals): HIGH->triple 27.1% LOW->34.8% (D=-7.7pp) | valuable HIGH 0.0% LOW 8.8% (D=-8.8pp)
+
+  slotBar2@ (1107 spins, 128 bytes)
+  Variable bytes: 7 / 128
+  Top 5 most variable: [(122, 7), (120, 5), (121, 5), (123, 4), (80, 2)]
+    ** byte[122] (7 vals): HIGH->triple 26.6% LOW->38.2% (D=-11.6pp) | valuable HIGH 0.0% LOW 12.4% (D=-12.4pp)
+    ** byte[120] (5 vals): HIGH->triple 18.6% LOW->46.7% (D=-28.1pp) | valuable HIGH 3.6% LOW 11.4% (D=-7.8pp)
+    ** byte[121] (5 vals): HIGH->triple 17.0% LOW->39.4% (D=-22.4pp) | valuable HIGH 6.7% LOW 8.2% (D=-1.6pp)
+    ** byte[123] (4 vals): HIGH->triple 18.0% LOW->45.1% (D=-27.1pp) | valuable HIGH 4.0% LOW 10.6% (D=-6.6pp)
+
+  slotBar3@ (1107 spins, 128 bytes)
+  Variable bytes: 7 / 128
+  Top 5 most variable: [(122, 7), (120, 5), (121, 5), (123, 4), (80, 2)]
+    ** byte[122] (7 vals): HIGH->triple 50.7% LOW->29.8% (D=+20.8pp) | valuable HIGH 0.0% LOW 9.8% (D=-9.8pp)
+    ** byte[120] (5 vals): HIGH->triple 58.6% LOW->29.5% (D=+29.0pp) | valuable HIGH 10.7% LOW 7.4% (D=+3.3pp)
+    ** byte[121] (5 vals): HIGH->triple 98.2% LOW->30.5% (D=+67.7pp) | valuable HIGH 32.1% LOW 6.6% (D=+25.6pp)
+    ** byte[123] (4 vals): HIGH->triple 15.4% LOW->49.9% (D=-34.5pp) | valuable HIGH 3.5% LOW 11.6% (D=-8.1pp)
+
+  DynamicSlotResults@ (1107 spins, 128 bytes)
+  Variable bytes: 0 / 128
+
+  WinBehaviours.innerList@ (1107 spins, 128 bytes)
+  Variable bytes: 33 / 128
+  Top 5 most variable: [(65, 19), (66, 18), (64, 17), (67, 14), (96, 8)]
+    ** byte[96] (8 vals): HIGH->triple 43.3% LOW->33.7% (D=+9.6pp) | valuable HIGH 23.3% LOW 7.4% (D=+15.9pp)
+    ** byte[97] (7 vals): HIGH->triple 34.7% LOW->33.9% (D=+0.9pp) | valuable HIGH 11.8% LOW 7.3% (D=+4.5pp)
+    ** byte[98] (7 vals): HIGH->triple 34.7% LOW->33.9% (D=+0.9pp) | valuable HIGH 11.8% LOW 7.3% (D=+4.5pp)
+    ** byte[105] (7 vals): HIGH->triple 35.6% LOW->33.7% (D=+1.9pp) | valuable HIGH 10.6% LOW 7.5% (D=+3.1pp)
+
+================================================================================
+  SECTION 9: Mutual information — all features x triple/valuable
+================================================================================
+
+Feature               MI(cur_triple)  MI(cur_val)  MI(nxt_triple)  MI(nxt_val)
+------------------------------------------------------------------------------
+state_hash                    0.8041       0.3653          0.0408 *       0.0302 ***
+prev_r2_idx                   0.0036       0.0054          0.0089       0.0074 ***
+R1_bot                        0.2712       0.2483          0.0084       0.0046
+R1_ctr                        0.2712       0.2483          0.0084       0.0046
+R1_top                        0.2712       0.2483          0.0084       0.0046
+r1_idx                        0.2712       0.2483          0.0084       0.0046
+prev_r1_idx                   0.0089       0.0047          0.0071       0.0113 ***
+prev_r3_idx                   0.0065       0.0075          0.0070       0.0058 ***
+R3_bot                        0.3200       0.3586          0.0060       0.0074 ***
+R3_ctr                        0.3200       0.3586          0.0060       0.0074 ***
+R3_top                        0.3200       0.3586          0.0060       0.0074 ***
+r3_idx                        0.3200       0.3586          0.0060       0.0074 ***
+s1                            0.3200       0.3586          0.0041       0.0027
+s3                            0.2706       0.2483          0.0039       0.0038
+prev_valuable                 0.0006       0.0001          0.0034       0.0036
+R2_bot                        0.1717       0.2760          0.0030       0.0053 ***
+R2_ctr                        0.1717       0.2760          0.0030       0.0053 ***
+R2_top                        0.1717       0.2760          0.0030       0.0053 ***
+r2_idx                        0.1717       0.2760          0.0030       0.0053 ***
+s2                            0.1711       0.2760          0.0014       0.0046
+prev_triple                   0.0008       0.0004          0.0007       0.0001
+
+================================================================================
+  SECTION 10: Composite scoring — all significant features stacked
+================================================================================
+
+Triple score distribution: {-9: 74, -6: 44, -3: 134, 0: 549, 3: 264, 6: 42}
+Valuable score distribution: {-9: 82, -6: 38, -3: 183, 0: 588, 3: 144, 6: 72}
+
+--- Temporal CV: composite triple score -> next-3 triple ---
+  Fold 0: HOT=86.8% (53) NEUTRAL=61.9% (118) COLD=62.0% (50) | spread=+24.8pp | valuable: HOT=20.8% COLD=20.0% spread=+0.8pp
+  Fold 1: HOT=79.7% (59) NEUTRAL=69.4% (108) COLD=79.6% (54) | spread=+0.0pp | valuable: HOT=23.7% COLD=13.0% spread=+10.8pp
+  Fold 2: HOT=76.9% (65) NEUTRAL=75.5% (110) COLD=58.7% (46) | spread=+18.2pp | valuable: HOT=18.5% COLD=26.1% spread=-7.6pp
+  Fold 3: HOT=75.0% (60) NEUTRAL=75.2% (109) COLD=67.3% (52) | spread=+7.7pp | valuable: HOT=26.7% COLD=19.2% spread=+7.4pp
+  Fold 4: HOT=80.9% (68) NEUTRAL=75.0% (104) COLD=50.0% (50) | spread=+30.9pp | valuable: HOT=23.5% COLD=18.0% spread=+5.5pp
+
+================================================================================
+  SECTION 11: Symbol co-occurrence — which visible symbols predict next triple?
+================================================================================
+
+--- Valuable symbols visible -> next-1 triple/valuable ---
+  0 valuable syms visible: n=169, next triple=33.7%, next valuable=7.1%
+  1 valuable syms visible: n=224, next triple=33.0%, next valuable=8.9%
+  2 valuable syms visible: n=204, next triple=37.7%, next valuable=8.3%
+  3 valuable syms visible: n=382, next triple=34.6%, next valuable=7.6%
+  4 valuable syms visible: n=64, next triple=26.6%, next valuable=6.2%
+  5 valuable syms visible: n=59, next triple=32.2%, next valuable=8.5%
+
+--- Accumulation visible -> next valuable ---
+  ACC visible: 7.8% next valuable (n=754)
+  No ACC:      8.0% next valuable (n=352)
+
+--- Spins visible -> next valuable ---
+  SPINS visible: 7.7% next valuable (n=596)
+  No SPINS:      8.0% next valuable (n=510)
+
+================================================================================
+  SECTION 12: Zoki-style 1-7 lookahead — promising features deep dive
+================================================================================
+
+--- Current triple -> next valuable within N ---
+  next-1: after TRIPLE=7.2% (n=376) after NON-TRIPLE=8.2% (n=730) spread=-1.0pp
+  next-2: after TRIPLE=14.9% (n=375) after NON-TRIPLE=15.2% (n=730) spread=-0.3pp
+  next-3: after TRIPLE=22.1% (n=376) after NON-TRIPLE=22.3% (n=730) spread=-0.3pp
+  next-5: after TRIPLE=34.3% (n=376) after NON-TRIPLE=35.3% (n=730) spread=-1.0pp
+  next-7: after TRIPLE=44.7% (n=376) after NON-TRIPLE=47.3% (n=730) spread=-2.6pp
+
+--- Current valuable -> next valuable within N ---
+  next-1: after VALUABLE=8.0% (n=87) after NON-VAL=7.9% (n=1019) spread=+0.2pp
+  next-3: after VALUABLE=16.1% (n=87) after NON-VAL=22.8% (n=1019) spread=-6.7pp
+  next-5: after VALUABLE=25.3% (n=87) after NON-VAL=35.8% (n=1019) spread=-10.5pp
+  next-7: after VALUABLE=33.3% (n=87) after NON-VAL=47.5% (n=1019) spread=-14.2pp
+
+================================================================================
+  FINAL SUMMARY
+================================================================================
+
+SECTION VERDICTS:
+  1. 9-cell grid: [results above]
+  2. Zoki cells: [results above]
+  3. Cell pairs: [results above]
+  4. Transitions: [results above]
+  5. Gaps: [results above]
+  6. Regimes: [results above]
+  7. Rolling windows: [results above]
+  8. Hex bytes: [results above]
+  9. Mutual information: [results above]
+  10. Composite: [results above]
+  11. Symbol co-occurrence: [results above]
+  12. Zoki lookahead: [results above]

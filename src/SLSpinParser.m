@@ -247,6 +247,118 @@ void SLParseSpinAPIResponseWithBet(NSData *responseData, NSInteger betMultiplier
 }
 
 // ---------------------------------------------------------------------------
+//  cm_balance from strack spin events
+// ---------------------------------------------------------------------------
+static long long sCmBalance = 0;
+
+long long SLLatestCmBalance(void) {
+    return sCmBalance;
+}
+
+void SLParseStrackForBalance(NSData *body) {
+    if (!body || body.length == 0) return;
+
+    // strack bodies are NDJSON — may arrive gzipped despite HAR showing plain text.
+    NSData *plain = nil;
+
+    // Check for gzip magic bytes (0x1f 0x8b)
+    if (body.length >= 2) {
+        const uint8_t *bytes = body.bytes;
+        if (bytes[0] == 0x1f && bytes[1] == 0x8b) {
+            // Decompress with NSData+zlib (available via compression framework)
+            // Use shell-level zlib: NSInputStream → inflate. Simpler: try NSJSONSerialization
+            // directly on the raw bytes — if it fails, it's gzipped and we skip (rare path).
+            plain = nil;  // will fall through to raw attempt
+        } else {
+            plain = body;
+        }
+    }
+    if (!plain) {
+        // Try decompressing — use the simpler approach of converting to string
+        // (strack in-app is sent as plain NDJSON; gzip is done at HTTP layer
+        //  which NSURLProtocol already decompresses for us)
+        plain = body;
+    }
+
+    NSString *text = [[NSString alloc] initWithData:plain encoding:NSUTF8StringEncoding];
+    if (!text.length) return;
+
+    for (NSString *line in [text componentsSeparatedByCharactersInSet:
+                            [NSCharacterSet newlineCharacterSet]]) {
+        if (line.length == 0) continue;
+
+        NSData *lineData = [line dataUsingEncoding:NSUTF8StringEncoding];
+        if (!lineData) continue;
+
+        NSDictionary *json = [NSJSONSerialization JSONObjectWithData:lineData options:0 error:nil];
+        if (![json isKindOfClass:[NSDictionary class]]) continue;
+        if (![[json[@"event"] description] isEqualToString:@"spin"]) continue;
+
+        NSDictionary *msg = json[@"msg"];
+        if (![msg isKindOfClass:[NSDictionary class]]) continue;
+
+        id bal = msg[@"cm_balance"];
+        if (bal) {
+            long long v = [[bal description] longLongValue];
+            if (v > 0) {
+                sCmBalance = v;
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+//  testSegments + ProfileName from client_error request body
+// ---------------------------------------------------------------------------
+static NSString *sProfileName = nil;
+static NSString *sSlotProbSeg = nil;
+
+NSString *SLSessionProfileName(void) {
+    return sProfileName ?: @"";
+}
+
+NSString *SLSessionSlotProbSeg(void) {
+    return sSlotProbSeg ?: @"";
+}
+
+void SLParseClientErrorForSegments(NSData *body) {
+    if (!body || body.length == 0) return;
+
+    NSString *text = [[NSString alloc] initWithData:body encoding:NSUTF8StringEncoding];
+    if (!text.length) return;
+
+    // URL-decode the form body
+    NSString *decoded = [text stringByRemovingPercentEncoding];
+    if (!decoded) decoded = text;
+
+    // Extract ProfileName
+    for (NSString *pair in [decoded componentsSeparatedByString:@"&"]) {
+        if ([pair hasPrefix:@"ProfileName="]) {
+            NSString *val = [pair substringFromIndex:12];
+            if (val.length > 0) {
+                sProfileName = [val copy];
+                NSLog(@"[SpinLogger] Session profile: %@", sProfileName);
+            }
+        }
+    }
+
+    // Extract testSegments — look for core_slot_prob specifically
+    for (NSString *pair in [decoded componentsSeparatedByString:@"&"]) {
+        if (![pair containsString:@"testSegments"]) continue;
+        // Format: testSegments[N]=segment_tag_xxx
+        NSRange eq = [pair rangeOfString:@"="];
+        if (eq.location == NSNotFound) continue;
+        NSString *val = [pair substringFromIndex:eq.location + 1];
+
+        if ([val containsString:@"core_slot_prob"]) {
+            // e.g. "segment_tag_core_slot_prob_nu_29_06_var_a" → extract variant
+            sSlotProbSeg = [val copy];
+            NSLog(@"[SpinLogger] Slot prob segment: %@", sSlotProbSeg);
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 //  SLParseStrackBody — legacy strack NDJSON parser (backup)
 // ---------------------------------------------------------------------------
 void SLParseStrackBody(NSString *body) {

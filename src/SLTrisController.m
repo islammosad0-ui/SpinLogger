@@ -52,6 +52,8 @@
         _symHistAccum  = [NSMutableArray array]; _symHistGold   = [NSMutableArray array];
         _totalSpins = 0;
         _symbolCountMode = NO;
+        NSUInteger saved = [[NSUserDefaults standardUserDefaults] integerForKey:@"Speeder_TrisVisibleCols"];
+        _visibleColumns = (saved != 0) ? saved : kSLTrisColAll;
         [self restoreState];
     }
     return self;
@@ -259,13 +261,17 @@
     // Column keys for lock target highlight
     NSString *colKeys[6] = {@"attack", @"steal", @"spins", @"shield", @"accumulation", @"potion"};
 
+    NSUInteger colBits[6] = {kSLTrisColAttack, kSLTrisColSteal, kSLTrisColSpins,
+                              kSLTrisColShield, kSLTrisColAccum, kSLTrisColPotion};
+
     NSMutableString *colHTML = [NSMutableString string];
     for (int c = 0; c < 6; c++) {
+        if (!(self.visibleColumns & colBits[c])) continue; // skip hidden columns
         NSArray *arr = self.symbolCountMode ? symArrays[c] : arrays[c];
         NSMutableString *entries = [NSMutableString string];
         NSInteger gapIdx = 1;
         for (NSNumber *val in arr) {
-            [entries appendFormat:@"<div class='e'>%ld-%ld</div>",
+            [entries appendFormat:@"<div class='e'><b>%ld-</b>%ld</div>",
                 (long)gapIdx, (long)val.integerValue];
             gapIdx++;
         }
@@ -301,7 +307,7 @@
         ".hb{height:2px;width:75%%;border-radius:1px;margin-top:1px}"
         ".cb{flex:1;overflow-y:auto;overflow-x:hidden}"
         ".cb::-webkit-scrollbar{display:none}"
-        ".e{text-align:center;padding:3px 1px;font-size:11px;font-weight:700;"
+        ".e{text-align:center;padding:2px 1px;font-size:10px;font-weight:400;"
         "border-bottom:1px solid rgba(255,255,255,0.03)}"
         ".col:nth-child(1) .e{color:#00e5ff}"
         ".col:nth-child(2) .e{color:#ff69b4}"
@@ -336,6 +342,13 @@
 }
 
 #pragma mark - Setters
+
+- (void)toggleColumn:(NSUInteger)colBit {
+    _visibleColumns ^= colBit;
+    if (_visibleColumns == 0) _visibleColumns = colBit; // don't allow hiding all
+    [[NSUserDefaults standardUserDefaults] setInteger:_visibleColumns forKey:@"Speeder_TrisVisibleCols"];
+    if (self.trisWindow && !self.trisWindow.hidden) [self refreshTrisHTML];
+}
 
 - (void)setLockTarget:(NSString *)lockTarget {
     _lockTarget = [lockTarget copy];

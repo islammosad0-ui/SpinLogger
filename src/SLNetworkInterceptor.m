@@ -33,6 +33,16 @@ static BOOL SLIsSpinAPI(NSURLRequest *request) {
     return (path && [path hasSuffix:@"/spin"] && [path containsString:@"/users/"]);
 }
 
+static BOOL SLIsStrackAPI(NSURLRequest *request) {
+    NSString *path = request.URL.path;
+    return (path && [path containsString:@"/strack/"]);
+}
+
+static BOOL SLIsClientErrorAPI(NSURLRequest *request) {
+    NSString *path = request.URL.path;
+    return (path && [path containsString:@"/client_error"]);
+}
+
 #pragma mark - SLURLProtocol
 
 @interface SLURLProtocol : NSURLProtocol <NSURLSessionDataDelegate>
@@ -107,6 +117,54 @@ static NSURLSessionConfiguration *SLCleanConfig(void) {
                     break;
                 }
             }
+        }
+    }
+
+    // Extract cm_balance from strack spin events (request body = analytics payload)
+    if (SLIsStrackAPI(self.request)) {
+        NSData *body = self.request.HTTPBody;
+        if (!body && self.request.HTTPBodyStream) {
+            NSInputStream *stream = self.request.HTTPBodyStream;
+            [stream open];
+            NSMutableData *streamData = [NSMutableData data];
+            uint8_t buf[4096];
+            NSInteger len;
+            while ((len = [stream read:buf maxLength:sizeof(buf)]) > 0) {
+                [streamData appendBytes:buf length:len];
+            }
+            [stream close];
+            body = streamData;
+            tagged.HTTPBodyStream = [[NSInputStream alloc] initWithData:body];
+        }
+        if (body.length > 0) {
+            NSData *bodyCopy = [body copy];
+            dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+                SLParseStrackForBalance(bodyCopy);
+            });
+        }
+    }
+
+    // Extract testSegments + ProfileName from client_error (sent once on app start)
+    if (SLIsClientErrorAPI(self.request)) {
+        NSData *body = self.request.HTTPBody;
+        if (!body && self.request.HTTPBodyStream) {
+            NSInputStream *stream = self.request.HTTPBodyStream;
+            [stream open];
+            NSMutableData *streamData = [NSMutableData data];
+            uint8_t buf[4096];
+            NSInteger len;
+            while ((len = [stream read:buf maxLength:sizeof(buf)]) > 0) {
+                [streamData appendBytes:buf length:len];
+            }
+            [stream close];
+            body = streamData;
+            tagged.HTTPBodyStream = [[NSInputStream alloc] initWithData:body];
+        }
+        if (body.length > 0) {
+            NSData *bodyCopy = [body copy];
+            dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+                SLParseClientErrorForSegments(bodyCopy);
+            });
         }
     }
 

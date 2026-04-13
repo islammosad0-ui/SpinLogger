@@ -1,0 +1,1368 @@
+{
+  "accumulation": {
+    "positives": [
+      {
+        "reel": "r2",
+        "idx": 7,
+        "lift_pp": 0.66,
+        "cv": 5,
+        "hits": 8,
+        "n": 480,
+        "rate_pct": 1.67,
+        "weight": 2
+      },
+      {
+        "reel": "r1",
+        "idx": 3,
+        "lift_pp": 0.5,
+        "cv": 4,
+        "hits": 15,
+        "n": 993,
+        "rate_pct": 1.51,
+        "weight": 1
+      },
+      {
+        "reel": "r2",
+        "idx": 6,
+        "lift_pp": 0.4,
+        "cv": 4,
+        "hits": 7,
+        "n": 498,
+        "rate_pct": 1.41,
+        "weight": 1
+      },
+      {
+        "reel": "r3",
+        "idx": 8,
+        "lift_pp": 0.26,
+        "cv": 4,
+        "hits": 13,
+        "n": 1023,
+        "rate_pct": 1.27,
+        "weight": 1
+      }
+    ],
+    "negatives": [
+      {
+        "reel": "r2",
+        "idx": 0,
+        "lift_pp": -0.81,
+        "cv": 4,
+        "hits": 1,
+        "n": 503,
+        "rate_pct": 0.2,
+        "weight": -1
+      },
+      {
+        "reel": "r1",
+        "idx": 0,
+        "lift_pp": -0.7,
+        "cv": 4,
+        "hits": 1,
+        "n": 322,
+        "rate_pct": 0.31,
+        "weight": -1
+      },
+      {
+        "reel": "r2",
+        "idx": 8,
+        "lift_pp": -0.7,
+        "cv": 4,
+        "hits": 1,
+        "n": 318,
+        "rate_pct": 0.31,
+        "weight": -1
+      },
+      {
+        "reel": "r2",
+        "idx": 5,
+        "lift_pp": -0.68,
+        "cv": 4,
+        "hits": 1,
+        "n": 306,
+        "rate_pct": 0.33,
+        "weight": -1
+      },
+      {
+        "reel": "r1",
+        "idx": 5,
+        "lift_pp": -0.65,
+        "cv": 4,
+        "hits": 1,
+        "n": 280,
+        "rate_pct": 0.36,
+        "weight": -1
+      },
+      {
+        "reel": "r2",
+        "idx": 2,
+        "lift_pp": -0.61,
+        "cv": 4,
+        "hits": 1,
+        "n": 248,
+        "rate_pct": 0.4,
+        "weight": -1
+      },
+      {
+        "reel": "r3",
+        "idx": 1,
+        "lift_pp": -0.59,
+        "cv": 4,
+        "hits": 2,
+        "n": 480,
+        "rate_pct": 0.42,
+        "weight": -1
+      },
+      {
+        "reel": "r3",
+        "idx": 2,
+        "lift_pp": -0.54,
+        "cv": 4,
+        "hits": 1,
+        "n": 213,
+        "rate_pct": 0.47,
+        "weight": -1
+      }
+    ],
+    "pos_pairs": [
+      {
+        "pair": "r1=3,r2=7",
+        "lift_pp": 1.14,
+        "cv": 4,
+        "hits": 6,
+        "n": 279,
+        "weight": 1
+      },
+      {
+        "pair": "r2=7,r3=8",
+        "lift_pp": 0.81,
+        "cv": 4,
+        "hits": 6,
+        "n": 330,
+        "weight": 1
+      },
+      {
+        "pair": "r1=3,r3=0",
+        "lift_pp": 0.8,
+        "cv": 4,
+        "hits": 6,
+        "n": 332,
+        "weight": 1
+      },
+      {
+        "pair": "r2=3,r3=8",
+        "lift_pp": 0.59,
+        "cv": 4,
+        "hits": 6,
+        "n": 375,
+        "weight": 1
+      }
+    ],
+    "neg_pairs": [
+      {
+        "pair": "r2=6,r3=5",
+        "lift_pp": -1.01,
+        "cv": 4,
+        "hits": 0,
+        "n": 37,
+        "weight": -1
+      },
+      {
+        "pair": "r2=6,r3=1",
+        "lift_pp": -1.01,
+        "cv": 5,
+        "hits": 0,
+        "n": 56,
+        "weight": -2
+      },
+      {
+        "pair": "r2=5,r3=1",
+        "lift_pp": -1.01,
+        "cv": 5,
+        "hits": 0,
+        "n": 105,
+        "weight": -2
+      },
+      {
+        "pair": "r2=5,r3=0",
+        "lift_pp": -1.01,
+        "cv": 5,
+        "hits": 0,
+        "n": 99,
+        "weight": -2
+      },
+      {
+        "pair": "r2=4,r3=1",
+        "lift_pp": -1.01,
+        "cv": 5,
+        "hits": 0,
+        "n": 148,
+        "weight": -2
+      },
+      {
+        "pair": "r2=3,r3=7",
+        "lift_pp": -1.01,
+        "cv": 5,
+        "hits": 0,
+        "n": 60,
+        "weight": -2
+      },
+      {
+        "pair": "r2=3,r3=3",
+        "lift_pp": -1.01,
+        "cv": 5,
+        "hits": 0,
+        "n": 71,
+        "weight": -2
+      },
+      {
+        "pair": "r2=2,r3=0",
+        "lift_pp": -1.01,
+        "cv": 4,
+        "hits": 0,
+        "n": 35,
+        "weight": -1
+      },
+      {
+        "pair": "r1=7,r3=7",
+        "lift_pp": -1.01,
+        "cv": 5,
+        "hits": 0,
+        "n": 57,
+        "weight": -2
+      },
+      {
+        "pair": "r1=7,r3=3",
+        "lift_pp": -1.01,
+        "cv": 5,
+        "hits": 0,
+        "n": 64,
+        "weight": -2
+      }
+    ]
+  },
+  "spins": {
+    "positives": [
+      {
+        "reel": "r2",
+        "idx": 3,
+        "lift_pp": 0.89,
+        "cv": 5,
+        "hits": 11,
+        "n": 521,
+        "rate_pct": 2.11,
+        "weight": 2
+      },
+      {
+        "reel": "r1",
+        "idx": 7,
+        "lift_pp": 0.87,
+        "cv": 4,
+        "hits": 16,
+        "n": 767,
+        "rate_pct": 2.09,
+        "weight": 1
+      }
+    ],
+    "negatives": [
+      {
+        "reel": "r1",
+        "idx": 8,
+        "lift_pp": -1.22,
+        "cv": 5,
+        "hits": 0,
+        "n": 39,
+        "rate_pct": 0.0,
+        "weight": -2
+      },
+      {
+        "reel": "r3",
+        "idx": 6,
+        "lift_pp": -1.22,
+        "cv": 5,
+        "hits": 0,
+        "n": 57,
+        "rate_pct": 0.0,
+        "weight": -2
+      },
+      {
+        "reel": "r3",
+        "idx": 7,
+        "lift_pp": -1.22,
+        "cv": 5,
+        "hits": 0,
+        "n": 118,
+        "rate_pct": 0.0,
+        "weight": -2
+      },
+      {
+        "reel": "r3",
+        "idx": 1,
+        "lift_pp": -1.01,
+        "cv": 4,
+        "hits": 1,
+        "n": 480,
+        "rate_pct": 0.21,
+        "weight": -1
+      },
+      {
+        "reel": "r3",
+        "idx": 4,
+        "lift_pp": -0.87,
+        "cv": 5,
+        "hits": 1,
+        "n": 286,
+        "rate_pct": 0.35,
+        "weight": -2
+      },
+      {
+        "reel": "r2",
+        "idx": 6,
+        "lift_pp": -0.82,
+        "cv": 4,
+        "hits": 2,
+        "n": 498,
+        "rate_pct": 0.4,
+        "weight": -1
+      }
+    ],
+    "pos_pairs": [
+      {
+        "pair": "r1=7,r2=3",
+        "lift_pp": 1.3,
+        "cv": 4,
+        "hits": 6,
+        "n": 238,
+        "weight": 1
+      },
+      {
+        "pair": "r1=7,r2=7",
+        "lift_pp": 1.27,
+        "cv": 4,
+        "hits": 5,
+        "n": 201,
+        "weight": 1
+      },
+      {
+        "pair": "r1=7,r3=8",
+        "lift_pp": 1.05,
+        "cv": 4,
+        "hits": 7,
+        "n": 309,
+        "weight": 1
+      },
+      {
+        "pair": "r2=3,r3=8",
+        "lift_pp": 0.92,
+        "cv": 4,
+        "hits": 8,
+        "n": 375,
+        "weight": 1
+      }
+    ],
+    "neg_pairs": [
+      {
+        "pair": "r2=7,r3=7",
+        "lift_pp": -1.22,
+        "cv": 5,
+        "hits": 0,
+        "n": 58,
+        "weight": -2
+      },
+      {
+        "pair": "r2=6,r3=6",
+        "lift_pp": -1.22,
+        "cv": 5,
+        "hits": 0,
+        "n": 57,
+        "weight": -2
+      },
+      {
+        "pair": "r2=6,r3=5",
+        "lift_pp": -1.22,
+        "cv": 4,
+        "hits": 0,
+        "n": 37,
+        "weight": -1
+      },
+      {
+        "pair": "r2=6,r3=1",
+        "lift_pp": -1.22,
+        "cv": 5,
+        "hits": 0,
+        "n": 56,
+        "weight": -2
+      },
+      {
+        "pair": "r2=5,r3=1",
+        "lift_pp": -1.22,
+        "cv": 5,
+        "hits": 0,
+        "n": 105,
+        "weight": -2
+      },
+      {
+        "pair": "r2=4,r3=4",
+        "lift_pp": -1.22,
+        "cv": 5,
+        "hits": 0,
+        "n": 145,
+        "weight": -2
+      },
+      {
+        "pair": "r2=3,r3=7",
+        "lift_pp": -1.22,
+        "cv": 5,
+        "hits": 0,
+        "n": 60,
+        "weight": -2
+      },
+      {
+        "pair": "r2=2,r3=0",
+        "lift_pp": -1.22,
+        "cv": 4,
+        "hits": 0,
+        "n": 35,
+        "weight": -1
+      },
+      {
+        "pair": "r2=1,r3=1",
+        "lift_pp": -1.22,
+        "cv": 5,
+        "hits": 0,
+        "n": 157,
+        "weight": -2
+      },
+      {
+        "pair": "r1=8,r3=8",
+        "lift_pp": -1.22,
+        "cv": 5,
+        "hits": 0,
+        "n": 39,
+        "weight": -1
+      }
+    ]
+  },
+  "shield": {
+    "positives": [
+      {
+        "reel": "r3",
+        "idx": 0,
+        "lift_pp": 0.66,
+        "cv": 4,
+        "hits": 63,
+        "n": 1167,
+        "rate_pct": 5.4,
+        "weight": 1
+      }
+    ],
+    "negatives": [
+      {
+        "reel": "r3",
+        "idx": 7,
+        "lift_pp": -3.04,
+        "cv": 5,
+        "hits": 2,
+        "n": 118,
+        "rate_pct": 1.69,
+        "weight": -2
+      }
+    ],
+    "pos_pairs": [
+      {
+        "pair": "r1=1,r3=1",
+        "lift_pp": 5.65,
+        "cv": 4,
+        "hits": 8,
+        "n": 77,
+        "weight": 2
+      },
+      {
+        "pair": "r1=1,r2=1",
+        "lift_pp": 4.27,
+        "cv": 5,
+        "hits": 10,
+        "n": 111,
+        "weight": 2
+      },
+      {
+        "pair": "r1=3,r2=4",
+        "lift_pp": 3.2,
+        "cv": 4,
+        "hits": 10,
+        "n": 126,
+        "weight": 1
+      },
+      {
+        "pair": "r1=4,r2=5",
+        "lift_pp": 2.96,
+        "cv": 4,
+        "hits": 5,
+        "n": 65,
+        "weight": 1
+      },
+      {
+        "pair": "r2=4,r3=0",
+        "lift_pp": 2.88,
+        "cv": 5,
+        "hits": 16,
+        "n": 210,
+        "weight": 2
+      },
+      {
+        "pair": "r2=4,r3=5",
+        "lift_pp": 2.88,
+        "cv": 4,
+        "hits": 8,
+        "n": 105,
+        "weight": 1
+      },
+      {
+        "pair": "r1=4,r3=5",
+        "lift_pp": 2.04,
+        "cv": 4,
+        "hits": 8,
+        "n": 118,
+        "weight": 1
+      },
+      {
+        "pair": "r1=5,r2=1",
+        "lift_pp": 1.51,
+        "cv": 4,
+        "hits": 5,
+        "n": 80,
+        "weight": 1
+      }
+    ],
+    "neg_pairs": [
+      {
+        "pair": "r2=2,r3=0",
+        "lift_pp": -4.74,
+        "cv": 4,
+        "hits": 0,
+        "n": 35,
+        "weight": -1
+      },
+      {
+        "pair": "r1=6,r2=5",
+        "lift_pp": -4.74,
+        "cv": 5,
+        "hits": 0,
+        "n": 53,
+        "weight": -2
+      },
+      {
+        "pair": "r1=5,r2=0",
+        "lift_pp": -4.74,
+        "cv": 4,
+        "hits": 0,
+        "n": 33,
+        "weight": -1
+      },
+      {
+        "pair": "r1=2,r2=5",
+        "lift_pp": -4.74,
+        "cv": 4,
+        "hits": 0,
+        "n": 28,
+        "weight": -1
+      }
+    ]
+  },
+  "attack": {
+    "positives": [
+      {
+        "reel": "r3",
+        "idx": 7,
+        "lift_pp": 2.43,
+        "cv": 4,
+        "hits": 12,
+        "n": 118,
+        "rate_pct": 10.17,
+        "weight": 1
+      },
+      {
+        "reel": "r1",
+        "idx": 1,
+        "lift_pp": 1.87,
+        "cv": 4,
+        "hits": 37,
+        "n": 385,
+        "rate_pct": 9.61,
+        "weight": 1
+      },
+      {
+        "reel": "r1",
+        "idx": 4,
+        "lift_pp": 1.49,
+        "cv": 4,
+        "hits": 37,
+        "n": 401,
+        "rate_pct": 9.23,
+        "weight": 1
+      },
+      {
+        "reel": "r1",
+        "idx": 0,
+        "lift_pp": 1.27,
+        "cv": 4,
+        "hits": 29,
+        "n": 322,
+        "rate_pct": 9.01,
+        "weight": 1
+      },
+      {
+        "reel": "r3",
+        "idx": 0,
+        "lift_pp": 0.23,
+        "cv": 4,
+        "hits": 93,
+        "n": 1167,
+        "rate_pct": 7.97,
+        "weight": 1
+      }
+    ],
+    "negatives": [],
+    "pos_pairs": [
+      {
+        "pair": "r1=1,r2=0",
+        "lift_pp": 8.93,
+        "cv": 4,
+        "hits": 7,
+        "n": 42,
+        "weight": 2
+      },
+      {
+        "pair": "r1=2,r2=1",
+        "lift_pp": 5.59,
+        "cv": 4,
+        "hits": 6,
+        "n": 45,
+        "weight": 2
+      },
+      {
+        "pair": "r1=2,r3=0",
+        "lift_pp": 4.59,
+        "cv": 5,
+        "hits": 9,
+        "n": 73,
+        "weight": 2
+      },
+      {
+        "pair": "r1=1,r3=0",
+        "lift_pp": 4.35,
+        "cv": 4,
+        "hits": 11,
+        "n": 91,
+        "weight": 1
+      },
+      {
+        "pair": "r1=7,r2=6",
+        "lift_pp": 3.87,
+        "cv": 4,
+        "hits": 18,
+        "n": 155,
+        "weight": 1
+      },
+      {
+        "pair": "r1=3,r3=7",
+        "lift_pp": 3.74,
+        "cv": 4,
+        "hits": 7,
+        "n": 61,
+        "weight": 1
+      },
+      {
+        "pair": "r1=6,r2=5",
+        "lift_pp": 3.58,
+        "cv": 4,
+        "hits": 6,
+        "n": 53,
+        "weight": 1
+      },
+      {
+        "pair": "r1=1,r2=8",
+        "lift_pp": 3.53,
+        "cv": 4,
+        "hits": 16,
+        "n": 142,
+        "weight": 1
+      },
+      {
+        "pair": "r1=1,r3=8",
+        "lift_pp": 3.53,
+        "cv": 4,
+        "hits": 16,
+        "n": 142,
+        "weight": 1
+      },
+      {
+        "pair": "r2=5,r3=5",
+        "lift_pp": 3.04,
+        "cv": 4,
+        "hits": 11,
+        "n": 102,
+        "weight": 1
+      },
+      {
+        "pair": "r1=4,r3=5",
+        "lift_pp": 2.43,
+        "cv": 4,
+        "hits": 12,
+        "n": 118,
+        "weight": 1
+      }
+    ],
+    "neg_pairs": [
+      {
+        "pair": "r2=6,r3=5",
+        "lift_pp": -7.74,
+        "cv": 4,
+        "hits": 0,
+        "n": 37,
+        "weight": -1
+      }
+    ]
+  },
+  "steal": {
+    "positives": [
+      {
+        "reel": "r2",
+        "idx": 3,
+        "lift_pp": 2.43,
+        "cv": 4,
+        "hits": 31,
+        "n": 521,
+        "rate_pct": 5.95,
+        "weight": 1
+      },
+      {
+        "reel": "r3",
+        "idx": 7,
+        "lift_pp": 2.41,
+        "cv": 4,
+        "hits": 7,
+        "n": 118,
+        "rate_pct": 5.93,
+        "weight": 1
+      }
+    ],
+    "negatives": [],
+    "pos_pairs": [
+      {
+        "pair": "r2=3,r3=7",
+        "lift_pp": 4.81,
+        "cv": 4,
+        "hits": 5,
+        "n": 60,
+        "weight": 1
+      },
+      {
+        "pair": "r1=3,r2=3",
+        "lift_pp": 2.49,
+        "cv": 4,
+        "hits": 17,
+        "n": 283,
+        "weight": 1
+      },
+      {
+        "pair": "r1=1,r2=8",
+        "lift_pp": 1.41,
+        "cv": 4,
+        "hits": 7,
+        "n": 142,
+        "weight": 1
+      },
+      {
+        "pair": "r1=1,r3=8",
+        "lift_pp": 1.41,
+        "cv": 4,
+        "hits": 7,
+        "n": 142,
+        "weight": 1
+      },
+      {
+        "pair": "r1=4,r3=5",
+        "lift_pp": 0.72,
+        "cv": 4,
+        "hits": 5,
+        "n": 118,
+        "weight": 1
+      }
+    ],
+    "neg_pairs": [
+      {
+        "pair": "r1=2,r3=0",
+        "lift_pp": -3.52,
+        "cv": 5,
+        "hits": 0,
+        "n": 73,
+        "weight": -2
+      },
+      {
+        "pair": "r1=5,r2=0",
+        "lift_pp": -3.52,
+        "cv": 4,
+        "hits": 0,
+        "n": 33,
+        "weight": -1
+      },
+      {
+        "pair": "r1=2,r2=5",
+        "lift_pp": -3.52,
+        "cv": 4,
+        "hits": 0,
+        "n": 28,
+        "weight": -1
+      },
+      {
+        "pair": "r1=2,r2=1",
+        "lift_pp": -3.52,
+        "cv": 5,
+        "hits": 0,
+        "n": 45,
+        "weight": -1
+      },
+      {
+        "pair": "r1=1,r2=5",
+        "lift_pp": -3.52,
+        "cv": 5,
+        "hits": 0,
+        "n": 90,
+        "weight": -2
+      }
+    ]
+  },
+  "coin": {
+    "positives": [
+      {
+        "reel": "r1",
+        "idx": 4,
+        "lift_pp": 3.08,
+        "cv": 5,
+        "hits": 38,
+        "n": 401,
+        "rate_pct": 9.48,
+        "weight": 2
+      },
+      {
+        "reel": "r2",
+        "idx": 1,
+        "lift_pp": 2.0,
+        "cv": 4,
+        "hits": 32,
+        "n": 381,
+        "rate_pct": 8.4,
+        "weight": 1
+      },
+      {
+        "reel": "r2",
+        "idx": 8,
+        "lift_pp": 1.47,
+        "cv": 4,
+        "hits": 25,
+        "n": 318,
+        "rate_pct": 7.86,
+        "weight": 1
+      }
+    ],
+    "negatives": [],
+    "pos_pairs": [
+      {
+        "pair": "r1=4,r3=1",
+        "lift_pp": 5.14,
+        "cv": 5,
+        "hits": 15,
+        "n": 130,
+        "weight": 2
+      },
+      {
+        "pair": "r1=2,r2=1",
+        "lift_pp": 4.72,
+        "cv": 4,
+        "hits": 5,
+        "n": 45,
+        "weight": 1
+      },
+      {
+        "pair": "r1=4,r3=4",
+        "lift_pp": 4.64,
+        "cv": 4,
+        "hits": 15,
+        "n": 136,
+        "weight": 1
+      },
+      {
+        "pair": "r1=4,r2=5",
+        "lift_pp": 4.38,
+        "cv": 4,
+        "hits": 7,
+        "n": 65,
+        "weight": 1
+      },
+      {
+        "pair": "r2=4,r3=4",
+        "lift_pp": 3.95,
+        "cv": 4,
+        "hits": 15,
+        "n": 145,
+        "weight": 1
+      },
+      {
+        "pair": "r1=5,r2=8",
+        "lift_pp": 3.92,
+        "cv": 4,
+        "hits": 10,
+        "n": 97,
+        "weight": 1
+      },
+      {
+        "pair": "r1=5,r3=8",
+        "lift_pp": 3.92,
+        "cv": 4,
+        "hits": 10,
+        "n": 97,
+        "weight": 1
+      },
+      {
+        "pair": "r1=6,r2=1",
+        "lift_pp": 3.78,
+        "cv": 4,
+        "hits": 6,
+        "n": 59,
+        "weight": 1
+      }
+    ],
+    "neg_pairs": []
+  },
+  "goldSack": {
+    "positives": [
+      {
+        "reel": "r1",
+        "idx": 7,
+        "lift_pp": 1.56,
+        "cv": 4,
+        "hits": 65,
+        "n": 767,
+        "rate_pct": 8.47,
+        "weight": 1
+      },
+      {
+        "reel": "r3",
+        "idx": 7,
+        "lift_pp": 1.56,
+        "cv": 4,
+        "hits": 10,
+        "n": 118,
+        "rate_pct": 8.47,
+        "weight": 1
+      },
+      {
+        "reel": "r1",
+        "idx": 1,
+        "lift_pp": 1.4,
+        "cv": 4,
+        "hits": 32,
+        "n": 385,
+        "rate_pct": 8.31,
+        "weight": 1
+      },
+      {
+        "reel": "r2",
+        "idx": 3,
+        "lift_pp": 1.34,
+        "cv": 4,
+        "hits": 43,
+        "n": 521,
+        "rate_pct": 8.25,
+        "weight": 1
+      },
+      {
+        "reel": "r3",
+        "idx": 8,
+        "lift_pp": 0.62,
+        "cv": 4,
+        "hits": 77,
+        "n": 1023,
+        "rate_pct": 7.53,
+        "weight": 1
+      },
+      {
+        "reel": "r3",
+        "idx": 0,
+        "lift_pp": 0.46,
+        "cv": 4,
+        "hits": 86,
+        "n": 1167,
+        "rate_pct": 7.37,
+        "weight": 1
+      }
+    ],
+    "negatives": [
+      {
+        "reel": "r1",
+        "idx": 8,
+        "lift_pp": -6.91,
+        "cv": 5,
+        "hits": 0,
+        "n": 39,
+        "rate_pct": 0.0,
+        "weight": -2
+      }
+    ],
+    "pos_pairs": [
+      {
+        "pair": "r1=6,r2=5",
+        "lift_pp": 6.3,
+        "cv": 4,
+        "hits": 7,
+        "n": 53,
+        "weight": 2
+      },
+      {
+        "pair": "r1=5,r2=8",
+        "lift_pp": 5.46,
+        "cv": 4,
+        "hits": 12,
+        "n": 97,
+        "weight": 2
+      },
+      {
+        "pair": "r1=5,r3=8",
+        "lift_pp": 5.46,
+        "cv": 4,
+        "hits": 12,
+        "n": 97,
+        "weight": 2
+      },
+      {
+        "pair": "r1=1,r3=0",
+        "lift_pp": 5.18,
+        "cv": 4,
+        "hits": 11,
+        "n": 91,
+        "weight": 2
+      },
+      {
+        "pair": "r1=1,r2=1",
+        "lift_pp": 4.8,
+        "cv": 4,
+        "hits": 13,
+        "n": 111,
+        "weight": 1
+      },
+      {
+        "pair": "r2=6,r3=0",
+        "lift_pp": 4.68,
+        "cv": 4,
+        "hits": 24,
+        "n": 207,
+        "weight": 1
+      },
+      {
+        "pair": "r1=7,r2=7",
+        "lift_pp": 2.04,
+        "cv": 4,
+        "hits": 18,
+        "n": 201,
+        "weight": 1
+      },
+      {
+        "pair": "r1=6,r3=1",
+        "lift_pp": 1.85,
+        "cv": 4,
+        "hits": 17,
+        "n": 194,
+        "weight": 1
+      }
+    ],
+    "neg_pairs": [
+      {
+        "pair": "r1=8,r3=8",
+        "lift_pp": -6.91,
+        "cv": 5,
+        "hits": 0,
+        "n": 39,
+        "weight": -1
+      },
+      {
+        "pair": "r1=5,r3=5",
+        "lift_pp": -6.91,
+        "cv": 5,
+        "hits": 0,
+        "n": 37,
+        "weight": -1
+      },
+      {
+        "pair": "r1=8,r2=8",
+        "lift_pp": -6.91,
+        "cv": 5,
+        "hits": 0,
+        "n": 39,
+        "weight": -1
+      }
+    ]
+  },
+  "acc+spins": {
+    "positives": [
+      {
+        "reel": "r3",
+        "idx": 3,
+        "lift_pp": 1.8,
+        "cv": 4,
+        "hits": 6,
+        "n": 149,
+        "rate_pct": 4.03,
+        "weight": 1
+      },
+      {
+        "reel": "r2",
+        "idx": 7,
+        "lift_pp": 1.11,
+        "cv": 4,
+        "hits": 16,
+        "n": 480,
+        "rate_pct": 3.33,
+        "weight": 1
+      },
+      {
+        "reel": "r2",
+        "idx": 3,
+        "lift_pp": 1.04,
+        "cv": 4,
+        "hits": 17,
+        "n": 521,
+        "rate_pct": 3.26,
+        "weight": 1
+      },
+      {
+        "reel": "r1",
+        "idx": 7,
+        "lift_pp": 1.03,
+        "cv": 5,
+        "hits": 25,
+        "n": 767,
+        "rate_pct": 3.26,
+        "weight": 2
+      },
+      {
+        "reel": "r3",
+        "idx": 5,
+        "lift_pp": 0.75,
+        "cv": 4,
+        "hits": 11,
+        "n": 370,
+        "rate_pct": 2.97,
+        "weight": 1
+      },
+      {
+        "reel": "r3",
+        "idx": 8,
+        "lift_pp": 0.71,
+        "cv": 5,
+        "hits": 30,
+        "n": 1023,
+        "rate_pct": 2.93,
+        "weight": 2
+      },
+      {
+        "reel": "r1",
+        "idx": 3,
+        "lift_pp": 0.39,
+        "cv": 4,
+        "hits": 26,
+        "n": 993,
+        "rate_pct": 2.62,
+        "weight": 1
+      }
+    ],
+    "negatives": [
+      {
+        "reel": "r3",
+        "idx": 1,
+        "lift_pp": -1.6,
+        "cv": 5,
+        "hits": 3,
+        "n": 480,
+        "rate_pct": 0.62,
+        "weight": -2
+      },
+      {
+        "reel": "r3",
+        "idx": 7,
+        "lift_pp": -1.38,
+        "cv": 4,
+        "hits": 1,
+        "n": 118,
+        "rate_pct": 0.85,
+        "weight": -1
+      },
+      {
+        "reel": "r2",
+        "idx": 5,
+        "lift_pp": -1.25,
+        "cv": 5,
+        "hits": 3,
+        "n": 306,
+        "rate_pct": 0.98,
+        "weight": -2
+      }
+    ],
+    "pos_pairs": [
+      {
+        "pair": "r2=4,r3=5",
+        "lift_pp": 3.49,
+        "cv": 4,
+        "hits": 6,
+        "n": 105,
+        "weight": 1
+      },
+      {
+        "pair": "r1=7,r3=8",
+        "lift_pp": 1.98,
+        "cv": 4,
+        "hits": 13,
+        "n": 309,
+        "weight": 1
+      },
+      {
+        "pair": "r1=7,r2=3",
+        "lift_pp": 1.98,
+        "cv": 5,
+        "hits": 10,
+        "n": 238,
+        "weight": 2
+      },
+      {
+        "pair": "r2=3,r3=8",
+        "lift_pp": 1.51,
+        "cv": 4,
+        "hits": 14,
+        "n": 375,
+        "weight": 1
+      },
+      {
+        "pair": "r1=7,r2=7",
+        "lift_pp": 1.26,
+        "cv": 4,
+        "hits": 7,
+        "n": 201,
+        "weight": 1
+      },
+      {
+        "pair": "r1=6,r3=5",
+        "lift_pp": 1.19,
+        "cv": 4,
+        "hits": 4,
+        "n": 117,
+        "weight": 1
+      },
+      {
+        "pair": "r2=7,r3=8",
+        "lift_pp": 1.11,
+        "cv": 4,
+        "hits": 11,
+        "n": 330,
+        "weight": 1
+      },
+      {
+        "pair": "r1=3,r2=7",
+        "lift_pp": 1.0,
+        "cv": 4,
+        "hits": 9,
+        "n": 279,
+        "weight": 1
+      },
+      {
+        "pair": "r1=6,r2=4",
+        "lift_pp": 1.0,
+        "cv": 4,
+        "hits": 4,
+        "n": 124,
+        "weight": 1
+      }
+    ],
+    "neg_pairs": [
+      {
+        "pair": "r2=6,r3=5",
+        "lift_pp": -2.23,
+        "cv": 4,
+        "hits": 0,
+        "n": 37,
+        "weight": -1
+      },
+      {
+        "pair": "r2=6,r3=1",
+        "lift_pp": -2.23,
+        "cv": 5,
+        "hits": 0,
+        "n": 56,
+        "weight": -2
+      },
+      {
+        "pair": "r2=5,r3=1",
+        "lift_pp": -2.23,
+        "cv": 5,
+        "hits": 0,
+        "n": 105,
+        "weight": -2
+      },
+      {
+        "pair": "r2=3,r3=7",
+        "lift_pp": -2.23,
+        "cv": 5,
+        "hits": 0,
+        "n": 60,
+        "weight": -2
+      },
+      {
+        "pair": "r2=2,r3=0",
+        "lift_pp": -2.23,
+        "cv": 4,
+        "hits": 0,
+        "n": 35,
+        "weight": -1
+      },
+      {
+        "pair": "r1=7,r3=7",
+        "lift_pp": -2.23,
+        "cv": 5,
+        "hits": 0,
+        "n": 57,
+        "weight": -2
+      },
+      {
+        "pair": "r1=5,r3=1",
+        "lift_pp": -2.23,
+        "cv": 5,
+        "hits": 0,
+        "n": 58,
+        "weight": -2
+      },
+      {
+        "pair": "r1=4,r3=4",
+        "lift_pp": -2.23,
+        "cv": 5,
+        "hits": 0,
+        "n": 136,
+        "weight": -2
+      },
+      {
+        "pair": "r1=1,r3=1",
+        "lift_pp": -2.23,
+        "cv": 5,
+        "hits": 0,
+        "n": 77,
+        "weight": -2
+      },
+      {
+        "pair": "r1=6,r2=5",
+        "lift_pp": -2.23,
+        "cv": 5,
+        "hits": 0,
+        "n": 53,
+        "weight": -2
+      }
+    ]
+  }
+}

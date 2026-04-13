@@ -32,7 +32,7 @@ static void SpinLoggerInit(void) {
             [[SLSpinTarget shared] install];
             [[SLTrisController shared] install];
             [[SLNetworkMonitor shared] install];
-            [[SLDebtMonitor shared] install];
+            // [[SLDebtMonitor shared] install];  // hidden — not in active use
             [[SLMemoryScanner shared] startScanning];
             [[SLSignalPanel shared] install];
             SLMenuOverlayInstall();

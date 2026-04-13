@@ -262,7 +262,7 @@ typedef NS_ENUM(NSInteger, ScanPhase) {
     self.prevSpinNumber = 0;
     self.currentPhaseName = @"resolveAPIs";
 
-    self.scanTimer = [NSTimer scheduledTimerWithTimeInterval:0.25
+    self.scanTimer = [NSTimer scheduledTimerWithTimeInterval:0.08
                                                      target:self
                                                    selector:@selector(tick)
                                                    userInfo:nil

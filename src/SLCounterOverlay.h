@@ -10,4 +10,5 @@
 - (void)resetPositions;
 - (void)showTeaserAlert;
 - (NSDictionary<NSString *, NSNumber *> *)currentCounts;
+- (BOOL)isSymbolVisible:(NSString *)symbol;
 @end
