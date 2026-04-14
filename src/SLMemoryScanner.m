@@ -528,6 +528,12 @@ static void* fieldHandleFor(void* klass, const char* fieldName) {
     if (_runtime_class_init) _runtime_class_init(s_klass_Manager);
 
     NSLog(@"[SpinLogger] Field offsets cached successfully");
+    NSLog(@"[SpinLogger] STRIP DIAG: fo_symbolElements=%zu fo_slotSymbolBacking=%zu "
+          "fo_symbolReplacer=%zu fo_replMap=%zu fo_numberOfSymbols=%zu "
+          "BarSymInfo=%p BarRepl=%p",
+          fo_symbolElements, fo_slotSymbolBacking,
+          fo_symbolReplacer, fo_replMap, fo_numberOfSymbols,
+          s_klass_BarSymInfo, s_klass_BarRepl);
     return YES;
 }
 
@@ -556,13 +562,41 @@ static inline uint8_t readBool(void* obj, size_t offset) {
 /// Read the full post-replacement strip from a SlotBarManager's m_SymbolElements.
 /// Returns a comma-separated string of symbol enum values, e.g. "4,30,2,6,1,3,5,2,4".
 - (NSString *)readStripFromBar:(void *)bar {
-    if (!bar || !fo_symbolElements || !fo_slotSymbolBacking) return nil;
+    if (!bar) { return nil; }
+    if (!fo_symbolElements) {
+        NSLog(@"[SpinLogger] STRIP FAIL: fo_symbolElements=0 (field not found on SlotBarManager)");
+        return nil;
+    }
+    if (!fo_slotSymbolBacking) {
+        NSLog(@"[SpinLogger] STRIP FAIL: fo_slotSymbolBacking=0 (SlotBarSymbolInfo class or field missing)");
+        // Try alternative: read raw int32 values from the elements array directly
+        // (m_SymbolElements might be a simple int[] instead of SlotBarSymbolInfo[])
+        void *elements = readPtr(bar, fo_symbolElements);
+        if (!elements || !looksLikeHeapPointer(elements)) return nil;
+        int64_t len = *(int64_t *)((uint8_t *)elements + kArrayLengthOffset);
+        if (len <= 0 || len > 50) return nil;
+        // Try reading as value-type array (int32[] — 4 bytes per element)
+        NSMutableArray *parts = [NSMutableArray arrayWithCapacity:(NSUInteger)len];
+        for (int32_t i = 0; i < (int32_t)len; i++) {
+            int32_t val = *(int32_t *)((uint8_t *)elements + kArrayHeaderSize + i * sizeof(int32_t));
+            [parts addObject:[NSString stringWithFormat:@"%d", val]];
+        }
+        NSString *result = [parts componentsJoinedByString:@","];
+        NSLog(@"[SpinLogger] STRIP ALT (int[]): [%@]", result);
+        return result;
+    }
 
     void *elements = readPtr(bar, fo_symbolElements);
-    if (!elements || !looksLikeHeapPointer(elements)) return nil;
+    if (!elements || !looksLikeHeapPointer(elements)) {
+        NSLog(@"[SpinLogger] STRIP FAIL: elements ptr=%p (null or bad heap)", elements);
+        return nil;
+    }
 
     int64_t len = *(int64_t *)((uint8_t *)elements + kArrayLengthOffset);
-    if (len <= 0 || len > 50) return nil;   // sanity check
+    if (len <= 0 || len > 50) {
+        NSLog(@"[SpinLogger] STRIP FAIL: array len=%lld (out of range)", len);
+        return nil;
+    }
 
     NSMutableArray *parts = [NSMutableArray arrayWithCapacity:(NSUInteger)len];
     for (int32_t i = 0; i < (int32_t)len; i++) {
@@ -585,7 +619,15 @@ static inline uint8_t readBool(void* obj, size_t offset) {
 /// Entry struct (16 bytes): hashCode(4), next(4), key(4), value(4)
 /// Returns "origA>replA,origB>replB" or nil if no replacer/replacements.
 - (NSString *)readReplMapFromBar:(void *)bar {
-    if (!bar || !fo_symbolReplacer || !fo_replMap) return nil;
+    if (!bar) return nil;
+    if (!fo_symbolReplacer || !fo_replMap) {
+        static BOOL loggedOnce = NO;
+        if (!loggedOnce) {
+            NSLog(@"[SpinLogger] REPL FAIL: fo_symbolReplacer=%zu fo_replMap=%zu", fo_symbolReplacer, fo_replMap);
+            loggedOnce = YES;
+        }
+        return nil;
+    }
 
     void *replacer = readPtr(bar, fo_symbolReplacer);
     if (!replacer || !looksLikeHeapPointer(replacer)) return nil;
@@ -714,6 +756,39 @@ static inline uint8_t readBool(void* obj, size_t offset) {
         int32_t idx1 = (bar1 && fo_resultSymbolIndex) ? readInt32(bar1, fo_resultSymbolIndex) : -1;
         int32_t idx2 = (bar2 && fo_resultSymbolIndex) ? readInt32(bar2, fo_resultSymbolIndex) : -1;
         int32_t idx3 = (bar3 && fo_resultSymbolIndex) ? readInt32(bar3, fo_resultSymbolIndex) : -1;
+
+        // One-time field dump of SlotBarManager to diagnose strip reading
+        static BOOL dumpedBarFields = NO;
+        if (!dumpedBarFields && bar1 && s_klass_BarManager) {
+            dumpedBarFields = YES;
+            NSDictionary *fields = dumpClassFields(s_klass_BarManager, bar1);
+            NSLog(@"[SpinLogger] BAR1 FIELD DUMP (%lu fields):", (unsigned long)fields.count);
+            for (NSString *name in [fields.allKeys sortedArrayUsingSelector:@selector(compare:)]) {
+                NSDictionary *v = fields[name];
+                NSLog(@"  %@ off=%@ i32=%@ ptr=%@", name, v[@"off"], v[@"i32"], v[@"ptr"]);
+            }
+            // Also dump SlotBarSymbolInfo if we have a reference
+            if (fo_symbolElements) {
+                void *elements = readPtr(bar1, fo_symbolElements);
+                if (elements && looksLikeHeapPointer(elements)) {
+                    int64_t arrLen = *(int64_t *)((uint8_t *)elements + kArrayLengthOffset);
+                    NSLog(@"[SpinLogger] m_SymbolElements: ptr=%p len=%lld", elements, arrLen);
+                    if (arrLen > 0 && arrLen <= 50) {
+                        void *firstElem = arrayElementPtr(elements, 0);
+                        NSLog(@"[SpinLogger] first element ptr=%p heap=%d", firstElem,
+                              firstElem ? looksLikeHeapPointer(firstElem) : -1);
+                        if (firstElem && looksLikeHeapPointer(firstElem) && s_klass_BarSymInfo) {
+                            NSDictionary *infoFields = dumpClassFields(s_klass_BarSymInfo, firstElem);
+                            NSLog(@"[SpinLogger] BarSymInfo DUMP (%lu fields):", (unsigned long)infoFields.count);
+                            for (NSString *name in [infoFields.allKeys sortedArrayUsingSelector:@selector(compare:)]) {
+                                NSDictionary *v = infoFields[name];
+                                NSLog(@"  %@ off=%@ i32=%@ ptr=%@", name, v[@"off"], v[@"i32"], v[@"ptr"]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         // Read full post-replacement strips from m_SymbolElements
         NSString *strip1 = [self readStripFromBar:bar1];
