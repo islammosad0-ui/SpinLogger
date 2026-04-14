@@ -1,4 +1,4 @@
-#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 
 // ---------------------------------------------------------------------------
 //  SLGapPredictor — VT gap timing predictor
