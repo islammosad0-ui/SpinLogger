@@ -88,8 +88,9 @@ static size_t fo_slotBar2            = 0;
 static size_t fo_slotBar3            = 0;
 static size_t fo_boardManager        = 0;      // m_BoardManager
 
-// SlotResult
+// SlotResult — slotSymbols is a REFERENCE to SlotSymbol3 object
 static size_t fo_slotSymbols         = 0;
+static size_t fo_barSymbols          = 0;      // barSymbols (SlotSymbol[] on Manager)
 
 // SlotSymbol3
 static size_t fo_symbol1             = 0;
@@ -436,6 +437,7 @@ static void* fieldHandleFor(void* klass, const char* fieldName) {
     fo_failCounterGlobal = offsetFor(s_klass_Manager, "m_SpinFailedCounterGlobal",    "SlotMachineManager");
     fo_failThreshold     = offsetFor(s_klass_Manager, "m_SpinFailedAnalyticThreshold","SlotMachineManager");
     fo_dynamicResults    = offsetFor(s_klass_Manager, "DynamicSlotResults",           "SlotMachineManager");
+    fo_barSymbols        = offsetFor(s_klass_Manager, "barSymbols",                   "SlotMachineManager");
     fo_freezeCtx         = offsetFor(s_klass_Manager, "m_FreezeResolveContext",       "SlotMachineManager");
     fo_lastBalShields    = offsetFor(s_klass_Manager, "lastBalanceShields",           "SlotMachineManager");
     fo_slotBar1          = offsetFor(s_klass_Manager, "_slotBar1",                    "SlotMachineManager");
@@ -859,6 +861,25 @@ static inline int32_t arrayLength32(void *array) {
                  fo_dynamicResults, fo_slotBar1, fo_slotBar2, fo_slotBar3];
 
             // =============================================================
+            // SECTION 1b: barSymbols — SlotSymbol[] on Manager
+            // =============================================================
+            [dump appendString:@"\n=== SECTION 1b: barSymbols ===\n"];
+            if (fo_barSymbols) {
+                void *bsArr = readPtr(instance, fo_barSymbols);
+                [dump appendFormat:@"  fo_barSymbols=%zu  ptr=%p\n", fo_barSymbols, bsArr];
+                if (bsArr && looksLikeHeapPointer(bsArr) && safeReadable(bsArr, kArrayHeaderSize + 40)) {
+                    int32_t bsLen = arrayLength32(bsArr);
+                    [dump appendFormat:@"  len=%d  values:", bsLen];
+                    uint8_t *bsData = (uint8_t *)bsArr + kArrayHeaderSize;
+                    for (int32_t bi = 0; bi < bsLen && bi < 10; bi++) {
+                        int32_t v = *(int32_t *)(bsData + bi * 4);
+                        [dump appendFormat:@" [%d]=%d", bi, v];
+                    }
+                    [dump appendString:@"\n"];
+                }
+            }
+
+            // =============================================================
             // SECTION 2: currentSlotResult — THE PRIMARY SYMBOL SOURCE
             // =============================================================
             [dump appendString:@"\n=== SECTION 2: currentSlotResult ===\n"];
@@ -1101,20 +1122,45 @@ static inline int32_t arrayLength32(void *array) {
             NSLog(@"[SpinLogger] Strip diagnostic written to %@", path);
         }
 
-        // Read full post-replacement strips from m_SymbolElements
-        NSString *strip1 = [self readStripFromBar:bar1];
-        NSString *strip2 = [self readStripFromBar:bar2];
-        NSString *strip3 = [self readStripFromBar:bar3];
-
-        // Read replacement maps from m_SymbolReplacer → m_Replacements
-        NSString *repl1 = [self readReplMapFromBar:bar1];
-        NSString *repl2 = [self readReplMapFromBar:bar2];
-        NSString *repl3 = [self readReplMapFromBar:bar3];
-
-        // Also read strip lengths
+        // Read strip lengths
         int32_t len1 = (bar1 && fo_numberOfSymbols) ? readInt32(bar1, fo_numberOfSymbols) : -1;
         int32_t len2 = (bar2 && fo_numberOfSymbols) ? readInt32(bar2, fo_numberOfSymbols) : -1;
         int32_t len3 = (bar3 && fo_numberOfSymbols) ? readInt32(bar3, fo_numberOfSymbols) : -1;
+
+        // Read actual symbols via two independent methods:
+        // Method 1: barSymbols — SlotSymbol[] array on Manager (3 elements = reel 1,2,3)
+        int32_t memSym1 = -1, memSym2 = -1, memSym3 = -1;
+        if (fo_barSymbols) {
+            void *barSymArr = readPtr(instance, fo_barSymbols);
+            if (barSymArr && looksLikeHeapPointer(barSymArr)
+                && safeReadable(barSymArr, kArrayHeaderSize + 12)) {
+                int32_t bsLen = arrayLength32(barSymArr);
+                uint8_t *bsData = (uint8_t *)barSymArr + kArrayHeaderSize;
+                if (bsLen >= 3 && safeReadable(bsData, (size_t)bsLen * 4)) {
+                    memSym1 = *(int32_t *)(bsData);
+                    memSym2 = *(int32_t *)(bsData + 4);
+                    memSym3 = *(int32_t *)(bsData + 8);
+                }
+            }
+        }
+
+        // Method 2: currentSlotResult → slotSymbols (ptr) → symbol1/2/3
+        int32_t resSym1 = -1, resSym2 = -1, resSym3 = -1;
+        if (fo_currentSlotResult && fo_slotSymbols && fo_symbol1) {
+            void *sr = readPtr(instance, fo_currentSlotResult);
+            if (sr && looksLikeHeapPointer(sr) && safeReadable(sr, fo_slotSymbols + 8)) {
+                void *sym3 = readPtr(sr, fo_slotSymbols);
+                if (sym3 && looksLikeHeapPointer(sym3) && safeReadable(sym3, fo_symbol3 + 4)) {
+                    resSym1 = *(int32_t *)((uint8_t *)sym3 + fo_symbol1);
+                    resSym2 = *(int32_t *)((uint8_t *)sym3 + fo_symbol2);
+                    resSym3 = *(int32_t *)((uint8_t *)sym3 + fo_symbol3);
+                }
+            }
+        }
+
+        // Build symbol strings for CSV/snapshot (prefer barSymbols, fallback to result)
+        NSString *symStr = [NSString stringWithFormat:@"%d,%d,%d", memSym1, memSym2, memSym3];
+        NSString *resSymStr = [NSString stringWithFormat:@"%d,%d,%d", resSym1, resSym2, resSym3];
 
         // Populate snapshot
         SLScanSnapshot *snap = [[SLScanSnapshot alloc] init];
@@ -1128,13 +1174,13 @@ static inline int32_t arrayLength32(void *array) {
         snap.stripLen1 = len1;
         snap.stripLen2 = len2;
         snap.stripLen3 = len3;
-        snap.fullStrip1 = strip1;
-        snap.fullStrip2 = strip2;
-        snap.fullStrip3 = strip3;
-        snap.replMap1 = repl1;
-        snap.replMap2 = repl2;
-        snap.replMap3 = repl3;
-        snap.hasReplacements = (repl1 != nil || repl2 != nil || repl3 != nil);
+        snap.fullStrip1 = symStr;     // reuse strip fields for mem-read symbols
+        snap.fullStrip2 = resSymStr;  // reuse for result-read symbols
+        snap.fullStrip3 = nil;
+        snap.replMap1 = nil;
+        snap.replMap2 = nil;
+        snap.replMap3 = nil;
+        snap.hasReplacements = NO;
         self.latestSnapshot = snap;
 
         // Settle pending result on main thread (triggers CSV write + strategy compute)
@@ -1142,9 +1188,8 @@ static inline int32_t arrayLength32(void *array) {
             [[SLIdxStrategy shared] settlePendingWithSnapshot:snap];
         });
 
-        NSLog(@"[SpinLogger] Spin settled: idx=(%d,%d,%d) len=(%d,%d,%d) strip1=[%@] repl1=[%@] repl2=[%@] repl3=[%@]",
-              idx1, idx2, idx3, len1, len2, len3,
-              strip1 ?: @"nil", repl1 ?: @"none", repl2 ?: @"none", repl3 ?: @"none");
+        NSLog(@"[SpinLogger] Spin settled: idx=(%d,%d,%d) barSym=(%d,%d,%d) resSym=(%d,%d,%d)",
+              idx1, idx2, idx3, memSym1, memSym2, memSym3, resSym1, resSym2, resSym3);
     }
 }
 

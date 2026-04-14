@@ -84,8 +84,8 @@ static NSString *const kCSVHeader =
      "ss_spins,ss_atk,ss_stl,ss_shd,ss_spn,ss_acc,ss_3x_atk,ss_3x_stl,ss_3x_shd,"
      "r1_idx,r2_idx,r3_idx,is_valuable,strategy_tier,strategy_score,"
      "l1_score,l2_score,scorer_cfg,"
-     "full_strip1,full_strip2,full_strip3,"
-     "repl_map1,repl_map2,repl_map3,"
+     "mem_sym1,mem_sym2,mem_sym3,"
+     "res_sym1,res_sym2,res_sym3,"
      "cm_balance,profile_name,slot_prob_seg";
 
 // Session date stored in UserDefaults — determines which CSV file to write to
@@ -213,14 +213,10 @@ void SLSpinStoreAppend(SLSpinResult *result) {
 
     long long cmBal = SLLatestCmBalance();
 
-    // Quote strip strings (they contain commas)
-    NSString *qStrip1 = result.fullStrip1 ? [NSString stringWithFormat:@"\"%@\"", result.fullStrip1] : @"";
-    NSString *qStrip2 = result.fullStrip2 ? [NSString stringWithFormat:@"\"%@\"", result.fullStrip2] : @"";
-    NSString *qStrip3 = result.fullStrip3 ? [NSString stringWithFormat:@"\"%@\"", result.fullStrip3] : @"";
-    // Repl maps can contain commas (e.g. "4>30,1>6") — quote them
-    NSString *qRepl1 = result.replMap1 ? [NSString stringWithFormat:@"\"%@\"", result.replMap1] : @"";
-    NSString *qRepl2 = result.replMap2 ? [NSString stringWithFormat:@"\"%@\"", result.replMap2] : @"";
-    NSString *qRepl3 = result.replMap3 ? [NSString stringWithFormat:@"\"%@\"", result.replMap3] : @"";
+    // Parse memory-read symbol triplets from fullStrip1/2 (format: "s1,s2,s3")
+    // fullStrip1 = barSymbols (mem_sym), fullStrip2 = SlotResult (res_sym)
+    NSString *memSymCols = result.fullStrip1 ?: @"-1,-1,-1";
+    NSString *resSymCols = result.fullStrip2 ?: @"-1,-1,-1";
 
     NSString *row = [NSString stringWithFormat:
         @"%ld,%@,%ld,%ld,%ld,%@,%@,%@,%@,%ld,%@,"
@@ -235,8 +231,8 @@ void SLSpinStoreAppend(SLSpinResult *result) {
          "%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,"
          "%d,%d,%d,%@,%@,%ld,"
          "%ld,%ld,%@,"
-         "%@,%@,%@,"
-         "%@,%@,%@,"
+         "%@,"
+         "%@,"
          "%lld,%@,%@\n",
         (long)result.seq, ts,
         (long)r1, (long)r2, (long)r3,
@@ -266,9 +262,9 @@ void SLSpinStoreAppend(SLSpinResult *result) {
         (long)result.l1Score,
         (long)result.l2Score,
         result.scorerCfg ?: @"",
-        // Full strip + replacement data (from IL2CPP scanner)
-        qStrip1, qStrip2, qStrip3,
-        qRepl1, qRepl2, qRepl3,
+        // Memory-read symbols (barSymbols + SlotResult)
+        memSymCols,
+        resSymCols,
         // Strack + segments
         cmBal,
         SLSessionProfileName(),
