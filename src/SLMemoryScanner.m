@@ -1042,13 +1042,17 @@ static inline int32_t arrayLength32(void *array) {
             // pointer field and report class + size (depth 1)
             // =============================================================
             [dump appendString:@"\n=== SECTION 5: Manager pointer crawl (depth 1) ===\n"];
-            if (s_klass_Manager && safeReadable(instance, 400)) {
+            if (s_klass_Manager) {
+                unsigned instSize = _class_instance_size ? _class_instance_size(s_klass_Manager) : 256;
+                if (instSize > 4096) instSize = 4096;  // sanity cap
+                [dump appendFormat:@"  Manager instance_size=%u\n", instSize];
+                if (!safeReadable(instance, instSize)) instSize = 0;
                 void *itM = NULL;
                 void *fldM = NULL;
-                while ((fldM = _class_get_fields(s_klass_Manager, &itM)) != NULL) {
+                while (instSize && (fldM = _class_get_fields(s_klass_Manager, &itM)) != NULL) {
                     const char *nm = _field_get_name(fldM);
                     size_t off = _field_get_offset(fldM);
-                    if (!nm || off == 0 || off >= 400) continue;
+                    if (!nm || off == 0 || off + 8 > instSize) continue;
                     void *pv = *(void **)((uint8_t *)instance + off);
                     if (!pv || !looksLikeHeapPointer(pv)) continue;
                     const char *cn = "?";
@@ -1070,7 +1074,7 @@ static inline int32_t arrayLength32(void *array) {
             [dump appendFormat:@"  s_klass_ReplSvc=%p  fh_ReplSvcInstance=%p  fo_persistentRepl=%zu\n",
                  s_klass_ReplSvc, fh_ReplSvcInstance, fo_persistentRepl];
             if (s_klass_ReplSvc) {
-                // Enumerate ALL fields (static + instance) to find the real singleton accessor
+                // Enumerate ALL fields — just names + offsets (safe, no deref)
                 [dump appendString:@"  All fields on SlotSymbolReplacementService:\n"];
                 void *itRS = NULL;
                 void *fldRS = NULL;
@@ -1078,14 +1082,14 @@ static inline int32_t arrayLength32(void *array) {
                     const char *nm = _field_get_name(fldRS);
                     size_t off = _field_get_offset(fldRS);
                     [dump appendFormat:@"    %s  off=%zu  handle=%p\n", nm ?: "?", off, fldRS];
-                    // Try reading as static field
-                    void *staticVal = NULL;
-                    if (_field_static_get_value) {
-                        @try { _field_static_get_value(fldRS, &staticVal); }
-                        @catch (NSException *e) { staticVal = NULL; }
-                    }
-                    if (staticVal && looksLikeHeapPointer(staticVal)) {
-                        [dump appendFormat:@"      static_get_value → %p\n", staticVal];
+                }
+                // Only try static_get_value on the known "Instance" handle (if found)
+                if (fh_ReplSvcInstance && _field_static_get_value) {
+                    void *svcInst = NULL;
+                    _field_static_get_value(fh_ReplSvcInstance, &svcInst);
+                    [dump appendFormat:@"  Instance static_get_value → %p\n", svcInst];
+                    if (svcInst && looksLikeHeapPointer(svcInst) && safeReadable(svcInst, 32)) {
+                        dumpObject(dump, "ReplSvc instance", svcInst, 32);
                     }
                 }
             }
