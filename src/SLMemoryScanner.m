@@ -4,6 +4,7 @@
 #include <dlfcn.h>
 #include <string.h>
 #include <mach/mach_time.h>
+#include <mach/mach.h>
 
 // ============================================================
 //  IL2CPP API Type Definitions
@@ -170,6 +171,23 @@ static inline BOOL looksLikeHeapPointer(void *p) {
     if (addr > 0x7FFFFFFFFFULL) return NO;      // too high (kernel / garbage)
     if (addr & 0x7) return NO;                  // misaligned (not an object)
     return YES;
+}
+
+/// Safely test if `size` bytes starting at `addr` are readable.
+/// Uses vm_read_overwrite to avoid SIGSEGV on unmapped memory.
+static inline BOOL safeReadable(const void *addr, size_t size) {
+    if (!addr) return NO;
+    vm_size_t outSize = 0;
+    uint8_t buf[64];  // small stack buffer — only used for the probe
+    if (size > sizeof(buf)) size = sizeof(buf);
+    kern_return_t kr = vm_read_overwrite(
+        mach_task_self(),
+        (vm_address_t)addr,
+        (vm_size_t)size,
+        (vm_address_t)buf,
+        &outSize
+    );
+    return (kr == KERN_SUCCESS && outSize >= size);
 }
 
 /// Convert a byte buffer to lowercase hex string, no separators.
@@ -592,12 +610,14 @@ static inline int32_t arrayLength32(void *array) {
     if (!bar || !fo_symbolElements) return nil;
 
     void *elements = readPtr(bar, fo_symbolElements);
-    if (!elements || !looksLikeHeapPointer(elements)) return nil;
+    if (!elements || !looksLikeHeapPointer(elements)
+        || !safeReadable(elements, kArrayHeaderSize)) return nil;
 
     int32_t len = arrayLength32(elements);
     if (len <= 0 || len > 50) return nil;
 
     uint8_t *data = (uint8_t *)elements + kArrayHeaderSize;
+    if (!safeReadable(data, (size_t)len * sizeof(void *))) return nil;
     NSMutableArray *parts = [NSMutableArray arrayWithCapacity:(NSUInteger)len];
 
     // elemSize=8 and first element may be NULL (sparse reference array).
@@ -615,7 +635,8 @@ static inline int32_t arrayLength32(void *array) {
         // NULL = position uses base strip symbol (unknown to us), non-NULL = replaced/active.
         for (int32_t i = 0; i < len; i++) {
             void *info = *(void **)(data + i * sizeof(void *));
-            if (!info || !looksLikeHeapPointer(info)) {
+            if (!info || !looksLikeHeapPointer(info)
+                || !safeReadable((uint8_t *)info + fo_slotSymbolBacking, 4)) {
                 [parts addObject:@"-1"];
                 continue;
             }
@@ -648,7 +669,8 @@ static inline int32_t arrayLength32(void *array) {
     if (!replacer || !looksLikeHeapPointer(replacer)) return nil;
 
     void *dict = readPtr(replacer, fo_replMap);
-    if (!dict || !looksLikeHeapPointer(dict)) return nil;
+    if (!dict || !looksLikeHeapPointer(dict)
+        || !safeReadable(dict, 0x28)) return nil;  // need at least 0x28 bytes for count+entries
 
     // Dictionary internal offsets (System.Collections.Generic.Dictionary<TKey,TValue>)
     static const size_t kDictEntriesOff = 0x18;   // _entries field
@@ -665,6 +687,10 @@ static inline int32_t arrayLength32(void *array) {
     static const size_t kEntrySize   = 16;   // hashCode(4) + next(4) + key(4) + value(4)
     static const size_t kEntryKeyOff = 8;    // offset of key within Entry
     static const size_t kEntryValOff = 12;   // offset of value within Entry
+
+    // Safety: verify the entries array is actually readable before dereferencing
+    size_t totalSize = kArrayHeaderSize + (size_t)count * kEntrySize;
+    if (!safeReadable(entries, totalSize)) return nil;
 
     NSMutableArray *pairs = [NSMutableArray arrayWithCapacity:(NSUInteger)count];
     for (int32_t i = 0; i < count; i++) {
@@ -832,7 +858,8 @@ static inline int32_t arrayLength32(void *array) {
                     uint8_t *arrData = (uint8_t *)elements + kArrayHeaderSize;
                     for (int32_t i = 0; i < arrLen; i++) {
                         void *info = *(void **)(arrData + i * sizeof(void *));
-                        if (info && looksLikeHeapPointer(info)) {
+                        if (info && looksLikeHeapPointer(info)
+                            && safeReadable((uint8_t *)info + fo_slotSymbolBacking, 4)) {
                             int32_t sym = *(int32_t *)((uint8_t *)info + fo_slotSymbolBacking);
                             [dump appendFormat:@"  [%d] = sym %d  (ptr=%p)\n", i, sym, info];
                         } else {
@@ -846,7 +873,8 @@ static inline int32_t arrayLength32(void *array) {
             if (fo_symbolReplacer) {
                 void *replacer = readPtr(bar1, fo_symbolReplacer);
                 [dump appendFormat:@"\n--- m_SymbolReplacer: ptr=%p ---\n", replacer];
-                if (replacer && looksLikeHeapPointer(replacer) && s_klass_BarRepl) {
+                if (replacer && looksLikeHeapPointer(replacer) && s_klass_BarRepl
+                    && safeReadable(replacer, 64)) {
                     void *iter3 = NULL;
                     void *field3 = NULL;
                     while ((field3 = _class_get_fields(s_klass_BarRepl, &iter3)) != NULL) {
@@ -862,7 +890,7 @@ static inline int32_t arrayLength32(void *array) {
                     if (fo_replMap) {
                         void *dict = readPtr(replacer, fo_replMap);
                         [dump appendFormat:@"\n--- m_Replacements Dictionary raw (ptr=%p) ---\n", dict];
-                        if (dict && looksLikeHeapPointer(dict)) {
+                        if (dict && looksLikeHeapPointer(dict) && safeReadable(dict, 96)) {
                             // Dump first 96 bytes of Dictionary object
                             for (int b = 0; b < 96; b += 8) {
                                 int32_t lo = *(int32_t *)((uint8_t *)dict + b);
@@ -870,20 +898,25 @@ static inline int32_t arrayLength32(void *array) {
                                 void *ptr = *(void **)((uint8_t *)dict + b);
                                 [dump appendFormat:@"  +%2d: lo=%d hi=%d ptr=%p\n", b, lo, hi, ptr];
                             }
-                            // Try reading _entries at common offsets
+                            // Probe _entries at common offsets — safely via vm_read
                             for (int tryOff = 0x10; tryOff <= 0x30; tryOff += 8) {
                                 void *entries = *(void **)((uint8_t *)dict + tryOff);
-                                if (entries && looksLikeHeapPointer(entries)) {
+                                if (entries && looksLikeHeapPointer(entries)
+                                    && safeReadable(entries, kArrayHeaderSize + 16)) {
                                     int32_t eLen = arrayLength32(entries);
                                     [dump appendFormat:@"\n  Candidate _entries at +0x%x: ptr=%p len=%d\n",
                                          tryOff, entries, eLen];
                                     if (eLen > 0 && eLen <= 20) {
-                                        uint8_t *eData = (uint8_t *)entries + kArrayHeaderSize;
-                                        int dumpSize = eLen * 16;
+                                        size_t dumpSize = (size_t)eLen * 16;
                                         if (dumpSize > 256) dumpSize = 256;
-                                        for (int eb = 0; eb < dumpSize; eb += 4) {
-                                            int32_t ev = *(int32_t *)(eData + eb);
-                                            [dump appendFormat:@"    +%3d: %d (0x%08x)\n", eb, ev, (unsigned)ev];
+                                        uint8_t *eData = (uint8_t *)entries + kArrayHeaderSize;
+                                        if (safeReadable(eData, dumpSize)) {
+                                            for (size_t eb = 0; eb < dumpSize; eb += 4) {
+                                                int32_t ev = *(int32_t *)(eData + eb);
+                                                [dump appendFormat:@"    +%3d: %d (0x%08x)\n", (int)eb, ev, (unsigned)ev];
+                                            }
+                                        } else {
+                                            [dump appendString:@"    (entry data not readable)\n"];
                                         }
                                     }
                                 }
