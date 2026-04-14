@@ -1,6 +1,7 @@
 #import "SLSignalPanel.h"
 #import "SLMemoryScanner.h"
 #import "SLIdxStrategy.h"
+#import "SLGapPredictor.h"
 #import "SLConstants.h"
 
 // ---------------------------------------------------------------------------
@@ -11,7 +12,8 @@ static const CGFloat kHeaderH = 28;
 static const CGFloat kRowH = 20;
 static const int kTypeCount = 4;   // ACC+SP, SHIELD, ATTACK, STEAL
 static const CGFloat kReasonRowH = 16;
-static const CGFloat kExpandedH = 28 + (20 * 4) + 16 + 24;  // header + 4 rows + reason + idx footer
+static const CGFloat kGapRowH = 24;   // gap predictor row height
+static const CGFloat kExpandedH = 28 + (20 * 4) + 16 + 24 + kGapRowH;  // header + 4 rows + reason + idx + gap
 
 // Heat bar colors
 static UIColor *colorForHeat(int score, int maxScore) {
@@ -58,6 +60,14 @@ static UIColor *tierColor(SLBetTier tier) {
 // Reason + footer
 @property (nonatomic, strong) UILabel *reasonLabel;
 @property (nonatomic, strong) UILabel *idxLabel;
+
+// Gap predictor row
+@property (nonatomic, strong) UILabel *gapLabel;         // "GAP 23/41 [p:85]"
+@property (nonatomic, strong) UIView *gapBarBg;          // progress bar background
+@property (nonatomic, strong) UIView *gapBarFill;        // progress bar fill
+@property (nonatomic, strong) UIView *gapBarP25;         // P25 marker
+@property (nonatomic, strong) UIView *gapBarP75;         // P75 marker
+@property (nonatomic, strong) UILabel *gapActionLabel;   // "HIGH" / "LOW" / "ALL IN"
 
 // Settings overlay
 @property (nonatomic, strong) UIView *settingsView;
@@ -218,6 +228,51 @@ static UIColor *tierColor(SLBetTier tier) {
     self.idxLabel.text = @"idx: (-,-,-)";
     [body addSubview:self.idxLabel];
 
+    // Gap predictor row
+    CGFloat gapY = footerY + 20 + 2;
+    self.gapLabel = [self makeLbl:CGRectMake(6, gapY, 110, kGapRowH)
+                             size:9 bold:YES color:[UIColor colorWithWhite:0.5 alpha:1]];
+    self.gapLabel.text = @"GAP --";
+    self.gapLabel.adjustsFontSizeToFitWidth = YES;
+    self.gapLabel.minimumScaleFactor = 0.7;
+    [body addSubview:self.gapLabel];
+
+    // Gap progress bar
+    CGFloat gapBarX = 112;
+    CGFloat gapBarW = 48;
+    CGFloat gapBarH = 8;
+    UIView *gapBg = [[UIView alloc] initWithFrame:CGRectMake(gapBarX, gapY + 8, gapBarW, gapBarH)];
+    gapBg.backgroundColor = [UIColor colorWithWhite:0.15 alpha:1];
+    gapBg.layer.cornerRadius = 3;
+    gapBg.clipsToBounds = YES;
+    [body addSubview:gapBg];
+    self.gapBarBg = gapBg;
+
+    UIView *gapFill = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 0, gapBarH)];
+    gapFill.backgroundColor = [UIColor colorWithWhite:0.5 alpha:1];
+    gapFill.layer.cornerRadius = 2;
+    [gapBg addSubview:gapFill];
+    self.gapBarFill = gapFill;
+
+    // P25 marker (thin green line)
+    UIView *p25m = [[UIView alloc] initWithFrame:CGRectMake(gapBarW * 0.33, 0, 1, gapBarH)];
+    p25m.backgroundColor = [UIColor colorWithRed:0.3 green:0.7 blue:0.3 alpha:0.6];
+    [gapBg addSubview:p25m];
+    self.gapBarP25 = p25m;
+
+    // P75 marker (thin red line)
+    UIView *p75m = [[UIView alloc] initWithFrame:CGRectMake(gapBarW * 0.75, 0, 1, gapBarH)];
+    p75m.backgroundColor = [UIColor colorWithRed:1.0 green:0.3 blue:0.3 alpha:0.6];
+    [gapBg addSubview:p75m];
+    self.gapBarP75 = p75m;
+
+    // Gap action label
+    self.gapActionLabel = [self makeLbl:CGRectMake(164, gapY, 34, kGapRowH)
+                                    size:9 bold:YES color:[UIColor colorWithWhite:0.5 alpha:1]];
+    self.gapActionLabel.text = @"---";
+    self.gapActionLabel.textAlignment = NSTextAlignmentRight;
+    [body addSubview:self.gapActionLabel];
+
     // Settings overlay (hidden by default, shown on long-press)
     CGFloat settingsH = 2 * kRowH + 12;
     UIView *settings = [[UIView alloc] initWithFrame:CGRectMake(0, kHeaderH, kPanelW, settingsH)];
@@ -302,6 +357,17 @@ static UIColor *tierColor(SLBetTier tier) {
     NSInteger combined = s.compositeScore;
     int32_t r1 = s.lastR1Idx, r2 = s.lastR2Idx, r3 = s.lastR3Idx;
 
+    // Gap predictor data
+    SLGapPredictor *gp = [SLGapPredictor shared];
+    SLGapPrediction gap = gp.prediction;
+    NSString *gapDisplay = gp.displayString;
+    NSString *gapAction = gp.actionLabel;
+    UIColor *gapColor = gp.actionColor;
+    CGFloat gapProgress = gap.progress;
+    NSInteger gapP25 = gap.predP25;
+    NSInteger gapP75 = gap.predP75;
+    NSInteger gapP90 = gap.predP90;
+
     dispatch_async(dispatch_get_main_queue(), ^{
         SLTypeHeat heats[] = {h0, h1, h2, h3};
 
@@ -351,6 +417,34 @@ static UIColor *tierColor(SLBetTier tier) {
 
         // Footer: idx
         self.idxLabel.text = [NSString stringWithFormat:@"idx: (%d,%d,%d)", r1, r2, r3];
+
+        // Gap predictor row
+        self.gapLabel.text = gapDisplay;
+        self.gapActionLabel.text = gapAction;
+        self.gapActionLabel.textColor = gapColor;
+
+        CGFloat gapBarW = 48;
+        if (gapP90 > 0) {
+            // Fill: position relative to P90 as full scale
+            CGFloat fillRatio = MIN((CGFloat)gap.gapPos / (CGFloat)gapP90, 1.2);
+            CGFloat fillW = MIN(fillRatio * gapBarW, gapBarW);
+            self.gapBarFill.frame = CGRectMake(0, 0, fillW, 8);
+            self.gapBarFill.backgroundColor = gapColor;
+
+            // P25 marker position
+            CGFloat p25X = MIN((CGFloat)gapP25 / (CGFloat)gapP90, 1.0) * gapBarW;
+            CGRect p25f = self.gapBarP25.frame;
+            p25f.origin.x = p25X;
+            self.gapBarP25.frame = p25f;
+
+            // P75 marker position
+            CGFloat p75X = MIN((CGFloat)gapP75 / (CGFloat)gapP90, 1.0) * gapBarW;
+            CGRect p75f = self.gapBarP75.frame;
+            p75f.origin.x = p75X;
+            self.gapBarP75.frame = p75f;
+        } else {
+            self.gapBarFill.frame = CGRectMake(0, 0, 0, 8);
+        }
     });
 }
 

@@ -1,6 +1,7 @@
 #import "SLIdxStrategy.h"
 #import "SLSpinStore.h"
 #import "SLConstants.h"
+#import "SLGapPredictor.h"
 
 // ---------------------------------------------------------------------------
 //  Ring buffer for Layer 2 window scoring
@@ -166,6 +167,9 @@ typedef struct {
         BOOL isValuable = isTriple && (self.pendingResult.rawR1 == 30 ||
                                         self.pendingResult.rawR1 == 6);
 
+        // Feed gap predictor (before computing signals so panel sees both)
+        [[SLGapPredictor shared] recordSpinIsVT:isValuable];
+
         // Compute combined L1+L2 strategy for NEXT spin
         [self computeAllSignals];
 
@@ -181,6 +185,8 @@ typedef struct {
         self.pendingResult = nil;
     } else {
         NSLog(@"[SLIdxStrategy] Scanner settled but no pending result");
+        // Still count as a non-VT spin for gap tracking
+        [[SLGapPredictor shared] recordSpinIsVT:NO];
         [self computeAllSignals];
     }
 }

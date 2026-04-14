@@ -5,4 +5,5 @@
 - (void)install;
 - (void)show;
 - (void)hide;
+- (void)refreshLabels;
 @end
