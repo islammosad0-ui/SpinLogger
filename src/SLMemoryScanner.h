@@ -16,6 +16,16 @@
 @property (nonatomic) int32_t stripIdx1, stripIdx2, stripIdx3;   // stop positions
 @property (nonatomic) int32_t stripLen1, stripLen2, stripLen3;   // strip lengths
 
+// Full post-replacement strip symbols per reel (e.g. "4,30,2,6,1,3,5,2,4")
+@property (nonatomic, copy) NSString *fullStrip1;
+@property (nonatomic, copy) NSString *fullStrip2;
+@property (nonatomic, copy) NSString *fullStrip3;
+
+// Replacement maps per reel (e.g. "4>30,1>6" meaning sym 4 replaced by 30)
+@property (nonatomic, copy) NSString *replMap1;
+@property (nonatomic, copy) NSString *replMap2;
+@property (nonatomic, copy) NSString *replMap3;
+
 // Pity / fail counters
 @property (nonatomic) int32_t failCounter;         // session (resets on restart)
 @property (nonatomic) int32_t failCounterGlobal;   // persistent across sessions

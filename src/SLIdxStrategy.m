@@ -2,6 +2,7 @@
 #import "SLSpinStore.h"
 #import "SLConstants.h"
 #import "SLGapPredictor.h"
+#import "SLMemoryScanner.h"
 
 // ---------------------------------------------------------------------------
 //  Ring buffer for Layer 2 window scoring
@@ -189,6 +190,19 @@ typedef struct {
         [[SLGapPredictor shared] recordSpinIsVT:NO];
         [self computeAllSignals];
     }
+}
+
+- (void)settlePendingWithSnapshot:(SLScanSnapshot *)snap {
+    // Attach strip + replacement data to pending result before settling
+    if (self.pendingResult && snap) {
+        self.pendingResult.fullStrip1 = snap.fullStrip1;
+        self.pendingResult.fullStrip2 = snap.fullStrip2;
+        self.pendingResult.fullStrip3 = snap.fullStrip3;
+        self.pendingResult.replMap1 = snap.replMap1;
+        self.pendingResult.replMap2 = snap.replMap2;
+        self.pendingResult.replMap3 = snap.replMap3;
+    }
+    [self settlePendingWithR1Idx:snap.stripIdx1 r2Idx:snap.stripIdx2 r3Idx:snap.stripIdx3];
 }
 
 // ---------------------------------------------------------------------------

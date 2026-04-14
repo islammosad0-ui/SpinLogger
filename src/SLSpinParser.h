@@ -56,6 +56,14 @@
 @property (nonatomic, assign) int32_t r2Idx;
 @property (nonatomic, assign) int32_t r3Idx;
 
+// --- Full strip + replacement data (populated by scanner on spin-end) ---
+@property (nonatomic, copy) NSString *fullStrip1;   // e.g. "4,30,2,6,1,3,5,2,4"
+@property (nonatomic, copy) NSString *fullStrip2;
+@property (nonatomic, copy) NSString *fullStrip3;
+@property (nonatomic, copy) NSString *replMap1;     // e.g. "4>30,1>6"
+@property (nonatomic, copy) NSString *replMap2;
+@property (nonatomic, copy) NSString *replMap3;
+
 // --- Strategy engine output (populated before CSV write) ---
 @property (nonatomic, assign) BOOL isValuableTriple;
 @property (nonatomic, copy) NSString *strategyTier;

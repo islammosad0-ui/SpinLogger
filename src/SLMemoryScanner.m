@@ -550,6 +550,80 @@ static inline uint8_t readBool(void* obj, size_t offset) {
 }
 
 // ============================================================
+//  Strip reading helpers
+// ============================================================
+
+/// Read the full post-replacement strip from a SlotBarManager's m_SymbolElements.
+/// Returns a comma-separated string of symbol enum values, e.g. "4,30,2,6,1,3,5,2,4".
+- (NSString *)readStripFromBar:(void *)bar {
+    if (!bar || !fo_symbolElements || !fo_slotSymbolBacking) return nil;
+
+    void *elements = readPtr(bar, fo_symbolElements);
+    if (!elements || !looksLikeHeapPointer(elements)) return nil;
+
+    int64_t len = *(int64_t *)((uint8_t *)elements + kArrayLengthOffset);
+    if (len <= 0 || len > 50) return nil;   // sanity check
+
+    NSMutableArray *parts = [NSMutableArray arrayWithCapacity:(NSUInteger)len];
+    for (int32_t i = 0; i < (int32_t)len; i++) {
+        void *info = arrayElementPtr(elements, i);
+        if (!info || !looksLikeHeapPointer(info)) {
+            [parts addObject:@"-1"];
+            continue;
+        }
+        int32_t sym = readInt32(info, fo_slotSymbolBacking);
+        [parts addObject:[NSString stringWithFormat:@"%d", sym]];
+    }
+    return [parts componentsJoinedByString:@","];
+}
+
+/// Read the replacement map from a SlotBarManager's m_SymbolReplacer → m_Replacements.
+/// IL2CPP Dictionary<SlotSymbol,SlotSymbol> layout (arm64):
+///   +0x10: _buckets (int[] ref)
+///   +0x18: _entries (Entry[] ref)
+///   +0x20: _count   (int32)
+/// Entry struct (16 bytes): hashCode(4), next(4), key(4), value(4)
+/// Returns "origA>replA,origB>replB" or nil if no replacer/replacements.
+- (NSString *)readReplMapFromBar:(void *)bar {
+    if (!bar || !fo_symbolReplacer || !fo_replMap) return nil;
+
+    void *replacer = readPtr(bar, fo_symbolReplacer);
+    if (!replacer || !looksLikeHeapPointer(replacer)) return nil;
+
+    void *dict = readPtr(replacer, fo_replMap);
+    if (!dict || !looksLikeHeapPointer(dict)) return nil;
+
+    // Dictionary internal offsets (System.Collections.Generic.Dictionary<TKey,TValue>)
+    static const size_t kDictEntriesOff = 0x18;   // _entries field
+    static const size_t kDictCountOff   = 0x20;   // _count field
+
+    int32_t count = *(int32_t *)((uint8_t *)dict + kDictCountOff);
+    if (count <= 0 || count > 20) return nil;      // sanity
+
+    void *entries = *(void **)((uint8_t *)dict + kDictEntriesOff);
+    if (!entries || !looksLikeHeapPointer(entries)) return nil;
+
+    // Entry[] is a managed array of value-type structs (16 bytes each)
+    // Array header = 32 bytes, then entries packed
+    static const size_t kEntrySize   = 16;   // hashCode(4) + next(4) + key(4) + value(4)
+    static const size_t kEntryKeyOff = 8;    // offset of key within Entry
+    static const size_t kEntryValOff = 12;   // offset of value within Entry
+
+    NSMutableArray *pairs = [NSMutableArray arrayWithCapacity:(NSUInteger)count];
+    for (int32_t i = 0; i < count; i++) {
+        uint8_t *entry = (uint8_t *)entries + kArrayHeaderSize + i * kEntrySize;
+        int32_t hashCode = *(int32_t *)(entry);
+        if (hashCode < 0) continue;   // deleted entry (hashCode == -1)
+        int32_t key = *(int32_t *)(entry + kEntryKeyOff);
+        int32_t val = *(int32_t *)(entry + kEntryValOff);
+        if (key != val) {             // only log actual replacements
+            [pairs addObject:[NSString stringWithFormat:@"%d>%d", key, val]];
+        }
+    }
+    return pairs.count > 0 ? [pairs componentsJoinedByString:@","] : nil;
+}
+
+// ============================================================
 //  Main timer tick — state machine
 // ============================================================
 - (void)tick {
@@ -641,7 +715,22 @@ static inline uint8_t readBool(void* obj, size_t offset) {
         int32_t idx2 = (bar2 && fo_resultSymbolIndex) ? readInt32(bar2, fo_resultSymbolIndex) : -1;
         int32_t idx3 = (bar3 && fo_resultSymbolIndex) ? readInt32(bar3, fo_resultSymbolIndex) : -1;
 
-        // Populate snapshot with idx
+        // Read full post-replacement strips from m_SymbolElements
+        NSString *strip1 = [self readStripFromBar:bar1];
+        NSString *strip2 = [self readStripFromBar:bar2];
+        NSString *strip3 = [self readStripFromBar:bar3];
+
+        // Read replacement maps from m_SymbolReplacer → m_Replacements
+        NSString *repl1 = [self readReplMapFromBar:bar1];
+        NSString *repl2 = [self readReplMapFromBar:bar2];
+        NSString *repl3 = [self readReplMapFromBar:bar3];
+
+        // Also read strip lengths
+        int32_t len1 = (bar1 && fo_numberOfSymbols) ? readInt32(bar1, fo_numberOfSymbols) : -1;
+        int32_t len2 = (bar2 && fo_numberOfSymbols) ? readInt32(bar2, fo_numberOfSymbols) : -1;
+        int32_t len3 = (bar3 && fo_numberOfSymbols) ? readInt32(bar3, fo_numberOfSymbols) : -1;
+
+        // Populate snapshot
         SLScanSnapshot *snap = [[SLScanSnapshot alloc] init];
         snap.timestamp = [NSDate date];
         snap.spinNumber = readInt32(instance, fo_currentSpinNumber);
@@ -650,14 +739,26 @@ static inline uint8_t readBool(void* obj, size_t offset) {
         snap.stripIdx1 = idx1;
         snap.stripIdx2 = idx2;
         snap.stripIdx3 = idx3;
+        snap.stripLen1 = len1;
+        snap.stripLen2 = len2;
+        snap.stripLen3 = len3;
+        snap.fullStrip1 = strip1;
+        snap.fullStrip2 = strip2;
+        snap.fullStrip3 = strip3;
+        snap.replMap1 = repl1;
+        snap.replMap2 = repl2;
+        snap.replMap3 = repl3;
+        snap.hasReplacements = (repl1 != nil || repl2 != nil || repl3 != nil);
         self.latestSnapshot = snap;
 
         // Settle pending result on main thread (triggers CSV write + strategy compute)
         dispatch_async(dispatch_get_main_queue(), ^{
-            [[SLIdxStrategy shared] settlePendingWithR1Idx:idx1 r2Idx:idx2 r3Idx:idx3];
+            [[SLIdxStrategy shared] settlePendingWithSnapshot:snap];
         });
 
-        NSLog(@"[SpinLogger] Spin settled: idx=(%d, %d, %d)", idx1, idx2, idx3);
+        NSLog(@"[SpinLogger] Spin settled: idx=(%d,%d,%d) len=(%d,%d,%d) strip1=[%@] repl1=[%@] repl2=[%@] repl3=[%@]",
+              idx1, idx2, idx3, len1, len2, len3,
+              strip1 ?: @"nil", repl1 ?: @"none", repl2 ?: @"none", repl3 ?: @"none");
     }
 }
 

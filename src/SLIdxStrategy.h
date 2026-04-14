@@ -1,6 +1,8 @@
 #import <Foundation/Foundation.h>
 #import "SLSpinParser.h"
 
+@class SLScanSnapshot;
+
 // ---------------------------------------------------------------------------
 //  SLIdxStrategy — Per-triple-type idx-based strategy engine
 //
@@ -59,6 +61,9 @@ typedef struct {
 /// Settle the pending result with idx from the scanner. Writes CSV,
 /// feeds strategy engine, clears pending.
 - (void)settlePendingWithR1Idx:(int32_t)r1 r2Idx:(int32_t)r2 r3Idx:(int32_t)r3;
+
+/// Settle with full snapshot data (strip + replacement maps).
+- (void)settlePendingWithSnapshot:(SLScanSnapshot *)snap;
 
 // ------ Per-type heat scores (for the NEXT spin) ------
 
