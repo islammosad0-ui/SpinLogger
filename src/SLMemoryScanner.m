@@ -559,54 +559,42 @@ static inline uint8_t readBool(void* obj, size_t offset) {
 //  Strip reading helpers
 // ============================================================
 
+/// Read array length as int32 (this Unity build uses uint32 for il2cpp_array_size_t)
+static inline int32_t arrayLength32(void *array) {
+    if (!array) return 0;
+    return *(int32_t *)((uint8_t *)array + kArrayLengthOffset);
+}
+
 /// Read the full post-replacement strip from a SlotBarManager's m_SymbolElements.
 /// Returns a comma-separated string of symbol enum values, e.g. "4,30,2,6,1,3,5,2,4".
 - (NSString *)readStripFromBar:(void *)bar {
-    if (!bar) { return nil; }
-    if (!fo_symbolElements) {
-        NSLog(@"[SpinLogger] STRIP FAIL: fo_symbolElements=0 (field not found on SlotBarManager)");
-        return nil;
-    }
-    if (!fo_slotSymbolBacking) {
-        NSLog(@"[SpinLogger] STRIP FAIL: fo_slotSymbolBacking=0 (SlotBarSymbolInfo class or field missing)");
-        // Try alternative: read raw int32 values from the elements array directly
-        // (m_SymbolElements might be a simple int[] instead of SlotBarSymbolInfo[])
-        void *elements = readPtr(bar, fo_symbolElements);
-        if (!elements || !looksLikeHeapPointer(elements)) return nil;
-        int64_t len = *(int64_t *)((uint8_t *)elements + kArrayLengthOffset);
-        if (len <= 0 || len > 50) return nil;
-        // Try reading as value-type array (int32[] — 4 bytes per element)
-        NSMutableArray *parts = [NSMutableArray arrayWithCapacity:(NSUInteger)len];
-        for (int32_t i = 0; i < (int32_t)len; i++) {
+    if (!bar || !fo_symbolElements) return nil;
+
+    void *elements = readPtr(bar, fo_symbolElements);
+    if (!elements || !looksLikeHeapPointer(elements)) return nil;
+
+    int32_t len = arrayLength32(elements);
+    if (len <= 0 || len > 50) return nil;
+
+    NSMutableArray *parts = [NSMutableArray arrayWithCapacity:(NSUInteger)len];
+
+    if (fo_slotSymbolBacking) {
+        // Reference-type array: SlotBarSymbolInfo[] — read each object's backing field
+        for (int32_t i = 0; i < len; i++) {
+            void *info = arrayElementPtr(elements, i);
+            if (!info || !looksLikeHeapPointer(info)) {
+                [parts addObject:@"-1"];
+                continue;
+            }
+            int32_t sym = readInt32(info, fo_slotSymbolBacking);
+            [parts addObject:[NSString stringWithFormat:@"%d", sym]];
+        }
+    } else {
+        // Fallback: try reading as value-type array (int32[])
+        for (int32_t i = 0; i < len; i++) {
             int32_t val = *(int32_t *)((uint8_t *)elements + kArrayHeaderSize + i * sizeof(int32_t));
             [parts addObject:[NSString stringWithFormat:@"%d", val]];
         }
-        NSString *result = [parts componentsJoinedByString:@","];
-        NSLog(@"[SpinLogger] STRIP ALT (int[]): [%@]", result);
-        return result;
-    }
-
-    void *elements = readPtr(bar, fo_symbolElements);
-    if (!elements || !looksLikeHeapPointer(elements)) {
-        NSLog(@"[SpinLogger] STRIP FAIL: elements ptr=%p (null or bad heap)", elements);
-        return nil;
-    }
-
-    int64_t len = *(int64_t *)((uint8_t *)elements + kArrayLengthOffset);
-    if (len <= 0 || len > 50) {
-        NSLog(@"[SpinLogger] STRIP FAIL: array len=%lld (out of range)", len);
-        return nil;
-    }
-
-    NSMutableArray *parts = [NSMutableArray arrayWithCapacity:(NSUInteger)len];
-    for (int32_t i = 0; i < (int32_t)len; i++) {
-        void *info = arrayElementPtr(elements, i);
-        if (!info || !looksLikeHeapPointer(info)) {
-            [parts addObject:@"-1"];
-            continue;
-        }
-        int32_t sym = readInt32(info, fo_slotSymbolBacking);
-        [parts addObject:[NSString stringWithFormat:@"%d", sym]];
     }
     return [parts componentsJoinedByString:@","];
 }
@@ -757,33 +745,45 @@ static inline uint8_t readBool(void* obj, size_t offset) {
         int32_t idx2 = (bar2 && fo_resultSymbolIndex) ? readInt32(bar2, fo_resultSymbolIndex) : -1;
         int32_t idx3 = (bar3 && fo_resultSymbolIndex) ? readInt32(bar3, fo_resultSymbolIndex) : -1;
 
-        // One-time field dump of SlotBarManager to diagnose strip reading
+        // One-time field dump using C strings (avoids iOS privacy redaction)
         static BOOL dumpedBarFields = NO;
         if (!dumpedBarFields && bar1 && s_klass_BarManager) {
             dumpedBarFields = YES;
-            NSDictionary *fields = dumpClassFields(s_klass_BarManager, bar1);
-            NSLog(@"[SpinLogger] BAR1 FIELD DUMP (%lu fields):", (unsigned long)fields.count);
-            for (NSString *name in [fields.allKeys sortedArrayUsingSelector:@selector(compare:)]) {
-                NSDictionary *v = fields[name];
-                NSLog(@"  %@ off=%@ i32=%@ ptr=%@", name, v[@"off"], v[@"i32"], v[@"ptr"]);
+            // Dump SlotBarManager fields with C-string names
+            void *iter = NULL;
+            void *field = NULL;
+            NSLog(@"[SpinLogger] === BAR1 FIELD DUMP ===");
+            while ((field = _class_get_fields(s_klass_BarManager, &iter)) != NULL) {
+                const char *nm = _field_get_name(field);
+                if (!nm) continue;
+                size_t off = _field_get_offset(field);
+                if (off == 0) continue;
+                int32_t i32 = *(int32_t *)((uint8_t *)bar1 + off);
+                void *ptr = *(void **)((uint8_t *)bar1 + off);
+                NSLog(@"[SpinLogger]   field='%s' off=%zu i32=%d ptr=%p", nm, off, i32, ptr);
             }
-            // Also dump SlotBarSymbolInfo if we have a reference
+
+            // Check m_SymbolElements array with int32 length
             if (fo_symbolElements) {
                 void *elements = readPtr(bar1, fo_symbolElements);
-                if (elements && looksLikeHeapPointer(elements)) {
-                    int64_t arrLen = *(int64_t *)((uint8_t *)elements + kArrayLengthOffset);
-                    NSLog(@"[SpinLogger] m_SymbolElements: ptr=%p len=%lld", elements, arrLen);
-                    if (arrLen > 0 && arrLen <= 50) {
-                        void *firstElem = arrayElementPtr(elements, 0);
-                        NSLog(@"[SpinLogger] first element ptr=%p heap=%d", firstElem,
-                              firstElem ? looksLikeHeapPointer(firstElem) : -1);
-                        if (firstElem && looksLikeHeapPointer(firstElem) && s_klass_BarSymInfo) {
-                            NSDictionary *infoFields = dumpClassFields(s_klass_BarSymInfo, firstElem);
-                            NSLog(@"[SpinLogger] BarSymInfo DUMP (%lu fields):", (unsigned long)infoFields.count);
-                            for (NSString *name in [infoFields.allKeys sortedArrayUsingSelector:@selector(compare:)]) {
-                                NSDictionary *v = infoFields[name];
-                                NSLog(@"  %@ off=%@ i32=%@ ptr=%@", name, v[@"off"], v[@"i32"], v[@"ptr"]);
-                            }
+                int32_t arrLen = elements ? arrayLength32(elements) : -1;
+                NSLog(@"[SpinLogger] m_SymbolElements: ptr=%p len32=%d", elements, arrLen);
+                if (elements && arrLen > 0 && arrLen <= 50) {
+                    void *firstElem = arrayElementPtr(elements, 0);
+                    NSLog(@"[SpinLogger] elem[0]=%p heap=%d", firstElem,
+                          firstElem ? (int)looksLikeHeapPointer(firstElem) : -1);
+                    // Dump first element's class fields if it's a valid object
+                    if (firstElem && looksLikeHeapPointer(firstElem) && s_klass_BarSymInfo) {
+                        void *iter2 = NULL;
+                        void *field2 = NULL;
+                        NSLog(@"[SpinLogger] === BarSymInfo[0] FIELDS ===");
+                        while ((field2 = _class_get_fields(s_klass_BarSymInfo, &iter2)) != NULL) {
+                            const char *nm2 = _field_get_name(field2);
+                            if (!nm2) continue;
+                            size_t off2 = _field_get_offset(field2);
+                            if (off2 == 0) continue;
+                            int32_t val = *(int32_t *)((uint8_t *)firstElem + off2);
+                            NSLog(@"[SpinLogger]   field='%s' off=%zu i32=%d", nm2, off2, val);
                         }
                     }
                 }
