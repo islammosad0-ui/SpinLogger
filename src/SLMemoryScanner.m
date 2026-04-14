@@ -849,21 +849,35 @@ static inline int32_t arrayLength32(void *array) {
                 }
             }
 
-            // Read symbols from non-null elements
-            if (fo_symbolElements && fo_slotSymbolBacking) {
+            // Read symbols from non-null elements — dump raw object bytes
+            if (fo_symbolElements) {
                 void *elements = readPtr(bar1, fo_symbolElements);
                 int32_t arrLen = elements ? arrayLength32(elements) : 0;
                 if (elements && arrLen > 0 && arrLen <= 50) {
-                    [dump appendFormat:@"\n--- Strip symbols (non-null elements) ---\n"];
+                    [dump appendFormat:@"\n--- Strip element objects (non-null) ---\n"];
                     uint8_t *arrData = (uint8_t *)elements + kArrayHeaderSize;
                     for (int32_t i = 0; i < arrLen; i++) {
                         void *info = *(void **)(arrData + i * sizeof(void *));
-                        if (info && looksLikeHeapPointer(info)
-                            && safeReadable((uint8_t *)info + fo_slotSymbolBacking, 4)) {
-                            int32_t sym = *(int32_t *)((uint8_t *)info + fo_slotSymbolBacking);
-                            [dump appendFormat:@"  [%d] = sym %d  (ptr=%p)\n", i, sym, info];
-                        } else {
-                            [dump appendFormat:@"  [%d] = NULL (base strip)\n", i];
+                        if (!info || !looksLikeHeapPointer(info)) {
+                            [dump appendFormat:@"  [%d] = NULL\n", i];
+                            continue;
+                        }
+                        // Read runtime class name from object header (offset 0 = klass ptr)
+                        const char *className = "?";
+                        if (safeReadable(info, 8)) {
+                            void *klass = *(void **)info;
+                            if (klass && looksLikeHeapPointer(klass) && _class_get_name) {
+                                const char *cn = _class_get_name(klass);
+                                if (cn) className = cn;
+                            }
+                        }
+                        // Dump first 64 bytes of the object
+                        [dump appendFormat:@"  [%d] ptr=%p class=%s\n", i, info, className];
+                        if (safeReadable(info, 64)) {
+                            for (int b = 0; b < 64; b += 4) {
+                                int32_t v = *(int32_t *)((uint8_t *)info + b);
+                                [dump appendFormat:@"    +%2d: %d (0x%08x)\n", b, v, (unsigned)v];
+                            }
                         }
                     }
                 }
@@ -920,6 +934,49 @@ static inline int32_t arrayLength32(void *array) {
                                         }
                                     }
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Dump SlotSymbolReplacementService singleton + persistentReplacements
+            if (fh_ReplSvcInstance && fo_persistentRepl && _field_static_get_value) {
+                void *svcInstance = NULL;
+                _field_static_get_value(fh_ReplSvcInstance, &svcInstance);
+                [dump appendFormat:@"\n--- SlotSymbolReplacementService singleton=%p ---\n", svcInstance];
+                if (svcInstance && looksLikeHeapPointer(svcInstance) && safeReadable(svcInstance, 64)) {
+                    // Dump first 64 bytes of the service instance
+                    for (int b = 0; b < 64; b += 4) {
+                        int32_t v = *(int32_t *)((uint8_t *)svcInstance + b);
+                        [dump appendFormat:@"  +%2d: %d (0x%08x)\n", b, v, (unsigned)v];
+                    }
+                    // Read persistentReplacements
+                    void *persist = readPtr(svcInstance, fo_persistentRepl);
+                    [dump appendFormat:@"\n  persistentReplacements (off=%zu): ptr=%p\n",
+                         fo_persistentRepl, persist];
+                    if (persist && looksLikeHeapPointer(persist) && safeReadable(persist, 96)) {
+                        // Dump first 96 bytes of persistentReplacements
+                        for (int b = 0; b < 96; b += 8) {
+                            int32_t lo = *(int32_t *)((uint8_t *)persist + b);
+                            int32_t hi = *(int32_t *)((uint8_t *)persist + b + 4);
+                            void *ptr = *(void **)((uint8_t *)persist + b);
+                            [dump appendFormat:@"    +%2d: lo=%d hi=%d ptr=%p\n", b, lo, hi, ptr];
+                        }
+                    }
+                    // Also dump all ReplSvc fields via reflection
+                    if (s_klass_ReplSvc) {
+                        [dump appendFormat:@"\n  ReplSvc fields:\n"];
+                        void *iterSvc = NULL;
+                        void *fieldSvc = NULL;
+                        while ((fieldSvc = _class_get_fields(s_klass_ReplSvc, &iterSvc)) != NULL) {
+                            const char *nm = _field_get_name(fieldSvc);
+                            size_t off = _field_get_offset(fieldSvc);
+                            if (!nm || off == 0) continue;
+                            if (off < 64) {
+                                int32_t v = *(int32_t *)((uint8_t *)svcInstance + off);
+                                void *pv = *(void **)((uint8_t *)svcInstance + off);
+                                [dump appendFormat:@"    %s  off=%zu  i32=%d  ptr=%p\n", nm, off, v, pv];
                             }
                         }
                     }
