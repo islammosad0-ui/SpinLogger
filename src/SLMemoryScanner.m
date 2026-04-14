@@ -798,268 +798,294 @@ static inline int32_t arrayLength32(void *array) {
         int32_t idx2 = (bar2 && fo_resultSymbolIndex) ? readInt32(bar2, fo_resultSymbolIndex) : -1;
         int32_t idx3 = (bar3 && fo_resultSymbolIndex) ? readInt32(bar3, fo_resultSymbolIndex) : -1;
 
-        // One-time diagnostic dump → written to file (bypasses iOS privacy redaction)
+        // ============================================================
+        // COMPREHENSIVE ONE-SHOT DIAGNOSTIC — writes strip_diag.txt
+        // Explores everything reachable, auto-discovers correct layouts
+        // ============================================================
         static BOOL dumpedBarFields = NO;
         if (!dumpedBarFields && bar1 && s_klass_BarManager) {
             dumpedBarFields = YES;
-            NSMutableString *dump = [NSMutableString stringWithString:@"=== STRIP DIAGNOSTIC DUMP ===\n"];
+            NSMutableString *dump = [NSMutableString stringWithString:@"=== COMPREHENSIVE STRIP DIAGNOSTIC ===\n"];
 
-            // Dump SlotBarManager fields
-            [dump appendString:@"\n--- SlotBarManager fields ---\n"];
-            void *iter = NULL;
-            void *field = NULL;
-            while ((field = _class_get_fields(s_klass_BarManager, &iter)) != NULL) {
-                const char *nm = _field_get_name(field);
-                if (!nm) continue;
-                size_t off = _field_get_offset(field);
-                if (off == 0) continue;
-                int32_t i32 = *(int32_t *)((uint8_t *)bar1 + off);
-                void *ptr = *(void **)((uint8_t *)bar1 + off);
-                [dump appendFormat:@"  %s  off=%zu  i32=%d  ptr=%p\n", nm, off, i32, ptr];
-            }
-
-            // Dump BarSymInfo class fields (schema only — no instance needed)
-            if (s_klass_BarSymInfo) {
-                [dump appendFormat:@"\n--- SlotBarSymbolInfo class fields (elemSize=%d) ---\n",
-                    s_barSymInfoElemSize];
-                void *iter2 = NULL;
-                void *field2 = NULL;
-                while ((field2 = _class_get_fields(s_klass_BarSymInfo, &iter2)) != NULL) {
-                    const char *nm2 = _field_get_name(field2);
-                    size_t off2 = _field_get_offset(field2);
-                    [dump appendFormat:@"  %s  off=%zu\n", nm2 ?: "?", off2];
+            // ---- Helper block: dump an object's raw bytes + class name ----
+            void (^dumpObject)(NSMutableString*, const char*, void*, int) =
+                ^(NSMutableString *d, const char *label, void *obj, int bytes) {
+                if (!obj || !looksLikeHeapPointer(obj) || !safeReadable(obj, (size_t)bytes)) {
+                    [d appendFormat:@"  %s: NULL or unreadable (ptr=%p)\n", label, obj];
+                    return;
                 }
-            }
+                const char *cn = "?";
+                void *klass = *(void **)obj;
+                if (klass && _class_get_name) {
+                    const char *n = _class_get_name(klass);
+                    if (n) cn = n;
+                }
+                [d appendFormat:@"  %s: ptr=%p class=%s\n", label, obj, cn];
+                for (int b = 0; b < bytes; b += 4) {
+                    int32_t v = *(int32_t *)((uint8_t *)obj + b);
+                    [d appendFormat:@"    +%2d: %d (0x%08x)\n", b, v, (unsigned)v];
+                }
+            };
 
-            // Dump raw hex from m_SymbolElements array data area
-            if (fo_symbolElements) {
-                void *elements = readPtr(bar1, fo_symbolElements);
-                int32_t arrLen = elements ? arrayLength32(elements) : -1;
-                [dump appendFormat:@"\n--- m_SymbolElements: ptr=%p len=%d ---\n", elements, arrLen];
-                if (elements && arrLen > 0 && arrLen <= 50) {
-                    // Dump first 128 bytes of data area as hex + int32 interpretation
-                    uint8_t *data = (uint8_t *)elements + kArrayHeaderSize;
-                    int dumpBytes = arrLen * (s_barSymInfoElemSize > 0 ? s_barSymInfoElemSize : 8);
-                    if (dumpBytes > 256) dumpBytes = 256;
-                    [dump appendFormat:@"  data at +%d, dumping %d bytes:\n", kArrayHeaderSize, dumpBytes];
-                    for (int b = 0; b < dumpBytes; b += 4) {
-                        int32_t v = *(int32_t *)(data + b);
-                        [dump appendFormat:@"    +%3d: i32=%d  (0x%08x)\n", b, v, (unsigned)v];
+            // ---- Helper block: reflect all fields of a class on an instance ----
+            void (^reflectFields)(NSMutableString*, const char*, void*, void*, int) =
+                ^(NSMutableString *d, const char *label, void *klass, void *obj, int maxOff) {
+                if (!klass || !obj || !safeReadable(obj, (size_t)maxOff)) return;
+                [d appendFormat:@"\n  %s fields (reflection):\n", label];
+                void *it = NULL;
+                void *fld = NULL;
+                while ((fld = _class_get_fields(klass, &it)) != NULL) {
+                    const char *nm = _field_get_name(fld);
+                    size_t off = _field_get_offset(fld);
+                    if (!nm) nm = "?";
+                    if (off == 0) { [d appendFormat:@"    %s  off=0 (static?)\n", nm]; continue; }
+                    if ((int)off + 8 <= maxOff) {
+                        int32_t v = *(int32_t *)((uint8_t *)obj + off);
+                        void *pv = *(void **)((uint8_t *)obj + off);
+                        [d appendFormat:@"    %s  off=%zu  i32=%d  ptr=%p\n", nm, off, v, pv];
+                    } else {
+                        [d appendFormat:@"    %s  off=%zu  (beyond dump range)\n", nm, off];
+                    }
+                }
+            };
+
+            // =============================================================
+            // SECTION 1: SlotMachineManager instance — all cached offsets
+            // =============================================================
+            [dump appendFormat:@"\n=== SECTION 1: SlotMachineManager instance=%p ===\n", instance];
+            [dump appendFormat:@"  fo_spinning=%zu fo_currentSpinNumber=%zu fo_currentSlotResult=%zu\n",
+                 fo_spinning, fo_currentSpinNumber, fo_currentSlotResult];
+            [dump appendFormat:@"  fo_dynamicResults=%zu fo_slotBar1=%zu fo_slotBar2=%zu fo_slotBar3=%zu\n",
+                 fo_dynamicResults, fo_slotBar1, fo_slotBar2, fo_slotBar3];
+
+            // =============================================================
+            // SECTION 2: currentSlotResult — THE PRIMARY SYMBOL SOURCE
+            // =============================================================
+            [dump appendString:@"\n=== SECTION 2: currentSlotResult ===\n"];
+            {
+                void *sr = readPtr(instance, fo_currentSlotResult);
+                dumpObject(dump, "SlotResult", sr, 64);
+                if (sr && s_klass_Result)
+                    reflectFields(dump, "SlotResult", s_klass_Result, sr, 64);
+
+                [dump appendFormat:@"\n  Cached offsets: fo_slotSymbols=%zu fo_symbol1=%zu fo_symbol2=%zu fo_symbol3=%zu\n",
+                     fo_slotSymbols, fo_symbol1, fo_symbol2, fo_symbol3];
+
+                // BRUTE FORCE: scan every int32 in the SlotResult for valid
+                // SlotSymbol ranges (0-15). Print ALL candidates.
+                if (sr && safeReadable(sr, 64)) {
+                    [dump appendString:@"\n  Brute-force scan for valid symbols (0-15) in SlotResult:\n"];
+                    for (int b = 0; b < 60; b += 4) {
+                        int32_t v = *(int32_t *)((uint8_t *)sr + b);
+                        if (v >= 0 && v <= 15) {
+                            [dump appendFormat:@"    offset +%d = %d  <<<\n", b, v];
+                        }
+                    }
+                }
+
+                // Try all 3 interpretations of symbol reading
+                if (sr && safeReadable(sr, 64) && fo_slotSymbols && fo_symbol1) {
+                    [dump appendString:@"\n  Symbol reading attempts:\n"];
+
+                    // Method A: embedded struct with -16 VT header correction
+                    size_t a1 = fo_slotSymbols + fo_symbol1 - 16;
+                    size_t a2 = fo_slotSymbols + fo_symbol2 - 16;
+                    size_t a3 = fo_slotSymbols + fo_symbol3 - 16;
+                    if (a1 < 56 && a3 < 60) {
+                        int32_t v1 = *(int32_t *)((uint8_t *)sr + a1);
+                        int32_t v2 = *(int32_t *)((uint8_t *)sr + a2);
+                        int32_t v3 = *(int32_t *)((uint8_t *)sr + a3);
+                        BOOL valid = (v1 >= 0 && v1 <= 15 && v2 >= 0 && v2 <= 15 && v3 >= 0 && v3 <= 15);
+                        [dump appendFormat:@"    A (embed-16): off=%zu,%zu,%zu → %d,%d,%d %s\n",
+                             a1, a2, a3, v1, v2, v3, valid ? "<<< VALID" : ""];
+                    }
+
+                    // Method B: raw offset addition (no VT correction)
+                    size_t b1 = fo_slotSymbols + fo_symbol1;
+                    size_t b2 = fo_slotSymbols + fo_symbol2;
+                    size_t b3 = fo_slotSymbols + fo_symbol3;
+                    if (b1 < 56 && b3 < 60) {
+                        int32_t v1 = *(int32_t *)((uint8_t *)sr + b1);
+                        int32_t v2 = *(int32_t *)((uint8_t *)sr + b2);
+                        int32_t v3 = *(int32_t *)((uint8_t *)sr + b3);
+                        BOOL valid = (v1 >= 0 && v1 <= 15 && v2 >= 0 && v2 <= 15 && v3 >= 0 && v3 <= 15);
+                        [dump appendFormat:@"    B (raw-add): off=%zu,%zu,%zu → %d,%d,%d %s\n",
+                             b1, b2, b3, v1, v2, v3, valid ? "<<< VALID" : ""];
+                    }
+
+                    // Method C: direct field offsets (fo_symbolN alone on SlotResult)
+                    if (fo_symbol1 < 56 && fo_symbol3 < 60) {
+                        int32_t v1 = *(int32_t *)((uint8_t *)sr + fo_symbol1);
+                        int32_t v2 = *(int32_t *)((uint8_t *)sr + fo_symbol2);
+                        int32_t v3 = *(int32_t *)((uint8_t *)sr + fo_symbol3);
+                        BOOL valid = (v1 >= 0 && v1 <= 15 && v2 >= 0 && v2 <= 15 && v3 >= 0 && v3 <= 15);
+                        [dump appendFormat:@"    C (sym3-direct): off=%zu,%zu,%zu → %d,%d,%d %s\n",
+                             fo_symbol1, fo_symbol2, fo_symbol3, v1, v2, v3, valid ? "<<< VALID" : ""];
+                    }
+
+                    // Method D: fo_slotSymbols is a POINTER, deref then read symbols
+                    void *sym3ref = readPtr(sr, fo_slotSymbols);
+                    if (sym3ref && looksLikeHeapPointer(sym3ref) && safeReadable(sym3ref, 32)) {
+                        int32_t v1 = *(int32_t *)((uint8_t *)sym3ref + fo_symbol1);
+                        int32_t v2 = *(int32_t *)((uint8_t *)sym3ref + fo_symbol2);
+                        int32_t v3 = *(int32_t *)((uint8_t *)sym3ref + fo_symbol3);
+                        BOOL valid = (v1 >= 0 && v1 <= 15 && v2 >= 0 && v2 <= 15 && v3 >= 0 && v3 <= 15);
+                        [dump appendFormat:@"    D (ref-deref): deref %p → %d,%d,%d %s\n",
+                             sym3ref, v1, v2, v3, valid ? "<<< VALID" : ""];
+                        dumpObject(dump, "SlotSymbol3-ref", sym3ref, 32);
+                    }
+
+                    // Method E: brute-force triplet scan — find 3 consecutive int32s in 0-15 range
+                    [dump appendString:@"\n  Brute-force consecutive-triple scan:\n"];
+                    for (int off = 0; off <= 52; off += 4) {
+                        int32_t v1 = *(int32_t *)((uint8_t *)sr + off);
+                        int32_t v2 = *(int32_t *)((uint8_t *)sr + off + 4);
+                        int32_t v3 = *(int32_t *)((uint8_t *)sr + off + 8);
+                        if (v1 >= 0 && v1 <= 15 && v2 >= 0 && v2 <= 15 && v3 >= 0 && v3 <= 15) {
+                            [dump appendFormat:@"    +%d: %d,%d,%d <<< TRIPLE\n", off, v1, v2, v3];
+                        }
                     }
                 }
             }
 
-            // Read symbols from non-null elements — dump raw object bytes
-            if (fo_symbolElements) {
-                void *elements = readPtr(bar1, fo_symbolElements);
-                int32_t arrLen = elements ? arrayLength32(elements) : 0;
-                if (elements && arrLen > 0 && arrLen <= 50) {
-                    [dump appendFormat:@"\n--- Strip element objects (non-null) ---\n"];
-                    uint8_t *arrData = (uint8_t *)elements + kArrayHeaderSize;
-                    for (int32_t i = 0; i < arrLen; i++) {
-                        void *info = *(void **)(arrData + i * sizeof(void *));
-                        if (!info || !looksLikeHeapPointer(info)) {
-                            [dump appendFormat:@"  [%d] = NULL\n", i];
-                            continue;
-                        }
-                        // Read runtime class name from object header (offset 0 = klass ptr)
-                        const char *className = "?";
-                        if (safeReadable(info, 8)) {
-                            void *klass = *(void **)info;
-                            if (klass && looksLikeHeapPointer(klass) && _class_get_name) {
-                                const char *cn = _class_get_name(klass);
-                                if (cn) className = cn;
-                            }
-                        }
-                        // Dump first 64 bytes of the object
-                        [dump appendFormat:@"  [%d] ptr=%p class=%s\n", i, info, className];
-                        if (safeReadable(info, 64)) {
-                            for (int b = 0; b < 64; b += 4) {
-                                int32_t v = *(int32_t *)((uint8_t *)info + b);
-                                [dump appendFormat:@"    +%2d: %d (0x%08x)\n", b, v, (unsigned)v];
-                            }
+            // =============================================================
+            // SECTION 3: DynamicSlotResults — deep crawl
+            // =============================================================
+            [dump appendString:@"\n=== SECTION 3: DynamicSlotResults ===\n"];
+            if (fo_dynamicResults) {
+                void *dynRes = readPtr(instance, fo_dynamicResults);
+                dumpObject(dump, "DynamicSlotResults", dynRes, 128);
+                // If it's a List/Array, try to read length and elements
+                if (dynRes && looksLikeHeapPointer(dynRes) && safeReadable(dynRes, 32)) {
+                    // Check if it's an array (has array length at +24)
+                    int32_t arrLen = arrayLength32(dynRes);
+                    [dump appendFormat:@"  (as array, len at +%d: %d)\n", kArrayLengthOffset, arrLen];
+                    // Check if it's a List<T> — _items at +16, _size at +24
+                    void *items = readPtr(dynRes, 16);
+                    int32_t listSize = *(int32_t *)((uint8_t *)dynRes + 24);
+                    [dump appendFormat:@"  (as List, _items=+16: %p, _size=+24: %d)\n", items, listSize];
+                    if (items && looksLikeHeapPointer(items) && listSize > 0 && listSize < 50
+                        && safeReadable(items, kArrayHeaderSize + (size_t)listSize * 8)) {
+                        [dump appendFormat:@"  List elements (first %d):\n", listSize];
+                        for (int32_t li = 0; li < listSize && li < 10; li++) {
+                            void *elem = *(void **)((uint8_t *)items + kArrayHeaderSize + li * 8);
+                            char lbl[32]; snprintf(lbl, sizeof(lbl), "  List[%d]", li);
+                            dumpObject(dump, lbl, elem, 64);
                         }
                     }
                 }
+            } else {
+                [dump appendString:@"  fo_dynamicResults=0 (offset not found)\n"];
             }
 
-            // Dump SlotBarSymbolReplacer + raw Dictionary hex
-            if (fo_symbolReplacer) {
-                void *replacer = readPtr(bar1, fo_symbolReplacer);
-                [dump appendFormat:@"\n--- m_SymbolReplacer: ptr=%p ---\n", replacer];
-                if (replacer && looksLikeHeapPointer(replacer) && s_klass_BarRepl
-                    && safeReadable(replacer, 64)) {
-                    void *iter3 = NULL;
-                    void *field3 = NULL;
-                    while ((field3 = _class_get_fields(s_klass_BarRepl, &iter3)) != NULL) {
-                        const char *nm3 = _field_get_name(field3);
-                        size_t off3 = _field_get_offset(field3);
-                        if (off3 == 0) continue;
-                        int32_t val = *(int32_t *)((uint8_t *)replacer + off3);
-                        void *pval = *(void **)((uint8_t *)replacer + off3);
-                        [dump appendFormat:@"  %s  off=%zu  i32=%d  ptr=%p\n", nm3 ?: "?", off3, val, pval];
-                    }
+            // =============================================================
+            // SECTION 4: All 3 bars — replacer + Dictionary status
+            // =============================================================
+            [dump appendString:@"\n=== SECTION 4: Per-reel bars ===\n"];
+            void *bars[3] = { bar1, bar2, bar3 };
+            for (int ri = 0; ri < 3; ri++) {
+                void *bar = bars[ri];
+                [dump appendFormat:@"\n--- Bar %d: ptr=%p ---\n", ri+1, bar];
+                if (!bar) continue;
+                int32_t ridx = fo_resultSymbolIndex ? readInt32(bar, fo_resultSymbolIndex) : -1;
+                int32_t nSym = fo_numberOfSymbols ? readInt32(bar, fo_numberOfSymbols) : -1;
+                [dump appendFormat:@"  resultSymbolIndex=%d  m_NumberOfSymbols=%d\n", ridx, nSym];
 
-                    // Dump raw Dictionary at m_Replacements
-                    if (fo_replMap) {
-                        void *dict = readPtr(replacer, fo_replMap);
-                        [dump appendFormat:@"\n--- m_Replacements Dictionary raw (ptr=%p) ---\n", dict];
-                        if (dict && looksLikeHeapPointer(dict) && safeReadable(dict, 96)) {
-                            // Dump first 96 bytes of Dictionary object
-                            for (int b = 0; b < 96; b += 8) {
-                                int32_t lo = *(int32_t *)((uint8_t *)dict + b);
-                                int32_t hi = *(int32_t *)((uint8_t *)dict + b + 4);
-                                void *ptr = *(void **)((uint8_t *)dict + b);
-                                [dump appendFormat:@"  +%2d: lo=%d hi=%d ptr=%p\n", b, lo, hi, ptr];
-                            }
-                            // Probe _entries at common offsets — safely via vm_read
-                            for (int tryOff = 0x10; tryOff <= 0x30; tryOff += 8) {
-                                void *entries = *(void **)((uint8_t *)dict + tryOff);
-                                if (entries && looksLikeHeapPointer(entries)
-                                    && safeReadable(entries, kArrayHeaderSize + 16)) {
-                                    int32_t eLen = arrayLength32(entries);
-                                    [dump appendFormat:@"\n  Candidate _entries at +0x%x: ptr=%p len=%d\n",
-                                         tryOff, entries, eLen];
-                                    if (eLen > 0 && eLen <= 20) {
-                                        size_t dumpSize = (size_t)eLen * 16;
-                                        if (dumpSize > 256) dumpSize = 256;
-                                        uint8_t *eData = (uint8_t *)entries + kArrayHeaderSize;
-                                        if (safeReadable(eData, dumpSize)) {
-                                            for (size_t eb = 0; eb < dumpSize; eb += 4) {
-                                                int32_t ev = *(int32_t *)(eData + eb);
-                                                [dump appendFormat:@"    +%3d: %d (0x%08x)\n", (int)eb, ev, (unsigned)ev];
-                                            }
-                                        } else {
-                                            [dump appendString:@"    (entry data not readable)\n"];
-                                        }
-                                    }
+                // m_SymbolReplacer → m_Replacements dict count
+                if (fo_symbolReplacer) {
+                    void *repl = readPtr(bar, fo_symbolReplacer);
+                    [dump appendFormat:@"  m_SymbolReplacer=%p\n", repl];
+                    if (repl && looksLikeHeapPointer(repl) && fo_replMap && safeReadable(repl, 32)) {
+                        void *dict = readPtr(repl, fo_replMap);
+                        [dump appendFormat:@"  m_Replacements dict=%p\n", dict];
+                        if (dict && looksLikeHeapPointer(dict) && safeReadable(dict, 48)) {
+                            // Dict layout: +16=_buckets, +24=_entries, +32=_count(i32)
+                            void *buckets = *(void **)((uint8_t *)dict + 16);
+                            void *entries = *(void **)((uint8_t *)dict + 24);
+                            int32_t count  = *(int32_t *)((uint8_t *)dict + 32);
+                            [dump appendFormat:@"    _buckets=%p _entries=%p _count=%d\n",
+                                 buckets, entries, count];
+                            // Try reading entries if count > 0
+                            if (count > 0 && count <= 20 && entries && looksLikeHeapPointer(entries)
+                                && safeReadable(entries, kArrayHeaderSize + (size_t)count * 16)) {
+                                for (int32_t ei = 0; ei < count; ei++) {
+                                    uint8_t *e = (uint8_t *)entries + kArrayHeaderSize + ei * 16;
+                                    int32_t hash = *(int32_t *)(e);
+                                    int32_t next = *(int32_t *)(e + 4);
+                                    int32_t key  = *(int32_t *)(e + 8);
+                                    int32_t val  = *(int32_t *)(e + 12);
+                                    [dump appendFormat:@"    entry[%d]: hash=%d next=%d key=%d val=%d\n",
+                                         ei, hash, next, key, val];
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            // Dump SlotSymbolReplacementService singleton + persistentReplacements
-            if (fh_ReplSvcInstance && fo_persistentRepl && _field_static_get_value) {
-                void *svcInstance = NULL;
-                _field_static_get_value(fh_ReplSvcInstance, &svcInstance);
-                [dump appendFormat:@"\n--- SlotSymbolReplacementService singleton=%p ---\n", svcInstance];
-                if (svcInstance && looksLikeHeapPointer(svcInstance) && safeReadable(svcInstance, 64)) {
-                    // Dump first 64 bytes of the service instance
-                    for (int b = 0; b < 64; b += 4) {
-                        int32_t v = *(int32_t *)((uint8_t *)svcInstance + b);
-                        [dump appendFormat:@"  +%2d: %d (0x%08x)\n", b, v, (unsigned)v];
-                    }
-                    // Read persistentReplacements
-                    void *persist = readPtr(svcInstance, fo_persistentRepl);
-                    [dump appendFormat:@"\n  persistentReplacements (off=%zu): ptr=%p\n",
-                         fo_persistentRepl, persist];
-                    if (persist && looksLikeHeapPointer(persist) && safeReadable(persist, 96)) {
-                        // Dump first 96 bytes of persistentReplacements
-                        for (int b = 0; b < 96; b += 8) {
-                            int32_t lo = *(int32_t *)((uint8_t *)persist + b);
-                            int32_t hi = *(int32_t *)((uint8_t *)persist + b + 4);
-                            void *ptr = *(void **)((uint8_t *)persist + b);
-                            [dump appendFormat:@"    +%2d: lo=%d hi=%d ptr=%p\n", b, lo, hi, ptr];
+                // m_SymbolElements — just element count + non-null status
+                if (fo_symbolElements) {
+                    void *elems = readPtr(bar, fo_symbolElements);
+                    int32_t eLen = (elems && safeReadable(elems, kArrayHeaderSize)) ? arrayLength32(elems) : -1;
+                    int nonNull = 0;
+                    if (elems && eLen > 0 && eLen <= 50 && safeReadable((uint8_t*)elems + kArrayHeaderSize, (size_t)eLen * 8)) {
+                        for (int32_t j = 0; j < eLen; j++) {
+                            void *p = *(void **)((uint8_t*)elems + kArrayHeaderSize + j * 8);
+                            if (p && looksLikeHeapPointer(p)) nonNull++;
                         }
                     }
-                    // Also dump all ReplSvc fields via reflection
-                    if (s_klass_ReplSvc) {
-                        [dump appendFormat:@"\n  ReplSvc fields:\n"];
-                        void *iterSvc = NULL;
-                        void *fieldSvc = NULL;
-                        while ((fieldSvc = _class_get_fields(s_klass_ReplSvc, &iterSvc)) != NULL) {
-                            const char *nm = _field_get_name(fieldSvc);
-                            size_t off = _field_get_offset(fieldSvc);
-                            if (!nm || off == 0) continue;
-                            if (off < 64) {
-                                int32_t v = *(int32_t *)((uint8_t *)svcInstance + off);
-                                void *pv = *(void **)((uint8_t *)svcInstance + off);
-                                [dump appendFormat:@"    %s  off=%zu  i32=%d  ptr=%p\n", nm, off, v, pv];
-                            }
-                        }
-                    }
+                    [dump appendFormat:@"  m_SymbolElements: len=%d nonNull=%d\n", eLen, nonNull];
                 }
             }
 
-            // Dump currentSlotResult + SlotSymbol3 + DynamicSlotResults
-            {
-                void *slotResult = readPtr(instance, fo_currentSlotResult);
-                [dump appendFormat:@"\n--- currentSlotResult: ptr=%p ---\n", slotResult];
-                [dump appendFormat:@"  fo_slotSymbols=%zu  fo_symbol1=%zu fo_symbol2=%zu fo_symbol3=%zu\n",
-                     fo_slotSymbols, fo_symbol1, fo_symbol2, fo_symbol3];
-                if (slotResult && looksLikeHeapPointer(slotResult) && safeReadable(slotResult, 64)) {
-                    // Dump first 64 bytes of SlotResult
-                    [dump appendString:@"  Raw SlotResult bytes:\n"];
-                    for (int b = 0; b < 64; b += 4) {
-                        int32_t v = *(int32_t *)((uint8_t *)slotResult + b);
-                        [dump appendFormat:@"    +%2d: %d (0x%08x)\n", b, v, (unsigned)v];
-                    }
-                    // Dump SlotResult fields via reflection
-                    if (s_klass_Result) {
-                        [dump appendFormat:@"\n  SlotResult fields:\n"];
-                        void *iterR = NULL;
-                        void *fieldR = NULL;
-                        while ((fieldR = _class_get_fields(s_klass_Result, &iterR)) != NULL) {
-                            const char *nm = _field_get_name(fieldR);
-                            size_t off = _field_get_offset(fieldR);
-                            if (!nm || off == 0) continue;
-                            int32_t v = *(int32_t *)((uint8_t *)slotResult + off);
-                            void *pv = *(void **)((uint8_t *)slotResult + off);
-                            [dump appendFormat:@"    %s  off=%zu  i32=%d  ptr=%p\n", nm, off, v, pv];
+            // =============================================================
+            // SECTION 5: SlotMachineManager pointer crawl — follow every
+            // pointer field and report class + size (depth 1)
+            // =============================================================
+            [dump appendString:@"\n=== SECTION 5: Manager pointer crawl (depth 1) ===\n"];
+            if (s_klass_Manager && safeReadable(instance, 400)) {
+                void *itM = NULL;
+                void *fldM = NULL;
+                while ((fldM = _class_get_fields(s_klass_Manager, &itM)) != NULL) {
+                    const char *nm = _field_get_name(fldM);
+                    size_t off = _field_get_offset(fldM);
+                    if (!nm || off == 0 || off >= 400) continue;
+                    void *pv = *(void **)((uint8_t *)instance + off);
+                    if (!pv || !looksLikeHeapPointer(pv)) continue;
+                    const char *cn = "?";
+                    if (safeReadable(pv, 8)) {
+                        void *k = *(void **)pv;
+                        if (k && _class_get_name) {
+                            const char *n = _class_get_name(k);
+                            if (n) cn = n;
                         }
                     }
-                    // Try reading symbols: slotSymbols is likely embedded struct
-                    // For value-type fields, offset is relative to containing object
-                    // symbol1/2/3 offsets from SlotSymbol3 may need adjustment
-                    if (fo_slotSymbols && fo_symbol1) {
-                        // SlotSymbol3 as embedded struct: symbols at slotResult+fo_slotSymbols+symbol_offset
-                        // But fo_symbol1 from offsetFor is relative to SlotSymbol3's own start
-                        // For value types, il2cpp returns offset including value-type header
-                        // which is typically sizeof(Il2CppObject)=16 on arm64.
-                        // So actual offset within parent = fo_slotSymbols + (fo_symbolN - 16)
-                        // BUT if SlotSymbol3 is a reference type, fo_slotSymbols is a pointer.
-                        // Dump both interpretations:
-                        int32_t s1_embed = *(int32_t *)((uint8_t *)slotResult + fo_slotSymbols + fo_symbol1 - 16);
-                        int32_t s2_embed = *(int32_t *)((uint8_t *)slotResult + fo_slotSymbols + fo_symbol2 - 16);
-                        int32_t s3_embed = *(int32_t *)((uint8_t *)slotResult + fo_slotSymbols + fo_symbol3 - 16);
-                        [dump appendFormat:@"\n  Symbols (embedded struct, -16): s1=%d s2=%d s3=%d\n",
-                             s1_embed, s2_embed, s3_embed];
-                        int32_t s1_raw = *(int32_t *)((uint8_t *)slotResult + fo_slotSymbols + fo_symbol1);
-                        int32_t s2_raw = *(int32_t *)((uint8_t *)slotResult + fo_slotSymbols + fo_symbol2);
-                        int32_t s3_raw = *(int32_t *)((uint8_t *)slotResult + fo_slotSymbols + fo_symbol3);
-                        [dump appendFormat:@"  Symbols (raw offset add): s1=%d s2=%d s3=%d\n",
-                             s1_raw, s2_raw, s3_raw];
-                        // Also try as direct offsets on slotResult (if SlotSymbol3 is a ref type)
-                        void *sym3ref = readPtr(slotResult, fo_slotSymbols);
-                        if (sym3ref && looksLikeHeapPointer(sym3ref) && safeReadable(sym3ref, 32)) {
-                            int32_t s1_ref = *(int32_t *)((uint8_t *)sym3ref + fo_symbol1);
-                            int32_t s2_ref = *(int32_t *)((uint8_t *)sym3ref + fo_symbol2);
-                            int32_t s3_ref = *(int32_t *)((uint8_t *)sym3ref + fo_symbol3);
-                            [dump appendFormat:@"  Symbols (ref type deref): s1=%d s2=%d s3=%d\n",
-                                 s1_ref, s2_ref, s3_ref];
-                        }
-                    }
+                    [dump appendFormat:@"  %s  off=%zu  ptr=%p  class=%s\n", nm, off, pv, cn];
                 }
-                // DynamicSlotResults
-                if (fo_dynamicResults) {
-                    void *dynResults = readPtr(instance, fo_dynamicResults);
-                    [dump appendFormat:@"\n--- DynamicSlotResults (off=%zu): ptr=%p ---\n",
-                         fo_dynamicResults, dynResults];
-                    if (dynResults && looksLikeHeapPointer(dynResults) && safeReadable(dynResults, 96)) {
-                        // Get runtime class name
-                        void *dynKlass = *(void **)dynResults;
-                        const char *dynClassName = "?";
-                        if (dynKlass && _class_get_name) {
-                            const char *cn = _class_get_name(dynKlass);
-                            if (cn) dynClassName = cn;
-                        }
-                        [dump appendFormat:@"  class=%s\n", dynClassName];
-                        for (int b = 0; b < 96; b += 4) {
-                            int32_t v = *(int32_t *)((uint8_t *)dynResults + b);
-                            [dump appendFormat:@"  +%2d: %d (0x%08x)\n", b, v, (unsigned)v];
-                        }
+            }
+
+            // =============================================================
+            // SECTION 6: ReplSvc singleton attempt (debug why it's NULL)
+            // =============================================================
+            [dump appendString:@"\n=== SECTION 6: SlotSymbolReplacementService ===\n"];
+            [dump appendFormat:@"  s_klass_ReplSvc=%p  fh_ReplSvcInstance=%p  fo_persistentRepl=%zu\n",
+                 s_klass_ReplSvc, fh_ReplSvcInstance, fo_persistentRepl];
+            if (s_klass_ReplSvc) {
+                // Enumerate ALL fields (static + instance) to find the real singleton accessor
+                [dump appendString:@"  All fields on SlotSymbolReplacementService:\n"];
+                void *itRS = NULL;
+                void *fldRS = NULL;
+                while ((fldRS = _class_get_fields(s_klass_ReplSvc, &itRS)) != NULL) {
+                    const char *nm = _field_get_name(fldRS);
+                    size_t off = _field_get_offset(fldRS);
+                    [dump appendFormat:@"    %s  off=%zu  handle=%p\n", nm ?: "?", off, fldRS];
+                    // Try reading as static field
+                    void *staticVal = NULL;
+                    if (_field_static_get_value) {
+                        @try { _field_static_get_value(fldRS, &staticVal); }
+                        @catch (NSException *e) { staticVal = NULL; }
+                    }
+                    if (staticVal && looksLikeHeapPointer(staticVal)) {
+                        [dump appendFormat:@"      static_get_value → %p\n", staticVal];
                     }
                 }
             }
