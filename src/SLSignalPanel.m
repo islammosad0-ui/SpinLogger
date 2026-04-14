@@ -13,7 +13,8 @@ static const CGFloat kRowH = 20;
 static const int kTypeCount = 4;   // ACC+SP, SHIELD, ATTACK, STEAL
 static const CGFloat kReasonRowH = 16;
 static const CGFloat kGapRowH = 24;   // gap predictor row height
-static const CGFloat kExpandedH = 28 + (20 * 4) + 16 + 24 + kGapRowH;  // header + 4 rows + reason + idx + gap
+static const CGFloat kCollapsedH = 28 + 24;                              // header + gap (always visible)
+static const CGFloat kExpandedH = 28 + 24 + (20 * 4) + 16 + 24;        // + 4 rows + reason + idx
 
 // Heat bar colors
 static UIColor *colorForHeat(int score, int maxScore) {
@@ -104,7 +105,7 @@ static UIColor *tierColor(SLBetTier tier) {
 
     // Window
     UIWindow *win = [[UIWindow alloc] initWithWindowScene:scene];
-    win.frame = CGRectMake(startX, startY, kPanelW, kHeaderH);
+    win.frame = CGRectMake(startX, startY, kPanelW, kCollapsedH);
     win.windowLevel = UIWindowLevelAlert + 200;
     win.backgroundColor = [UIColor clearColor];
     win.clipsToBounds = YES;
@@ -112,8 +113,8 @@ static UIColor *tierColor(SLBetTier tier) {
     vc.view.backgroundColor = [UIColor clearColor];
     win.rootViewController = vc;
 
-    // Container — starts at header-only height, resizes on expand
-    UIView *container = [[UIView alloc] initWithFrame:CGRectMake(0, 0, kPanelW, kHeaderH)];
+    // Container — starts at collapsed height (header + gap), resizes on expand
+    UIView *container = [[UIView alloc] initWithFrame:CGRectMake(0, 0, kPanelW, kCollapsedH)];
     container.backgroundColor = [UIColor colorWithRed:0.05 green:0.07 blue:0.12 alpha:0.95];
     container.layer.cornerRadius = 10;
     container.layer.borderWidth = 1;
@@ -153,8 +154,8 @@ static UIColor *tierColor(SLBetTier tier) {
     UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
     [vc.view addGestureRecognizer:pan];
 
-    // Body: per-type rows
-    UIView *body = [[UIView alloc] initWithFrame:CGRectMake(0, kHeaderH, kPanelW, kExpandedH - kHeaderH)];
+    // Body: per-type rows (starts below header + gap row)
+    UIView *body = [[UIView alloc] initWithFrame:CGRectMake(0, kCollapsedH, kPanelW, kExpandedH - kCollapsedH)];
     [container addSubview:body];
     self.bodyView = body;
     body.hidden = YES;
@@ -228,14 +229,14 @@ static UIColor *tierColor(SLBetTier tier) {
     self.idxLabel.text = @"idx: (-,-,-)";
     [body addSubview:self.idxLabel];
 
-    // Gap predictor row
-    CGFloat gapY = footerY + 20 + 2;
+    // Gap predictor row — on container directly (always visible, even collapsed)
+    CGFloat gapY = kHeaderH;  // right below header
     self.gapLabel = [self makeLbl:CGRectMake(6, gapY, 110, kGapRowH)
                              size:9 bold:YES color:[UIColor colorWithWhite:0.5 alpha:1]];
     self.gapLabel.text = @"GAP --";
     self.gapLabel.adjustsFontSizeToFitWidth = YES;
     self.gapLabel.minimumScaleFactor = 0.7;
-    [body addSubview:self.gapLabel];
+    [container addSubview:self.gapLabel];
 
     // Gap progress bar
     CGFloat gapBarX = 112;
@@ -245,7 +246,7 @@ static UIColor *tierColor(SLBetTier tier) {
     gapBg.backgroundColor = [UIColor colorWithWhite:0.15 alpha:1];
     gapBg.layer.cornerRadius = 3;
     gapBg.clipsToBounds = YES;
-    [body addSubview:gapBg];
+    [container addSubview:gapBg];
     self.gapBarBg = gapBg;
 
     UIView *gapFill = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 0, gapBarH)];
@@ -271,11 +272,11 @@ static UIColor *tierColor(SLBetTier tier) {
                                     size:9 bold:YES color:[UIColor colorWithWhite:0.5 alpha:1]];
     self.gapActionLabel.text = @"---";
     self.gapActionLabel.textAlignment = NSTextAlignmentRight;
-    [body addSubview:self.gapActionLabel];
+    [container addSubview:self.gapActionLabel];
 
     // Settings overlay (hidden by default, shown on long-press)
     CGFloat settingsH = 2 * kRowH + 12;
-    UIView *settings = [[UIView alloc] initWithFrame:CGRectMake(0, kHeaderH, kPanelW, settingsH)];
+    UIView *settings = [[UIView alloc] initWithFrame:CGRectMake(0, kCollapsedH, kPanelW, settingsH)];
     settings.backgroundColor = [UIColor colorWithRed:0.10 green:0.08 blue:0.18 alpha:0.98];
     settings.hidden = YES;
     [container addSubview:settings];
@@ -459,7 +460,7 @@ static UIColor *tierColor(SLBetTier tier) {
     }
 
     self.expanded = !self.expanded;
-    CGFloat h = self.expanded ? kExpandedH : kHeaderH;
+    CGFloat h = self.expanded ? kExpandedH : kCollapsedH;
     CGRect wf = self.window.frame;
     wf.size.height = h;
     self.bodyView.hidden = !self.expanded;
@@ -526,7 +527,7 @@ static UIColor *tierColor(SLBetTier tier) {
         self.settingsView.hidden = NO;
 
         CGFloat settingsH = 2 * kRowH + 12;
-        CGFloat totalH = kHeaderH + settingsH;
+        CGFloat totalH = kCollapsedH + settingsH;
         CGRect wf = self.window.frame;
         wf.size.height = totalH;
 
@@ -557,7 +558,7 @@ static UIColor *tierColor(SLBetTier tier) {
 
     // Restore body visibility based on expanded state
     self.bodyView.hidden = !self.expanded;
-    CGFloat h = self.expanded ? kExpandedH : kHeaderH;
+    CGFloat h = self.expanded ? kExpandedH : kCollapsedH;
     CGRect wf = self.window.frame;
     wf.size.height = h;
 
