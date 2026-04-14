@@ -240,6 +240,7 @@ typedef NS_ENUM(NSInteger, ScanPhase) {
 @property (nonatomic, assign) void *domain;
 @property (nonatomic, assign) BOOL prevSpinning;
 @property (nonatomic, assign) int32_t prevSpinNumber;
+@property (nonatomic, assign) int32_t lastSettledSpinNum;
 @property (nonatomic, strong, readwrite) SLScanSnapshot *latestSnapshot;
 
 @property (nonatomic, assign) int64_t spinsSeen;
@@ -596,18 +597,39 @@ static inline uint8_t readBool(void* obj, size_t offset) {
 
     // Track spin-end — read idx from bars and settle strategy engine
     BOOL isSpinning = (readBool(instance, fo_spinning) != 0);
-    BOOL spinEnded = (self.prevSpinning && !isSpinning);
-    self.prevSpinning = isSpinning;
-
-    // Fallback: during autospin the spinning flag may never appear as NO
-    // (transitions faster than our 250ms poll). Detect via spin number change.
     int32_t spinNum = readInt32(instance, fo_currentSpinNumber);
-    if (!spinEnded && self.prevSpinNumber > 0 && spinNum != self.prevSpinNumber) {
+
+    BOOL spinEnded = NO;
+
+    // Primary: spinning YES → NO (authoritative — reels have stopped)
+    if (self.prevSpinning && !isSpinning) {
         spinEnded = YES;
     }
+
+    // Fallback: spinNum changed — covers autospin where spinning
+    // transitions faster than our 250ms poll.
+    // BUT: skip when a manual spin is just starting (prevSpinning=NO,
+    // isSpinning=YES). At that point reels are still animating and
+    // resultSymbolIndex holds stale/intermediate values.
+    if (!spinEnded && self.prevSpinNumber > 0 && spinNum != self.prevSpinNumber) {
+        BOOL spinJustStarted = (!self.prevSpinning && isSpinning);
+        if (!spinJustStarted) {
+            spinEnded = YES;
+        }
+    }
+
+    self.prevSpinning = isSpinning;
     self.prevSpinNumber = spinNum;
 
-    if (spinEnded) self.spinsSeen++;
+    // Guard: never double-settle the same spin number
+    if (spinEnded && spinNum == self.lastSettledSpinNum) {
+        spinEnded = NO;
+    }
+
+    if (spinEnded) {
+        self.lastSettledSpinNum = spinNum;
+        self.spinsSeen++;
+    }
 
     if (spinEnded) {
         // Read strip idx from each bar's resultSymbolIndex
