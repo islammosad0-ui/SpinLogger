@@ -22,6 +22,8 @@ typedef const char* (*fn_field_get_name)(void* field);
 typedef size_t      (*fn_field_get_offset)(void* field);
 typedef void        (*fn_field_static_get_value)(void* field, void* value);
 typedef void        (*fn_runtime_class_init)(void* klass);
+typedef int         (*fn_class_array_element_size)(void* klass);
+typedef unsigned    (*fn_class_instance_size)(void* klass);
 
 // ============================================================
 //  Cached IL2CPP function pointers
@@ -40,6 +42,8 @@ static fn_field_get_name             _field_get_name;
 static fn_field_get_offset           _field_get_offset;
 static fn_field_static_get_value     _field_static_get_value;
 static fn_runtime_class_init         _runtime_class_init;
+static fn_class_array_element_size   _class_array_element_size;
+static fn_class_instance_size        _class_instance_size;
 
 // ============================================================
 //  Cached class pointers
@@ -100,6 +104,7 @@ static size_t fo_symbolReplacer      = 0;      // m_SymbolReplacer → SlotBarSy
 
 // SlotBarSymbolInfo
 static size_t fo_slotSymbolBacking   = 0;      // <SlotSymbol>k__BackingField
+static int    s_barSymInfoElemSize   = 0;      // array element size for value-type arrays
 
 // BoardManager
 static size_t fo_diceWinDict         = 0;      // m_DiceWinResultDictionary
@@ -297,6 +302,8 @@ typedef NS_ENUM(NSInteger, ScanPhase) {
     RESOLVE(field_get_offset);
     RESOLVE(field_static_get_value);
     RESOLVE(runtime_class_init);
+    RESOLVE(class_array_element_size);
+    RESOLVE(class_instance_size);
     #undef RESOLVE
 
     if (!_domain_get || !_domain_get_assemblies || !_class_get_field_from_name) {
@@ -437,6 +444,17 @@ static void* fieldHandleFor(void* klass, const char* fieldName) {
     if (s_klass_BarSymInfo) {
         // Auto-property backing field uses angle brackets in name
         fo_slotSymbolBacking = offsetFor(s_klass_BarSymInfo, "<SlotSymbol>k__BackingField", "SlotBarSymbolInfo");
+        // Get element size for value-type arrays
+        if (_class_array_element_size) {
+            s_barSymInfoElemSize = _class_array_element_size(s_klass_BarSymInfo);
+            NSLog(@"[SpinLogger] BarSymInfo: elemSize=%d backingOff=%zu", s_barSymInfoElemSize, fo_slotSymbolBacking);
+        }
+        if (s_barSymInfoElemSize <= 0 && _class_instance_size) {
+            // Fallback: instance_size includes object header (16 bytes on arm64)
+            unsigned isize = _class_instance_size(s_klass_BarSymInfo);
+            s_barSymInfoElemSize = (int)(isize > 16 ? isize - 16 : isize);
+            NSLog(@"[SpinLogger] BarSymInfo: instanceSize=%u -> elemSize=%d", isize, s_barSymInfoElemSize);
+        }
     }
 
     // BoardManager (optional)
@@ -565,6 +583,9 @@ static inline int32_t arrayLength32(void *array) {
     return *(int32_t *)((uint8_t *)array + kArrayLengthOffset);
 }
 
+/// Object header size for IL2CPP reference types (vtable + monitor on arm64)
+#define kObjHeaderSize 16
+
 /// Read the full post-replacement strip from a SlotBarManager's m_SymbolElements.
 /// Returns a comma-separated string of symbol enum values, e.g. "4,30,2,6,1,3,5,2,4".
 - (NSString *)readStripFromBar:(void *)bar {
@@ -576,23 +597,40 @@ static inline int32_t arrayLength32(void *array) {
     int32_t len = arrayLength32(elements);
     if (len <= 0 || len > 50) return nil;
 
+    uint8_t *data = (uint8_t *)elements + kArrayHeaderSize;
     NSMutableArray *parts = [NSMutableArray arrayWithCapacity:(NSUInteger)len];
 
-    if (fo_slotSymbolBacking) {
-        // Reference-type array: SlotBarSymbolInfo[] — read each object's backing field
+    // Check if this is a reference-type or value-type array.
+    // Reference-type: elements are pointers to heap objects.
+    // Value-type: elements are structs stored inline.
+    void *firstPtr = *(void **)data;
+    BOOL isRefArray = (firstPtr != NULL && looksLikeHeapPointer(firstPtr));
+
+    if (isRefArray && fo_slotSymbolBacking) {
+        // Reference-type array: SlotBarSymbolInfo[] — each element is a pointer
         for (int32_t i = 0; i < len; i++) {
-            void *info = arrayElementPtr(elements, i);
+            void *info = *(void **)(data + i * sizeof(void *));
             if (!info || !looksLikeHeapPointer(info)) {
                 [parts addObject:@"-1"];
                 continue;
             }
-            int32_t sym = readInt32(info, fo_slotSymbolBacking);
+            int32_t sym = *(int32_t *)((uint8_t *)info + fo_slotSymbolBacking);
+            [parts addObject:[NSString stringWithFormat:@"%d", sym]];
+        }
+    } else if (s_barSymInfoElemSize > 0 && fo_slotSymbolBacking >= kObjHeaderSize) {
+        // Value-type array: structs stored inline.
+        // Field offsets from IL2CPP include the object header (16 bytes),
+        // but value types in arrays have no header — subtract it.
+        size_t fieldInStruct = fo_slotSymbolBacking - kObjHeaderSize;
+        for (int32_t i = 0; i < len; i++) {
+            uint8_t *elemBase = data + i * s_barSymInfoElemSize;
+            int32_t sym = *(int32_t *)(elemBase + fieldInStruct);
             [parts addObject:[NSString stringWithFormat:@"%d", sym]];
         }
     } else {
-        // Fallback: try reading as value-type array (int32[])
+        // Last resort: try reading as plain int32[] (SlotSymbol enum array)
         for (int32_t i = 0; i < len; i++) {
-            int32_t val = *(int32_t *)((uint8_t *)elements + kArrayHeaderSize + i * sizeof(int32_t));
+            int32_t val = *(int32_t *)(data + i * sizeof(int32_t));
             [parts addObject:[NSString stringWithFormat:@"%d", val]];
         }
     }
@@ -745,14 +783,16 @@ static inline int32_t arrayLength32(void *array) {
         int32_t idx2 = (bar2 && fo_resultSymbolIndex) ? readInt32(bar2, fo_resultSymbolIndex) : -1;
         int32_t idx3 = (bar3 && fo_resultSymbolIndex) ? readInt32(bar3, fo_resultSymbolIndex) : -1;
 
-        // One-time field dump using C strings (avoids iOS privacy redaction)
+        // One-time diagnostic dump → written to file (bypasses iOS privacy redaction)
         static BOOL dumpedBarFields = NO;
         if (!dumpedBarFields && bar1 && s_klass_BarManager) {
             dumpedBarFields = YES;
-            // Dump SlotBarManager fields with C-string names
+            NSMutableString *dump = [NSMutableString stringWithString:@"=== STRIP DIAGNOSTIC DUMP ===\n"];
+
+            // Dump SlotBarManager fields
+            [dump appendString:@"\n--- SlotBarManager fields ---\n"];
             void *iter = NULL;
             void *field = NULL;
-            NSLog(@"[SpinLogger] === BAR1 FIELD DUMP ===");
             while ((field = _class_get_fields(s_klass_BarManager, &iter)) != NULL) {
                 const char *nm = _field_get_name(field);
                 if (!nm) continue;
@@ -760,34 +800,63 @@ static inline int32_t arrayLength32(void *array) {
                 if (off == 0) continue;
                 int32_t i32 = *(int32_t *)((uint8_t *)bar1 + off);
                 void *ptr = *(void **)((uint8_t *)bar1 + off);
-                NSLog(@"[SpinLogger]   field='%s' off=%zu i32=%d ptr=%p", nm, off, i32, ptr);
+                [dump appendFormat:@"  %s  off=%zu  i32=%d  ptr=%p\n", nm, off, i32, ptr];
             }
 
-            // Check m_SymbolElements array with int32 length
+            // Dump BarSymInfo class fields (schema only — no instance needed)
+            if (s_klass_BarSymInfo) {
+                [dump appendFormat:@"\n--- SlotBarSymbolInfo class fields (elemSize=%d) ---\n",
+                    s_barSymInfoElemSize];
+                void *iter2 = NULL;
+                void *field2 = NULL;
+                while ((field2 = _class_get_fields(s_klass_BarSymInfo, &iter2)) != NULL) {
+                    const char *nm2 = _field_get_name(field2);
+                    size_t off2 = _field_get_offset(field2);
+                    [dump appendFormat:@"  %s  off=%zu\n", nm2 ?: "?", off2];
+                }
+            }
+
+            // Dump raw hex from m_SymbolElements array data area
             if (fo_symbolElements) {
                 void *elements = readPtr(bar1, fo_symbolElements);
                 int32_t arrLen = elements ? arrayLength32(elements) : -1;
-                NSLog(@"[SpinLogger] m_SymbolElements: ptr=%p len32=%d", elements, arrLen);
+                [dump appendFormat:@"\n--- m_SymbolElements: ptr=%p len=%d ---\n", elements, arrLen];
                 if (elements && arrLen > 0 && arrLen <= 50) {
-                    void *firstElem = arrayElementPtr(elements, 0);
-                    NSLog(@"[SpinLogger] elem[0]=%p heap=%d", firstElem,
-                          firstElem ? (int)looksLikeHeapPointer(firstElem) : -1);
-                    // Dump first element's class fields if it's a valid object
-                    if (firstElem && looksLikeHeapPointer(firstElem) && s_klass_BarSymInfo) {
-                        void *iter2 = NULL;
-                        void *field2 = NULL;
-                        NSLog(@"[SpinLogger] === BarSymInfo[0] FIELDS ===");
-                        while ((field2 = _class_get_fields(s_klass_BarSymInfo, &iter2)) != NULL) {
-                            const char *nm2 = _field_get_name(field2);
-                            if (!nm2) continue;
-                            size_t off2 = _field_get_offset(field2);
-                            if (off2 == 0) continue;
-                            int32_t val = *(int32_t *)((uint8_t *)firstElem + off2);
-                            NSLog(@"[SpinLogger]   field='%s' off=%zu i32=%d", nm2, off2, val);
-                        }
+                    // Dump first 128 bytes of data area as hex + int32 interpretation
+                    uint8_t *data = (uint8_t *)elements + kArrayHeaderSize;
+                    int dumpBytes = arrLen * (s_barSymInfoElemSize > 0 ? s_barSymInfoElemSize : 8);
+                    if (dumpBytes > 256) dumpBytes = 256;
+                    [dump appendFormat:@"  data at +%d, dumping %d bytes:\n", kArrayHeaderSize, dumpBytes];
+                    for (int b = 0; b < dumpBytes; b += 4) {
+                        int32_t v = *(int32_t *)(data + b);
+                        [dump appendFormat:@"    +%3d: i32=%d  (0x%08x)\n", b, v, (unsigned)v];
                     }
                 }
             }
+
+            // Dump SlotBarSymbolReplacer info
+            if (fo_symbolReplacer) {
+                void *replacer = readPtr(bar1, fo_symbolReplacer);
+                [dump appendFormat:@"\n--- m_SymbolReplacer: ptr=%p ---\n", replacer];
+                if (replacer && looksLikeHeapPointer(replacer) && s_klass_BarRepl) {
+                    void *iter3 = NULL;
+                    void *field3 = NULL;
+                    while ((field3 = _class_get_fields(s_klass_BarRepl, &iter3)) != NULL) {
+                        const char *nm3 = _field_get_name(field3);
+                        size_t off3 = _field_get_offset(field3);
+                        if (off3 == 0) continue;
+                        int32_t val = *(int32_t *)((uint8_t *)replacer + off3);
+                        void *pval = *(void **)((uint8_t *)replacer + off3);
+                        [dump appendFormat:@"  %s  off=%zu  i32=%d  ptr=%p\n", nm3 ?: "?", off3, val, pval];
+                    }
+                }
+            }
+
+            // Write to Documents directory
+            NSString *docs = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
+            NSString *path = [docs stringByAppendingPathComponent:@"strip_diag.txt"];
+            [dump writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
+            NSLog(@"[SpinLogger] Strip diagnostic written to %@", path);
         }
 
         // Read full post-replacement strips from m_SymbolElements
