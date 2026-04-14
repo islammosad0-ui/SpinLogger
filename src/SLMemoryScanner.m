@@ -983,6 +983,87 @@ static inline int32_t arrayLength32(void *array) {
                 }
             }
 
+            // Dump currentSlotResult + SlotSymbol3 + DynamicSlotResults
+            {
+                void *slotResult = readPtr(instance, fo_currentSlotResult);
+                [dump appendFormat:@"\n--- currentSlotResult: ptr=%p ---\n", slotResult];
+                [dump appendFormat:@"  fo_slotSymbols=%zu  fo_symbol1=%zu fo_symbol2=%zu fo_symbol3=%zu\n",
+                     fo_slotSymbols, fo_symbol1, fo_symbol2, fo_symbol3];
+                if (slotResult && looksLikeHeapPointer(slotResult) && safeReadable(slotResult, 64)) {
+                    // Dump first 64 bytes of SlotResult
+                    [dump appendString:@"  Raw SlotResult bytes:\n"];
+                    for (int b = 0; b < 64; b += 4) {
+                        int32_t v = *(int32_t *)((uint8_t *)slotResult + b);
+                        [dump appendFormat:@"    +%2d: %d (0x%08x)\n", b, v, (unsigned)v];
+                    }
+                    // Dump SlotResult fields via reflection
+                    if (s_klass_Result) {
+                        [dump appendFormat:@"\n  SlotResult fields:\n"];
+                        void *iterR = NULL;
+                        void *fieldR = NULL;
+                        while ((fieldR = _class_get_fields(s_klass_Result, &iterR)) != NULL) {
+                            const char *nm = _field_get_name(fieldR);
+                            size_t off = _field_get_offset(fieldR);
+                            if (!nm || off == 0) continue;
+                            int32_t v = *(int32_t *)((uint8_t *)slotResult + off);
+                            void *pv = *(void **)((uint8_t *)slotResult + off);
+                            [dump appendFormat:@"    %s  off=%zu  i32=%d  ptr=%p\n", nm, off, v, pv];
+                        }
+                    }
+                    // Try reading symbols: slotSymbols is likely embedded struct
+                    // For value-type fields, offset is relative to containing object
+                    // symbol1/2/3 offsets from SlotSymbol3 may need adjustment
+                    if (fo_slotSymbols && fo_symbol1) {
+                        // SlotSymbol3 as embedded struct: symbols at slotResult+fo_slotSymbols+symbol_offset
+                        // But fo_symbol1 from offsetFor is relative to SlotSymbol3's own start
+                        // For value types, il2cpp returns offset including value-type header
+                        // which is typically sizeof(Il2CppObject)=16 on arm64.
+                        // So actual offset within parent = fo_slotSymbols + (fo_symbolN - 16)
+                        // BUT if SlotSymbol3 is a reference type, fo_slotSymbols is a pointer.
+                        // Dump both interpretations:
+                        int32_t s1_embed = *(int32_t *)((uint8_t *)slotResult + fo_slotSymbols + fo_symbol1 - 16);
+                        int32_t s2_embed = *(int32_t *)((uint8_t *)slotResult + fo_slotSymbols + fo_symbol2 - 16);
+                        int32_t s3_embed = *(int32_t *)((uint8_t *)slotResult + fo_slotSymbols + fo_symbol3 - 16);
+                        [dump appendFormat:@"\n  Symbols (embedded struct, -16): s1=%d s2=%d s3=%d\n",
+                             s1_embed, s2_embed, s3_embed];
+                        int32_t s1_raw = *(int32_t *)((uint8_t *)slotResult + fo_slotSymbols + fo_symbol1);
+                        int32_t s2_raw = *(int32_t *)((uint8_t *)slotResult + fo_slotSymbols + fo_symbol2);
+                        int32_t s3_raw = *(int32_t *)((uint8_t *)slotResult + fo_slotSymbols + fo_symbol3);
+                        [dump appendFormat:@"  Symbols (raw offset add): s1=%d s2=%d s3=%d\n",
+                             s1_raw, s2_raw, s3_raw];
+                        // Also try as direct offsets on slotResult (if SlotSymbol3 is a ref type)
+                        void *sym3ref = readPtr(slotResult, fo_slotSymbols);
+                        if (sym3ref && looksLikeHeapPointer(sym3ref) && safeReadable(sym3ref, 32)) {
+                            int32_t s1_ref = *(int32_t *)((uint8_t *)sym3ref + fo_symbol1);
+                            int32_t s2_ref = *(int32_t *)((uint8_t *)sym3ref + fo_symbol2);
+                            int32_t s3_ref = *(int32_t *)((uint8_t *)sym3ref + fo_symbol3);
+                            [dump appendFormat:@"  Symbols (ref type deref): s1=%d s2=%d s3=%d\n",
+                                 s1_ref, s2_ref, s3_ref];
+                        }
+                    }
+                }
+                // DynamicSlotResults
+                if (fo_dynamicResults) {
+                    void *dynResults = readPtr(instance, fo_dynamicResults);
+                    [dump appendFormat:@"\n--- DynamicSlotResults (off=%zu): ptr=%p ---\n",
+                         fo_dynamicResults, dynResults];
+                    if (dynResults && looksLikeHeapPointer(dynResults) && safeReadable(dynResults, 96)) {
+                        // Get runtime class name
+                        void *dynKlass = *(void **)dynResults;
+                        const char *dynClassName = "?";
+                        if (dynKlass && _class_get_name) {
+                            const char *cn = _class_get_name(dynKlass);
+                            if (cn) dynClassName = cn;
+                        }
+                        [dump appendFormat:@"  class=%s\n", dynClassName];
+                        for (int b = 0; b < 96; b += 4) {
+                            int32_t v = *(int32_t *)((uint8_t *)dynResults + b);
+                            [dump appendFormat:@"  +%2d: %d (0x%08x)\n", b, v, (unsigned)v];
+                        }
+                    }
+                }
+            }
+
             // Write to Documents directory
             NSString *docs = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
             NSString *path = [docs stringByAppendingPathComponent:@"strip_diag.txt"];
