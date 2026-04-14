@@ -600,14 +600,19 @@ static inline int32_t arrayLength32(void *array) {
     uint8_t *data = (uint8_t *)elements + kArrayHeaderSize;
     NSMutableArray *parts = [NSMutableArray arrayWithCapacity:(NSUInteger)len];
 
-    // Check if this is a reference-type or value-type array.
-    // Reference-type: elements are pointers to heap objects.
-    // Value-type: elements are structs stored inline.
-    void *firstPtr = *(void **)data;
-    BOOL isRefArray = (firstPtr != NULL && looksLikeHeapPointer(firstPtr));
+    // elemSize=8 and first element may be NULL (sparse reference array).
+    // Scan for ANY non-null pointer to detect reference-type array.
+    BOOL isRefArray = NO;
+    if (s_barSymInfoElemSize == sizeof(void *) && fo_slotSymbolBacking) {
+        for (int32_t i = 0; i < len; i++) {
+            void *p = *(void **)(data + i * sizeof(void *));
+            if (p && looksLikeHeapPointer(p)) { isRefArray = YES; break; }
+        }
+    }
 
-    if (isRefArray && fo_slotSymbolBacking) {
-        // Reference-type array: SlotBarSymbolInfo[] — each element is a pointer
+    if (isRefArray) {
+        // Sparse reference-type array: SlotBarSymbolInfo[] with NULL gaps.
+        // NULL = position uses base strip symbol (unknown to us), non-NULL = replaced/active.
         for (int32_t i = 0; i < len; i++) {
             void *info = *(void **)(data + i * sizeof(void *));
             if (!info || !looksLikeHeapPointer(info)) {
@@ -616,22 +621,6 @@ static inline int32_t arrayLength32(void *array) {
             }
             int32_t sym = *(int32_t *)((uint8_t *)info + fo_slotSymbolBacking);
             [parts addObject:[NSString stringWithFormat:@"%d", sym]];
-        }
-    } else if (s_barSymInfoElemSize > 0 && fo_slotSymbolBacking >= kObjHeaderSize) {
-        // Value-type array: structs stored inline.
-        // Field offsets from IL2CPP include the object header (16 bytes),
-        // but value types in arrays have no header — subtract it.
-        size_t fieldInStruct = fo_slotSymbolBacking - kObjHeaderSize;
-        for (int32_t i = 0; i < len; i++) {
-            uint8_t *elemBase = data + i * s_barSymInfoElemSize;
-            int32_t sym = *(int32_t *)(elemBase + fieldInStruct);
-            [parts addObject:[NSString stringWithFormat:@"%d", sym]];
-        }
-    } else {
-        // Last resort: try reading as plain int32[] (SlotSymbol enum array)
-        for (int32_t i = 0; i < len; i++) {
-            int32_t val = *(int32_t *)(data + i * sizeof(int32_t));
-            [parts addObject:[NSString stringWithFormat:@"%d", val]];
         }
     }
     return [parts componentsJoinedByString:@","];
@@ -834,7 +823,26 @@ static inline int32_t arrayLength32(void *array) {
                 }
             }
 
-            // Dump SlotBarSymbolReplacer info
+            // Read symbols from non-null elements
+            if (fo_symbolElements && fo_slotSymbolBacking) {
+                void *elements = readPtr(bar1, fo_symbolElements);
+                int32_t arrLen = elements ? arrayLength32(elements) : 0;
+                if (elements && arrLen > 0 && arrLen <= 50) {
+                    [dump appendFormat:@"\n--- Strip symbols (non-null elements) ---\n"];
+                    uint8_t *arrData = (uint8_t *)elements + kArrayHeaderSize;
+                    for (int32_t i = 0; i < arrLen; i++) {
+                        void *info = *(void **)(arrData + i * sizeof(void *));
+                        if (info && looksLikeHeapPointer(info)) {
+                            int32_t sym = *(int32_t *)((uint8_t *)info + fo_slotSymbolBacking);
+                            [dump appendFormat:@"  [%d] = sym %d  (ptr=%p)\n", i, sym, info];
+                        } else {
+                            [dump appendFormat:@"  [%d] = NULL (base strip)\n", i];
+                        }
+                    }
+                }
+            }
+
+            // Dump SlotBarSymbolReplacer + raw Dictionary hex
             if (fo_symbolReplacer) {
                 void *replacer = readPtr(bar1, fo_symbolReplacer);
                 [dump appendFormat:@"\n--- m_SymbolReplacer: ptr=%p ---\n", replacer];
@@ -848,6 +856,39 @@ static inline int32_t arrayLength32(void *array) {
                         int32_t val = *(int32_t *)((uint8_t *)replacer + off3);
                         void *pval = *(void **)((uint8_t *)replacer + off3);
                         [dump appendFormat:@"  %s  off=%zu  i32=%d  ptr=%p\n", nm3 ?: "?", off3, val, pval];
+                    }
+
+                    // Dump raw Dictionary at m_Replacements
+                    if (fo_replMap) {
+                        void *dict = readPtr(replacer, fo_replMap);
+                        [dump appendFormat:@"\n--- m_Replacements Dictionary raw (ptr=%p) ---\n", dict];
+                        if (dict && looksLikeHeapPointer(dict)) {
+                            // Dump first 96 bytes of Dictionary object
+                            for (int b = 0; b < 96; b += 8) {
+                                int32_t lo = *(int32_t *)((uint8_t *)dict + b);
+                                int32_t hi = *(int32_t *)((uint8_t *)dict + b + 4);
+                                void *ptr = *(void **)((uint8_t *)dict + b);
+                                [dump appendFormat:@"  +%2d: lo=%d hi=%d ptr=%p\n", b, lo, hi, ptr];
+                            }
+                            // Try reading _entries at common offsets
+                            for (int tryOff = 0x10; tryOff <= 0x30; tryOff += 8) {
+                                void *entries = *(void **)((uint8_t *)dict + tryOff);
+                                if (entries && looksLikeHeapPointer(entries)) {
+                                    int32_t eLen = arrayLength32(entries);
+                                    [dump appendFormat:@"\n  Candidate _entries at +0x%x: ptr=%p len=%d\n",
+                                         tryOff, entries, eLen];
+                                    if (eLen > 0 && eLen <= 20) {
+                                        uint8_t *eData = (uint8_t *)entries + kArrayHeaderSize;
+                                        int dumpSize = eLen * 16;
+                                        if (dumpSize > 256) dumpSize = 256;
+                                        for (int eb = 0; eb < dumpSize; eb += 4) {
+                                            int32_t ev = *(int32_t *)(eData + eb);
+                                            [dump appendFormat:@"    +%3d: %d (0x%08x)\n", eb, ev, (unsigned)ev];
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
