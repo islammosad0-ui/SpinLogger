@@ -66,6 +66,16 @@ static void* s_klass_DataProv    = NULL;  // SlotDataProvider
 static void* s_klass_PvpSlots    = NULL;  // PvpBaseCompetitorSlotsController (RNG ref)
 static void* s_klass_BaseSymCtrl = NULL;  // BaseSlotSymbolController (back-ref path)
 
+// Scanner v3 — comprehensive diagnostic classes
+static void* s_klass_SymMgr      = NULL;  // SlotMachine.SymbolManager (per-reel state)
+static void* s_klass_SlotMgr     = NULL;  // SlotMachine.SlotManager (secondary bar refs)
+static void* s_klass_ErrResults   = NULL;  // SlotMachine.SlotMachineErrorResults
+static void* s_klass_SpinAnimSpd  = NULL;  // SlotMachineSpinAnimationSpeed
+static void* s_klass_AddSlotsSvc  = NULL;  // AdditionalSlotsService
+static void* s_klass_SecondSlotCtrl = NULL; // SecondSlotSymbolController
+static void* s_klass_FreeSpinsReels = NULL; // FreeSpinsReelsHandler
+static void* s_klass_SlotSymToWS   = NULL;  // SlotSymbolToWeightedScenario
+
 // ============================================================
 //  Cached field handles & offsets
 //  Convention: fh_ = field handle, fo_ = field offset
@@ -149,6 +159,37 @@ static size_t fo_baseSymMgrRef       = 0;      // m_SlotMachineManager
 // via _field_static_get_value into a pointer target.
 static void*  fh_WeightsIdentical    = NULL;   // WEIGHTS_IDENTICAL_SYMBOLS
 static void*  fh_WeightsNonIdentical = NULL;   // WEIGHTS_NON_IDENTICAL_SYMBOLS
+
+// Scanner v3 — new field offsets/handles
+// SlotResult — win field
+static size_t fo_slotResultWin       = 0;      // win (int32)
+
+// SlotMachine.SymbolManager — per-reel spin state
+static size_t fo_smResultSymIdx      = 0;      // <ResultSymbolIndex>k__BackingField
+static size_t fo_smSpinning          = 0;      // spinning
+static size_t fo_smEndSpinning       = 0;      // endSpinning
+static size_t fo_smReadyToStop       = 0;      // readyToStop
+static size_t fo_smEndAnimating      = 0;      // endAnimating
+
+// SlotMachine.SlotMachineErrorResults
+static void*  fh_ErrSlotSymbols      = NULL;   // <SlotSymbolsOnError>k__BackingField (static)
+
+// SlotMachineManager — additional fields
+static size_t fo_lastResult          = 0;      // lastResult (SlotResult)
+static size_t fo_isReadyToProcess    = 0;      // isReadyToProcessSpinResult
+static size_t fo_spinAnimEnded       = 0;      // spinAnimationEnded
+static size_t fo_spinButtonState     = 0;      // spinButtonState
+
+// SlotMachine.SlotMachineSpinAnimationSpeed
+static size_t fo_spinSpeedMult       = 0;      // m_SpinAnimationSpeedMultiplier
+static size_t fo_spinSpeedMultAuto   = 0;      // m_SpinAnimationSpeedMultiplierAutoSpin
+
+// SecondSlotSymbolController — second slot results
+static size_t fo_secSlotSpinResult   = 0;      // m_SecondSlotSpinResult
+static size_t fo_secSlotResultSeq    = 0;      // m_ResultSeq
+
+// One-shot diagnostic flag
+static BOOL s_diagDumped = NO;
 
 // ============================================================
 //  IL2CPP array layout constants (arm64)
@@ -346,6 +387,23 @@ typedef NS_ENUM(NSInteger, ScanPhase) {
                 s_klass_PvpSlots = klass;
             else if (strcmp(name, "BaseSlotSymbolController") == 0 && !s_klass_BaseSymCtrl)
                 s_klass_BaseSymCtrl = klass;
+            // Scanner v3 — comprehensive diagnostic classes
+            else if (strcmp(name, "SymbolManager") == 0 && strcmp(ns, "SlotMachine") == 0)
+                s_klass_SymMgr = klass;
+            else if (strcmp(name, "SlotManager") == 0 && strcmp(ns, "SlotMachine") == 0)
+                s_klass_SlotMgr = klass;
+            else if (strcmp(name, "SlotMachineErrorResults") == 0 && strcmp(ns, "SlotMachine") == 0)
+                s_klass_ErrResults = klass;
+            else if (strcmp(name, "SlotMachineSpinAnimationSpeed") == 0 && !s_klass_SpinAnimSpd)
+                s_klass_SpinAnimSpd = klass;
+            else if (strcmp(name, "AdditionalSlotsService") == 0 && !s_klass_AddSlotsSvc)
+                s_klass_AddSlotsSvc = klass;
+            else if (strcmp(name, "SecondSlotSymbolController") == 0 && !s_klass_SecondSlotCtrl)
+                s_klass_SecondSlotCtrl = klass;
+            else if (strcmp(name, "FreeSpinsReelsHandler") == 0 && !s_klass_FreeSpinsReels)
+                s_klass_FreeSpinsReels = klass;
+            else if (strcmp(name, "SlotSymbolToWeightedScenario") == 0 && !s_klass_SlotSymToWS)
+                s_klass_SlotSymToWS = klass;
         }
     }
 
@@ -359,6 +417,9 @@ typedef NS_ENUM(NSInteger, ScanPhase) {
               s_klass_WinComp, s_klass_ScenBhv, s_klass_DataProv);
         NSLog(@"[SpinLogger] v2 extras:   PvpSlots=%p BaseSymCtrl=%p",
               s_klass_PvpSlots, s_klass_BaseSymCtrl);
+        NSLog(@"[SpinLogger] v3 classes:  SymMgr=%p SlotMgr=%p ErrRes=%p SpinSpd=%p AddSlots=%p SecSlot=%p FreeSpin=%p SymToWS=%p",
+              s_klass_SymMgr, s_klass_SlotMgr, s_klass_ErrResults, s_klass_SpinAnimSpd,
+              s_klass_AddSlotsSvc, s_klass_SecondSlotCtrl, s_klass_FreeSpinsReels, s_klass_SlotSymToWS);
     } else {
         NSLog(@"[SpinLogger] Some classes not found, retrying...");
     }
@@ -501,6 +562,47 @@ static void* fieldHandleFor(void* klass, const char* fieldName) {
     if (s_klass_BaseSymCtrl) {
         fo_baseSymMgrRef = offsetFor(s_klass_BaseSymCtrl, "m_SlotMachineManager",
                                      "BaseSlotSymbolController");
+    }
+
+    // Scanner v3 — SlotResult.win
+    fo_slotResultWin = offsetFor(s_klass_Result, "win", "SlotResult");
+
+    // Scanner v3 — additional Manager fields
+    fo_lastResult        = offsetFor(s_klass_Manager, "lastResult",                   "SlotMachineManager");
+    fo_isReadyToProcess  = offsetFor(s_klass_Manager, "isReadyToProcessSpinResult",   "SlotMachineManager");
+    fo_spinAnimEnded     = offsetFor(s_klass_Manager, "spinAnimationEnded",           "SlotMachineManager");
+    fo_spinButtonState   = offsetFor(s_klass_Manager, "spinButtonState",              "SlotMachineManager");
+
+    // Scanner v3 — SymbolManager (per-reel state machine)
+    if (s_klass_SymMgr) {
+        fo_smResultSymIdx = offsetFor(s_klass_SymMgr, "<ResultSymbolIndex>k__BackingField", "SymbolManager");
+        fo_smSpinning     = offsetFor(s_klass_SymMgr, "spinning",      "SymbolManager");
+        fo_smEndSpinning  = offsetFor(s_klass_SymMgr, "endSpinning",   "SymbolManager");
+        fo_smReadyToStop  = offsetFor(s_klass_SymMgr, "readyToStop",   "SymbolManager");
+        fo_smEndAnimating = offsetFor(s_klass_SymMgr, "endAnimating",  "SymbolManager");
+    }
+
+    // Scanner v3 — SlotMachineErrorResults (static fallback symbols)
+    if (s_klass_ErrResults) {
+        fh_ErrSlotSymbols = fieldHandleFor(s_klass_ErrResults,
+                                           "<SlotSymbolsOnError>k__BackingField");
+        if (_runtime_class_init) _runtime_class_init(s_klass_ErrResults);
+    }
+
+    // Scanner v3 — SlotMachineSpinAnimationSpeed
+    if (s_klass_SpinAnimSpd) {
+        fo_spinSpeedMult     = offsetFor(s_klass_SpinAnimSpd,
+                                         "m_SpinAnimationSpeedMultiplier",          "SpinAnimSpeed");
+        fo_spinSpeedMultAuto = offsetFor(s_klass_SpinAnimSpd,
+                                         "m_SpinAnimationSpeedMultiplierAutoSpin",  "SpinAnimSpeed");
+    }
+
+    // Scanner v3 — SecondSlotSymbolController
+    if (s_klass_SecondSlotCtrl) {
+        fo_secSlotSpinResult = offsetFor(s_klass_SecondSlotCtrl,
+                                         "m_SecondSlotSpinResult",  "SecondSlotSymbolCtrl");
+        fo_secSlotResultSeq  = offsetFor(s_klass_SecondSlotCtrl,
+                                         "m_ResultSeq",            "SecondSlotSymbolCtrl");
     }
 
     // SlotMachineManager static weight tables — read as static fields.
@@ -653,11 +755,305 @@ static inline int32_t arrayLength32(void *array) {
         int32_t idx2 = (bar2 && fo_resultSymbolIndex) ? readInt32(bar2, fo_resultSymbolIndex) : -1;
         int32_t idx3 = (bar3 && fo_resultSymbolIndex) ? readInt32(bar3, fo_resultSymbolIndex) : -1;
 
-        // Diagnostic dump removed — layout is confirmed:
-        // One strip [ATK,COIN,SHIELD,GOLD,STEAL,COIN,SPINS,GOLD,ACCUM]
-        // Method D: SlotResult+16 (ptr) -> deref -> +16/+20/+24 = symbols
-        // barSymbols: Manager+120, SlotSymbol[] with 9 int32 elements
-        // Replacements: cosmetic only, dead end for prediction
+        // ══════════════════════════════════════════════════════════
+        //  ONE-SHOT COMPREHENSIVE DIAGNOSTIC (first spin only)
+        // ══════════════════════════════════════════════════════════
+        if (!s_diagDumped) {
+            s_diagDumped = YES;
+            NSLog(@"[SpinLogger] ═══ COMPREHENSIVE DIAGNOSTIC DUMP ═══");
+
+            // §1 — Weight tables (WEIGHTS_IDENTICAL / NON_IDENTICAL)
+            if (fh_WeightsIdentical && _field_static_get_value) {
+                void *wIdent = NULL;
+                _field_static_get_value(fh_WeightsIdentical, &wIdent);
+                if (wIdent && looksLikeHeapPointer(wIdent)
+                    && safeReadable(wIdent, kArrayHeaderSize + 4)) {
+                    int32_t wLen = arrayLength32(wIdent);
+                    NSMutableString *ws = [NSMutableString stringWithFormat:
+                                           @"WEIGHTS_IDENT[%d]:", wLen];
+                    uint8_t *wData = (uint8_t *)wIdent + kArrayHeaderSize;
+                    int wRead = (wLen > 30) ? 30 : wLen;
+                    if (safeReadable(wData, (size_t)wRead * 4)) {
+                        for (int w = 0; w < wRead; w++)
+                            [ws appendFormat:@" %d", *(int32_t *)(wData + w * 4)];
+                    }
+                    NSLog(@"[SpinLogger] %@", ws);
+                } else {
+                    NSLog(@"[SpinLogger] WEIGHTS_IDENT: unreadable (ptr=%p)", wIdent);
+                }
+            }
+            if (fh_WeightsNonIdentical && _field_static_get_value) {
+                void *wNon = NULL;
+                _field_static_get_value(fh_WeightsNonIdentical, &wNon);
+                if (wNon && looksLikeHeapPointer(wNon)
+                    && safeReadable(wNon, kArrayHeaderSize + 4)) {
+                    int32_t wLen = arrayLength32(wNon);
+                    NSMutableString *ws = [NSMutableString stringWithFormat:
+                                           @"WEIGHTS_NON_IDENT[%d]:", wLen];
+                    uint8_t *wData = (uint8_t *)wNon + kArrayHeaderSize;
+                    int wRead = (wLen > 30) ? 30 : wLen;
+                    if (safeReadable(wData, (size_t)wRead * 4)) {
+                        for (int w = 0; w < wRead; w++)
+                            [ws appendFormat:@" %d", *(int32_t *)(wData + w * 4)];
+                    }
+                    NSLog(@"[SpinLogger] %@", ws);
+                } else {
+                    NSLog(@"[SpinLogger] WEIGHTS_NON_IDENT: unreadable (ptr=%p)", wNon);
+                }
+            }
+
+            // §2 — SlotMachineErrorResults.SlotSymbolsOnError (fallback symbols)
+            if (fh_ErrSlotSymbols && _field_static_get_value) {
+                void *errSyms = NULL;
+                _field_static_get_value(fh_ErrSlotSymbols, &errSyms);
+                if (errSyms && looksLikeHeapPointer(errSyms)
+                    && safeReadable(errSyms, kArrayHeaderSize + 4)) {
+                    int32_t eLen = arrayLength32(errSyms);
+                    NSMutableString *es = [NSMutableString stringWithFormat:
+                                            @"ErrorFallbackSymbols[%d]:", eLen];
+                    uint8_t *eData = (uint8_t *)errSyms + kArrayHeaderSize;
+                    int eRead = (eLen > 10) ? 10 : eLen;
+                    if (safeReadable(eData, (size_t)eRead * 4)) {
+                        for (int e = 0; e < eRead; e++)
+                            [es appendFormat:@" %d", *(int32_t *)(eData + e * 4)];
+                    }
+                    NSLog(@"[SpinLogger] %@", es);
+                } else {
+                    NSLog(@"[SpinLogger] ErrorFallbackSymbols: %p (unreadable or NULL)", errSyms);
+                }
+            } else {
+                NSLog(@"[SpinLogger] ErrorResults class: %s",
+                      s_klass_ErrResults ? "found but no field handle" : "NOT FOUND");
+            }
+
+            // §3 — Manager state fields
+            NSLog(@"[SpinLogger] Manager: isReadyToProcess=%d spinAnimEnded=%d spinBtnState=%d",
+                  fo_isReadyToProcess ? readInt32(instance, fo_isReadyToProcess) : -1,
+                  fo_spinAnimEnded    ? readInt32(instance, fo_spinAnimEnded) : -1,
+                  fo_spinButtonState  ? readInt32(instance, fo_spinButtonState) : -1);
+
+            // §4 — lastResult (previous spin's SlotResult — compare with currentSlotResult)
+            if (fo_lastResult) {
+                void *lastRes = readPtr(instance, fo_lastResult);
+                if (lastRes && looksLikeHeapPointer(lastRes)
+                    && fo_slotSymbols && safeReadable(lastRes, fo_slotSymbols + 8)) {
+                    void *lrSym = readPtr(lastRes, fo_slotSymbols);
+                    int32_t lrW = fo_slotResultWin ? readInt32(lastRes, fo_slotResultWin) : -1;
+                    if (lrSym && looksLikeHeapPointer(lrSym)
+                        && safeReadable(lrSym, fo_symbol3 + 4)) {
+                        int32_t ls1 = *(int32_t *)((uint8_t *)lrSym + fo_symbol1);
+                        int32_t ls2 = *(int32_t *)((uint8_t *)lrSym + fo_symbol2);
+                        int32_t ls3 = *(int32_t *)((uint8_t *)lrSym + fo_symbol3);
+                        NSLog(@"[SpinLogger] lastResult: sym=(%d,%d,%d) win=%d", ls1, ls2, ls3, lrW);
+                    }
+                } else {
+                    NSLog(@"[SpinLogger] lastResult: NULL or unreadable");
+                }
+            }
+
+            // §5 — Board3DManager: nearWinSymbol
+            if (s_klass_Board3D && fo_nearWinSymbol && fo_boardManager) {
+                void *boardMgr = readPtr(instance, fo_boardManager);
+                if (boardMgr && looksLikeHeapPointer(boardMgr)) {
+                    // Board3DManager is nested — try reading from BoardManager
+                    // fo_nearWinSymbol is on Board3DManager, but we may have it on BoardManager
+                    // Try direct read first
+                    int32_t nws = readInt32(boardMgr, fo_nearWinSymbol);
+                    NSLog(@"[SpinLogger] Board3D nearWinSymbol=%d (from boardMgr+%zu)", nws, fo_nearWinSymbol);
+                }
+            }
+
+            // §6 — SpinAnimationSpeed (if the object is reachable from Manager)
+            if (fo_animSpeedBacking) {
+                void *animSpd = readPtr(instance, fo_animSpeedBacking);
+                if (animSpd && looksLikeHeapPointer(animSpd) && s_klass_SpinAnimSpd) {
+                    if (fo_spinSpeedMult && safeReadable(animSpd, fo_spinSpeedMult + 4)) {
+                        // These are float fields
+                        float spd = *(float *)((uint8_t *)animSpd + fo_spinSpeedMult);
+                        float spdAuto = fo_spinSpeedMultAuto
+                            ? *(float *)((uint8_t *)animSpd + fo_spinSpeedMultAuto) : -1.0f;
+                        NSLog(@"[SpinLogger] SpinAnimSpeed: mult=%.3f autoMult=%.3f", spd, spdAuto);
+                    }
+                } else {
+                    NSLog(@"[SpinLogger] SpinAnimSpeed: ptr=%p (animSpeedBacking)", animSpd);
+                }
+            }
+
+            // §7 — SymbolManager per-reel state (via bar1/2/3)
+            if (s_klass_SymMgr && fo_smSpinning) {
+                void *bars[3] = {bar1, bar2, bar3};
+                const char *names[3] = {"bar1", "bar2", "bar3"};
+                for (int b = 0; b < 3; b++) {
+                    if (!bars[b]) continue;
+                    // SymbolManager is the component on the SlotBarManager game object
+                    // SlotBarManager IS the SymbolManager in some builds, or it's a
+                    // separate component. The fields we cached (fo_sm*) are SymbolManager
+                    // offsets. SlotBarManager has the same fields (resultSymbolIndex etc.)
+                    // but SymbolManager has the property-backed version.
+                    // Try reading from the bar directly using SymbolManager offsets:
+                    NSLog(@"[SpinLogger] %s: smSpinning=%d smEndSpin=%d smReady=%d smEndAnim=%d smResIdx=%d",
+                          names[b],
+                          fo_smSpinning     ? readInt32(bars[b], fo_smSpinning) : -1,
+                          fo_smEndSpinning  ? readInt32(bars[b], fo_smEndSpinning) : -1,
+                          fo_smReadyToStop  ? readInt32(bars[b], fo_smReadyToStop) : -1,
+                          fo_smEndAnimating ? readInt32(bars[b], fo_smEndAnimating) : -1,
+                          fo_smResultSymIdx ? readInt32(bars[b], fo_smResultSymIdx) : -1);
+                }
+            }
+
+            // §8 — PvpBaseCompetitorSlotsController.m_Random
+            if (s_klass_PvpSlots && fo_pvpRandom) {
+                NSLog(@"[SpinLogger] PvpSlots: class=%p fo_pvpRandom=%zu (need instance to read)",
+                      s_klass_PvpSlots, fo_pvpRandom);
+            }
+
+            // §9 — SlotSymbolToWeightedScenario (just log if found)
+            NSLog(@"[SpinLogger] SlotSymbolToWeightedScenario: %s",
+                  s_klass_SlotSymToWS ? "FOUND" : "not found");
+
+            // §10 — FreeSpinsReelsHandler
+            if (s_klass_FreeSpinsReels) {
+                NSLog(@"[SpinLogger] FreeSpinsReelsHandler: FOUND (class=%p)", s_klass_FreeSpinsReels);
+            }
+
+            // §11 — Hex dump first 128 bytes of Manager instance (field layout discovery)
+            if (safeReadable(instance, 128)) {
+                NSMutableString *hex = [NSMutableString stringWithString:@"Manager hex[0..127]: "];
+                uint8_t *p = (uint8_t *)instance;
+                for (int h = 0; h < 128; h++) {
+                    [hex appendFormat:@"%02x", p[h]];
+                    if ((h & 7) == 7) [hex appendString:@" "];
+                }
+                NSLog(@"[SpinLogger] %@", hex);
+            }
+
+            // §12 — Enumerate all fields on resolved classes (once)
+            void* diagClasses[] = {
+                s_klass_Manager, s_klass_Result, s_klass_SymMgr,
+                s_klass_ErrResults, s_klass_SpinAnimSpd, s_klass_SecondSlotCtrl,
+                s_klass_SlotSymToWS, s_klass_AddSlotsSvc
+            };
+            const char* diagNames[] = {
+                "SlotMachineManager", "SlotResult", "SymbolManager",
+                "ErrorResults", "SpinAnimSpeed", "SecondSlotCtrl",
+                "SymToWeightedScen", "AddSlotsService"
+            };
+            for (int ci = 0; ci < 8; ci++) {
+                if (!diagClasses[ci] || !_class_get_fields || !_field_get_name || !_field_get_offset)
+                    continue;
+                NSMutableString *fields = [NSMutableString stringWithFormat:
+                                            @"Fields[%s]:", diagNames[ci]];
+                void *iter = NULL;
+                void *field;
+                int fc = 0;
+                while ((field = _class_get_fields(diagClasses[ci], &iter)) && fc < 50) {
+                    const char *fn = _field_get_name(field);
+                    size_t off = _field_get_offset(field);
+                    [fields appendFormat:@" %s@%zu", fn ? fn : "?", off];
+                    fc++;
+                }
+                NSLog(@"[SpinLogger] %@", fields);
+            }
+
+            NSLog(@"[SpinLogger] ═══ END DIAGNOSTIC DUMP ═══");
+        }
+
+        // ══════════════════════════════════════════════════════════
+        //  PER-SPIN READS (every spin)
+        // ══════════════════════════════════════════════════════════
+
+        // ── SlotResult.win (reward amount) ──────────────────────
+        int32_t spinWin = 0;
+        if (fo_currentSlotResult && fo_slotResultWin) {
+            void *sr = readPtr(instance, fo_currentSlotResult);
+            if (sr && looksLikeHeapPointer(sr) && safeReadable(sr, fo_slotResultWin + 4)) {
+                spinWin = readInt32(sr, fo_slotResultWin);
+            }
+        }
+
+        // ── DynamicSlotResults (pre-pushed future spins) ────────
+        if (fo_dynamicResults) {
+            void *dynResults = readPtr(instance, fo_dynamicResults);
+            if (dynResults && looksLikeHeapPointer(dynResults)) {
+                if (safeReadable(dynResults, kArrayHeaderSize + 8)) {
+                    int32_t dynLen = arrayLength32(dynResults);
+                    NSLog(@"[SpinLogger] DynSlotResults: ptr=%p arrLen=%d", dynResults, dynLen);
+                    int readCount = (dynLen > 10) ? 10 : dynLen;
+                    for (int d = 0; d < readCount; d++) {
+                        void *dynSR = *(void **)((uint8_t *)dynResults + kArrayHeaderSize + d * 8);
+                        if (dynSR && looksLikeHeapPointer(dynSR)
+                            && fo_slotSymbols && fo_symbol1
+                            && safeReadable(dynSR, fo_slotSymbols + 8)) {
+                            void *dynSym3 = readPtr(dynSR, fo_slotSymbols);
+                            int32_t dWin = fo_slotResultWin ? readInt32(dynSR, fo_slotResultWin) : -1;
+                            if (dynSym3 && looksLikeHeapPointer(dynSym3)
+                                && safeReadable(dynSym3, fo_symbol3 + 4)) {
+                                int32_t ds1 = *(int32_t *)((uint8_t *)dynSym3 + fo_symbol1);
+                                int32_t ds2 = *(int32_t *)((uint8_t *)dynSym3 + fo_symbol2);
+                                int32_t ds3 = *(int32_t *)((uint8_t *)dynSym3 + fo_symbol3);
+                                NSLog(@"[SpinLogger]   Dyn[%d]: sym=(%d,%d,%d) win=%d",
+                                      d, ds1, ds2, ds3, dWin);
+                            } else {
+                                NSLog(@"[SpinLogger]   Dyn[%d]: sym3 unreadable (sr=%p)", d, dynSR);
+                            }
+                        } else if (d == 0) {
+                            // Try List<T> layout: _items@16, _size@24
+                            void *items = readPtr(dynResults, 16);
+                            int32_t size = readInt32(dynResults, 24);
+                            NSLog(@"[SpinLogger]   DynResults List<T>?: _items=%p _size=%d", items, size);
+                            if (items && looksLikeHeapPointer(items) && size > 0
+                                && safeReadable(items, kArrayHeaderSize + 8)) {
+                                int32_t itemsLen = arrayLength32(items);
+                                int listRead = (size > 10) ? 10 : size;
+                                for (int li = 0; li < listRead; li++) {
+                                    void *listSR = *(void **)((uint8_t *)items
+                                                               + kArrayHeaderSize + li * 8);
+                                    if (listSR && looksLikeHeapPointer(listSR)
+                                        && fo_slotSymbols && safeReadable(listSR, fo_slotSymbols + 8)) {
+                                        void *lSym3 = readPtr(listSR, fo_slotSymbols);
+                                        int32_t lW = fo_slotResultWin ? readInt32(listSR, fo_slotResultWin) : -1;
+                                        if (lSym3 && looksLikeHeapPointer(lSym3)
+                                            && safeReadable(lSym3, fo_symbol3 + 4)) {
+                                            int32_t ls1 = *(int32_t *)((uint8_t *)lSym3 + fo_symbol1);
+                                            int32_t ls2 = *(int32_t *)((uint8_t *)lSym3 + fo_symbol2);
+                                            int32_t ls3 = *(int32_t *)((uint8_t *)lSym3 + fo_symbol3);
+                                            NSLog(@"[SpinLogger]   DynList[%d]: sym=(%d,%d,%d) win=%d",
+                                                  li, ls1, ls2, ls3, lW);
+                                        }
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                    }
+                } else {
+                    NSLog(@"[SpinLogger] DynSlotResults: ptr=%p (unreadable)", dynResults);
+                }
+            } else {
+                NSLog(@"[SpinLogger] DynSlotResults: NULL");
+            }
+        }
+
+        // ── Weight tables (per-spin — detect drift) ─────────────
+        // Only log compact summary, not full array
+        if (fh_WeightsIdentical && _field_static_get_value) {
+            void *wI = NULL;
+            _field_static_get_value(fh_WeightsIdentical, &wI);
+            void *wN = NULL;
+            if (fh_WeightsNonIdentical)
+                _field_static_get_value(fh_WeightsNonIdentical, &wN);
+            // Log just pointer + first 3 values as drift sentinel
+            if (wI && looksLikeHeapPointer(wI) && safeReadable(wI, kArrayHeaderSize + 12)) {
+                uint8_t *d = (uint8_t *)wI + kArrayHeaderSize;
+                int32_t v0 = *(int32_t *)(d), v1 = *(int32_t *)(d+4), v2 = *(int32_t *)(d+8);
+                NSLog(@"[SpinLogger] W_ID ptr=%p head=[%d,%d,%d]", wI, v0, v1, v2);
+            }
+            if (wN && looksLikeHeapPointer(wN) && safeReadable(wN, kArrayHeaderSize + 12)) {
+                uint8_t *d = (uint8_t *)wN + kArrayHeaderSize;
+                int32_t v0 = *(int32_t *)(d), v1 = *(int32_t *)(d+4), v2 = *(int32_t *)(d+8);
+                NSLog(@"[SpinLogger] W_NI ptr=%p head=[%d,%d,%d]", wN, v0, v1, v2);
+            }
+        }
 
 
         // Read strip lengths
@@ -726,8 +1122,8 @@ static inline int32_t arrayLength32(void *array) {
             [[SLIdxStrategy shared] settlePendingWithSnapshot:snap];
         });
 
-        NSLog(@"[SpinLogger] Spin settled: idx=(%d,%d,%d) barSym=(%d,%d,%d) resSym=(%d,%d,%d)",
-              idx1, idx2, idx3, memSym1, memSym2, memSym3, resSym1, resSym2, resSym3);
+        NSLog(@"[SpinLogger] Spin settled: idx=(%d,%d,%d) barSym=(%d,%d,%d) resSym=(%d,%d,%d) win=%d",
+              idx1, idx2, idx3, memSym1, memSym2, memSym3, resSym1, resSym2, resSym3, spinWin);
     }
 }
 
