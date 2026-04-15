@@ -1004,75 +1004,93 @@ static inline int32_t arrayLength32(void *array) {
         //  PER-SPIN READS (every spin)
         // ══════════════════════════════════════════════════════════
 
-        // ── SlotResult.win (reward amount) ──────────────────────
+        // ── SlotResult hex dump + win ─────────────────────────
+        // win@24 might be a pointer (8 bytes), not int32 — dump raw bytes
         int32_t spinWin = 0;
-        if (fo_currentSlotResult && fo_slotResultWin) {
+        if (fo_currentSlotResult) {
             void *sr = readPtr(instance, fo_currentSlotResult);
-            if (sr && looksLikeHeapPointer(sr) && safeReadable(sr, fo_slotResultWin + 4)) {
-                spinWin = readInt32(sr, fo_slotResultWin);
+            if (sr && looksLikeHeapPointer(sr) && safeReadable(sr, 40)) {
+                // Hex dump first 40 bytes of SlotResult: header(16) + slotSymbols(8) + win(8+)
+                NSMutableString *srHex = [NSMutableString stringWithString:@"SR hex: "];
+                uint8_t *p = (uint8_t *)sr;
+                for (int h = 0; h < 40; h++) {
+                    [srHex appendFormat:@"%02x", p[h]];
+                    if ((h & 7) == 7) [srHex appendString:@" "];
+                }
+                // Also read win as both int32 and int64 and pointer
+                int32_t w32 = *(int32_t *)(p + 24);
+                int64_t w64 = *(int64_t *)(p + 24);
+                void *wPtr = *(void **)(p + 24);
+                diagLog(@"%@ w32=%d w64=%lld wPtr=%p", srHex, w32, w64, wPtr);
+
+                // If win looks like a pointer, try to dereference it
+                if (wPtr && looksLikeHeapPointer(wPtr) && safeReadable(wPtr, 32)) {
+                    NSMutableString *wHex = [NSMutableString stringWithString:@"  win obj hex: "];
+                    uint8_t *wp = (uint8_t *)wPtr;
+                    for (int h = 0; h < 32; h++) {
+                        [wHex appendFormat:@"%02x", wp[h]];
+                        if ((h & 7) == 7) [wHex appendString:@" "];
+                    }
+                    diagLog(@"%@", wHex);
+                }
+                spinWin = w32;  // keep for log line compat
             }
         }
 
-        // ── DynamicSlotResults (pre-pushed future spins) ────────
+        // ── DynamicSlotResults — hex dump to identify type ────
         if (fo_dynamicResults) {
             void *dynResults = readPtr(instance, fo_dynamicResults);
-            if (dynResults && looksLikeHeapPointer(dynResults)) {
-                if (safeReadable(dynResults, kArrayHeaderSize + 8)) {
-                    int32_t dynLen = arrayLength32(dynResults);
-                    diagLog(@"DynSlotResults: ptr=%p arrLen=%d", dynResults, dynLen);
-                    int readCount = (dynLen > 10) ? 10 : dynLen;
-                    for (int d = 0; d < readCount; d++) {
-                        void *dynSR = *(void **)((uint8_t *)dynResults + kArrayHeaderSize + d * 8);
-                        if (dynSR && looksLikeHeapPointer(dynSR)
-                            && fo_slotSymbols && fo_symbol1
-                            && safeReadable(dynSR, fo_slotSymbols + 8)) {
-                            void *dynSym3 = readPtr(dynSR, fo_slotSymbols);
-                            int32_t dWin = fo_slotResultWin ? readInt32(dynSR, fo_slotResultWin) : -1;
-                            if (dynSym3 && looksLikeHeapPointer(dynSym3)
-                                && safeReadable(dynSym3, fo_symbol3 + 4)) {
-                                int32_t ds1 = *(int32_t *)((uint8_t *)dynSym3 + fo_symbol1);
-                                int32_t ds2 = *(int32_t *)((uint8_t *)dynSym3 + fo_symbol2);
-                                int32_t ds3 = *(int32_t *)((uint8_t *)dynSym3 + fo_symbol3);
-                                diagLog(@"  Dyn[%d]: sym=(%d,%d,%d) win=%d",
-                                      d, ds1, ds2, ds3, dWin);
-                            } else {
-                                diagLog(@"  Dyn[%d]: sym3 unreadable (sr=%p)", d, dynSR);
+            if (dynResults && looksLikeHeapPointer(dynResults) && safeReadable(dynResults, 64)) {
+                NSMutableString *dHex = [NSMutableString stringWithString:@"DynSlotRes hex: "];
+                uint8_t *p = (uint8_t *)dynResults;
+                for (int h = 0; h < 64; h++) {
+                    [dHex appendFormat:@"%02x", p[h]];
+                    if ((h & 7) == 7) [dHex appendString:@" "];
+                }
+                diagLog(@"%@", dHex);
+
+                // Try treating it as a single SlotResult: slotSymbols@16, win@24
+                void *drSym3 = readPtr(dynResults, 16);
+                if (drSym3 && looksLikeHeapPointer(drSym3)
+                    && safeReadable(drSym3, fo_symbol3 + 4)) {
+                    int32_t ds1 = *(int32_t *)((uint8_t *)drSym3 + fo_symbol1);
+                    int32_t ds2 = *(int32_t *)((uint8_t *)drSym3 + fo_symbol2);
+                    int32_t ds3 = *(int32_t *)((uint8_t *)drSym3 + fo_symbol3);
+                    diagLog(@"  DynAsSlotResult: sym=(%d,%d,%d)", ds1, ds2, ds3);
+                }
+
+                // Try reading as Queue<T>: _array@16, _head@24, _tail@28, _size@32
+                void *qArr = readPtr(dynResults, 16);
+                int32_t qHead = readInt32(dynResults, 24);
+                int32_t qTail = readInt32(dynResults, 28);
+                int32_t qSize = readInt32(dynResults, 32);
+                diagLog(@"  AsQueue?: _array=%p head=%d tail=%d size=%d",
+                        qArr, qHead, qTail, qSize);
+
+                // If queue _array looks valid, read elements
+                if (qArr && looksLikeHeapPointer(qArr) && qSize > 0 && qSize < 100
+                    && safeReadable(qArr, kArrayHeaderSize + 8)) {
+                    int32_t qaLen = arrayLength32(qArr);
+                    diagLog(@"  Queue._array len=%d, reading %d elements:", qaLen, qSize);
+                    int readN = (qSize > 10) ? 10 : qSize;
+                    for (int qi = 0; qi < readN; qi++) {
+                        int actualIdx = (qHead + qi) % qaLen;
+                        void *qSR = *(void **)((uint8_t *)qArr + kArrayHeaderSize + actualIdx * 8);
+                        if (qSR && looksLikeHeapPointer(qSR) && fo_slotSymbols
+                            && safeReadable(qSR, fo_slotSymbols + 8)) {
+                            void *qSym3 = readPtr(qSR, fo_slotSymbols);
+                            if (qSym3 && looksLikeHeapPointer(qSym3)
+                                && safeReadable(qSym3, fo_symbol3 + 4)) {
+                                int32_t qs1 = *(int32_t *)((uint8_t *)qSym3 + fo_symbol1);
+                                int32_t qs2 = *(int32_t *)((uint8_t *)qSym3 + fo_symbol2);
+                                int32_t qs3 = *(int32_t *)((uint8_t *)qSym3 + fo_symbol3);
+                                diagLog(@"  Queue[%d]: sym=(%d,%d,%d)", qi, qs1, qs2, qs3);
                             }
-                        } else if (d == 0) {
-                            // Try List<T> layout: _items@16, _size@24
-                            void *items = readPtr(dynResults, 16);
-                            int32_t size = readInt32(dynResults, 24);
-                            diagLog(@"  DynResults List<T>?: _items=%p _size=%d", items, size);
-                            if (items && looksLikeHeapPointer(items) && size > 0
-                                && safeReadable(items, kArrayHeaderSize + 8)) {
-                                int32_t itemsLen = arrayLength32(items);
-                                int listRead = (size > 10) ? 10 : size;
-                                for (int li = 0; li < listRead; li++) {
-                                    void *listSR = *(void **)((uint8_t *)items
-                                                               + kArrayHeaderSize + li * 8);
-                                    if (listSR && looksLikeHeapPointer(listSR)
-                                        && fo_slotSymbols && safeReadable(listSR, fo_slotSymbols + 8)) {
-                                        void *lSym3 = readPtr(listSR, fo_slotSymbols);
-                                        int32_t lW = fo_slotResultWin ? readInt32(listSR, fo_slotResultWin) : -1;
-                                        if (lSym3 && looksLikeHeapPointer(lSym3)
-                                            && safeReadable(lSym3, fo_symbol3 + 4)) {
-                                            int32_t ls1 = *(int32_t *)((uint8_t *)lSym3 + fo_symbol1);
-                                            int32_t ls2 = *(int32_t *)((uint8_t *)lSym3 + fo_symbol2);
-                                            int32_t ls3 = *(int32_t *)((uint8_t *)lSym3 + fo_symbol3);
-                                            diagLog(@"  DynList[%d]: sym=(%d,%d,%d) win=%d",
-                                                  li, ls1, ls2, ls3, lW);
-                                        }
-                                    }
-                                }
-                            }
-                            break;
                         }
                     }
-                } else {
-                    diagLog(@"DynSlotResults: ptr=%p (unreadable)", dynResults);
                 }
             } else {
-                diagLog(@"DynSlotResults: NULL");
+                diagLog(@"DynSlotResults: %s", dynResults ? "unreadable" : "NULL");
             }
         }
 
