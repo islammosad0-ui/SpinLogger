@@ -191,6 +191,42 @@ static size_t fo_secSlotResultSeq    = 0;      // m_ResultSeq
 // One-shot diagnostic flag
 static BOOL s_diagDumped = NO;
 
+// Diagnostic file handle (opened once, appended per-spin)
+static NSFileHandle *s_diagFile = nil;
+static NSString *s_diagPath = nil;
+
+/// Open (or create) the diagnostic dump file in the game's Documents folder.
+static void diagFileOpen(void) {
+    if (s_diagFile) return;
+    NSString *docs = NSSearchPathForDirectoriesInDomains(
+        NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
+    s_diagPath = [docs stringByAppendingPathComponent:@"diag_dump.txt"];
+    // Create the file if it doesn't exist
+    if (![[NSFileManager defaultManager] fileExistsAtPath:s_diagPath]) {
+        [[NSFileManager defaultManager] createFileAtPath:s_diagPath contents:nil attributes:nil];
+    }
+    s_diagFile = [NSFileHandle fileHandleForWritingAtPath:s_diagPath];
+    [s_diagFile seekToEndOfFile];
+    // Write session header
+    NSString *hdr = [NSString stringWithFormat:@"\n═══ DIAGNOSTIC SESSION %@ ═══\n",
+                     [NSDate date]];
+    [s_diagFile writeData:[hdr dataUsingEncoding:NSUTF8StringEncoding]];
+}
+
+/// Write a line to both NSLog and the diagnostic file.
+static void diagLog(NSString *fmt, ...) NS_FORMAT_FUNCTION(1, 2);
+static void diagLog(NSString *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    NSString *msg = [[NSString alloc] initWithFormat:fmt arguments:args];
+    va_end(args);
+    NSLog(@"[SpinLogger] %@", msg);
+    if (s_diagFile) {
+        NSString *line = [msg stringByAppendingString:@"\n"];
+        [s_diagFile writeData:[line dataUsingEncoding:NSUTF8StringEncoding]];
+    }
+}
+
 // ============================================================
 //  IL2CPP array layout constants (arm64)
 // ============================================================
@@ -760,7 +796,8 @@ static inline int32_t arrayLength32(void *array) {
         // ══════════════════════════════════════════════════════════
         if (!s_diagDumped) {
             s_diagDumped = YES;
-            NSLog(@"[SpinLogger] ═══ COMPREHENSIVE DIAGNOSTIC DUMP ═══");
+            diagFileOpen();
+            diagLog(@"═══ COMPREHENSIVE DIAGNOSTIC DUMP ═══");
 
             // §1 — Weight tables (WEIGHTS_IDENTICAL / NON_IDENTICAL)
             if (fh_WeightsIdentical && _field_static_get_value) {
@@ -777,9 +814,9 @@ static inline int32_t arrayLength32(void *array) {
                         for (int w = 0; w < wRead; w++)
                             [ws appendFormat:@" %d", *(int32_t *)(wData + w * 4)];
                     }
-                    NSLog(@"[SpinLogger] %@", ws);
+                    diagLog(@"%@", ws);
                 } else {
-                    NSLog(@"[SpinLogger] WEIGHTS_IDENT: unreadable (ptr=%p)", wIdent);
+                    diagLog(@"WEIGHTS_IDENT: unreadable (ptr=%p)", wIdent);
                 }
             }
             if (fh_WeightsNonIdentical && _field_static_get_value) {
@@ -796,9 +833,9 @@ static inline int32_t arrayLength32(void *array) {
                         for (int w = 0; w < wRead; w++)
                             [ws appendFormat:@" %d", *(int32_t *)(wData + w * 4)];
                     }
-                    NSLog(@"[SpinLogger] %@", ws);
+                    diagLog(@"%@", ws);
                 } else {
-                    NSLog(@"[SpinLogger] WEIGHTS_NON_IDENT: unreadable (ptr=%p)", wNon);
+                    diagLog(@"WEIGHTS_NON_IDENT: unreadable (ptr=%p)", wNon);
                 }
             }
 
@@ -817,17 +854,17 @@ static inline int32_t arrayLength32(void *array) {
                         for (int e = 0; e < eRead; e++)
                             [es appendFormat:@" %d", *(int32_t *)(eData + e * 4)];
                     }
-                    NSLog(@"[SpinLogger] %@", es);
+                    diagLog(@"%@", es);
                 } else {
-                    NSLog(@"[SpinLogger] ErrorFallbackSymbols: %p (unreadable or NULL)", errSyms);
+                    diagLog(@"ErrorFallbackSymbols: %p (unreadable or NULL)", errSyms);
                 }
             } else {
-                NSLog(@"[SpinLogger] ErrorResults class: %s",
+                diagLog(@"ErrorResults class: %s",
                       s_klass_ErrResults ? "found but no field handle" : "NOT FOUND");
             }
 
             // §3 — Manager state fields
-            NSLog(@"[SpinLogger] Manager: isReadyToProcess=%d spinAnimEnded=%d spinBtnState=%d",
+            diagLog(@"Manager: isReadyToProcess=%d spinAnimEnded=%d spinBtnState=%d",
                   fo_isReadyToProcess ? readInt32(instance, fo_isReadyToProcess) : -1,
                   fo_spinAnimEnded    ? readInt32(instance, fo_spinAnimEnded) : -1,
                   fo_spinButtonState  ? readInt32(instance, fo_spinButtonState) : -1);
@@ -844,10 +881,10 @@ static inline int32_t arrayLength32(void *array) {
                         int32_t ls1 = *(int32_t *)((uint8_t *)lrSym + fo_symbol1);
                         int32_t ls2 = *(int32_t *)((uint8_t *)lrSym + fo_symbol2);
                         int32_t ls3 = *(int32_t *)((uint8_t *)lrSym + fo_symbol3);
-                        NSLog(@"[SpinLogger] lastResult: sym=(%d,%d,%d) win=%d", ls1, ls2, ls3, lrW);
+                        diagLog(@"lastResult: sym=(%d,%d,%d) win=%d", ls1, ls2, ls3, lrW);
                     }
                 } else {
-                    NSLog(@"[SpinLogger] lastResult: NULL or unreadable");
+                    diagLog(@"lastResult: NULL or unreadable");
                 }
             }
 
@@ -859,7 +896,7 @@ static inline int32_t arrayLength32(void *array) {
                     // fo_nearWinSymbol is on Board3DManager, but we may have it on BoardManager
                     // Try direct read first
                     int32_t nws = readInt32(boardMgr, fo_nearWinSymbol);
-                    NSLog(@"[SpinLogger] Board3D nearWinSymbol=%d (from boardMgr+%zu)", nws, fo_nearWinSymbol);
+                    diagLog(@"Board3D nearWinSymbol=%d (from boardMgr+%zu)", nws, fo_nearWinSymbol);
                 }
             }
 
@@ -872,10 +909,10 @@ static inline int32_t arrayLength32(void *array) {
                         float spd = *(float *)((uint8_t *)animSpd + fo_spinSpeedMult);
                         float spdAuto = fo_spinSpeedMultAuto
                             ? *(float *)((uint8_t *)animSpd + fo_spinSpeedMultAuto) : -1.0f;
-                        NSLog(@"[SpinLogger] SpinAnimSpeed: mult=%.3f autoMult=%.3f", spd, spdAuto);
+                        diagLog(@"SpinAnimSpeed: mult=%.3f autoMult=%.3f", spd, spdAuto);
                     }
                 } else {
-                    NSLog(@"[SpinLogger] SpinAnimSpeed: ptr=%p (animSpeedBacking)", animSpd);
+                    diagLog(@"SpinAnimSpeed: ptr=%p (animSpeedBacking)", animSpd);
                 }
             }
 
@@ -891,7 +928,7 @@ static inline int32_t arrayLength32(void *array) {
                     // offsets. SlotBarManager has the same fields (resultSymbolIndex etc.)
                     // but SymbolManager has the property-backed version.
                     // Try reading from the bar directly using SymbolManager offsets:
-                    NSLog(@"[SpinLogger] %s: smSpinning=%d smEndSpin=%d smReady=%d smEndAnim=%d smResIdx=%d",
+                    diagLog(@"%s: smSpinning=%d smEndSpin=%d smReady=%d smEndAnim=%d smResIdx=%d",
                           names[b],
                           fo_smSpinning     ? readInt32(bars[b], fo_smSpinning) : -1,
                           fo_smEndSpinning  ? readInt32(bars[b], fo_smEndSpinning) : -1,
@@ -903,17 +940,17 @@ static inline int32_t arrayLength32(void *array) {
 
             // §8 — PvpBaseCompetitorSlotsController.m_Random
             if (s_klass_PvpSlots && fo_pvpRandom) {
-                NSLog(@"[SpinLogger] PvpSlots: class=%p fo_pvpRandom=%zu (need instance to read)",
+                diagLog(@"PvpSlots: class=%p fo_pvpRandom=%zu (need instance to read)",
                       s_klass_PvpSlots, fo_pvpRandom);
             }
 
             // §9 — SlotSymbolToWeightedScenario (just log if found)
-            NSLog(@"[SpinLogger] SlotSymbolToWeightedScenario: %s",
+            diagLog(@"SlotSymbolToWeightedScenario: %s",
                   s_klass_SlotSymToWS ? "FOUND" : "not found");
 
             // §10 — FreeSpinsReelsHandler
             if (s_klass_FreeSpinsReels) {
-                NSLog(@"[SpinLogger] FreeSpinsReelsHandler: FOUND (class=%p)", s_klass_FreeSpinsReels);
+                diagLog(@"FreeSpinsReelsHandler: FOUND (class=%p)", s_klass_FreeSpinsReels);
             }
 
             // §11 — Hex dump first 128 bytes of Manager instance (field layout discovery)
@@ -924,7 +961,7 @@ static inline int32_t arrayLength32(void *array) {
                     [hex appendFormat:@"%02x", p[h]];
                     if ((h & 7) == 7) [hex appendString:@" "];
                 }
-                NSLog(@"[SpinLogger] %@", hex);
+                diagLog(@"%@", hex);
             }
 
             // §12 — Enumerate all fields on resolved classes (once)
@@ -952,11 +989,16 @@ static inline int32_t arrayLength32(void *array) {
                     [fields appendFormat:@" %s@%zu", fn ? fn : "?", off];
                     fc++;
                 }
-                NSLog(@"[SpinLogger] %@", fields);
+                diagLog(@"%@", fields);
             }
 
-            NSLog(@"[SpinLogger] ═══ END DIAGNOSTIC DUMP ═══");
+            diagLog(@"═══ END DIAGNOSTIC DUMP ═══");
+            // Flush the file so it's readable immediately
+            [s_diagFile synchronizeFile];
         }
+
+        // Ensure diag file is open for per-spin writes
+        if (!s_diagFile) diagFileOpen();
 
         // ══════════════════════════════════════════════════════════
         //  PER-SPIN READS (every spin)
@@ -977,7 +1019,7 @@ static inline int32_t arrayLength32(void *array) {
             if (dynResults && looksLikeHeapPointer(dynResults)) {
                 if (safeReadable(dynResults, kArrayHeaderSize + 8)) {
                     int32_t dynLen = arrayLength32(dynResults);
-                    NSLog(@"[SpinLogger] DynSlotResults: ptr=%p arrLen=%d", dynResults, dynLen);
+                    diagLog(@"DynSlotResults: ptr=%p arrLen=%d", dynResults, dynLen);
                     int readCount = (dynLen > 10) ? 10 : dynLen;
                     for (int d = 0; d < readCount; d++) {
                         void *dynSR = *(void **)((uint8_t *)dynResults + kArrayHeaderSize + d * 8);
@@ -991,16 +1033,16 @@ static inline int32_t arrayLength32(void *array) {
                                 int32_t ds1 = *(int32_t *)((uint8_t *)dynSym3 + fo_symbol1);
                                 int32_t ds2 = *(int32_t *)((uint8_t *)dynSym3 + fo_symbol2);
                                 int32_t ds3 = *(int32_t *)((uint8_t *)dynSym3 + fo_symbol3);
-                                NSLog(@"[SpinLogger]   Dyn[%d]: sym=(%d,%d,%d) win=%d",
+                                diagLog(@"  Dyn[%d]: sym=(%d,%d,%d) win=%d",
                                       d, ds1, ds2, ds3, dWin);
                             } else {
-                                NSLog(@"[SpinLogger]   Dyn[%d]: sym3 unreadable (sr=%p)", d, dynSR);
+                                diagLog(@"  Dyn[%d]: sym3 unreadable (sr=%p)", d, dynSR);
                             }
                         } else if (d == 0) {
                             // Try List<T> layout: _items@16, _size@24
                             void *items = readPtr(dynResults, 16);
                             int32_t size = readInt32(dynResults, 24);
-                            NSLog(@"[SpinLogger]   DynResults List<T>?: _items=%p _size=%d", items, size);
+                            diagLog(@"  DynResults List<T>?: _items=%p _size=%d", items, size);
                             if (items && looksLikeHeapPointer(items) && size > 0
                                 && safeReadable(items, kArrayHeaderSize + 8)) {
                                 int32_t itemsLen = arrayLength32(items);
@@ -1017,7 +1059,7 @@ static inline int32_t arrayLength32(void *array) {
                                             int32_t ls1 = *(int32_t *)((uint8_t *)lSym3 + fo_symbol1);
                                             int32_t ls2 = *(int32_t *)((uint8_t *)lSym3 + fo_symbol2);
                                             int32_t ls3 = *(int32_t *)((uint8_t *)lSym3 + fo_symbol3);
-                                            NSLog(@"[SpinLogger]   DynList[%d]: sym=(%d,%d,%d) win=%d",
+                                            diagLog(@"  DynList[%d]: sym=(%d,%d,%d) win=%d",
                                                   li, ls1, ls2, ls3, lW);
                                         }
                                     }
@@ -1027,10 +1069,10 @@ static inline int32_t arrayLength32(void *array) {
                         }
                     }
                 } else {
-                    NSLog(@"[SpinLogger] DynSlotResults: ptr=%p (unreadable)", dynResults);
+                    diagLog(@"DynSlotResults: ptr=%p (unreadable)", dynResults);
                 }
             } else {
-                NSLog(@"[SpinLogger] DynSlotResults: NULL");
+                diagLog(@"DynSlotResults: NULL");
             }
         }
 
@@ -1046,12 +1088,12 @@ static inline int32_t arrayLength32(void *array) {
             if (wI && looksLikeHeapPointer(wI) && safeReadable(wI, kArrayHeaderSize + 12)) {
                 uint8_t *d = (uint8_t *)wI + kArrayHeaderSize;
                 int32_t v0 = *(int32_t *)(d), v1 = *(int32_t *)(d+4), v2 = *(int32_t *)(d+8);
-                NSLog(@"[SpinLogger] W_ID ptr=%p head=[%d,%d,%d]", wI, v0, v1, v2);
+                diagLog(@"W_ID ptr=%p head=[%d,%d,%d]", wI, v0, v1, v2);
             }
             if (wN && looksLikeHeapPointer(wN) && safeReadable(wN, kArrayHeaderSize + 12)) {
                 uint8_t *d = (uint8_t *)wN + kArrayHeaderSize;
                 int32_t v0 = *(int32_t *)(d), v1 = *(int32_t *)(d+4), v2 = *(int32_t *)(d+8);
-                NSLog(@"[SpinLogger] W_NI ptr=%p head=[%d,%d,%d]", wN, v0, v1, v2);
+                diagLog(@"W_NI ptr=%p head=[%d,%d,%d]", wN, v0, v1, v2);
             }
         }
 
@@ -1122,8 +1164,9 @@ static inline int32_t arrayLength32(void *array) {
             [[SLIdxStrategy shared] settlePendingWithSnapshot:snap];
         });
 
-        NSLog(@"[SpinLogger] Spin settled: idx=(%d,%d,%d) barSym=(%d,%d,%d) resSym=(%d,%d,%d) win=%d",
+        diagLog(@"Spin settled: idx=(%d,%d,%d) barSym=(%d,%d,%d) resSym=(%d,%d,%d) win=%d",
               idx1, idx2, idx3, memSym1, memSym2, memSym3, resSym1, resSym2, resSym3, spinWin);
+        if (s_diagFile) [s_diagFile synchronizeFile];
     }
 }
 
