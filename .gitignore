@@ -5,3 +5,6 @@ __pycache__/
 
 # Large IL2CPP trace files (too big for GitHub, keep local)
 data/Ahmed/il2cpp_trace_*.jsonl
+
+# Local Claude Code config
+.claude/

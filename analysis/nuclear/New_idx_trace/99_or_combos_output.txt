@@ -1,0 +1,182 @@
+C:\Users\Islam Nawwar\SpinLogger\analysis\nuclear\New_idx_trace\99_or_combos.py:83: FutureWarning: Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+  sdf['prev_was_triple'] = sdf['is_triple'].shift(1).fillna(False)
+C:\Users\Islam Nawwar\SpinLogger\analysis\nuclear\New_idx_trace\99_or_combos.py:83: FutureWarning: Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+  sdf['prev_was_triple'] = sdf['is_triple'].shift(1).fillna(False)
+C:\Users\Islam Nawwar\SpinLogger\analysis\nuclear\New_idx_trace\99_or_combos.py:83: FutureWarning: Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+  sdf['prev_was_triple'] = sdf['is_triple'].shift(1).fillna(False)
+C:\Users\Islam Nawwar\SpinLogger\analysis\nuclear\New_idx_trace\99_or_combos.py:83: FutureWarning: Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+  sdf['prev_was_triple'] = sdf['is_triple'].shift(1).fillna(False)
+C:\Users\Islam Nawwar\SpinLogger\analysis\nuclear\New_idx_trace\99_or_combos.py:83: FutureWarning: Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+  sdf['prev_was_triple'] = sdf['is_triple'].shift(1).fillna(False)
+  Ahmed_v2: 1107 spins, 87 VTs
+  Ahmed_0413: 1952 spins, 45 VTs
+  Ahmed_0414: 834 spins, 14 VTs
+  Islam: 2753 spins, 59 VTs
+  Nick: 417 spins, 8 VTs
+
+Dataset: 7038 spins, 212 VTs (3.01%, 1 per 33)
+
+======================================================================
+PART 1: VT OVERLAP — do rules catch different VTs?
+======================================================================
+
+                               Rule A                              Rule B |  A_only  Both  B_only Union
+  ---------------------------------------------------------------------------------------------------------
+                           sa_spn>=45                          sa_acc>=50 |       2     7       2    11
+                           sa_spn>=45                             gap>=50 |       4     5      50    59
+                           sa_spn>=45                             gap>=40 |       2     7      64    73
+                           sa_spn>=45                          sa_acc>=45 |       0     9       6    15
+                           sa_spn>=40                          sa_acc>=45 |       0    12       3    15
+                           sa_spn>=40                             gap>=40 |       3     9      62    74
+                    gap>=40 & spn>=45                          sa_acc>=50 |       1     6       3    10
+                    gap>=40 & spn>=45                          sa_acc>=45 |       0     7       8    15
+          gap>=35 & spn>=45 & acc>=45                          sa_spn>=45 |       0     8       1     9
+                    gap>=40 & spn>=40                          sa_acc>=45 |       0     9       6    15
+
+======================================================================
+PART 2: OR COMBINATIONS — union of rules (targeting <=10 bph)
+======================================================================
+
+                                                     Rule   Prec%  Catch%     BPH   TP  Bets        p
+                                 sa_spn>=45 OR sa_acc>=54     9.8     5.2    10.2   11   112   0.0006
+                                 sa_spn>=45 OR sa_acc>=50     6.0     5.2    16.6   11   183   0.0237
+                     sa_spn>=45 OR (gap>=50 & sa_acc>=50)     6.9     4.7    14.4   10   144   0.0123
+                     sa_spn>=45 OR (gap>=40 & sa_acc>=50)     6.5     4.7    15.4   10   154   0.0188
+                          (gap>=40&spn>=45) OR sa_acc>=54     9.3     4.2    10.8    9    97   0.0027
+                   (gap>=40&spn>=45) OR (gap>=50&acc>=50)     9.1     3.8    11.0    8    88   0.0051
+                   (gap>=40&spn>=45) OR (gap>=40&acc>=50)     8.2     3.8    12.2    8    98   0.0097
+                   (gap>=40&spn>=40) OR (gap>=40&acc>=50)     6.7     4.7    14.9   10   149   0.0153
+                   (gap>=30&spn>=45) OR (gap>=30&acc>=54)    12.2     4.7     8.2   10    82   0.0002 ***
+                   (gap>=30&spn>=45) OR (gap>=40&acc>=50)     7.3     4.2    13.8    9   124   0.0130
+                   (gap>=30&spn>=45) OR (gap>=50&acc>=45)     6.8     6.1    14.7   13   191   0.0056
+                             spn>=45 OR (gap>=50&acc>=45)     6.3     6.6    15.8   14   221   0.0076
+                     spn>=45 OR (gap>=40&acc>=45&spn>=35)     5.4     5.2    18.5   11   204   0.0462
+                     spn>=45 OR (gap>=50&spn>=35&acc>=45)     5.7     5.2    17.5   11   192   0.0320
+                       gap>=30&spn>=40 OR gap>=30&acc>=50     6.0     5.7    16.6   12   199   0.0183
+                       gap>=30&spn>=40 OR gap>=40&acc>=45     6.0     6.6    16.7   14   234   0.0122
+                               gap>=30&spn>=40 OR acc>=54     5.8     5.7    17.2   12   206   0.0232
+                       gap>=35&spn>=40 OR gap>=35&acc>=50     6.9     5.7    14.5   12   174   0.0068
+                  spn>=45 OR acc>=54 OR (gap>=50&spn>=35)     6.6     9.0    15.2   19   289   0.0014
+                  spn>=45 OR acc>=54 OR (gap>=60&spn>=30)     5.2     9.4    19.3   20   386   0.0145
+        (gap>=40&spn>=40) OR acc>=54 OR (gap>=60&acc>=45)     5.8     5.7    17.2   12   207   0.0240
+  (gap>=30&spn>=45) OR (gap>=30&acc>=54) OR (gap>=60&spn>=35)     6.6     7.1    15.1   15   226   0.0039
+
+======================================================================
+PART 3: SYSTEMATIC OR SWEEP (gap+spn OR gap+acc)
+======================================================================
+
+Found 58 OR rules with <=10 bph and TP>=5
+
+TOP 30 by catch rate:
+                                                     Rule   Prec%  Catch%     BPH   TP  Bets        p
+  ----------------------------------------------------------------------------------------------------
+                                       spn>=45 OR acc>=55     9.7     4.7    10.3   10   103   0.0011
+                       (g>=35&spn>=45) OR (g>=35&acc>=55)    14.3     4.2     7.0    9    63   0.0001 ***
+                       (g>=35&spn>=45) OR (g>=30&acc>=55)    13.2     4.2     7.6    9    68   0.0002 ***
+                       (g>=30&spn>=45) OR (g>=30&acc>=55)    12.3     4.2     8.1    9    73   0.0003 ***
+                       (g>=25&spn>=45) OR (g>=25&acc>=55)    11.5     4.2     8.7    9    78   0.0006 ***
+                       (g>=40&spn>=45) OR (g>=35&acc>=55)    15.4     3.8     6.5    8    52   0.0002 ***
+                       (g>=40&spn>=45) OR (g>=30&acc>=55)    14.0     3.8     7.1    8    57   0.0003 ***
+                       (g>=35&spn>=45) OR (g>=55&acc>=55)    13.6     3.8     7.4    8    59   0.0004 ***
+                       (g>=35&spn>=45) OR (g>=40&acc>=55)    12.9     3.8     7.8    8    62   0.0005 ***
+                       (g>=30&spn>=45) OR (g>=55&acc>=55)    11.6     3.8     8.6    8    69   0.0011 ***
+                       (g>=30&spn>=45) OR (g>=40&acc>=55)    11.1     3.8     9.0    8    72   0.0015 ***
+                       (g>=25&spn>=45) OR (g>=55&acc>=55)    10.8     3.8     9.2    8    74   0.0017 ***
+                       (g>=25&spn>=45) OR (g>=40&acc>=55)    10.4     3.8     9.6    8    77   0.0022 ***
+                       (g>=40&spn>=45) OR (g>=55&acc>=55)    16.3     3.3     6.1    7    43   0.0003 ***
+                       (g>=40&spn>=45) OR (g>=40&acc>=55)    15.2     3.3     6.6    7    46   0.0004 ***
+                       (g>=45&spn>=45) OR (g>=35&acc>=55)    14.0     3.3     7.1    7    50   0.0007 ***
+                       (g>=45&spn>=45) OR (g>=30&acc>=55)    12.7     3.3     7.9    7    55   0.0013 ***
+                       (g>=45&spn>=45) OR (g>=25&acc>=55)    11.7     3.3     8.6    7    60   0.0021 ***
+                       (g>=45&spn>=45) OR (g>=40&acc>=55)    13.6     2.8     7.3    6    44   0.0020 ***
+                       (g>=50&spn>=45) OR (g>=55&acc>=55)    17.9     2.4     5.6    5    28   0.0014 ***
+                       (g>=50&spn>=45) OR (g>=50&acc>=55)    16.1     2.4     6.2    5    31   0.0022 ***
+                       (g>=45&spn>=45) OR (g>=55&acc>=55)    15.2     2.4     6.6    5    33   0.0029 ***
+                       (g>=45&spn>=45) OR (g>=45&acc>=55)    13.9     2.4     7.2    5    36   0.0043 ***
+                       (g>=35&spn>=50) OR (g>=35&acc>=55)    11.1     2.4     9.0    5    45   0.0111 ***
+                       (g>=30&spn>=50) OR (g>=30&acc>=55)    10.0     2.4    10.0    5    50   0.0171 ***
+
+======================================================================
+PART 4: PARETO FRONT — best catch at each bph bucket
+======================================================================
+
+    BPH                                                    Rule   Prec%  Catch%   TP  Bets        p
+  -----------------------------------------------------------------------------------------------
+    2.8                                           g>=50&spn>=45    35.7     2.4    5    14   0.0000 ***
+    4.1                                           g>=40&spn>=45    24.1     3.3    7    29   0.0000 ***
+    5.2                                   g>=35&spn>=45&acc>=45    19.0     3.8    8    42   0.0000 ***
+    5.6                                           g>=35&spn>=45    17.8     3.8    8    45   0.0001 ***
+    7.0                      (g>=35&spn>=45) OR (g>=35&acc>=55)    14.3     4.2    9    63   0.0001 ***
+    7.6                      (g>=35&spn>=45) OR (g>=30&acc>=55)    13.2     4.2    9    68   0.0002 ***
+    9.4                                                 spn>=45    10.6     4.2    9    85   0.0011 ***
+   10.3                                      spn>=45 OR acc>=55     9.7     4.7   10   103   0.0011 ***
+   11.0                                           g>=25&acc>=55     9.1     2.4    5    55   0.0248
+   12.0                                   g>=35&spn>=40&acc>=45     8.3     5.2   11   132   0.0023
+   13.1                                           g>=35&spn>=40     7.6     5.2   11   144   0.0044
+   14.4                                           g>=35&acc>=45     6.9     6.6   14   202   0.0035
+   15.2                                           g>=50&acc>=40     6.6     8.0   17   258   0.0024
+   15.7                                           g>=35&acc>=40     6.4    10.4   22   345   0.0009
+   17.0                                           g>=30&acc>=40     5.9    10.4   22   375   0.0026
+   18.4                                           g>=25&acc>=40     5.4    10.4   22   405   0.0064
+   18.8                                   g>=30&spn>=30&acc>=40     5.3     8.5   18   338   0.0153
+   20.5                                           g>=50&acc>=35     4.9    10.4   22   450   0.0196
+   21.4                                           g>=35&acc>=35     4.7    13.2   28   598   0.0160
+   21.9                                           g>=40&acc>=35     4.6    11.8   25   547   0.0280
+   23.0                                           g>=30&acc>=35     4.3    13.2   28   645   0.0370
+   24.3                                           g>=25&acc>=35     4.1    13.2   28   681   0.0637
+   25.0                                           g>=30&spn>=30     4.0    11.3   24   599   0.0997
+   26.5                                           g>=25&spn>=30     3.8    11.8   25   663   0.1517
+
+======================================================================
+PART 5: VT PROFILE — what separates caught vs missed VTs?
+======================================================================
+
+Using rule: spn>=45 OR (gap>=40 & acc>=50)
+Caught: 10 VTs, Missed: 202 VTs
+
+  gap:
+    Caught VTs:  mean=66.0, median=61.0, min=1, max=163
+    Missed VTs:  mean=50.8, median=21.5, min=1, max=1102
+
+  sa_spn:
+    Caught VTs:  mean=46.3, median=46.0, min=34, max=57
+    Missed VTs:  mean=17.4, median=17.0, min=1, max=43
+
+  sa_acc:
+    Caught VTs:  mean=56.0, median=54.0, min=46, max=76
+    Missed VTs:  mean=20.6, median=20.0, min=1, max=57
+
+  sa_spins:
+    Caught VTs:  mean=177.1, median=174.0, min=156, max=225
+    Missed VTs:  mean=64.5, median=60.0, min=3, max=173
+
+Missed VTs breakdown:
+  gap < 20: 99/202 (49%)
+  gap < 30: 117/202 (58%)
+  gap < 40: 139/202 (69%)
+  sa_spn < 30: 186/202 (92%)
+  sa_spn < 35: 193/202 (96%)
+  sa_spn < 40: 199/202 (99%)
+  sa_spn = NaN (no data): 87/202 (43%)
+
+======================================================================
+PART 6: THEORETICAL MAXIMUM — how good CAN we get?
+======================================================================
+
+Per-VT best indicators (all 212 VTs):
+            has_spn_45: 9/212 (4.2%)
+            has_spn_40: 12/212 (5.7%)
+            has_spn_35: 18/212 (8.5%)
+            has_acc_54: 8/212 (3.8%)
+            has_acc_50: 9/212 (4.2%)
+            has_acc_45: 15/212 (7.1%)
+            has_gap_50: 55/212 (25.9%)
+            has_gap_40: 71/212 (33.5%)
+            has_gap_30: 94/212 (44.3%)
+           has_sa_data: 125/212 (59.0%)
+
+  gap>=30 & (spn>=35 | acc>=45): 20/212 (9.4%)
+  Unreachable (gap<20 OR no sa_ data): 115/212 (54.2%)
+  Of 125 VTs with sa_ data: 21 have spn>=35 OR acc>=45 (16.8%)
+
+Done.

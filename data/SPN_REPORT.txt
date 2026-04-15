@@ -1,0 +1,402 @@
+
+######################################################################
+  SPN TRIPLE PATTERN ANALYSIS
+######################################################################
+
+Dataset: 51,095 spins, 572 SPN triples (1.119%)
+Accounts: 3 (Ahmed, Islam, Nick)
+
+
+======================================================================
+A) SPN SEQUENCE ANALYSIS
+======================================================================
+=== SPN TRIPLE SEQUENCE ANALYSIS ===
+  SPN triples with >=20 preceding spins: 572
+
+Symbol frequency in 20 spins before SPN triple vs baseline:
+
+              Baseline  Pre-SPN  Ratio
+attack          0.1683   0.1689 1.0034
+coin            0.2068   0.2076 1.0038
+steal           0.1106   0.1096 0.9916
+shield          0.0676   0.0712 1.0528
+spins           0.0844   0.0794 0.9401
+goldSack        0.2560   0.2571 1.0042
+accumulation    0.1063   0.1063 0.9998
+
+  ELEVATED before SPN triples (>5% above baseline): shield 
+  DEPLETED before SPN triples (>5% below baseline): spins 
+
+  Top 3-spin patterns before SPN triple:
+    gold -> gold -> gold                            360 (62.9%)
+    attack -> gold -> gold                           29 (5.1%)
+    gold -> gold -> attack                           29 (5.1%)
+    gold -> attack -> gold                           24 (4.2%)
+    steal -> gold -> gold                            20 (3.5%)
+    shield -> gold -> gold                           20 (3.5%)
+    gold -> shield -> gold                           18 (3.1%)
+    gold -> gold -> steal                            10 (1.7%)
+    gold -> gold -> shield                            9 (1.6%)
+    gold -> steal -> gold                             8 (1.4%)
+    attack -> gold -> steal                           5 (0.9%)
+    shield -> gold -> shield                          4 (0.7%)
+    attack -> gold -> attack                          4 (0.7%)
+    attack -> attack -> gold                          3 (0.5%)
+    shield -> gold -> attack                          3 (0.5%)
+
+  Statistical test (top 3-grams vs baseline):
+    gold -> gold -> gold                           obs=0.6294 base=0.6033 p=0.1085 
+    attack -> gold -> gold                         obs=0.0507 base=0.0500 p=0.4947 
+    gold -> gold -> attack                         obs=0.0507 base=0.0508 p=0.5289 
+    gold -> attack -> gold                         obs=0.0420 base=0.0507 p=0.8526 
+    steal -> gold -> gold                          obs=0.0350 base=0.0219 p=0.0299 *** SIGNIFICANT
+    shield -> gold -> gold                         obs=0.0350 base=0.0321 p=0.3814 
+    gold -> shield -> gold                         obs=0.0315 base=0.0317 p=0.5479 
+    gold -> gold -> steal                          obs=0.0175 base=0.0214 p=0.7787 
+
+  Top 5-spin patterns before SPN triple:
+    gold -> gold -> gold -> gold -> gold            255 (44.6%)
+    gold -> gold -> gold -> gold -> attack           22 (3.8%)
+    gold -> gold -> attack -> gold -> gold           20 (3.5%)
+    gold -> attack -> gold -> gold -> gold           19 (3.3%)
+    gold -> gold -> gold -> attack -> gold           19 (3.3%)
+    attack -> gold -> gold -> gold -> gold           18 (3.1%)
+    shield -> gold -> gold -> gold -> gold           16 (2.8%)
+    gold -> gold -> shield -> gold -> gold           16 (2.8%)
+    gold -> gold -> steal -> gold -> gold            15 (2.6%)
+    gold -> shield -> gold -> gold -> gold           13 (2.3%)
+    gold -> steal -> gold -> gold -> gold            13 (2.3%)
+    steal -> gold -> gold -> gold -> gold            12 (2.1%)
+    gold -> gold -> gold -> shield -> gold           11 (1.9%)
+    gold -> gold -> gold -> gold -> steal             7 (1.2%)
+    gold -> gold -> attack -> gold -> steal           5 (0.9%)
+
+  Statistical test (top 5-grams vs baseline):
+    gold -> gold -> gold -> gold -> gold           obs=0.4458 base=0.4265 p=0.1867 
+    gold -> gold -> gold -> gold -> attack         obs=0.0385 base=0.0370 p=0.4564 
+    gold -> gold -> attack -> gold -> gold         obs=0.0350 base=0.0371 p=0.6349 
+    gold -> attack -> gold -> gold -> gold         obs=0.0332 base=0.0367 p=0.7036 
+    gold -> gold -> gold -> attack -> gold         obs=0.0332 base=0.0378 p=0.7480 
+    attack -> gold -> gold -> gold -> gold         obs=0.0315 base=0.0358 p=0.7431 
+    shield -> gold -> gold -> gold -> gold         obs=0.0280 base=0.0232 p=0.2607 
+    gold -> gold -> shield -> gold -> gold         obs=0.0280 base=0.0233 p=0.2648 
+
+  What was the previous spin's triple_type? (last element of pre-window triples):
+    none                        396 (69.2%)
+    3x_coin                      52 (9.1%)
+    3x_attack                    42 (7.3%)
+    3x_goldSack                  40 (7.0%)
+    3x_steal                     18 (3.1%)
+    3x_shield                    18 (3.1%)
+    3x_accumulation               4 (0.7%)
+    3x_spins                      2 (0.3%)
+
+
+
+======================================================================
+B) SPN PERIODICITY
+======================================================================
+=== SPN TRIPLE PERIODICITY ===
+
+--- Ahmed (259 SPN triples, 23353 spins) ---
+  Gap stats: mean=90.0, median=86.0, std=56.7, min=3, max=422
+  Percentiles: 25th=49, 75th=118, 90th=154, 95th=172
+  Autocorrelation peaks (>0.0131):
+    Lag 343: r=0.0245
+    Lag 438: r=0.0206
+    Lag 461: r=0.0166
+    Lag 468: r=0.0166
+    Lag 360: r=0.0166
+    Lag 348: r=0.0166
+    Lag 251: r=0.0164
+    Lag 261: r=0.0164
+  Modular clustering:
+    mod   25: chi2=21.41, p=0.6147 
+    mod   50: chi2=50.46, p=0.4156 
+    mod   75: chi2=27.43, p=0.8469 
+    mod  100: chi2=48.53, p=0.4921 
+    mod  150: chi2=50.07, p=0.4306 
+    mod  200: chi2=41.19, p=0.7783 
+
+--- Islam (210 SPN triples, 18390 spins) ---
+  Gap stats: mean=87.7, median=76.0, std=58.4, min=1, max=314
+  Percentiles: 25th=44, 75th=123, 90th=167, 95th=194
+  Autocorrelation peaks (>0.0147):
+    Lag 183: r=0.0226
+    Lag 212: r=0.0226
+    Lag 483: r=0.0184
+    Lag 323: r=0.0181
+    Lag 352: r=0.0181
+    Lag 357: r=0.0181
+    Lag 385: r=0.0181
+    Lag 307: r=0.0180
+  Modular clustering:
+    mod   25: chi2=25.71, p=0.3678 
+    mod   50: chi2=19.52, p=0.7235 
+    mod   75: chi2=32.68, p=0.6274 
+    mod  100: chi2=36.67, p=0.2612 
+    mod  150: chi2=33.75, p=0.5761 
+    mod  200: chi2=40.67, p=0.3969 
+
+--- Nick (103 SPN triples, 9352 spins) ---
+  Gap stats: mean=90.5, median=87.0, std=56.5, min=1, max=355
+  Percentiles: 25th=52, 75th=126, 90th=153, 95th=167
+  Autocorrelation peaks (>0.0207):
+    Lag 438: r=0.0405
+    Lag 452: r=0.0405
+    Lag 460: r=0.0405
+    Lag 361: r=0.0403
+    Lag 223: r=0.0398
+    Lag 78: r=0.0384
+    Lag 400: r=0.0300
+    Lag 274: r=0.0298
+  Modular clustering:
+    mod   25: chi2=16.05, p=0.1392 
+    mod   50: chi2=20.07, p=0.1691 
+    mod   75: chi2=15.35, p=0.5702 
+    mod  100: chi2=26.90, p=0.1069 
+    mod  150: chi2=31.89, p=0.0155 *** SIGNIFICANT
+    mod  200: chi2=24.57, p=0.1751 
+
+
+
+======================================================================
+C) SPN BET CORRELATION
+======================================================================
+=== SPN TRIPLE vs BET LEVEL ===
+
+SPN triple rate by bet multiplier:
+
+ bet_multiplier  total  target_triples     rate      pct
+              1  35686             395 0.011069 1.106877
+              2   2056              22 0.010700 1.070039
+              3   1995              20 0.010025 1.002506
+             15   1453              15 0.010323 1.032347
+             50   3543              46 0.012983 1.298335
+             80      9               0 0.000000 0.000000
+            150     31               0 0.000000 0.000000
+            200    180               1 0.005556 0.555556
+            400   3711              41 0.011048 1.104823
+            600     69               1 0.014493 1.449275
+           1500   1890              22 0.011640 1.164021
+           2500     17               1 0.058824 5.882353
+           6000    416               7 0.016827 1.682692
+          10000      1               0 0.000000 0.000000
+          20000     38               1 0.026316 2.631579
+
+Chi-squared: chi2=8.02, p=0.8884, dof=14
+Not significant
+
+Bet switch analysis:
+  SPN rate on switch spin: 0.01237 (1.237%)
+  SPN rate on non-switch:  0.01115 (1.115%)
+  SPN rate in 5 spins post-switch: 0.01197 (1.197%)
+  Baseline: 0.01119 (1.119%)
+  Z-test: z=0.512, p=0.6084 
+
+SPN rate by bet_level:
+ bet_level  total  triples     rate      pct
+         4     28        0 0.000000 0.000000
+         6     84        3 0.035714 3.571429
+         7   6646       80 0.012037 1.203732
+         8   1831       23 0.012561 1.256144
+         9   8310       83 0.009988 0.998797
+        10   6744       82 0.012159 1.215896
+        11  27416      300 0.010943 1.094252
+
+
+
+======================================================================
+D) SPN DROUGHT ANALYSIS
+======================================================================
+=== SPN TRIPLE DROUGHT ANALYSIS ===
+
+Drought length stats (SPN triple gaps):
+  N gaps: 569
+  Mean: 89.3
+  Median: 83.0
+  Std: 57.3
+  Min: 1, Max: 422
+  Percentiles: 25th=48, 75th=123, 90th=159, 95th=183, 99th=281
+
+Geometric (memoryless) test:
+  Estimated p: 0.01120
+  Expected std (geometric): 88.7
+  Actual std: 57.3
+  Ratio: 0.646
+  *** TIGHTER than geometric -> pity timer / catch-up mechanism
+  KS test vs geometric: D=0.1749, p=0.000000
+  *** REJECTS geometric
+
+Conditional SPN triple probability by drought length:
+
+  Using sa_spn counter:
+
+    bin  lo  n_spins  n_target     rate      pct
+   0-10   0    17491       145 0.008290 0.828998
+  10-20  10    14168       168 0.011858 1.185771
+  20-40  20    15828       206 0.013015 1.301491
+  40-60  40     2754        40 0.014524 1.452433
+  60-80  60      626         9 0.014377 1.437700
+ 80-100  80      139         3 0.021583 2.158273
+100-130 100       89         1 0.011236 1.123596
+
+  Spearman r=0.429, p=0.337368
+  No significant trend
+
+Conditional rate by gap position (computed from sequential position):
+
+gap_bin  lo  n_spins  n_target     rate      pct
+   1-10   1     5082        23 0.004526 0.452578
+  10-25  10     7950        43 0.005409 0.540881
+  25-50  25    11691        84 0.007185 0.718501
+  50-75  50     9346        99 0.010593 1.059277
+ 75-100  75     6828       101 0.014792 1.479203
+100-140 100     6186       129 0.020854 2.085354
+140-180 140     2335        63 0.026981 2.698073
+180-250 180     1105        22 0.019910 1.990950
+250-999 250      569         8 0.014060 1.405975
+
+  Spearman r=0.783, p=0.012520
+  *** CONFIRMED: SPN triple rate increases with gap -> PITY TIMER
+
+
+
+======================================================================
+E) SPN TRANSITION ANALYSIS
+======================================================================
+=== SPN TRIPLE TRANSITION ANALYSIS ===
+
+P(SPN triple on next spin | current spin result):
+
+  After attack      : 0.01195 (1.195%) ratio=1.07x  n=3516
+  After gold        : 0.01137 (1.137%) ratio=1.02x  n=43257
+  After shield      : 0.00807 (0.807%) ratio=0.72x  n=2230
+  After spins       : 0.00350 (0.350%) ratio=0.31x  n=572
+  After steal       : 0.01187 (1.187%) ratio=1.06x  n=1517
+
+P(SPN triple in next 5 spins | current outcome):
+
+  After attack      : 0.05631 (5.631%)  expected=0.05473  ratio=1.03x
+  After gold        : 0.05569 (5.569%)  expected=0.05473  ratio=1.02x
+  After shield      : 0.05605 (5.605%)  expected=0.05473  ratio=1.02x
+  After spins       : 0.02273 (2.273%)  expected=0.05473  ratio=0.42x
+  After steal       : 0.06394 (6.394%)  expected=0.05473  ratio=1.17x
+
+P(SPN triple in next 10 spins | current outcome):
+
+  After attack      : 0.11433 (11.433%)  expected=0.10647  ratio=1.07x
+  After gold        : 0.11011 (11.011%)  expected=0.10647  ratio=1.03x
+  After shield      : 0.11345 (11.345%)  expected=0.10647  ratio=1.07x
+  After spins       : 0.04720 (4.720%)  expected=0.10647  ratio=0.44x
+  After steal       : 0.10481 (10.481%)  expected=0.10647  ratio=0.98x
+
+P(SPN triple in next 5 spins | seeing specific SYMBOL on previous spin):
+
+  Has attack         : 0.05673 (5.673%)  n=15988
+  Has coin           : 0.05681 (5.681%)  n=19590
+  Has steal          : 0.05864 (5.864%)  n=12194
+  Has shield         : 0.05349 (5.349%)  n=5403
+  Has spins          : 0.05475 (5.475%)  n=10264 <-- TARGET SYMBOL
+  Has goldSack       : 0.05506 (5.506%)  n=22940
+  Has accumulation   : 0.05360 (5.360%)  n=11997
+
+SPN near-miss analysis (2-of-3 matching spins):
+  Near-miss -> SPN triple in next 5: 0.05610 (5.610%)  baseline=0.05473  ratio=1.02x  n=1533
+
+
+
+======================================================================
+F) SPN REEL/POSITION ANALYSIS
+======================================================================
+=== SPN TRIPLE REEL/POSITION ANALYSIS ===
+
+Reel indices ON SPN triple spins (n=572):
+  r1_idx: mean=6.00, std=0.00, top values: 6(64)
+  r2_idx: mean=6.00, std=0.00, top values: 6(64)
+  r3_idx: mean=6.00, std=0.00, top values: 6(64)
+
+Reel indices on spin BEFORE SPN triple:
+  prev_r1_idx: mean=4.09, std=2.13
+  prev_r2_idx: mean=3.75, std=2.40
+  prev_r3_idx: mean=2.91, std=3.04
+
+SPN triple rate by reel index value:
+
+  r1_idx:
+    idx=-1: 0.000% (n=65)
+    idx= 0: 0.000% (n=437)
+    idx= 1: 0.000% (n=588)
+    idx= 2: 0.000% (n=441)
+    idx= 3: 0.000% (n=1487)
+    idx= 4: 0.000% (n=667)
+    idx= 5: 0.000% (n=514)
+    idx= 6: 11.449% (n=559)
+    idx= 7: 0.000% (n=1201)
+    idx= 8: 0.000% (n=62)
+
+  r2_idx:
+    idx=-1: 0.000% (n=65)
+    idx= 0: 0.000% (n=730)
+    idx= 1: 0.000% (n=678)
+    idx= 2: 0.000% (n=401)
+    idx= 3: 0.000% (n=812)
+    idx= 4: 0.000% (n=802)
+    idx= 5: 0.000% (n=545)
+    idx= 6: 7.382% (n=867)
+    idx= 7: 0.000% (n=644)
+    idx= 8: 0.000% (n=477)
+
+  r3_idx:
+    idx=-1: 0.000% (n=65)
+    idx= 0: 0.000% (n=1830)
+    idx= 1: 0.000% (n=749)
+    idx= 2: 0.000% (n=318)
+    idx= 3: 0.000% (n=256)
+    idx= 4: 0.000% (n=489)
+    idx= 5: 0.000% (n=602)
+    idx= 6: 76.190% (n=84)
+    idx= 7: 0.000% (n=192)
+    idx= 8: 0.000% (n=1436)
+
+  SPN triple rate when all 3 indices SAME: 5.157% (n=1241)
+  SPN triple rate when indices DIFFER: 1.019% (n=49854)
+
+SPN triple rate by r3_idx step from previous spin:
+  [Ahmed] step= -8: 0.000% (n=206) *** DEPLETED
+  [Ahmed] step= -7: 0.000% (n=126) *** DEPLETED
+  [Ahmed] step= -6: 0.000% (n=71) *** DEPLETED
+  [Ahmed] step= -5: 0.000% (n=130) *** DEPLETED
+  [Ahmed] step= -4: 0.000% (n=153) *** DEPLETED
+  [Ahmed] step= -3: 0.000% (n=151) *** DEPLETED
+  [Ahmed] step= -2: 5.825% (n=103) *** ELEVATED
+  [Ahmed] step= -1: 0.493% (n=203) *** DEPLETED
+  [Ahmed] step=  0: 0.000% (n=540) *** DEPLETED
+  [Ahmed] step=  1: 2.128% (n=188) *** ELEVATED
+  [Ahmed] step=  3: 0.000% (n=158) *** DEPLETED
+  [Ahmed] step=  4: 2.299% (n=174) *** ELEVATED
+  [Ahmed] step=  5: 4.969% (n=161) *** ELEVATED
+  [Ahmed] step=  6: 10.909% (n=55) *** ELEVATED
+  [Ahmed] step=  7: 0.909% (n=110) *** DEPLETED
+  [Ahmed] step=  8: 0.000% (n=194) *** DEPLETED
+  [Islam] step= -8: 0.000% (n=213) *** DEPLETED
+  [Islam] step= -7: 0.000% (n=123) *** DEPLETED
+  [Islam] step= -6: 0.000% (n=61) *** DEPLETED
+  [Islam] step= -5: 0.000% (n=111) *** DEPLETED
+  [Islam] step= -4: 0.000% (n=180) *** DEPLETED
+  [Islam] step= -3: 0.000% (n=138) *** DEPLETED
+  [Islam] step= -2: 5.102% (n=98) *** ELEVATED
+  [Islam] step= -1: 0.549% (n=182) *** DEPLETED
+  [Islam] step=  0: 0.000% (n=537) *** DEPLETED
+  [Islam] step=  1: 0.568% (n=176) *** DEPLETED
+  [Islam] step=  2: 2.778% (n=108) *** ELEVATED
+  [Islam] step=  4: 0.000% (n=183) *** DEPLETED
+  [Islam] step=  5: 9.091% (n=99) *** ELEVATED
+  [Islam] step=  6: 18.182% (n=55) *** ELEVATED
+  [Islam] step=  7: 0.000% (n=117) *** DEPLETED
+  [Islam] step=  8: 0.000% (n=216) *** DEPLETED
+  [Nick] step=  0: 0.000% (n=77) *** DEPLETED
+
+Symbol distribution on SPN triple reels:
+  Pct where all 3 reels show spins: 100.0%
+

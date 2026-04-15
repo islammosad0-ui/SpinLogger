@@ -1,0 +1,346 @@
+
+╔══════════════════════════════════════════════════════════════════════╗
+║  COMPREHENSIVE SPIN PATTERN ANALYSIS — EXECUTIVE SUMMARY           ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+Dataset: 51,095 spins across 3 accounts
+Triples: 15,733 (30.79%)
+Date range: 2026-04-05 02:41:32 -> 2026-04-15 05:20:07
+
+
+======================================================================
+A) SEQUENCE ANALYSIS
+======================================================================
+Symbol frequency in 15 spins before triples vs overall baseline:
+
+              Baseline Rate  Pre-Triple Rate  Ratio
+attack               0.1683           0.1677 0.9967
+coin                 0.2068           0.2068 0.9999
+steal                0.1106           0.1105 0.9989
+shield               0.0676           0.0670 0.9906
+spins                0.0844           0.0854 1.0114
+accumulation         0.1063           0.1065 1.0022
+
+(Ratio > 1.0 means symbol appears MORE often before triples)
+
+Top 15 three-spin patterns immediately before a triple:
+  gold -> gold -> gold            9689 (61.6%)
+  gold -> attack -> gold           807 (5.1%)
+  attack -> gold -> gold           779 (5.0%)
+  gold -> gold -> attack           754 (4.8%)
+  gold -> gold -> shield           480 (3.1%)
+  gold -> shield -> gold           463 (2.9%)
+  shield -> gold -> gold           462 (2.9%)
+  gold -> steal -> gold            366 (2.3%)
+  steal -> gold -> gold            325 (2.1%)
+  gold -> gold -> steal            324 (2.1%)
+  gold -> spins -> gold            132 (0.8%)
+  gold -> gold -> spins            132 (0.8%)
+  spins -> gold -> gold            121 (0.8%)
+  gold -> attack -> attack          56 (0.4%)
+  attack -> gold -> attack          53 (0.3%)
+
+Statistical test (top patterns vs baseline 3-gram frequency):
+  gold -> gold -> gold            obs=0.616 base=0.603 p=0.0004 *** SIGNIFICANT
+  gold -> attack -> gold          obs=0.051 base=0.051 p=0.3537 
+  attack -> gold -> gold          obs=0.050 base=0.050 p=0.5997 
+  gold -> gold -> attack          obs=0.048 base=0.051 p=0.9474 
+  gold -> gold -> shield          obs=0.031 base=0.032 p=0.7857 
+
+
+
+======================================================================
+B) CYCLE / PERIODICITY
+======================================================================
+
+--- Ahmed (7196 triples, 23353 spins) ---
+  Gap stats: mean=3.2, median=2.0, std=2.6, min=1, max=25
+  Significant autocorrelation peaks (>0.0131):
+    Lag 184: r=0.0211
+    Lag 452: r=0.0191
+    Lag 355: r=0.0190
+    Lag 346: r=0.0189
+    Lag 43: r=0.0176
+    Lag 246: r=0.0164
+    Lag 497: r=0.0155
+    Lag 376: r=0.0142
+    Lag 239: r=0.0136
+
+  Modular clustering test (chi-squared):
+    mod   25: χ²=14.12, p=0.9440 
+    mod   50: χ²=24.79, p=0.9985 
+    mod   75: χ²=54.57, p=0.9561 
+    mod  100: χ²=75.98, p=0.9586 
+    mod  150: χ²=102.93, p=0.9985 
+    mod  200: χ²=134.68, p=0.9999 
+
+--- Islam (5659 triples, 18390 spins) ---
+  Gap stats: mean=3.2, median=2.0, std=2.6, min=1, max=28
+  Significant autocorrelation peaks (>0.0147):
+    Lag 185: r=0.0224
+    Lag 362: r=0.0205
+    Lag 140: r=0.0199
+    Lag 213: r=0.0191
+    Lag 134: r=0.0173
+    Lag 414: r=0.0173
+    Lag 492: r=0.0163
+    Lag 465: r=0.0154
+    Lag 112: r=0.0151
+    Lag 86: r=0.0151
+
+  Modular clustering test (chi-squared):
+    mod   25: χ²=11.45, p=0.9854 
+    mod   50: χ²=24.33, p=0.9988 
+    mod   75: χ²=40.51, p=0.9995 
+    mod  100: χ²=52.38, p=1.0000 
+    mod  150: χ²=92.93, p=0.9999 
+    mod  200: χ²=133.86, p=0.9999 
+
+--- Nick (2878 triples, 9352 spins) ---
+  Gap stats: mean=3.2, median=2.0, std=2.6, min=1, max=20
+  Significant autocorrelation peaks (>0.0207):
+    Lag 113: r=0.0276
+    Lag 210: r=0.0228
+    Lag 283: r=0.0215
+    Lag 441: r=0.0215
+    Lag 159: r=0.0212
+    Lag 167: r=0.0211
+    Lag 416: r=0.0210
+    Lag 27: r=0.0208
+
+  Modular clustering test (chi-squared):
+    mod   25: χ²=12.22, p=0.9773 
+    mod   50: χ²=23.70, p=0.9991 
+    mod   75: χ²=62.06, p=0.8374 
+    mod  100: χ²=56.89, p=0.9998 
+    mod  150: χ²=106.89, p=0.9963 
+    mod  200: χ²=124.92, p=1.0000 
+
+  3x_attack inter-triple gaps (pooled): mean=14.5, median=11.0, std=12.7
+
+  3x_steal inter-triple gaps (pooled): mean=33.6, median=28.0, std=26.0
+
+  3x_shield inter-triple gaps (pooled): mean=22.9, median=18.0, std=19.6
+
+  3x_coin inter-triple gaps (pooled): mean=14.2, median=11.0, std=12.4
+
+  3x_spins inter-triple gaps (pooled): mean=89.3, median=83.0, std=57.3
+
+  3x_accumulation inter-triple gaps (pooled): mean=107.1, median=102.0, std=59.4
+
+
+
+======================================================================
+C) BET LEVEL CORRELATION
+======================================================================
+Triple rate by bet multiplier:
+
+ bet_multiplier  total_spins  triples  triple_rate        pct
+              1        35686    10919     0.305974  30.597433
+              2         2056      646     0.314202  31.420233
+              3         1995      612     0.306767  30.676692
+             15         1453      436     0.300069  30.006882
+             50         3543     1114     0.314423  31.442281
+             80            9        3     0.333333  33.333333
+            150           31       15     0.483871  48.387097
+            200          180       61     0.338889  33.888889
+            400         3711     1166     0.314201  31.420102
+            600           69       22     0.318841  31.884058
+           1500         1890      591     0.312698  31.269841
+           2500           17        9     0.529412  52.941176
+           6000          416      125     0.300481  30.048077
+          10000            1        1     1.000000 100.000000
+          20000           38       13     0.342105  34.210526
+
+Chi-squared test (triple rate vs bet multiplier): χ²=14.90, p=0.3852, dof=14
+Not significant: Triple rate appears independent of bet level
+
+Bet switch analysis:
+  Triple rate on switch spin: 0.3117
+  Triple rate on non-switch:  0.3078
+  Triple rate in 5 spins post-switch: 0.3106
+  Baseline triple rate: 0.3079
+  Z-test for switch vs no-switch: z=0.379, p=0.7050 
+
+Triple rate by bet_level:
+ bet_level  total_spins  triples  triple_rate
+         0           11        1     0.090909
+         2           12        4     0.333333
+         3           12        4     0.333333
+         4           28        6     0.214286
+         5            1        0     0.000000
+         6           84       33     0.392857
+         7         6646     2040     0.306952
+         8         1831      556     0.303659
+         9         8310     2560     0.308063
+        10         6744     2076     0.307829
+        11        27416     8453     0.308324
+
+
+
+======================================================================
+D) STREAK / DROUGHT ANALYSIS
+======================================================================
+Drought length statistics (gaps between ANY triple):
+  N gaps: 15730
+  Mean: 3.2
+  Median: 2.0
+  Std: 2.6
+  Min: 1, Max: 28
+  Percentiles: 25th=1, 75th=4, 90th=7, 99th=13
+
+Geometric (memoryless) test:
+  Estimated p (from mean): 0.3079
+  Expected std if geometric: 2.7
+  Actual std: 2.6
+  Ratio (actual/expected): 0.971
+  
+  
+  Distribution is consistent with geometric (memoryless/random)
+
+  KS test vs geometric: D=0.3079, p=0.0000
+  *** REJECTS geometric (NOT memoryless)
+
+Conditional triple probability by drought length:
+(Does P(triple) increase with drought? If yes -> pity timer)
+
+drought_bin  total_spins  total_triples       pct
+        0-5         1958            569 29.060266
+       5-10         2415            722 29.896480
+      10-20         4730           1450 30.655391
+      20-30         4558           1390 30.495832
+      30-50         8571           2583 30.136507
+      50-75         9218           2782 30.180082
+     75-100         7233           2270 31.383935
+    100-150         8531           2716 31.836830
+    150-200         2378            772 32.464256
+    200-999         1503            479 31.869594
+
+Spearman correlation (drought length vs triple rate): r=0.879, p=0.0008
+*** SIGNIFICANT POSITIVE TREND: Triple probability INCREASES with drought -> pity timer confirmed
+
+
+
+======================================================================
+E) TRANSITION MATRIX
+======================================================================
+Transition probability matrix P(next=col | current=row):
+
+        attack  gold  shield  spins  steal
+attack   0.061 0.856   0.042  0.012  0.029
+gold     0.070 0.845   0.044  0.011  0.030
+shield   0.068 0.854   0.041  0.008  0.029
+spins    0.073 0.853   0.040  0.003  0.030
+steal    0.063 0.858   0.046  0.012  0.021
+
+Chi-squared test for independence: χ²=13.63, p=0.625890, dof=16
+Not significant: transitions appear independent
+
+Most anomalous transitions (observed vs expected under independence):
+
+  1 significant transitions (p < 0.05) out of 24 tested:
+
+  steal        -> steal       : obs=0.021 exp=0.030 ratio=0.71x (LESS) z=-1.98 p=0.0481 n=32
+
+
+Triple probability in next 5 spins given current outcome:
+
+  After attack      : 0.3007 (baseline: 0.3079, ratio: 0.98x)
+  After gold        : 0.3093 (baseline: 0.3079, ratio: 1.00x)
+  After shield      : 0.3011 (baseline: 0.3079, ratio: 0.98x)
+  After spins       : 0.3087 (baseline: 0.3079, ratio: 1.00x)
+  After steal       : 0.2965 (baseline: 0.3079, ratio: 0.96x)
+
+
+
+======================================================================
+F) SYMBOL / POSITION PATTERNS
+======================================================================
+Reel index analysis (strip position cycling):
+
+  r1_idx: 10 unique values, range [-1.0-8.0]
+  r2_idx: 10 unique values, range [-1.0-8.0]
+  r3_idx: 10 unique values, range [-1.0-8.0]
+
+Reel index step analysis (consecutive spin differences):
+
+  Ahmed:
+    r1_idx step distribution (top 5): Δ0=444(15.7%), Δ1=313(11.0%), Δ-1=261(9.2%), Δ2=243(8.6%), Δ-4=229(8.1%)  [entropy=2.56]
+    r2_idx step distribution (top 5): Δ0=322(11.4%), Δ1=302(10.7%), Δ-1=245(8.6%), Δ-2=233(8.2%), Δ2=228(8.0%)  [entropy=2.70]
+    r3_idx step distribution (top 5): Δ0=540(19.1%), Δ-8=206(7.3%), Δ-1=203(7.2%), Δ8=194(6.8%), Δ1=188(6.6%)  [entropy=2.70]
+
+  Islam:
+    r1_idx step distribution (top 5): Δ0=439(15.9%), Δ1=268(9.7%), Δ-1=260(9.4%), Δ-2=240(8.7%), Δ-3=238(8.6%)  [entropy=2.55]
+    r2_idx step distribution (top 5): Δ0=353(12.7%), Δ1=256(9.2%), Δ2=251(9.1%), Δ-1=249(9.0%), Δ-3=236(8.5%)  [entropy=2.67]
+    r3_idx step distribution (top 5): Δ0=537(19.4%), Δ8=216(7.8%), Δ-8=213(7.7%), Δ4=183(6.6%), Δ-1=182(6.6%)  [entropy=2.68]
+
+  Nick:
+    r1_idx step distribution (top 5): Δ0=64(15.4%), Δ-1=42(10.1%), Δ2=42(10.1%), Δ-2=38(9.1%), Δ-3=36(8.7%)  [entropy=2.57]
+    r2_idx step distribution (top 5): Δ0=56(13.5%), Δ-1=53(12.7%), Δ1=37(8.9%), Δ3=36(8.7%), Δ-2=34(8.2%)  [entropy=2.65]
+    r3_idx step distribution (top 5): Δ0=77(18.5%), Δ-4=39(9.4%), Δ8=33(7.9%), Δ-8=31(7.5%), Δ1=30(7.2%)  [entropy=2.65]
+
+
+Reel index patterns before triples:
+
+  Triple rate by r1_idx quartile:
+    Q1: 60.03% (n=1531)
+    Q2: 15.20% (n=1487)
+    Q3: 24.43% (n=1740)
+    Q4: 22.49% (n=1263)
+
+  Triple rate by r2_idx quartile:
+    Q1: 49.15% (n=1874)
+    Q2: 26.02% (n=1614)
+    Q3: 17.56% (n=1412)
+    Q4: 23.64% (n=1121)
+
+  Triple rate by r3_idx quartile:
+    Q1: 22.59% (n=1895)
+    Q2: 56.99% (n=1323)
+    Q3: 44.62% (n=1367)
+    Q4: 4.32% (n=1436)
+
+  Triple rate when all 3 reel indices are SAME: 96.21% (n=1241)
+  Triple rate when indices differ: 29.16% (n=49854)
+
+
+Reel index values ON triple spins:
+  r1_idx on triples: mean=3.0, std=2.5, mode=0.0
+  r2_idx on triples: mean=2.9, std=2.5, mode=0.0
+  r3_idx on triples: mean=2.9, std=2.5, mode=0.0
+
+
+Symbol frequency per reel position:
+
+  reel_1:
+    attack          0.3080 (30.8%)
+    accumulation    0.2348 (23.5%)
+    coin            0.2324 (23.2%)
+    steal           0.0820 (8.2%)
+    goldSack        0.0750 (7.5%)
+    shield          0.0535 (5.3%)
+    spins           0.0143 (1.4%)
+
+  reel_2:
+    goldSack        0.2441 (24.4%)
+    coin            0.2062 (20.6%)
+    spins           0.1473 (14.7%)
+    steal           0.1359 (13.6%)
+    attack          0.1232 (12.3%)
+    accumulation    0.0747 (7.5%)
+    shield          0.0686 (6.9%)
+
+  reel_3:
+    goldSack        0.4490 (44.9%)
+    coin            0.1818 (18.2%)
+    steal           0.1139 (11.4%)
+    spins           0.0917 (9.2%)
+    shield          0.0807 (8.1%)
+    attack          0.0737 (7.4%)
+    accumulation    0.0093 (0.9%)
+
+
+Reel independence test (are reel 1, 2, 3 identically distributed?):
+  Chi-squared: χ²=42865.65, p=0.000000, dof=12
+  *** Reel distributions are DIFFERENT
+

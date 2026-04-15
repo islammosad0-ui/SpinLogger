@@ -1,0 +1,402 @@
+
+######################################################################
+  ACC TRIPLE PATTERN ANALYSIS
+######################################################################
+
+Dataset: 51,095 spins, 477 ACC triples (0.934%)
+Accounts: 3 (Ahmed, Islam, Nick)
+
+
+======================================================================
+A) ACC SEQUENCE ANALYSIS
+======================================================================
+=== ACC TRIPLE SEQUENCE ANALYSIS ===
+  ACC triples with >=20 preceding spins: 477
+
+Symbol frequency in 20 spins before ACC triple vs baseline:
+
+              Baseline  Pre-ACC  Ratio
+attack          0.1683   0.1682 0.9994
+coin            0.2068   0.2111 1.0211
+steal           0.1106   0.1111 1.0045
+shield          0.0676   0.0688 1.0174
+spins           0.0844   0.0869 1.0288
+goldSack        0.2560   0.2566 1.0021
+accumulation    0.1063   0.0974 0.9162
+
+  DEPLETED before ACC triples (>5% below baseline): accumulation 
+
+  Top 3-spin patterns before ACC triple:
+    gold -> gold -> gold                            293 (61.4%)
+    attack -> gold -> gold                           27 (5.7%)
+    gold -> gold -> attack                           24 (5.0%)
+    gold -> attack -> gold                           21 (4.4%)
+    gold -> gold -> shield                           18 (3.8%)
+    gold -> shield -> gold                           15 (3.1%)
+    steal -> gold -> gold                            12 (2.5%)
+    shield -> gold -> gold                           11 (2.3%)
+    gold -> gold -> spins                            10 (2.1%)
+    gold -> steal -> gold                             8 (1.7%)
+    gold -> gold -> steal                             7 (1.5%)
+    gold -> spins -> gold                             6 (1.3%)
+    attack -> gold -> attack                          3 (0.6%)
+    spins -> gold -> gold                             2 (0.4%)
+    attack -> gold -> steal                           2 (0.4%)
+
+  Statistical test (top 3-grams vs baseline):
+    gold -> gold -> gold                           obs=0.6143 base=0.6033 p=0.3297 
+    attack -> gold -> gold                         obs=0.0566 base=0.0500 p=0.2804 
+    gold -> gold -> attack                         obs=0.0503 base=0.0508 p=0.5465 
+    gold -> attack -> gold                         obs=0.0440 base=0.0507 p=0.7739 
+    gold -> gold -> shield                         obs=0.0377 base=0.0316 p=0.2551 
+    gold -> shield -> gold                         obs=0.0314 base=0.0317 p=0.5508 
+    steal -> gold -> gold                          obs=0.0252 base=0.0219 p=0.3554 
+    shield -> gold -> gold                         obs=0.0231 base=0.0321 p=0.9000 
+
+  Top 5-spin patterns before ACC triple:
+    gold -> gold -> gold -> gold -> gold            217 (45.5%)
+    gold -> gold -> attack -> gold -> gold           22 (4.6%)
+    gold -> gold -> gold -> gold -> attack           19 (4.0%)
+    attack -> gold -> gold -> gold -> gold           15 (3.1%)
+    gold -> attack -> gold -> gold -> gold           15 (3.1%)
+    gold -> shield -> gold -> gold -> gold           14 (2.9%)
+    gold -> gold -> gold -> gold -> shield           13 (2.7%)
+    gold -> gold -> gold -> attack -> gold           11 (2.3%)
+    gold -> steal -> gold -> gold -> gold            10 (2.1%)
+    gold -> gold -> gold -> shield -> gold            9 (1.9%)
+    gold -> gold -> steal -> gold -> gold             9 (1.9%)
+    gold -> gold -> shield -> gold -> gold            8 (1.7%)
+    shield -> gold -> gold -> gold -> gold            7 (1.5%)
+    gold -> gold -> gold -> gold -> spins             7 (1.5%)
+    gold -> gold -> gold -> steal -> gold             7 (1.5%)
+
+  Statistical test (top 5-grams vs baseline):
+    gold -> gold -> gold -> gold -> gold           obs=0.4549 base=0.4265 p=0.1138 
+    gold -> gold -> attack -> gold -> gold         obs=0.0461 base=0.0371 p=0.1751 
+    gold -> gold -> gold -> gold -> attack         obs=0.0398 base=0.0370 p=0.4040 
+    attack -> gold -> gold -> gold -> gold         obs=0.0314 base=0.0358 p=0.7304 
+    gold -> attack -> gold -> gold -> gold         obs=0.0314 base=0.0367 p=0.7639 
+    gold -> shield -> gold -> gold -> gold         obs=0.0294 base=0.0237 p=0.2467 
+    gold -> gold -> gold -> gold -> shield         obs=0.0273 base=0.0219 p=0.2518 
+    gold -> gold -> gold -> attack -> gold         obs=0.0231 base=0.0378 p=0.9724 
+
+  What was the previous spin's triple_type? (last element of pre-window triples):
+    none                        339 (71.1%)
+    3x_coin                      34 (7.1%)
+    3x_goldSack                  30 (6.3%)
+    3x_attack                    30 (6.3%)
+    3x_shield                    22 (4.6%)
+    3x_spins                     11 (2.3%)
+    3x_steal                     11 (2.3%)
+
+
+
+======================================================================
+B) ACC PERIODICITY
+======================================================================
+=== ACC TRIPLE PERIODICITY ===
+
+--- Ahmed (225 ACC triples, 23353 spins) ---
+  Gap stats: mean=103.9, median=102.0, std=52.3, min=10, max=382
+  Percentiles: 25th=67, 75th=136, 90th=159, 95th=176
+  Autocorrelation peaks (>0.0131):
+    Lag 393: r=0.0224
+    Lag 342: r=0.0222
+    Lag 260: r=0.0221
+    Lag 452: r=0.0178
+    Lag 487: r=0.0178
+    Lag 117: r=0.0173
+    Lag 140: r=0.0173
+    Lag 407: r=0.0133
+  Modular clustering:
+    mod   25: chi2=16.22, p=0.8799 
+    mod   50: chi2=16.89, p=0.8534 
+    mod   75: chi2=25.33, p=0.9078 
+    mod  100: chi2=35.26, p=0.3166 
+    mod  150: chi2=37.28, p=0.4101 
+    mod  200: chi2=39.00, p=0.4699 
+
+--- Islam (171 ACC triples, 18390 spins) ---
+  Gap stats: mean=107.7, median=96.5, std=67.3, min=3, max=443
+  Percentiles: 25th=62, 75th=148, 90th=179, 95th=215
+  Autocorrelation peaks (>0.0147):
+    Lag 482: r=0.0334
+    Lag 337: r=0.0269
+    Lag 314: r=0.0268
+    Lag 191: r=0.0263
+    Lag 440: r=0.0211
+    Lag 449: r=0.0211
+    Lag 387: r=0.0210
+    Lag 426: r=0.0210
+  Modular clustering:
+    mod   25: chi2=19.79, p=0.7087 
+    mod   50: chi2=19.79, p=0.7087 
+    mod   75: chi2=24.76, p=0.4189 
+    mod  100: chi2=21.02, p=0.9313 
+    mod  150: chi2=26.02, p=0.6246 
+    mod  200: chi2=17.93, p=0.9786 
+
+--- Nick (81 ACC triples, 9352 spins) ---
+  Gap stats: mean=114.8, median=113.0, std=59.2, min=9, max=340
+  Percentiles: 25th=78, 75th=140, 90th=183, 95th=221
+  Autocorrelation peaks (>0.0207):
+    Lag 498: r=0.0445
+    Lag 431: r=0.0312
+    Lag 456: r=0.0312
+    Lag 408: r=0.0306
+    Lag 340: r=0.0301
+    Lag 256: r=0.0298
+    Lag 282: r=0.0298
+    Lag 311: r=0.0298
+  Modular clustering:
+    mod   25: chi2=8.92, p=0.6295 
+    mod   50: chi2=18.18, p=0.0776 
+    mod   75: chi2=25.48, p=0.0301 *** SIGNIFICANT
+    mod  100: chi2=30.99, p=0.0034 *** SIGNIFICANT
+    mod  150: chi2=22.15, p=0.0756 
+    mod  200: chi2=20.53, p=0.1143 
+
+
+
+======================================================================
+C) ACC BET CORRELATION
+======================================================================
+=== ACC TRIPLE vs BET LEVEL ===
+
+ACC triple rate by bet multiplier:
+
+ bet_multiplier  total  target_triples     rate      pct
+              1  35686             260 0.007286 0.728577
+              2   2056              19 0.009241 0.924125
+              3   1995              19 0.009524 0.952381
+             15   1453              11 0.007571 0.757054
+             50   3543              56 0.015806 1.580581
+             80      9               0 0.000000 0.000000
+            150     31               1 0.032258 3.225806
+            200    180               5 0.027778 2.777778
+            400   3711              64 0.017246 1.724603
+            600     69               0 0.000000 0.000000
+           1500   1890              33 0.017460 1.746032
+           2500     17               0 0.000000 0.000000
+           6000    416               8 0.019231 1.923077
+          10000      1               0 0.000000 0.000000
+          20000     38               1 0.026316 2.631579
+
+Chi-squared: chi2=86.22, p=0.0000, dof=14
+*** SIGNIFICANT
+
+Bet switch analysis:
+  ACC rate on switch spin: 0.01534 (1.534%)
+  ACC rate on non-switch:  0.00909 (0.909%)
+  ACC rate in 5 spins post-switch: 0.01504 (1.504%)
+  Baseline: 0.00934 (0.934%)
+  Z-test: z=2.864, p=0.0042 *** SIGNIFICANT
+
+ACC rate by bet_level:
+ bet_level  total  triples     rate      pct
+         4     28        2 0.071429 7.142857
+         6     84        0 0.000000 0.000000
+         7   6646       67 0.010081 1.008125
+         8   1831       18 0.009831 0.983069
+         9   8310       71 0.008544 0.854392
+        10   6744       60 0.008897 0.889680
+        11  27416      258 0.009411 0.941056
+
+
+
+======================================================================
+D) ACC DROUGHT ANALYSIS
+======================================================================
+=== ACC TRIPLE DROUGHT ANALYSIS ===
+
+Drought length stats (ACC triple gaps):
+  N gaps: 474
+  Mean: 107.1
+  Median: 102.0
+  Std: 59.4
+  Min: 3, Max: 443
+  Percentiles: 25th=65, 75th=140, 90th=171, 95th=194, 99th=288
+
+Geometric (memoryless) test:
+  Estimated p: 0.00934
+  Expected std (geometric): 106.6
+  Actual std: 59.4
+  Ratio: 0.557
+  *** TIGHTER than geometric -> pity timer / catch-up mechanism
+  KS test vs geometric: D=0.2212, p=0.000000
+  *** REJECTS geometric
+
+Conditional ACC triple probability by drought length:
+
+  Using sa_acc counter:
+
+    bin  lo  n_spins  n_target     rate      pct
+   0-10   0    15177        35 0.002306 0.230612
+  10-20  10    13382        60 0.004484 0.448363
+  20-40  20    16763       223 0.013303 1.330311
+  40-60  40     4266       134 0.031411 3.141116
+  60-80  60      888        16 0.018018 1.801802
+ 80-100  80      315         6 0.019048 1.904762
+100-130 100      235         2 0.008511 0.851064
+130-160 130       69         1 0.014493 1.449275
+
+  Spearman r=0.476, p=0.232936
+  No significant trend
+
+Conditional rate by gap position (computed from sequential position):
+
+gap_bin  lo  n_spins  n_target     rate      pct
+   1-10   1     4308         4 0.000929 0.092851
+  10-25  10     6990        23 0.003290 0.329041
+  25-50  25    10777        51 0.004732 0.473230
+  50-75  50     9153        70 0.007648 0.764777
+ 75-100  75     7233        75 0.010369 1.036914
+100-140 100     7503       134 0.017860 1.785952
+140-180 140     2976        83 0.027890 2.788978
+180-250 180     1433        26 0.018144 1.814375
+250-999 250      719        11 0.015299 1.529903
+
+  Spearman r=0.883, p=0.001591
+  *** CONFIRMED: ACC triple rate increases with gap -> PITY TIMER
+
+
+
+======================================================================
+E) ACC TRANSITION ANALYSIS
+======================================================================
+=== ACC TRIPLE TRANSITION ANALYSIS ===
+
+P(ACC triple on next spin | current spin result):
+
+  After attack      : 0.00853 (0.853%) ratio=0.91x  n=3516
+  After gold        : 0.00932 (0.932%) ratio=1.00x  n=43257
+  After shield      : 0.00987 (0.987%) ratio=1.06x  n=2230
+  After spins       : 0.01923 (1.923%) ratio=2.06x  n=572
+  After steal       : 0.00725 (0.725%) ratio=0.78x  n=1517
+
+P(ACC triple in next 5 spins | current outcome):
+
+  After attack      : 0.04039 (4.039%)  expected=0.04581  ratio=0.88x
+  After gold        : 0.04721 (4.721%)  expected=0.04581  ratio=1.03x
+  After shield      : 0.04260 (4.260%)  expected=0.04581  ratio=0.93x
+  After spins       : 0.06818 (6.818%)  expected=0.04581  ratio=1.49x
+  After steal       : 0.04285 (4.285%)  expected=0.04581  ratio=0.94x
+
+P(ACC triple in next 10 spins | current outcome):
+
+  After attack      : 0.09329 (9.329%)  expected=0.08953  ratio=1.04x
+  After gold        : 0.09291 (9.291%)  expected=0.08953  ratio=1.04x
+  After shield      : 0.09148 (9.148%)  expected=0.08953  ratio=1.02x
+  After spins       : 0.10664 (10.664%)  expected=0.08953  ratio=1.19x
+  After steal       : 0.09361 (9.361%)  expected=0.08953  ratio=1.05x
+
+P(ACC triple in next 5 spins | seeing specific SYMBOL on previous spin):
+
+  Has attack         : 0.04566 (4.566%)  n=15988
+  Has coin           : 0.04747 (4.747%)  n=19590
+  Has steal          : 0.04822 (4.822%)  n=12194
+  Has shield         : 0.04757 (4.757%)  n=5403
+  Has spins          : 0.04716 (4.716%)  n=10264
+  Has goldSack       : 0.04791 (4.791%)  n=22940
+  Has accumulation   : 0.04301 (4.301%)  n=11997 <-- TARGET SYMBOL
+
+ACC near-miss analysis (2-of-3 matching accumulation):
+  Near-miss -> ACC triple in next 5: 0.04373 (4.373%)  baseline=0.04581  ratio=0.95x  n=3339
+
+
+
+======================================================================
+F) ACC REEL/POSITION ANALYSIS
+======================================================================
+=== ACC TRIPLE REEL/POSITION ANALYSIS ===
+
+Reel indices ON ACC triple spins (n=477):
+  r1_idx: mean=7.86, std=1.12, top values: 8(62), -1(1)
+  r2_idx: mean=7.86, std=1.12, top values: 8(62), -1(1)
+  r3_idx: mean=7.86, std=1.12, top values: 8(62), -1(1)
+
+Reel indices on spin BEFORE ACC triple:
+  prev_r1_idx: mean=3.78, std=2.18
+  prev_r2_idx: mean=3.79, std=2.39
+  prev_r3_idx: mean=3.19, std=3.06
+
+ACC triple rate by reel index value:
+
+  r1_idx:
+    idx=-1: 1.538% (n=65)
+    idx= 0: 0.000% (n=437)
+    idx= 1: 0.000% (n=588)
+    idx= 2: 0.000% (n=441)
+    idx= 3: 0.000% (n=1487)
+    idx= 4: 0.000% (n=667)
+    idx= 5: 0.000% (n=514)
+    idx= 6: 0.000% (n=559)
+    idx= 7: 0.000% (n=1201)
+    idx= 8: 100.000% (n=62)
+
+  r2_idx:
+    idx=-1: 1.538% (n=65)
+    idx= 0: 0.000% (n=730)
+    idx= 1: 0.000% (n=678)
+    idx= 2: 0.000% (n=401)
+    idx= 3: 0.000% (n=812)
+    idx= 4: 0.000% (n=802)
+    idx= 5: 0.000% (n=545)
+    idx= 6: 0.000% (n=867)
+    idx= 7: 0.000% (n=644)
+    idx= 8: 12.998% (n=477)
+
+  r3_idx:
+    idx=-1: 1.538% (n=65)
+    idx= 0: 0.000% (n=1830)
+    idx= 1: 0.000% (n=749)
+    idx= 2: 0.000% (n=318)
+    idx= 3: 0.000% (n=256)
+    idx= 4: 0.000% (n=489)
+    idx= 5: 0.000% (n=602)
+    idx= 6: 0.000% (n=84)
+    idx= 7: 0.000% (n=192)
+    idx= 8: 4.318% (n=1436)
+
+  ACC triple rate when all 3 indices SAME: 5.077% (n=1241)
+  ACC triple rate when indices DIFFER: 0.830% (n=49854)
+
+ACC triple rate by r3_idx step from previous spin:
+  [Ahmed] step= -8: 0.000% (n=206) *** DEPLETED
+  [Ahmed] step= -7: 0.000% (n=126) *** DEPLETED
+  [Ahmed] step= -6: 0.000% (n=71) *** DEPLETED
+  [Ahmed] step= -5: 0.000% (n=130) *** DEPLETED
+  [Ahmed] step= -4: 0.654% (n=153) *** DEPLETED
+  [Ahmed] step= -3: 0.000% (n=151) *** DEPLETED
+  [Ahmed] step= -2: 0.000% (n=103) *** DEPLETED
+  [Ahmed] step= -1: 0.000% (n=203) *** DEPLETED
+  [Ahmed] step=  0: 1.481% (n=540) *** ELEVATED
+  [Ahmed] step=  1: 0.000% (n=188) *** DEPLETED
+  [Ahmed] step=  2: 0.000% (n=103) *** DEPLETED
+  [Ahmed] step=  3: 1.266% (n=158) *** ELEVATED
+  [Ahmed] step=  4: 0.575% (n=174) *** DEPLETED
+  [Ahmed] step=  5: 3.106% (n=161) *** ELEVATED
+  [Ahmed] step=  6: 1.818% (n=55) *** ELEVATED
+  [Ahmed] step=  7: 2.727% (n=110) *** ELEVATED
+  [Ahmed] step=  8: 4.124% (n=194) *** ELEVATED
+  [Islam] step= -8: 0.000% (n=213) *** DEPLETED
+  [Islam] step= -7: 0.000% (n=123) *** DEPLETED
+  [Islam] step= -6: 0.000% (n=61) *** DEPLETED
+  [Islam] step= -5: 0.000% (n=111) *** DEPLETED
+  [Islam] step= -4: 0.000% (n=180) *** DEPLETED
+  [Islam] step= -3: 0.000% (n=138) *** DEPLETED
+  [Islam] step= -2: 0.000% (n=98) *** DEPLETED
+  [Islam] step= -1: 0.000% (n=182) *** DEPLETED
+  [Islam] step=  0: 0.745% (n=537) *** DEPLETED
+  [Islam] step=  1: 1.136% (n=176) *** ELEVATED
+  [Islam] step=  2: 1.852% (n=108) *** ELEVATED
+  [Islam] step=  3: 1.775% (n=169) *** ELEVATED
+  [Islam] step=  4: 0.546% (n=183) *** DEPLETED
+  [Islam] step=  6: 1.818% (n=55) *** ELEVATED
+  [Islam] step=  7: 4.274% (n=117) *** ELEVATED
+  [Islam] step=  8: 4.167% (n=216) *** ELEVATED
+  [Nick] step=  0: 0.000% (n=77) *** DEPLETED
+
+Symbol distribution on ACC triple reels:
+  Pct where all 3 reels show accumulation: 100.0%
+
