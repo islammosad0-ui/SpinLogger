@@ -1,0 +1,1515 @@
+{
+  "overview": {
+    "rows": 53993,
+    "sessions": 15,
+    "accounts": {
+      "Ahmed": 23353,
+      "Islam": 21288,
+      "Nick": 9352
+    }
+  },
+  "targets": {
+    "ACC": {
+      "events": 496,
+      "base_rate": 0.009186376011705221,
+      "base_next5": 0.04589483821976923,
+      "top_features": [
+        [
+          "accum_pct",
+          2692
+        ],
+        [
+          "ss_stl",
+          1993
+        ],
+        [
+          "sa_shd",
+          1793
+        ],
+        [
+          "ss_acc",
+          1692
+        ],
+        [
+          "ss_atk",
+          1565
+        ],
+        [
+          "sa_stl",
+          1487
+        ],
+        [
+          "sa_acc",
+          1479
+        ],
+        [
+          "sa_atk",
+          1309
+        ],
+        [
+          "gap_acc_mod100",
+          1248
+        ],
+        [
+          "sa_spn",
+          1213
+        ],
+        [
+          "ss_spins",
+          1190
+        ],
+        [
+          "gap_acc",
+          1161
+        ],
+        [
+          "ss_shd",
+          1018
+        ],
+        [
+          "bet_multiplier",
+          969
+        ],
+        [
+          "ss_spn",
+          838
+        ],
+        [
+          "gap_acc_mod50",
+          828
+        ],
+        [
+          "bet_level",
+          639
+        ],
+        [
+          "sa_spins",
+          363
+        ],
+        [
+          "gap_acc_mod20",
+          185
+        ],
+        [
+          "is_triple_sum10",
+          145
+        ]
+      ],
+      "strategies": {
+        "gap_warm": {
+          "per_spin": {
+            "alerts": 13543,
+            "alert_rate": 0.2508288111421851,
+            "next5_rate": 0.09207708779443255,
+            "baseline_next5": 0.04589483821976923,
+            "lift": 2.006262389541887
+          },
+          "episodes": {
+            "windows": 3024,
+            "windows_hit": 258,
+            "window_hit_rate": 0.08531746031746032,
+            "bet_spins": 14595,
+            "spins_per_hit": 56.56976744186046,
+            "caught_events": 258,
+            "capture_rate": 0.5201612903225806,
+            "session_rows": [
+              {
+                "session_id": "Ahmed|spin_history_2026-04-05.csv",
+                "windows": 336,
+                "hits": 40,
+                "bet_spins": 1588
+              },
+              {
+                "session_id": "Ahmed|spin_history_2026-04-06.csv",
+                "windows": 264,
+                "hits": 26,
+                "bet_spins": 1260
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-08.csv",
+                "windows": 92,
+                "hits": 11,
+                "bet_spins": 449
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-13.csv",
+                "windows": 86,
+                "hits": 9,
+                "bet_spins": 409
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-14.csv",
+                "windows": 50,
+                "hits": 4,
+                "bet_spins": 241
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_enriched.csv",
+                "windows": 317,
+                "hits": 24,
+                "bet_spins": 1535
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-04.csv",
+                "windows": 477,
+                "hits": 37,
+                "bet_spins": 2313
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-06.csv",
+                "windows": 334,
+                "hits": 22,
+                "bet_spins": 1621
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-10.csv",
+                "windows": 144,
+                "hits": 11,
+                "bet_spins": 701
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-13.csv",
+                "windows": 120,
+                "hits": 11,
+                "bet_spins": 582
+              },
+              {
+                "session_id": "Islam|spin_history_default_2026-04-06.csv",
+                "windows": 261,
+                "hits": 15,
+                "bet_spins": 1280
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-04.csv",
+                "windows": 189,
+                "hits": 11,
+                "bet_spins": 927
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-06.csv",
+                "windows": 27,
+                "hits": 4,
+                "bet_spins": 123
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-08.csv",
+                "windows": 323,
+                "hits": 33,
+                "bet_spins": 1549
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-13.csv",
+                "windows": 4,
+                "hits": 0,
+                "bet_spins": 17
+              }
+            ]
+          }
+        },
+        "gap_hot": {
+          "per_spin": {
+            "alerts": 5424,
+            "alert_rate": 0.10045746670864741,
+            "next5_rate": 0.10637905604719763,
+            "baseline_next5": 0.04589483821976923,
+            "lift": 2.317887156237426
+          },
+          "episodes": {
+            "windows": 1227,
+            "windows_hit": 120,
+            "window_hit_rate": 0.097799511002445,
+            "bet_spins": 5900,
+            "spins_per_hit": 49.166666666666664,
+            "caught_events": 120,
+            "capture_rate": 0.24193548387096775,
+            "session_rows": [
+              {
+                "session_id": "Ahmed|spin_history_2026-04-05.csv",
+                "windows": 51,
+                "hits": 9,
+                "bet_spins": 242
+              },
+              {
+                "session_id": "Ahmed|spin_history_2026-04-06.csv",
+                "windows": 87,
+                "hits": 13,
+                "bet_spins": 418
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-08.csv",
+                "windows": 19,
+                "hits": 4,
+                "bet_spins": 89
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-13.csv",
+                "windows": 30,
+                "hits": 3,
+                "bet_spins": 144
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-14.csv",
+                "windows": 16,
+                "hits": 3,
+                "bet_spins": 74
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_enriched.csv",
+                "windows": 149,
+                "hits": 12,
+                "bet_spins": 722
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-04.csv",
+                "windows": 212,
+                "hits": 21,
+                "bet_spins": 1015
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-06.csv",
+                "windows": 183,
+                "hits": 14,
+                "bet_spins": 889
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-10.csv",
+                "windows": 58,
+                "hits": 5,
+                "bet_spins": 275
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-13.csv",
+                "windows": 53,
+                "hits": 6,
+                "bet_spins": 256
+              },
+              {
+                "session_id": "Islam|spin_history_default_2026-04-06.csv",
+                "windows": 147,
+                "hits": 10,
+                "bet_spins": 715
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-04.csv",
+                "windows": 107,
+                "hits": 7,
+                "bet_spins": 516
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-06.csv",
+                "windows": 3,
+                "hits": 1,
+                "bet_spins": 11
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-08.csv",
+                "windows": 112,
+                "hits": 12,
+                "bet_spins": 534
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-13.csv",
+                "windows": 0,
+                "hits": 0,
+                "bet_spins": 0
+              }
+            ]
+          }
+        },
+        "heur_warm": {
+          "per_spin": {
+            "alerts": 9588,
+            "alert_rate": 0.17757857500046303,
+            "next5_rate": 0.08729662077596996,
+            "baseline_next5": 0.04589483821976923,
+            "lift": 1.9021010676178152
+          },
+          "episodes": {
+            "windows": 2418,
+            "windows_hit": 185,
+            "window_hit_rate": 0.07650951199338296,
+            "bet_spins": 11697,
+            "spins_per_hit": 63.22702702702703,
+            "caught_events": 185,
+            "capture_rate": 0.37298387096774194,
+            "session_rows": [
+              {
+                "session_id": "Ahmed|spin_history_2026-04-05.csv",
+                "windows": 130,
+                "hits": 19,
+                "bet_spins": 608
+              },
+              {
+                "session_id": "Ahmed|spin_history_2026-04-06.csv",
+                "windows": 215,
+                "hits": 20,
+                "bet_spins": 1029
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-08.csv",
+                "windows": 31,
+                "hits": 4,
+                "bet_spins": 149
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-13.csv",
+                "windows": 130,
+                "hits": 12,
+                "bet_spins": 612
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-14.csv",
+                "windows": 73,
+                "hits": 5,
+                "bet_spins": 360
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_enriched.csv",
+                "windows": 298,
+                "hits": 16,
+                "bet_spins": 1468
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-04.csv",
+                "windows": 302,
+                "hits": 25,
+                "bet_spins": 1458
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-06.csv",
+                "windows": 279,
+                "hits": 17,
+                "bet_spins": 1358
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-10.csv",
+                "windows": 102,
+                "hits": 6,
+                "bet_spins": 496
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-13.csv",
+                "windows": 242,
+                "hits": 13,
+                "bet_spins": 1182
+              },
+              {
+                "session_id": "Islam|spin_history_default_2026-04-06.csv",
+                "windows": 183,
+                "hits": 14,
+                "bet_spins": 886
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-04.csv",
+                "windows": 189,
+                "hits": 10,
+                "bet_spins": 924
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-06.csv",
+                "windows": 17,
+                "hits": 1,
+                "bet_spins": 83
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-08.csv",
+                "windows": 205,
+                "hits": 22,
+                "bet_spins": 979
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-13.csv",
+                "windows": 22,
+                "hits": 1,
+                "bet_spins": 105
+              }
+            ]
+          }
+        },
+        "heur_hot": {
+          "per_spin": {
+            "alerts": 5606,
+            "alert_rate": 0.10382827403552312,
+            "next5_rate": 0.10470924009989298,
+            "baseline_next5": 0.04589483821976923,
+            "lift": 2.2815036322492017
+          },
+          "episodes": {
+            "windows": 1309,
+            "windows_hit": 125,
+            "window_hit_rate": 0.09549274255156608,
+            "bet_spins": 6311,
+            "spins_per_hit": 50.488,
+            "caught_events": 125,
+            "capture_rate": 0.25201612903225806,
+            "session_rows": [
+              {
+                "session_id": "Ahmed|spin_history_2026-04-05.csv",
+                "windows": 52,
+                "hits": 9,
+                "bet_spins": 248
+              },
+              {
+                "session_id": "Ahmed|spin_history_2026-04-06.csv",
+                "windows": 94,
+                "hits": 13,
+                "bet_spins": 451
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-08.csv",
+                "windows": 19,
+                "hits": 4,
+                "bet_spins": 89
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-13.csv",
+                "windows": 34,
+                "hits": 4,
+                "bet_spins": 164
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-14.csv",
+                "windows": 26,
+                "hits": 3,
+                "bet_spins": 128
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_enriched.csv",
+                "windows": 159,
+                "hits": 12,
+                "bet_spins": 778
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-04.csv",
+                "windows": 215,
+                "hits": 21,
+                "bet_spins": 1029
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-06.csv",
+                "windows": 190,
+                "hits": 15,
+                "bet_spins": 920
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-10.csv",
+                "windows": 60,
+                "hits": 5,
+                "bet_spins": 287
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-13.csv",
+                "windows": 83,
+                "hits": 8,
+                "bet_spins": 402
+              },
+              {
+                "session_id": "Islam|spin_history_default_2026-04-06.csv",
+                "windows": 146,
+                "hits": 10,
+                "bet_spins": 709
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-04.csv",
+                "windows": 111,
+                "hits": 7,
+                "bet_spins": 536
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-06.csv",
+                "windows": 4,
+                "hits": 1,
+                "bet_spins": 16
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-08.csv",
+                "windows": 116,
+                "hits": 13,
+                "bet_spins": 554
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-13.csv",
+                "windows": 0,
+                "hits": 0,
+                "bet_spins": 0
+              }
+            ]
+          }
+        },
+        "model_warm": {
+          "per_spin": {
+            "alerts": 10904,
+            "alert_rate": 0.20195210490248736,
+            "next5_rate": 0.09592809977989729,
+            "baseline_next5": 0.04589483821976923,
+            "lift": 2.0901718690137185
+          },
+          "episodes": {
+            "windows": 2754,
+            "windows_hit": 243,
+            "window_hit_rate": 0.08823529411764706,
+            "bet_spins": 13231,
+            "spins_per_hit": 54.44855967078189,
+            "caught_events": 243,
+            "capture_rate": 0.4899193548387097,
+            "session_rows": [
+              {
+                "session_id": "Ahmed|spin_history_2026-04-05.csv",
+                "windows": 307,
+                "hits": 40,
+                "bet_spins": 1434
+              },
+              {
+                "session_id": "Ahmed|spin_history_2026-04-06.csv",
+                "windows": 214,
+                "hits": 23,
+                "bet_spins": 1022
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-08.csv",
+                "windows": 82,
+                "hits": 7,
+                "bet_spins": 394
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-13.csv",
+                "windows": 123,
+                "hits": 11,
+                "bet_spins": 600
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-14.csv",
+                "windows": 57,
+                "hits": 5,
+                "bet_spins": 279
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_enriched.csv",
+                "windows": 330,
+                "hits": 23,
+                "bet_spins": 1600
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-04.csv",
+                "windows": 355,
+                "hits": 33,
+                "bet_spins": 1702
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-06.csv",
+                "windows": 209,
+                "hits": 15,
+                "bet_spins": 1025
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-10.csv",
+                "windows": 154,
+                "hits": 10,
+                "bet_spins": 741
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-13.csv",
+                "windows": 174,
+                "hits": 17,
+                "bet_spins": 830
+              },
+              {
+                "session_id": "Islam|spin_history_default_2026-04-06.csv",
+                "windows": 189,
+                "hits": 12,
+                "bet_spins": 920
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-04.csv",
+                "windows": 162,
+                "hits": 9,
+                "bet_spins": 784
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-06.csv",
+                "windows": 36,
+                "hits": 4,
+                "bet_spins": 176
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-08.csv",
+                "windows": 357,
+                "hits": 33,
+                "bet_spins": 1705
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-13.csv",
+                "windows": 5,
+                "hits": 1,
+                "bet_spins": 19
+              }
+            ]
+          }
+        },
+        "model_hot": {
+          "per_spin": {
+            "alerts": 2483,
+            "alert_rate": 0.04598744281666142,
+            "next5_rate": 0.14418042690294,
+            "baseline_next5": 0.04589483821976923,
+            "lift": 3.1415390596329456
+          },
+          "episodes": {
+            "windows": 662,
+            "windows_hit": 93,
+            "window_hit_rate": 0.1404833836858006,
+            "bet_spins": 3100,
+            "spins_per_hit": 33.333333333333336,
+            "caught_events": 93,
+            "capture_rate": 0.1875,
+            "session_rows": [
+              {
+                "session_id": "Ahmed|spin_history_2026-04-05.csv",
+                "windows": 70,
+                "hits": 18,
+                "bet_spins": 312
+              },
+              {
+                "session_id": "Ahmed|spin_history_2026-04-06.csv",
+                "windows": 62,
+                "hits": 8,
+                "bet_spins": 292
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-08.csv",
+                "windows": 10,
+                "hits": 2,
+                "bet_spins": 46
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-13.csv",
+                "windows": 27,
+                "hits": 3,
+                "bet_spins": 132
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-14.csv",
+                "windows": 22,
+                "hits": 4,
+                "bet_spins": 103
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_enriched.csv",
+                "windows": 77,
+                "hits": 11,
+                "bet_spins": 359
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-04.csv",
+                "windows": 84,
+                "hits": 14,
+                "bet_spins": 388
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-06.csv",
+                "windows": 66,
+                "hits": 5,
+                "bet_spins": 314
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-10.csv",
+                "windows": 28,
+                "hits": 3,
+                "bet_spins": 130
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-13.csv",
+                "windows": 36,
+                "hits": 4,
+                "bet_spins": 170
+              },
+              {
+                "session_id": "Islam|spin_history_default_2026-04-06.csv",
+                "windows": 45,
+                "hits": 4,
+                "bet_spins": 213
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-04.csv",
+                "windows": 51,
+                "hits": 6,
+                "bet_spins": 241
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-06.csv",
+                "windows": 7,
+                "hits": 1,
+                "bet_spins": 31
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-08.csv",
+                "windows": 77,
+                "hits": 10,
+                "bet_spins": 369
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-13.csv",
+                "windows": 0,
+                "hits": 0,
+                "bet_spins": 0
+              }
+            ]
+          }
+        }
+      }
+    },
+    "SPN": {
+      "events": 601,
+      "base_rate": 0.011131072546441205,
+      "base_next5": 0.055321986183394144,
+      "top_features": [
+        [
+          "accum_pct",
+          3450
+        ],
+        [
+          "ss_atk",
+          2006
+        ],
+        [
+          "sa_shd",
+          1751
+        ],
+        [
+          "sa_atk",
+          1610
+        ],
+        [
+          "ss_shd",
+          1587
+        ],
+        [
+          "sa_spn",
+          1522
+        ],
+        [
+          "sa_acc",
+          1433
+        ],
+        [
+          "sa_stl",
+          1389
+        ],
+        [
+          "ss_acc",
+          1323
+        ],
+        [
+          "ss_stl",
+          1322
+        ],
+        [
+          "ss_spn",
+          1210
+        ],
+        [
+          "sa_spins",
+          1031
+        ],
+        [
+          "gap_spn_mod50",
+          1017
+        ],
+        [
+          "gap_spn",
+          1005
+        ],
+        [
+          "gap_spn_mod100",
+          939
+        ],
+        [
+          "ss_spins",
+          593
+        ],
+        [
+          "bet_level",
+          524
+        ],
+        [
+          "bet_multiplier",
+          456
+        ],
+        [
+          "gap_spn_mod20",
+          236
+        ],
+        [
+          "is_triple_sum10",
+          182
+        ]
+      ],
+      "strategies": {
+        "gap_warm": {
+          "per_spin": {
+            "alerts": 13607,
+            "alert_rate": 0.2520141499824051,
+            "next5_rate": 0.0985522157712942,
+            "baseline_next5": 0.055321986183394144,
+            "lift": 1.7814294563573778
+          },
+          "episodes": {
+            "windows": 3055,
+            "windows_hit": 283,
+            "window_hit_rate": 0.09263502454991816,
+            "bet_spins": 14700,
+            "spins_per_hit": 51.9434628975265,
+            "caught_events": 283,
+            "capture_rate": 0.47088186356073214,
+            "session_rows": [
+              {
+                "session_id": "Ahmed|spin_history_2026-04-05.csv",
+                "windows": 414,
+                "hits": 40,
+                "bet_spins": 1993
+              },
+              {
+                "session_id": "Ahmed|spin_history_2026-04-06.csv",
+                "windows": 280,
+                "hits": 22,
+                "bet_spins": 1338
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-08.csv",
+                "windows": 98,
+                "hits": 10,
+                "bet_spins": 468
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-13.csv",
+                "windows": 77,
+                "hits": 13,
+                "bet_spins": 359
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-14.csv",
+                "windows": 79,
+                "hits": 6,
+                "bet_spins": 378
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_enriched.csv",
+                "windows": 333,
+                "hits": 32,
+                "bet_spins": 1604
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-04.csv",
+                "windows": 516,
+                "hits": 44,
+                "bet_spins": 2489
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-06.csv",
+                "windows": 244,
+                "hits": 22,
+                "bet_spins": 1176
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-10.csv",
+                "windows": 160,
+                "hits": 12,
+                "bet_spins": 776
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-13.csv",
+                "windows": 162,
+                "hits": 14,
+                "bet_spins": 786
+              },
+              {
+                "session_id": "Islam|spin_history_default_2026-04-06.csv",
+                "windows": 157,
+                "hits": 14,
+                "bet_spins": 767
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-04.csv",
+                "windows": 86,
+                "hits": 9,
+                "bet_spins": 413
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-06.csv",
+                "windows": 42,
+                "hits": 6,
+                "bet_spins": 198
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-08.csv",
+                "windows": 351,
+                "hits": 38,
+                "bet_spins": 1681
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-13.csv",
+                "windows": 56,
+                "hits": 1,
+                "bet_spins": 274
+              }
+            ]
+          }
+        },
+        "gap_hot": {
+          "per_spin": {
+            "alerts": 5510,
+            "alert_rate": 0.10205026577519308,
+            "next5_rate": 0.11125226860254084,
+            "baseline_next5": 0.055321986183394144,
+            "lift": 2.0109955603136886
+          },
+          "episodes": {
+            "windows": 1254,
+            "windows_hit": 133,
+            "window_hit_rate": 0.10606060606060606,
+            "bet_spins": 6013,
+            "spins_per_hit": 45.21052631578947,
+            "caught_events": 133,
+            "capture_rate": 0.22129783693843594,
+            "session_rows": [
+              {
+                "session_id": "Ahmed|spin_history_2026-04-05.csv",
+                "windows": 151,
+                "hits": 14,
+                "bet_spins": 724
+              },
+              {
+                "session_id": "Ahmed|spin_history_2026-04-06.csv",
+                "windows": 140,
+                "hits": 12,
+                "bet_spins": 667
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-08.csv",
+                "windows": 36,
+                "hits": 6,
+                "bet_spins": 174
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-13.csv",
+                "windows": 8,
+                "hits": 1,
+                "bet_spins": 40
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-14.csv",
+                "windows": 34,
+                "hits": 4,
+                "bet_spins": 161
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_enriched.csv",
+                "windows": 140,
+                "hits": 16,
+                "bet_spins": 670
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-04.csv",
+                "windows": 228,
+                "hits": 22,
+                "bet_spins": 1097
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-06.csv",
+                "windows": 105,
+                "hits": 9,
+                "bet_spins": 510
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-10.csv",
+                "windows": 79,
+                "hits": 8,
+                "bet_spins": 379
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-13.csv",
+                "windows": 70,
+                "hits": 8,
+                "bet_spins": 338
+              },
+              {
+                "session_id": "Islam|spin_history_default_2026-04-06.csv",
+                "windows": 67,
+                "hits": 7,
+                "bet_spins": 324
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-04.csv",
+                "windows": 22,
+                "hits": 4,
+                "bet_spins": 103
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-06.csv",
+                "windows": 6,
+                "hits": 1,
+                "bet_spins": 29
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-08.csv",
+                "windows": 121,
+                "hits": 20,
+                "bet_spins": 566
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-13.csv",
+                "windows": 47,
+                "hits": 1,
+                "bet_spins": 231
+              }
+            ]
+          }
+        },
+        "heur_warm": {
+          "per_spin": {
+            "alerts": 12236,
+            "alert_rate": 0.2266219695145667,
+            "next5_rate": 0.09104282445243543,
+            "baseline_next5": 0.055321986183394144,
+            "lift": 1.6456897290459813
+          },
+          "episodes": {
+            "windows": 3447,
+            "windows_hit": 287,
+            "window_hit_rate": 0.08326080649840441,
+            "bet_spins": 16643,
+            "spins_per_hit": 57.98954703832753,
+            "caught_events": 287,
+            "capture_rate": 0.47753743760399336,
+            "session_rows": [
+              {
+                "session_id": "Ahmed|spin_history_2026-04-05.csv",
+                "windows": 328,
+                "hits": 33,
+                "bet_spins": 1562
+              },
+              {
+                "session_id": "Ahmed|spin_history_2026-04-06.csv",
+                "windows": 422,
+                "hits": 27,
+                "bet_spins": 2059
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-08.csv",
+                "windows": 75,
+                "hits": 8,
+                "bet_spins": 353
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-13.csv",
+                "windows": 68,
+                "hits": 12,
+                "bet_spins": 314
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-14.csv",
+                "windows": 77,
+                "hits": 4,
+                "bet_spins": 381
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_enriched.csv",
+                "windows": 476,
+                "hits": 35,
+                "bet_spins": 2314
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-04.csv",
+                "windows": 451,
+                "hits": 38,
+                "bet_spins": 2191
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-06.csv",
+                "windows": 332,
+                "hits": 28,
+                "bet_spins": 1599
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-10.csv",
+                "windows": 170,
+                "hits": 15,
+                "bet_spins": 816
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-13.csv",
+                "windows": 219,
+                "hits": 15,
+                "bet_spins": 1065
+              },
+              {
+                "session_id": "Islam|spin_history_default_2026-04-06.csv",
+                "windows": 180,
+                "hits": 15,
+                "bet_spins": 867
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-04.csv",
+                "windows": 190,
+                "hits": 17,
+                "bet_spins": 907
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-06.csv",
+                "windows": 55,
+                "hits": 5,
+                "bet_spins": 267
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-08.csv",
+                "windows": 352,
+                "hits": 34,
+                "bet_spins": 1691
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-13.csv",
+                "windows": 52,
+                "hits": 1,
+                "bet_spins": 257
+              }
+            ]
+          }
+        },
+        "heur_hot": {
+          "per_spin": {
+            "alerts": 5930,
+            "alert_rate": 0.10982905191413701,
+            "next5_rate": 0.10944350758853288,
+            "baseline_next5": 0.055321986183394144,
+            "lift": 1.978300403491013
+          },
+          "episodes": {
+            "windows": 1428,
+            "windows_hit": 146,
+            "window_hit_rate": 0.10224089635854341,
+            "bet_spins": 6841,
+            "spins_per_hit": 46.85616438356164,
+            "caught_events": 146,
+            "capture_rate": 0.24292845257903495,
+            "session_rows": [
+              {
+                "session_id": "Ahmed|spin_history_2026-04-05.csv",
+                "windows": 151,
+                "hits": 14,
+                "bet_spins": 724
+              },
+              {
+                "session_id": "Ahmed|spin_history_2026-04-06.csv",
+                "windows": 165,
+                "hits": 15,
+                "bet_spins": 782
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-08.csv",
+                "windows": 35,
+                "hits": 6,
+                "bet_spins": 166
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-13.csv",
+                "windows": 10,
+                "hits": 1,
+                "bet_spins": 50
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-14.csv",
+                "windows": 41,
+                "hits": 4,
+                "bet_spins": 195
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_enriched.csv",
+                "windows": 183,
+                "hits": 19,
+                "bet_spins": 883
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-04.csv",
+                "windows": 232,
+                "hits": 22,
+                "bet_spins": 1114
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-06.csv",
+                "windows": 121,
+                "hits": 11,
+                "bet_spins": 577
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-10.csv",
+                "windows": 84,
+                "hits": 8,
+                "bet_spins": 401
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-13.csv",
+                "windows": 81,
+                "hits": 8,
+                "bet_spins": 393
+              },
+              {
+                "session_id": "Islam|spin_history_default_2026-04-06.csv",
+                "windows": 80,
+                "hits": 8,
+                "bet_spins": 392
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-04.csv",
+                "windows": 39,
+                "hits": 7,
+                "bet_spins": 182
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-06.csv",
+                "windows": 12,
+                "hits": 1,
+                "bet_spins": 59
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-08.csv",
+                "windows": 148,
+                "hits": 21,
+                "bet_spins": 696
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-13.csv",
+                "windows": 46,
+                "hits": 1,
+                "bet_spins": 227
+              }
+            ]
+          }
+        },
+        "model_warm": {
+          "per_spin": {
+            "alerts": 10914,
+            "alert_rate": 0.20213731409627173,
+            "next5_rate": 0.09831409199193696,
+            "baseline_next5": 0.055321986183394144,
+            "lift": 1.777125131878357
+          },
+          "episodes": {
+            "windows": 2723,
+            "windows_hit": 256,
+            "window_hit_rate": 0.09401395519647447,
+            "bet_spins": 13107,
+            "spins_per_hit": 51.19921875,
+            "caught_events": 256,
+            "capture_rate": 0.4259567387687188,
+            "session_rows": [
+              {
+                "session_id": "Ahmed|spin_history_2026-04-05.csv",
+                "windows": 367,
+                "hits": 35,
+                "bet_spins": 1774
+              },
+              {
+                "session_id": "Ahmed|spin_history_2026-04-06.csv",
+                "windows": 266,
+                "hits": 25,
+                "bet_spins": 1283
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-08.csv",
+                "windows": 79,
+                "hits": 13,
+                "bet_spins": 361
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-13.csv",
+                "windows": 62,
+                "hits": 7,
+                "bet_spins": 285
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-14.csv",
+                "windows": 54,
+                "hits": 3,
+                "bet_spins": 263
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_enriched.csv",
+                "windows": 252,
+                "hits": 25,
+                "bet_spins": 1219
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-04.csv",
+                "windows": 480,
+                "hits": 38,
+                "bet_spins": 2329
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-06.csv",
+                "windows": 242,
+                "hits": 22,
+                "bet_spins": 1178
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-10.csv",
+                "windows": 135,
+                "hits": 9,
+                "bet_spins": 653
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-13.csv",
+                "windows": 134,
+                "hits": 11,
+                "bet_spins": 640
+              },
+              {
+                "session_id": "Islam|spin_history_default_2026-04-06.csv",
+                "windows": 145,
+                "hits": 16,
+                "bet_spins": 685
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-04.csv",
+                "windows": 91,
+                "hits": 12,
+                "bet_spins": 428
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-06.csv",
+                "windows": 33,
+                "hits": 5,
+                "bet_spins": 154
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-08.csv",
+                "windows": 344,
+                "hits": 34,
+                "bet_spins": 1665
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-13.csv",
+                "windows": 39,
+                "hits": 1,
+                "bet_spins": 190
+              }
+            ]
+          }
+        },
+        "model_hot": {
+          "per_spin": {
+            "alerts": 2802,
+            "alert_rate": 0.05189561609838313,
+            "next5_rate": 0.1331192005710207,
+            "baseline_next5": 0.055321986183394144,
+            "lift": 2.406262134727526
+          },
+          "episodes": {
+            "windows": 784,
+            "windows_hit": 97,
+            "window_hit_rate": 0.12372448979591837,
+            "bet_spins": 3720,
+            "spins_per_hit": 38.350515463917525,
+            "caught_events": 97,
+            "capture_rate": 0.16139767054908485,
+            "session_rows": [
+              {
+                "session_id": "Ahmed|spin_history_2026-04-05.csv",
+                "windows": 103,
+                "hits": 14,
+                "bet_spins": 477
+              },
+              {
+                "session_id": "Ahmed|spin_history_2026-04-06.csv",
+                "windows": 98,
+                "hits": 11,
+                "bet_spins": 458
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-08.csv",
+                "windows": 23,
+                "hits": 6,
+                "bet_spins": 102
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-13.csv",
+                "windows": 4,
+                "hits": 1,
+                "bet_spins": 18
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_2026-04-14.csv",
+                "windows": 13,
+                "hits": 0,
+                "bet_spins": 65
+              },
+              {
+                "session_id": "Ahmed|spin_history_Ahmed_enriched.csv",
+                "windows": 69,
+                "hits": 10,
+                "bet_spins": 327
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-04.csv",
+                "windows": 172,
+                "hits": 17,
+                "bet_spins": 833
+              },
+              {
+                "session_id": "Islam|spin_history_2026-04-06.csv",
+                "windows": 49,
+                "hits": 7,
+                "bet_spins": 228
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-10.csv",
+                "windows": 36,
+                "hits": 2,
+                "bet_spins": 179
+              },
+              {
+                "session_id": "Islam|spin_history_Islam_2026-04-13.csv",
+                "windows": 44,
+                "hits": 5,
+                "bet_spins": 210
+              },
+              {
+                "session_id": "Islam|spin_history_default_2026-04-06.csv",
+                "windows": 44,
+                "hits": 6,
+                "bet_spins": 206
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-04.csv",
+                "windows": 29,
+                "hits": 4,
+                "bet_spins": 137
+              },
+              {
+                "session_id": "Nick|spin_history_2026-04-06.csv",
+                "windows": 6,
+                "hits": 2,
+                "bet_spins": 27
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-08.csv",
+                "windows": 75,
+                "hits": 11,
+                "bet_spins": 358
+              },
+              {
+                "session_id": "Nick|spin_history_Nick_2026-04-13.csv",
+                "windows": 19,
+                "hits": 1,
+                "bet_spins": 95
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "plots": [
+    "C:\\Users\\Islam Nawwar\\SpinLogger\\analysis\\output_acc_spn_hotzone\\acc_score_dists.png",
+    "C:\\Users\\Islam Nawwar\\SpinLogger\\analysis\\output_acc_spn_hotzone\\spn_score_dists.png"
+  ]
+}

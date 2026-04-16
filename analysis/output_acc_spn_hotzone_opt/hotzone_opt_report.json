@@ -1,0 +1,1127 @@
+{
+  "overview": {
+    "rows": 53993,
+    "sessions": 15,
+    "accounts": {
+      "Ahmed": 23353,
+      "Islam": 21288,
+      "Nick": 9352
+    }
+  },
+  "targets": {
+    "ACC": {
+      "top_features": [
+        [
+          "accum_pct",
+          2692
+        ],
+        [
+          "ss_stl",
+          1993
+        ],
+        [
+          "sa_shd",
+          1793
+        ],
+        [
+          "ss_acc",
+          1692
+        ],
+        [
+          "ss_atk",
+          1565
+        ],
+        [
+          "sa_stl",
+          1487
+        ],
+        [
+          "sa_acc",
+          1479
+        ],
+        [
+          "sa_atk",
+          1309
+        ],
+        [
+          "gap_acc_mod100",
+          1248
+        ],
+        [
+          "sa_spn",
+          1213
+        ],
+        [
+          "ss_spins",
+          1190
+        ],
+        [
+          "gap_acc",
+          1161
+        ],
+        [
+          "ss_shd",
+          1018
+        ],
+        [
+          "bet_multiplier",
+          969
+        ],
+        [
+          "ss_spn",
+          838
+        ],
+        [
+          "gap_acc_mod50",
+          828
+        ],
+        [
+          "bet_level",
+          639
+        ],
+        [
+          "sa_spins",
+          363
+        ],
+        [
+          "gap_acc_mod20",
+          185
+        ],
+        [
+          "is_triple_sum10",
+          145
+        ]
+      ],
+      "best_by_spins_per_hit": [
+        {
+          "signal": "model_q950&gap_hot&acc80",
+          "window_len": 5,
+          "windows": 70,
+          "bet_spins": 324,
+          "caught_events": 12,
+          "capture_rate": 0.024193548387096774,
+          "spins_per_hit": 27.0,
+          "window_hit_rate": 0.17142857142857143
+        },
+        {
+          "signal": "model_q950&gap_hot&acc80",
+          "window_len": 3,
+          "windows": 102,
+          "bet_spins": 298,
+          "caught_events": 11,
+          "capture_rate": 0.02217741935483871,
+          "spins_per_hit": 27.09090909090909,
+          "window_hit_rate": 0.10784313725490197
+        },
+        {
+          "signal": "model_q950&gap_hot&acc80",
+          "window_len": 4,
+          "windows": 79,
+          "bet_spins": 302,
+          "caught_events": 11,
+          "capture_rate": 0.02217741935483871,
+          "spins_per_hit": 27.454545454545453,
+          "window_hit_rate": 0.13924050632911392
+        },
+        {
+          "signal": "model_q900&gap_hot&acc80",
+          "window_len": 2,
+          "windows": 196,
+          "bet_spins": 384,
+          "caught_events": 13,
+          "capture_rate": 0.02620967741935484,
+          "spins_per_hit": 29.53846153846154,
+          "window_hit_rate": 0.0663265306122449
+        },
+        {
+          "signal": "model_q975",
+          "window_len": 2,
+          "windows": 739,
+          "bet_spins": 1457,
+          "caught_events": 49,
+          "capture_rate": 0.09879032258064516,
+          "spins_per_hit": 29.73469387755102,
+          "window_hit_rate": 0.06630581867388363
+        },
+        {
+          "signal": "gap_hot&pair",
+          "window_len": 3,
+          "windows": 126,
+          "bet_spins": 363,
+          "caught_events": 12,
+          "capture_rate": 0.024193548387096774,
+          "spins_per_hit": 30.25,
+          "window_hit_rate": 0.09523809523809523
+        },
+        {
+          "signal": "model_q975",
+          "window_len": 3,
+          "windows": 538,
+          "bet_spins": 1557,
+          "caught_events": 51,
+          "capture_rate": 0.1028225806451613,
+          "spins_per_hit": 30.529411764705884,
+          "window_hit_rate": 0.09479553903345725
+        },
+        {
+          "signal": "model_q900&gap_hot&acc80",
+          "window_len": 4,
+          "windows": 112,
+          "bet_spins": 430,
+          "caught_events": 14,
+          "capture_rate": 0.028225806451612902,
+          "spins_per_hit": 30.714285714285715,
+          "window_hit_rate": 0.125
+        },
+        {
+          "signal": "model_q975&gap_hot",
+          "window_len": 2,
+          "windows": 598,
+          "bet_spins": 1179,
+          "caught_events": 38,
+          "capture_rate": 0.07661290322580645,
+          "spins_per_hit": 31.026315789473685,
+          "window_hit_rate": 0.06354515050167224
+        },
+        {
+          "signal": "model_q975",
+          "window_len": 4,
+          "windows": 428,
+          "bet_spins": 1628,
+          "caught_events": 52,
+          "capture_rate": 0.10483870967741936,
+          "spins_per_hit": 31.307692307692307,
+          "window_hit_rate": 0.12149532710280374
+        },
+        {
+          "signal": "model_q975&gap_hot",
+          "window_len": 3,
+          "windows": 433,
+          "bet_spins": 1258,
+          "caught_events": 40,
+          "capture_rate": 0.08064516129032258,
+          "spins_per_hit": 31.45,
+          "window_hit_rate": 0.09237875288683603
+        },
+        {
+          "signal": "model_q975&gap_hot",
+          "window_len": 4,
+          "windows": 343,
+          "bet_spins": 1304,
+          "caught_events": 41,
+          "capture_rate": 0.08266129032258064,
+          "spins_per_hit": 31.804878048780488,
+          "window_hit_rate": 0.119533527696793
+        },
+        {
+          "signal": "model_q900&gap_hot&acc80",
+          "window_len": 3,
+          "windows": 141,
+          "bet_spins": 414,
+          "caught_events": 13,
+          "capture_rate": 0.02620967741935484,
+          "spins_per_hit": 31.846153846153847,
+          "window_hit_rate": 0.09219858156028368
+        },
+        {
+          "signal": "model_q950&pair",
+          "window_len": 3,
+          "windows": 112,
+          "bet_spins": 323,
+          "caught_events": 10,
+          "capture_rate": 0.020161290322580645,
+          "spins_per_hit": 32.3,
+          "window_hit_rate": 0.08928571428571429
+        },
+        {
+          "signal": "model_q950&pair",
+          "window_len": 5,
+          "windows": 77,
+          "bet_spins": 356,
+          "caught_events": 11,
+          "capture_rate": 0.02217741935483871,
+          "spins_per_hit": 32.36363636363637,
+          "window_hit_rate": 0.14285714285714285
+        },
+        {
+          "signal": "model_q900&gap_hot&acc80",
+          "window_len": 5,
+          "windows": 97,
+          "bet_spins": 456,
+          "caught_events": 14,
+          "capture_rate": 0.028225806451612902,
+          "spins_per_hit": 32.57142857142857,
+          "window_hit_rate": 0.14432989690721648
+        },
+        {
+          "signal": "model_q975&gap_hot",
+          "window_len": 5,
+          "windows": 281,
+          "bet_spins": 1326,
+          "caught_events": 40,
+          "capture_rate": 0.08064516129032258,
+          "spins_per_hit": 33.15,
+          "window_hit_rate": 0.1423487544483986
+        },
+        {
+          "signal": "model_q990&gap_hot",
+          "window_len": 5,
+          "windows": 148,
+          "bet_spins": 698,
+          "caught_events": 21,
+          "capture_rate": 0.04233870967741935,
+          "spins_per_hit": 33.23809523809524,
+          "window_hit_rate": 0.14189189189189189
+        },
+        {
+          "signal": "gap_hot&pair",
+          "window_len": 2,
+          "windows": 168,
+          "bet_spins": 333,
+          "caught_events": 10,
+          "capture_rate": 0.020161290322580645,
+          "spins_per_hit": 33.3,
+          "window_hit_rate": 0.05952380952380952
+        },
+        {
+          "signal": "model_q950&gap_hot",
+          "window_len": 3,
+          "windows": 651,
+          "bet_spins": 1904,
+          "caught_events": 57,
+          "capture_rate": 0.11491935483870967,
+          "spins_per_hit": 33.40350877192982,
+          "window_hit_rate": 0.08755760368663594
+        }
+      ],
+      "frontier": [
+        {
+          "signal": "model_q950&gap_hot&acc80",
+          "window_len": 5,
+          "windows": 70,
+          "bet_spins": 324,
+          "caught_events": 12,
+          "capture_rate": 0.024193548387096774,
+          "spins_per_hit": 27.0,
+          "window_hit_rate": 0.17142857142857143
+        },
+        {
+          "signal": "model_q900&gap_hot&acc80",
+          "window_len": 2,
+          "windows": 196,
+          "bet_spins": 384,
+          "caught_events": 13,
+          "capture_rate": 0.02620967741935484,
+          "spins_per_hit": 29.53846153846154,
+          "window_hit_rate": 0.0663265306122449
+        },
+        {
+          "signal": "model_q975",
+          "window_len": 2,
+          "windows": 739,
+          "bet_spins": 1457,
+          "caught_events": 49,
+          "capture_rate": 0.09879032258064516,
+          "spins_per_hit": 29.73469387755102,
+          "window_hit_rate": 0.06630581867388363
+        },
+        {
+          "signal": "model_q975",
+          "window_len": 3,
+          "windows": 538,
+          "bet_spins": 1557,
+          "caught_events": 51,
+          "capture_rate": 0.1028225806451613,
+          "spins_per_hit": 30.529411764705884,
+          "window_hit_rate": 0.09479553903345725
+        },
+        {
+          "signal": "model_q975",
+          "window_len": 4,
+          "windows": 428,
+          "bet_spins": 1628,
+          "caught_events": 52,
+          "capture_rate": 0.10483870967741936,
+          "spins_per_hit": 31.307692307692307,
+          "window_hit_rate": 0.12149532710280374
+        },
+        {
+          "signal": "model_q950&gap_hot",
+          "window_len": 3,
+          "windows": 651,
+          "bet_spins": 1904,
+          "caught_events": 57,
+          "capture_rate": 0.11491935483870967,
+          "spins_per_hit": 33.40350877192982,
+          "window_hit_rate": 0.08755760368663594
+        },
+        {
+          "signal": "model_q950&gap_hot",
+          "window_len": 5,
+          "windows": 435,
+          "bet_spins": 2058,
+          "caught_events": 61,
+          "capture_rate": 0.12298387096774194,
+          "spins_per_hit": 33.73770491803279,
+          "window_hit_rate": 0.14022988505747128
+        },
+        {
+          "signal": "model_q950",
+          "window_len": 2,
+          "windows": 1473,
+          "bet_spins": 2907,
+          "caught_events": 84,
+          "capture_rate": 0.1693548387096774,
+          "spins_per_hit": 34.607142857142854,
+          "window_hit_rate": 0.05702647657841141
+        },
+        {
+          "signal": "model_q950",
+          "window_len": 3,
+          "windows": 1060,
+          "bet_spins": 3086,
+          "caught_events": 89,
+          "capture_rate": 0.17943548387096775,
+          "spins_per_hit": 34.674157303370784,
+          "window_hit_rate": 0.08396226415094339
+        },
+        {
+          "signal": "model_q950",
+          "window_len": 4,
+          "windows": 841,
+          "bet_spins": 3237,
+          "caught_events": 93,
+          "capture_rate": 0.1875,
+          "spins_per_hit": 34.806451612903224,
+          "window_hit_rate": 0.11058263971462545
+        },
+        {
+          "signal": "model_q950",
+          "window_len": 5,
+          "windows": 712,
+          "bet_spins": 3365,
+          "caught_events": 94,
+          "capture_rate": 0.18951612903225806,
+          "spins_per_hit": 35.797872340425535,
+          "window_hit_rate": 0.13202247191011235
+        },
+        {
+          "signal": "model_q900",
+          "window_len": 2,
+          "windows": 2921,
+          "bet_spins": 5775,
+          "caught_events": 134,
+          "capture_rate": 0.2701612903225806,
+          "spins_per_hit": 43.09701492537314,
+          "window_hit_rate": 0.04587470044505306
+        },
+        {
+          "signal": "model_q900",
+          "window_len": 4,
+          "windows": 1650,
+          "bet_spins": 6403,
+          "caught_events": 146,
+          "capture_rate": 0.29435483870967744,
+          "spins_per_hit": 43.85616438356164,
+          "window_hit_rate": 0.08848484848484849
+        },
+        {
+          "signal": "model_q900",
+          "window_len": 5,
+          "windows": 1386,
+          "bet_spins": 6619,
+          "caught_events": 148,
+          "capture_rate": 0.29838709677419356,
+          "spins_per_hit": 44.722972972972975,
+          "window_hit_rate": 0.10678210678210678
+        },
+        {
+          "signal": "gap_warm",
+          "window_len": 2,
+          "windows": 6964,
+          "bet_spins": 13803,
+          "caught_events": 257,
+          "capture_rate": 0.5181451612903226,
+          "spins_per_hit": 53.70817120622568,
+          "window_hit_rate": 0.03690407811602527
+        },
+        {
+          "signal": "gap_warm",
+          "window_len": 3,
+          "windows": 4773,
+          "bet_spins": 14068,
+          "caught_events": 258,
+          "capture_rate": 0.5201612903225806,
+          "spins_per_hit": 54.52713178294574,
+          "window_hit_rate": 0.05405405405405406
+        }
+      ],
+      "practical_picks": {
+        "min_capture_10": {
+          "signal": "model_q975",
+          "window_len": 3,
+          "windows": 538,
+          "bet_spins": 1557,
+          "caught_events": 51,
+          "capture_rate": 0.1028225806451613,
+          "spins_per_hit": 30.529411764705884,
+          "window_hit_rate": 0.09479553903345725
+        },
+        "min_capture_15": {
+          "signal": "model_q950",
+          "window_len": 2,
+          "windows": 1473,
+          "bet_spins": 2907,
+          "caught_events": 84,
+          "capture_rate": 0.1693548387096774,
+          "spins_per_hit": 34.607142857142854,
+          "window_hit_rate": 0.05702647657841141
+        },
+        "min_capture_20": {
+          "signal": "model_q900",
+          "window_len": 2,
+          "windows": 2921,
+          "bet_spins": 5775,
+          "caught_events": 134,
+          "capture_rate": 0.2701612903225806,
+          "spins_per_hit": 43.09701492537314,
+          "window_hit_rate": 0.04587470044505306
+        },
+        "min_capture_25": {
+          "signal": "model_q900",
+          "window_len": 2,
+          "windows": 2921,
+          "bet_spins": 5775,
+          "caught_events": 134,
+          "capture_rate": 0.2701612903225806,
+          "spins_per_hit": 43.09701492537314,
+          "window_hit_rate": 0.04587470044505306
+        },
+        "min_capture_30": {
+          "signal": "gap_warm",
+          "window_len": 2,
+          "windows": 6964,
+          "bet_spins": 13803,
+          "caught_events": 257,
+          "capture_rate": 0.5181451612903226,
+          "spins_per_hit": 53.70817120622568,
+          "window_hit_rate": 0.03690407811602527
+        }
+      }
+    },
+    "SPN": {
+      "top_features": [
+        [
+          "accum_pct",
+          3450
+        ],
+        [
+          "ss_atk",
+          2006
+        ],
+        [
+          "sa_shd",
+          1751
+        ],
+        [
+          "sa_atk",
+          1610
+        ],
+        [
+          "ss_shd",
+          1587
+        ],
+        [
+          "sa_spn",
+          1522
+        ],
+        [
+          "sa_acc",
+          1433
+        ],
+        [
+          "sa_stl",
+          1389
+        ],
+        [
+          "ss_acc",
+          1323
+        ],
+        [
+          "ss_stl",
+          1322
+        ],
+        [
+          "ss_spn",
+          1210
+        ],
+        [
+          "sa_spins",
+          1031
+        ],
+        [
+          "gap_spn_mod50",
+          1017
+        ],
+        [
+          "gap_spn",
+          1005
+        ],
+        [
+          "gap_spn_mod100",
+          939
+        ],
+        [
+          "ss_spins",
+          593
+        ],
+        [
+          "bet_level",
+          524
+        ],
+        [
+          "bet_multiplier",
+          456
+        ],
+        [
+          "gap_spn_mod20",
+          236
+        ],
+        [
+          "is_triple_sum10",
+          182
+        ]
+      ],
+      "best_by_spins_per_hit": [
+        {
+          "signal": "model_q995&gap_hot",
+          "window_len": 5,
+          "windows": 67,
+          "bet_spins": 313,
+          "caught_events": 13,
+          "capture_rate": 0.021630615640599003,
+          "spins_per_hit": 24.076923076923077,
+          "window_hit_rate": 0.19402985074626866
+        },
+        {
+          "signal": "model_q990",
+          "window_len": 2,
+          "windows": 306,
+          "bet_spins": 602,
+          "caught_events": 25,
+          "capture_rate": 0.04159733777038269,
+          "spins_per_hit": 24.08,
+          "window_hit_rate": 0.08169934640522876
+        },
+        {
+          "signal": "model_q995&gap_hot",
+          "window_len": 4,
+          "windows": 76,
+          "bet_spins": 294,
+          "caught_events": 12,
+          "capture_rate": 0.019966722129783693,
+          "spins_per_hit": 24.5,
+          "window_hit_rate": 0.15789473684210525
+        },
+        {
+          "signal": "model_q990&gap_hot",
+          "window_len": 2,
+          "windows": 266,
+          "bet_spins": 523,
+          "caught_events": 21,
+          "capture_rate": 0.03494176372712146,
+          "spins_per_hit": 24.904761904761905,
+          "window_hit_rate": 0.07894736842105263
+        },
+        {
+          "signal": "model_q995&gap_hot",
+          "window_len": 2,
+          "windows": 128,
+          "bet_spins": 252,
+          "caught_events": 10,
+          "capture_rate": 0.016638935108153077,
+          "spins_per_hit": 25.2,
+          "window_hit_rate": 0.078125
+        },
+        {
+          "signal": "model_q995",
+          "window_len": 5,
+          "windows": 80,
+          "bet_spins": 374,
+          "caught_events": 14,
+          "capture_rate": 0.02329450915141431,
+          "spins_per_hit": 26.714285714285715,
+          "window_hit_rate": 0.175
+        },
+        {
+          "signal": "model_q995&gap_hot",
+          "window_len": 3,
+          "windows": 93,
+          "bet_spins": 269,
+          "caught_events": 10,
+          "capture_rate": 0.016638935108153077,
+          "spins_per_hit": 26.9,
+          "window_hit_rate": 0.10752688172043011
+        },
+        {
+          "signal": "model_q990",
+          "window_len": 3,
+          "windows": 225,
+          "bet_spins": 650,
+          "caught_events": 24,
+          "capture_rate": 0.03993344425956739,
+          "spins_per_hit": 27.083333333333332,
+          "window_hit_rate": 0.10666666666666667
+        },
+        {
+          "signal": "model_q995",
+          "window_len": 2,
+          "windows": 154,
+          "bet_spins": 303,
+          "caught_events": 11,
+          "capture_rate": 0.018302828618968387,
+          "spins_per_hit": 27.545454545454547,
+          "window_hit_rate": 0.07142857142857142
+        },
+        {
+          "signal": "model_q995",
+          "window_len": 4,
+          "windows": 93,
+          "bet_spins": 359,
+          "caught_events": 13,
+          "capture_rate": 0.021630615640599003,
+          "spins_per_hit": 27.615384615384617,
+          "window_hit_rate": 0.13978494623655913
+        },
+        {
+          "signal": "model_q990",
+          "window_len": 4,
+          "windows": 186,
+          "bet_spins": 706,
+          "caught_events": 25,
+          "capture_rate": 0.04159733777038269,
+          "spins_per_hit": 28.24,
+          "window_hit_rate": 0.13440860215053763
+        },
+        {
+          "signal": "model_q990&gap_hot",
+          "window_len": 3,
+          "windows": 195,
+          "bet_spins": 565,
+          "caught_events": 20,
+          "capture_rate": 0.033277870216306155,
+          "spins_per_hit": 28.25,
+          "window_hit_rate": 0.10256410256410256
+        },
+        {
+          "signal": "model_q990&gap_hot",
+          "window_len": 4,
+          "windows": 159,
+          "bet_spins": 605,
+          "caught_events": 21,
+          "capture_rate": 0.03494176372712146,
+          "spins_per_hit": 28.80952380952381,
+          "window_hit_rate": 0.1320754716981132
+        },
+        {
+          "signal": "model_q975&gap_hot",
+          "window_len": 2,
+          "windows": 593,
+          "bet_spins": 1163,
+          "caught_events": 40,
+          "capture_rate": 0.06655574043261231,
+          "spins_per_hit": 29.075,
+          "window_hit_rate": 0.06745362563237774
+        },
+        {
+          "signal": "model_q990",
+          "window_len": 5,
+          "windows": 163,
+          "bet_spins": 760,
+          "caught_events": 26,
+          "capture_rate": 0.04326123128119801,
+          "spins_per_hit": 29.23076923076923,
+          "window_hit_rate": 0.15950920245398773
+        },
+        {
+          "signal": "model_q995",
+          "window_len": 3,
+          "windows": 112,
+          "bet_spins": 324,
+          "caught_events": 11,
+          "capture_rate": 0.018302828618968387,
+          "spins_per_hit": 29.454545454545453,
+          "window_hit_rate": 0.09821428571428571
+        },
+        {
+          "signal": "model_q990&gap_hot",
+          "window_len": 5,
+          "windows": 140,
+          "bet_spins": 652,
+          "caught_events": 22,
+          "capture_rate": 0.036605657237936774,
+          "spins_per_hit": 29.636363636363637,
+          "window_hit_rate": 0.15714285714285714
+        },
+        {
+          "signal": "model_q975&gap_hot",
+          "window_len": 3,
+          "windows": 434,
+          "bet_spins": 1256,
+          "caught_events": 42,
+          "capture_rate": 0.06988352745424292,
+          "spins_per_hit": 29.904761904761905,
+          "window_hit_rate": 0.0967741935483871
+        },
+        {
+          "signal": "model_q975",
+          "window_len": 2,
+          "windows": 763,
+          "bet_spins": 1497,
+          "caught_events": 50,
+          "capture_rate": 0.08319467554076539,
+          "spins_per_hit": 29.94,
+          "window_hit_rate": 0.0655307994757536
+        },
+        {
+          "signal": "model_q975&gap_hot",
+          "window_len": 5,
+          "windows": 303,
+          "bet_spins": 1410,
+          "caught_events": 46,
+          "capture_rate": 0.07653910149750416,
+          "spins_per_hit": 30.652173913043477,
+          "window_hit_rate": 0.15181518151815182
+        }
+      ],
+      "frontier": [
+        {
+          "signal": "model_q995&gap_hot",
+          "window_len": 5,
+          "windows": 67,
+          "bet_spins": 313,
+          "caught_events": 13,
+          "capture_rate": 0.021630615640599003,
+          "spins_per_hit": 24.076923076923077,
+          "window_hit_rate": 0.19402985074626866
+        },
+        {
+          "signal": "model_q990",
+          "window_len": 2,
+          "windows": 306,
+          "bet_spins": 602,
+          "caught_events": 25,
+          "capture_rate": 0.04159733777038269,
+          "spins_per_hit": 24.08,
+          "window_hit_rate": 0.08169934640522876
+        },
+        {
+          "signal": "model_q975&gap_hot",
+          "window_len": 2,
+          "windows": 593,
+          "bet_spins": 1163,
+          "caught_events": 40,
+          "capture_rate": 0.06655574043261231,
+          "spins_per_hit": 29.075,
+          "window_hit_rate": 0.06745362563237774
+        },
+        {
+          "signal": "model_q975&gap_hot",
+          "window_len": 3,
+          "windows": 434,
+          "bet_spins": 1256,
+          "caught_events": 42,
+          "capture_rate": 0.06988352745424292,
+          "spins_per_hit": 29.904761904761905,
+          "window_hit_rate": 0.0967741935483871
+        },
+        {
+          "signal": "model_q975",
+          "window_len": 2,
+          "windows": 763,
+          "bet_spins": 1497,
+          "caught_events": 50,
+          "capture_rate": 0.08319467554076539,
+          "spins_per_hit": 29.94,
+          "window_hit_rate": 0.0655307994757536
+        },
+        {
+          "signal": "model_q975",
+          "window_len": 3,
+          "windows": 561,
+          "bet_spins": 1633,
+          "caught_events": 51,
+          "capture_rate": 0.08485856905158069,
+          "spins_per_hit": 32.01960784313726,
+          "window_hit_rate": 0.09090909090909091
+        },
+        {
+          "signal": "model_q975",
+          "window_len": 4,
+          "windows": 460,
+          "bet_spins": 1770,
+          "caught_events": 55,
+          "capture_rate": 0.09151414309484193,
+          "spins_per_hit": 32.18181818181818,
+          "window_hit_rate": 0.11956521739130435
+        },
+        {
+          "signal": "model_q950&gap_hot",
+          "window_len": 2,
+          "windows": 952,
+          "bet_spins": 1870,
+          "caught_events": 57,
+          "capture_rate": 0.09484193011647254,
+          "spins_per_hit": 32.80701754385965,
+          "window_hit_rate": 0.059873949579831935
+        },
+        {
+          "signal": "model_q950&gap_hot",
+          "window_len": 3,
+          "windows": 684,
+          "bet_spins": 1987,
+          "caught_events": 60,
+          "capture_rate": 0.09983361064891846,
+          "spins_per_hit": 33.11666666666667,
+          "window_hit_rate": 0.08771929824561403
+        },
+        {
+          "signal": "model_q950&gap_hot",
+          "window_len": 5,
+          "windows": 465,
+          "bet_spins": 2192,
+          "caught_events": 65,
+          "capture_rate": 0.10815307820299501,
+          "spins_per_hit": 33.723076923076924,
+          "window_hit_rate": 0.13978494623655913
+        },
+        {
+          "signal": "model_q950",
+          "window_len": 2,
+          "windows": 1499,
+          "bet_spins": 2951,
+          "caught_events": 85,
+          "capture_rate": 0.14143094841930118,
+          "spins_per_hit": 34.71764705882353,
+          "window_hit_rate": 0.05670446964643095
+        },
+        {
+          "signal": "model_q950",
+          "window_len": 3,
+          "windows": 1087,
+          "bet_spins": 3170,
+          "caught_events": 88,
+          "capture_rate": 0.1464226289517471,
+          "spins_per_hit": 36.02272727272727,
+          "window_hit_rate": 0.08095676172953081
+        },
+        {
+          "signal": "model_q950",
+          "window_len": 4,
+          "windows": 882,
+          "bet_spins": 3394,
+          "caught_events": 92,
+          "capture_rate": 0.15307820299500832,
+          "spins_per_hit": 36.891304347826086,
+          "window_hit_rate": 0.10430839002267574
+        },
+        {
+          "signal": "model_q950",
+          "window_len": 5,
+          "windows": 754,
+          "bet_spins": 3563,
+          "caught_events": 95,
+          "capture_rate": 0.15806988352745424,
+          "spins_per_hit": 37.50526315789474,
+          "window_hit_rate": 0.1259946949602122
+        },
+        {
+          "signal": "heur>=3.5",
+          "window_len": 5,
+          "windows": 932,
+          "bet_spins": 4460,
+          "caught_events": 104,
+          "capture_rate": 0.17304492512479203,
+          "spins_per_hit": 42.88461538461539,
+          "window_hit_rate": 0.11158798283261803
+        },
+        {
+          "signal": "gap_hot",
+          "window_len": 2,
+          "windows": 2852,
+          "bet_spins": 5635,
+          "caught_events": 128,
+          "capture_rate": 0.2129783693843594,
+          "spins_per_hit": 44.0234375,
+          "window_hit_rate": 0.04488078541374474
+        },
+        {
+          "signal": "gap_hot",
+          "window_len": 4,
+          "windows": 1529,
+          "bet_spins": 5889,
+          "caught_events": 131,
+          "capture_rate": 0.21797004991680533,
+          "spins_per_hit": 44.954198473282446,
+          "window_hit_rate": 0.08567691301504252
+        },
+        {
+          "signal": "gap_hot",
+          "window_len": 5,
+          "windows": 1254,
+          "bet_spins": 6013,
+          "caught_events": 133,
+          "capture_rate": 0.22129783693843594,
+          "spins_per_hit": 45.21052631578947,
+          "window_hit_rate": 0.10606060606060606
+        },
+        {
+          "signal": "heur>=3.0",
+          "window_len": 2,
+          "windows": 3134,
+          "bet_spins": 6197,
+          "caught_events": 137,
+          "capture_rate": 0.22795341098169716,
+          "spins_per_hit": 45.23357664233577,
+          "window_hit_rate": 0.0437141033822591
+        },
+        {
+          "signal": "heur>=3.0",
+          "window_len": 3,
+          "windows": 2185,
+          "bet_spins": 6412,
+          "caught_events": 138,
+          "capture_rate": 0.22961730449251247,
+          "spins_per_hit": 46.46376811594203,
+          "window_hit_rate": 0.06315789473684211
+        },
+        {
+          "signal": "heur>=3.0",
+          "window_len": 4,
+          "windows": 1719,
+          "bet_spins": 6636,
+          "caught_events": 142,
+          "capture_rate": 0.23627287853577372,
+          "spins_per_hit": 46.732394366197184,
+          "window_hit_rate": 0.08260616637579989
+        },
+        {
+          "signal": "heur>=3.0",
+          "window_len": 5,
+          "windows": 1428,
+          "bet_spins": 6841,
+          "caught_events": 146,
+          "capture_rate": 0.24292845257903495,
+          "spins_per_hit": 46.85616438356164,
+          "window_hit_rate": 0.10224089635854341
+        },
+        {
+          "signal": "heur>=2.5",
+          "window_len": 2,
+          "windows": 4090,
+          "bet_spins": 8097,
+          "caught_events": 163,
+          "capture_rate": 0.27121464226289516,
+          "spins_per_hit": 49.67484662576687,
+          "window_hit_rate": 0.039853300733496334
+        },
+        {
+          "signal": "gap_warm",
+          "window_len": 2,
+          "windows": 7017,
+          "bet_spins": 13878,
+          "caught_events": 278,
+          "capture_rate": 0.46256239600665555,
+          "spins_per_hit": 49.92086330935252,
+          "window_hit_rate": 0.039618070400456035
+        },
+        {
+          "signal": "gap_warm",
+          "window_len": 4,
+          "windows": 3719,
+          "bet_spins": 14428,
+          "caught_events": 281,
+          "capture_rate": 0.46755407653910147,
+          "spins_per_hit": 51.345195729537366,
+          "window_hit_rate": 0.07555794568432374
+        },
+        {
+          "signal": "gap_warm",
+          "window_len": 5,
+          "windows": 3055,
+          "bet_spins": 14700,
+          "caught_events": 283,
+          "capture_rate": 0.47088186356073214,
+          "spins_per_hit": 51.9434628975265,
+          "window_hit_rate": 0.09263502454991816
+        },
+        {
+          "signal": "heur>=2.0",
+          "window_len": 5,
+          "windows": 3447,
+          "bet_spins": 16643,
+          "caught_events": 287,
+          "capture_rate": 0.47753743760399336,
+          "spins_per_hit": 57.98954703832753,
+          "window_hit_rate": 0.08326080649840441
+        }
+      ],
+      "practical_picks": {
+        "min_capture_10": {
+          "signal": "model_q950&gap_hot",
+          "window_len": 5,
+          "windows": 465,
+          "bet_spins": 2192,
+          "caught_events": 65,
+          "capture_rate": 0.10815307820299501,
+          "spins_per_hit": 33.723076923076924,
+          "window_hit_rate": 0.13978494623655913
+        },
+        "min_capture_15": {
+          "signal": "model_q950",
+          "window_len": 4,
+          "windows": 882,
+          "bet_spins": 3394,
+          "caught_events": 92,
+          "capture_rate": 0.15307820299500832,
+          "spins_per_hit": 36.891304347826086,
+          "window_hit_rate": 0.10430839002267574
+        },
+        "min_capture_20": {
+          "signal": "gap_hot",
+          "window_len": 2,
+          "windows": 2852,
+          "bet_spins": 5635,
+          "caught_events": 128,
+          "capture_rate": 0.2129783693843594,
+          "spins_per_hit": 44.0234375,
+          "window_hit_rate": 0.04488078541374474
+        },
+        "min_capture_25": {
+          "signal": "heur>=2.5",
+          "window_len": 2,
+          "windows": 4090,
+          "bet_spins": 8097,
+          "caught_events": 163,
+          "capture_rate": 0.27121464226289516,
+          "spins_per_hit": 49.67484662576687,
+          "window_hit_rate": 0.039853300733496334
+        },
+        "min_capture_30": {
+          "signal": "gap_warm",
+          "window_len": 2,
+          "windows": 7017,
+          "bet_spins": 13878,
+          "caught_events": 278,
+          "capture_rate": 0.46256239600665555,
+          "spins_per_hit": 49.92086330935252,
+          "window_hit_rate": 0.039618070400456035
+        }
+      }
+    }
+  },
+  "plots": [
+    "C:\\Users\\Islam Nawwar\\SpinLogger\\analysis\\output_acc_spn_hotzone_opt\\acc_frontier.png",
+    "C:\\Users\\Islam Nawwar\\SpinLogger\\analysis\\output_acc_spn_hotzone_opt\\spn_frontier.png"
+  ]
+}
