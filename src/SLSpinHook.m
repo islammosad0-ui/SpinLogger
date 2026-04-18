@@ -6,6 +6,8 @@
 #include <stdbool.h>
 #include <sys/time.h>
 #include <pthread.h>
+#include <signal.h>
+#include <setjmp.h>
 
 // ---------------------------------------------------------------------------
 //  Dobby inline-hook API (static lib linked at build time).
@@ -31,9 +33,6 @@ static BOOL s_installed = NO;
 
 // ---------------------------------------------------------------------------
 //  Lightweight C-stdio event log.
-//  NSLog + NSString on the hot callback path starves the Unity main thread
-//  enough to trip the iOS launch watchdog. This path uses a single FILE*,
-//  line-buffered, fflushed every write.
 // ---------------------------------------------------------------------------
 static FILE *s_evtFp = NULL;
 static pthread_mutex_t s_evtMu = PTHREAD_MUTEX_INITIALIZER;
@@ -130,13 +129,7 @@ static void *orig_ContainsAccumulationResult = NULL;
 
 // ---------------------------------------------------------------------------
 //  Hook bodies.
-//  All follow the same shape:
-//    1. Log ENTER (so we can tell if a crash is in trampoline vs hook body).
-//    2. Call orig (never delay the game's own path).
-//    3. Log EXIT with return value / extracted fields.
-//
-//  IL2CPP ABI: every method receives a trailing `void *methodInfo` parameter
-//  that MUST be forwarded to the original.
+//  IL2CPP ABI: every method receives a trailing `void *methodInfo` parameter.
 // ---------------------------------------------------------------------------
 
 static bool hook_TrySetNexSpinHitRecord(void *self, void *methodInfo) {
@@ -207,12 +200,7 @@ static int32_t hook_ContainsAccumulationResult(void *self, int32_t defaultIcon, 
 }
 
 // ---------------------------------------------------------------------------
-//  Installer.
-// ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
-//  Crash breadcrumb: writes current step to Documents/hook_breadcrumb.txt
-//  with fflush so it survives a crash. After a crash, open this file to see
-//  exactly which hook killed the app.
+//  Crash breadcrumb.
 // ---------------------------------------------------------------------------
 static FILE *s_bcFp = NULL;
 
@@ -229,15 +217,97 @@ static void breadcrumb(const char *msg) {
 }
 
 // ---------------------------------------------------------------------------
-//  Hook enable config: reads Documents/hook_config.txt to decide which hooks
-//  to install. If the file doesn't exist, ALL hooks are enabled by default.
+//  MethodInfo pointer swap — fallback when Dobby fails.
 //
-//  Format — one hook name per line to ENABLE, e.g.:
-//      activateWinSequence
-//      ContainsAccumulationResult
+//  IL2CPP MethodInfo layout (arm64):
+//      offset 0: methodPointer (void*)  — the native function address
 //
-//  Or write "NONE" to disable all hooks (test that Dobby linking alone is ok).
-//  Or write "ALL" (or just don't create the file) to enable everything.
+//  We overwrite this pointer with our hook. When IL2CPP dispatches through
+//  the MethodInfo (delegates, virtual calls, coroutine resumption), our hook
+//  runs. AOT direct calls bypass the MethodInfo and won't be intercepted,
+//  but many of these 5 methods ARE called via delegates/coroutines.
+//
+//  This is 100% safe — no instruction patching, no page protection changes,
+//  no trampoline allocation. Just a pointer write.
+// ---------------------------------------------------------------------------
+#include <mach/mach.h>
+#include <mach/vm_map.h>
+
+static int methodInfoSwap(void *methodInfo, void *replacement, void **outOrig) {
+    if (!methodInfo || !replacement) return -1;
+
+    void **slot = (void **)methodInfo;  // methodPointer is at offset 0
+    void *original = *slot;
+
+    if (outOrig) *outOrig = original;
+
+    // MethodInfo lives in writable IL2CPP metadata memory, so a direct
+    // write usually works. Try it first; fall back to vm_protect if needed.
+    *slot = replacement;
+    if (*slot == replacement) return 0;
+
+    // If direct write failed (unlikely), try vm_protect.
+    const vm_address_t PAGE_MASK = 0x3FFF;  // 16KB iOS pages
+    vm_address_t page = (vm_address_t)slot & ~PAGE_MASK;
+    vm_size_t span = ((vm_address_t)slot + sizeof(void*) - page + PAGE_MASK) & ~PAGE_MASK;
+
+    kern_return_t kr = vm_protect(mach_task_self(), page, span, FALSE,
+                                  VM_PROT_READ | VM_PROT_WRITE);
+    if (kr != KERN_SUCCESS) {
+        kr = vm_protect(mach_task_self(), page, span, FALSE,
+                        VM_PROT_READ | VM_PROT_WRITE | VM_PROT_COPY);
+    }
+    if (kr != KERN_SUCCESS) return -2;
+
+    *slot = replacement;
+    return (*slot == replacement) ? 0 : -3;
+}
+
+// ---------------------------------------------------------------------------
+//  Safe Dobby wrapper — catches SIGBUS/SIGSEGV if Dobby crashes.
+// ---------------------------------------------------------------------------
+static sigjmp_buf s_dobbyJmpBuf;
+static volatile sig_atomic_t s_inDobbyCall = 0;
+
+static void dobby_crash_handler(int sig) {
+    if (s_inDobbyCall) {
+        siglongjmp(s_dobbyJmpBuf, sig);
+    }
+    // Not our crash — re-raise.
+    signal(sig, SIG_DFL);
+    raise(sig);
+}
+
+static int safeDobbyHook(void *target, void *replacement, void **outOrig) {
+    struct sigaction oldBus, oldSegv;
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = dobby_crash_handler;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+
+    sigaction(SIGBUS,  &sa, &oldBus);
+    sigaction(SIGSEGV, &sa, &oldSegv);
+
+    int result;
+    s_inDobbyCall = 1;
+    int sig = sigsetjmp(s_dobbyJmpBuf, 1);
+    if (sig == 0) {
+        result = DobbyHook(target, replacement, outOrig);
+    } else {
+        // Dobby crashed with signal `sig`.
+        result = -100 - sig;  // e.g. SIGBUS=10 → -110, SIGSEGV=11 → -111
+    }
+    s_inDobbyCall = 0;
+
+    sigaction(SIGBUS,  &oldBus,  NULL);
+    sigaction(SIGSEGV, &oldSegv, NULL);
+
+    return result;
+}
+
+// ---------------------------------------------------------------------------
+//  Hook config.
 // ---------------------------------------------------------------------------
 static bool s_hookEnabled[5] = { true, true, true, true, true };
 static const char *s_hookNames[5] = {
@@ -257,12 +327,10 @@ static void loadHookConfig(void) {
         NSLog(@"[SLHook] No hook_config.txt — all 5 hooks enabled");
         return;
     }
-    // If file exists, default all to OFF, then enable listed ones.
     for (int i = 0; i < 5; i++) s_hookEnabled[i] = false;
 
     char line[128];
     while (fgets(line, sizeof line, f)) {
-        // Strip newline.
         size_t len = strlen(line);
         while (len > 0 && (line[len-1] == '\n' || line[len-1] == '\r')) line[--len] = 0;
         if (len == 0) continue;
@@ -282,20 +350,21 @@ static void loadHookConfig(void) {
     }
 }
 
+// ---------------------------------------------------------------------------
+//  Installer — tries Dobby first, falls back to MethodInfo pointer swap.
+// ---------------------------------------------------------------------------
 int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
     if (s_installed) return 0;
 
     breadcrumb("STEP 0: entry");
 
     if (!klassMgr) {
-        NSLog(@"[SLHook] klassMgr is NULL — aborting install");
         breadcrumb("ABORT: klassMgr NULL");
         return 0;
     }
 
     breadcrumb("STEP 1: resolveIL2CPP");
     if (!resolveIL2CPP()) {
-        NSLog(@"[SLHook] IL2CPP method APIs unresolvable — aborting");
         breadcrumb("ABORT: IL2CPP unresolvable");
         return 0;
     }
@@ -311,33 +380,45 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
     loadHookConfig();
 
     int installed = 0;
-    int hookIdx = 0;
 
     #define TRY_HOOK(NAME, ARGC, IDX)                                             \
         do {                                                                      \
             if (!s_hookEnabled[(IDX)]) {                                          \
                 breadcrumb("SKIP " #NAME " (disabled)");                          \
-                NSLog(@"[SLHook] %s: SKIPPED (disabled in hook_config.txt)",      \
-                      #NAME);                                                     \
                 break;                                                            \
             }                                                                     \
             breadcrumb("FIND " #NAME);                                            \
             void *m = findMethod(klassMgr, #NAME, (ARGC));                        \
             void *fp = methodNativePointer(m);                                    \
             if (!fp) {                                                            \
-                NSLog(@"[SLHook] %s: MethodInfo not found", #NAME);               \
                 breadcrumb("NOTFOUND " #NAME);                                    \
                 break;                                                            \
             }                                                                     \
-            breadcrumb("DOBBY " #NAME " target=" #NAME);                          \
-            int r = DobbyHook(fp, (void *)&hook_##NAME, &orig_##NAME);            \
-            NSLog(@"[SLHook] %s: dobby=%d target=%p trampoline=%p",               \
-                  #NAME, r, fp, orig_##NAME);                                     \
+            /* Strategy 1: Dobby inline hook (catches crashes) */                 \
+            char bc[128];                                                         \
+            snprintf(bc, sizeof bc, "DOBBY " #NAME " fp=%p", fp);                \
+            breadcrumb(bc);                                                       \
+            int r = safeDobbyHook(fp, (void *)&hook_##NAME, &orig_##NAME);        \
+            snprintf(bc, sizeof bc, "DOBBY " #NAME " rc=%d orig=%p",              \
+                     r, orig_##NAME);                                             \
+            breadcrumb(bc);                                                       \
             if (r == 0) {                                                         \
                 installed++;                                                      \
-                breadcrumb("OK " #NAME);                                          \
+                breadcrumb("OK " #NAME " (dobby)");                               \
+                break;                                                            \
+            }                                                                     \
+            /* Strategy 2: MethodInfo pointer swap */                             \
+            breadcrumb("FALLBACK " #NAME " (methodinfo swap)");                   \
+            orig_##NAME = fp;   /* save the native pointer */                     \
+            int s = methodInfoSwap(m, (void *)&hook_##NAME, &orig_##NAME);        \
+            snprintf(bc, sizeof bc, "SWAP " #NAME " rc=%d orig=%p",               \
+                     s, orig_##NAME);                                             \
+            breadcrumb(bc);                                                       \
+            if (s == 0) {                                                         \
+                installed++;                                                      \
+                breadcrumb("OK " #NAME " (swap)");                                \
             } else {                                                              \
-                breadcrumb("FAIL " #NAME);                                        \
+                breadcrumb("FAIL " #NAME " (both methods failed)");               \
             }                                                                     \
         } while (0)
 
@@ -350,8 +431,7 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
     #undef TRY_HOOK
 
     s_installed = (installed > 0);
-    NSLog(@"[SLHook] installed %d/5 hooks (Dobby)", installed);
-    char ri[8];
+    char ri[64];
     snprintf(ri, sizeof ri, "%d", installed);
     logLine("INSTALL_END", "", "", ri, "session-start");
 
