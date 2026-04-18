@@ -380,13 +380,24 @@ static const int kSymbolCount = 6;
 
 #pragma mark - Visibility
 
+// shield + potion are opt-in only — the master "show/hide all" toggle ignores
+// them. User must flip them via the per-symbol toggle in settings.
+static inline BOOL SLCounter_IsMasterExempt(NSString *key) {
+    return [key isEqualToString:@"shield"] || [key isEqualToString:@"potion"];
+}
+
 - (void)onToggleAll:(NSNotification *)note {
     BOOL anyVisible = NO;
-    for (SLCounterTile *t in self.tiles) { if (t.visible) { anyVisible = YES; break; } }
     for (SLCounterTile *t in self.tiles) {
+        if (SLCounter_IsMasterExempt(t.symbolKey)) continue;
+        if (t.visible) { anyVisible = YES; break; }
+    }
+    for (SLCounterTile *t in self.tiles) {
+        if (SLCounter_IsMasterExempt(t.symbolKey)) continue;
         t.visible = !anyVisible;
         t.window.hidden = !t.visible;
     }
+    [self saveState];
 }
 
 - (void)onToggleSymbol:(NSNotification *)note {
@@ -401,7 +412,10 @@ static const int kSymbolCount = 6;
 }
 
 - (void)show {
-    for (SLCounterTile *t in self.tiles) { t.window.hidden = NO; t.visible = YES; }
+    for (SLCounterTile *t in self.tiles) {
+        if (SLCounter_IsMasterExempt(t.symbolKey)) continue;
+        t.window.hidden = NO; t.visible = YES;
+    }
 }
 
 - (void)resetPositions {
@@ -414,14 +428,20 @@ static const int kSymbolCount = 6;
     for (NSUInteger i = 0; i < self.tiles.count; i++) {
         SLCounterTile *t = self.tiles[i];
         t.window.frame = CGRectMake(startX + i * (tileW + tileGap), startY, tileW, tileH);
-        t.window.hidden = NO;
-        t.visible = YES;
+        // shield + potion keep their saved visibility; only their position resets.
+        if (!SLCounter_IsMasterExempt(t.symbolKey)) {
+            t.window.hidden = NO;
+            t.visible = YES;
+        }
     }
     [self saveState];
 }
 
 - (void)hide {
-    for (SLCounterTile *t in self.tiles) { t.window.hidden = YES; t.visible = NO; }
+    for (SLCounterTile *t in self.tiles) {
+        if (SLCounter_IsMasterExempt(t.symbolKey)) continue;
+        t.window.hidden = YES; t.visible = NO;
+    }
 }
 
 - (void)resetAllCounters {

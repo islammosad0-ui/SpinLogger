@@ -4,6 +4,10 @@
 #import "SLGapPredictor.h"
 #import "SLConstants.h"
 
+// Persistence keys
+static NSString *const kSLSigPanelOriginKey  = @"SLSignalPanel.origin";
+static NSString *const kSLSigPanelVisibleKey = @"SLSignalPanel.visible";
+
 // ---------------------------------------------------------------------------
 //  Panel layout constants
 // ---------------------------------------------------------------------------
@@ -102,6 +106,17 @@ static UIColor *tierColor(SLBetTier tier) {
     CGRect screen = scene.coordinateSpace.bounds;
     CGFloat startX = screen.size.width - kPanelW - 8;
     CGFloat startY = 60;
+
+    // Restore persisted origin (clamped to screen).
+    NSDictionary *saved = [[NSUserDefaults standardUserDefaults] dictionaryForKey:kSLSigPanelOriginKey];
+    if (saved[@"x"] && saved[@"y"]) {
+        CGFloat sx = [saved[@"x"] doubleValue];
+        CGFloat sy = [saved[@"y"] doubleValue];
+        if (sx > -10 && sy > -10 &&
+            sx < screen.size.width - 10 && sy < screen.size.height - 10) {
+            startX = sx; startY = sy;
+        }
+    }
 
     // Window
     UIWindow *win = [[UIWindow alloc] initWithWindowScene:scene];
@@ -324,7 +339,10 @@ static UIColor *tierColor(SLBetTier tier) {
     sep.backgroundColor = [UIColor colorWithWhite:0.25 alpha:1];
     [settings addSubview:sep];
 
-    win.hidden = NO;
+    // Honour persisted visibility pref (default: visible).
+    NSUserDefaults *def = [NSUserDefaults standardUserDefaults];
+    BOOL wantVisible = [def objectForKey:kSLSigPanelVisibleKey] ? [def boolForKey:kSLSigPanelVisibleKey] : YES;
+    win.hidden = !wantVisible;
     self.window = win;
 
     // Instant refresh on strategy update — no polling delay
@@ -489,13 +507,24 @@ static UIColor *tierColor(SLBetTier tier) {
         self.window.frame = f;
         [pan setTranslation:CGPointZero inView:pan.view];
     }
+    if (pan.state == UIGestureRecognizerStateEnded) {
+        CGRect f = self.window.frame;
+        [[NSUserDefaults standardUserDefaults] setObject:@{@"x": @(f.origin.x), @"y": @(f.origin.y)}
+                                                  forKey:kSLSigPanelOriginKey];
+    }
 }
 
 // ============================================================
 //  Visibility
 // ============================================================
-- (void)show  { self.window.hidden = NO; }
-- (void)hide  { self.window.hidden = YES; }
+- (void)show  {
+    self.window.hidden = NO;
+    [[NSUserDefaults standardUserDefaults] setBool:YES forKey:kSLSigPanelVisibleKey];
+}
+- (void)hide  {
+    self.window.hidden = YES;
+    [[NSUserDefaults standardUserDefaults] setBool:NO forKey:kSLSigPanelVisibleKey];
+}
 
 // ============================================================
 //  Label factory

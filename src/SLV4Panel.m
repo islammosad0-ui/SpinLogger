@@ -5,6 +5,10 @@
 
 NSString *const SLV4PanelRefreshNotification = @"SLV4PanelRefreshNotification";
 
+// Persistence keys
+static NSString *const kSLV4PanelOriginKey  = @"SLV4Panel.origin";
+static NSString *const kSLV4PanelVisibleKey = @"SLV4Panel.visible";
+
 // ---------------------------------------------------------------------------
 //  Layout — deliberately minimal. Collapsed row shows everything you need to
 //  act on (pos / predicted window / fire verdict); expanded reveals a simple
@@ -78,6 +82,17 @@ static UIColor *colorMuted(void)    { return [UIColor colorWithWhite:0.32 alpha:
     CGRect screen = scene.coordinateSpace.bounds;
     CGFloat startX = screen.size.width - kW - 8;
     CGFloat startY = 140;
+
+    // Restore persisted origin (clamped to screen).
+    NSDictionary *saved = [[NSUserDefaults standardUserDefaults] dictionaryForKey:kSLV4PanelOriginKey];
+    if (saved[@"x"] && saved[@"y"]) {
+        CGFloat sx = [saved[@"x"] doubleValue];
+        CGFloat sy = [saved[@"y"] doubleValue];
+        if (sx > -10 && sy > -10 &&
+            sx < screen.size.width - 10 && sy < screen.size.height - 10) {
+            startX = sx; startY = sy;
+        }
+    }
 
     UIWindow *win = [[UIWindow alloc] initWithWindowScene:scene];
     win.frame = CGRectMake(startX, startY, kW, kCollapsedH);
@@ -181,7 +196,10 @@ static UIColor *colorMuted(void)    { return [UIColor colorWithWhite:0.32 alpha:
     [body addSubview:footer];
     self.footerLabel = footer;
 
-    win.hidden = NO;
+    // Honour persisted visibility pref (default: visible).
+    NSUserDefaults *def = [NSUserDefaults standardUserDefaults];
+    BOOL wantVisible = [def objectForKey:kSLV4PanelVisibleKey] ? [def boolForKey:kSLV4PanelVisibleKey] : YES;
+    win.hidden = !wantVisible;
     self.window = win;
 
     [[NSNotificationCenter defaultCenter] addObserver:self
@@ -326,10 +344,21 @@ static NSString *SLV4_ShortName(SLV4PolicyKind k) {
         self.window.frame = f;
         [p setTranslation:CGPointZero inView:p.view];
     }
+    if (p.state == UIGestureRecognizerStateEnded) {
+        CGRect f = self.window.frame;
+        [[NSUserDefaults standardUserDefaults] setObject:@{@"x": @(f.origin.x), @"y": @(f.origin.y)}
+                                                  forKey:kSLV4PanelOriginKey];
+    }
 }
 
-- (void)show { self.window.hidden = NO; }
-- (void)hide { self.window.hidden = YES; }
+- (void)show {
+    self.window.hidden = NO;
+    [[NSUserDefaults standardUserDefaults] setBool:YES forKey:kSLV4PanelVisibleKey];
+}
+- (void)hide {
+    self.window.hidden = YES;
+    [[NSUserDefaults standardUserDefaults] setBool:NO forKey:kSLV4PanelVisibleKey];
+}
 
 - (UILabel *)lbl:(CGRect)f size:(CGFloat)s bold:(BOOL)b color:(UIColor *)c {
     UILabel *l = [[UILabel alloc] initWithFrame:f];

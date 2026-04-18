@@ -10,7 +10,13 @@
 #import "SLCounterOverlay.h"
 #import "SLNetworkMonitor.h"
 #import "SLDebtMonitor.h"
+#import "SLSignalPanel.h"
+#import "SLV4Panel.h"
 #import <UIKit/UIKit.h>
+
+// Panel-visibility NSUserDefaults keys (shared with SLV4Panel / SLSignalPanel).
+static NSString *const kSLV4PanelVisibleKey  = @"SLV4Panel.visible";
+static NSString *const kSLSigPanelVisibleKey = @"SLSignalPanel.visible";
 
 // ---------------------------------------------------------------------------
 //  SPEEDER ELITE — 100% Native UIKit (no WKWebView)
@@ -41,8 +47,9 @@ static UIColor *SLMuted(void) { return [UIColor colorWithRed:0.48 green:0.54 blu
 static UIButton *sSpeedBadgeBtn = nil;
 static UIButton *sRefreshBtn = nil;
 static UIButton *sNetBtn = nil;
-static UIButton *sPreset1Btn = nil;
 static UIButton *sPreset2Btn = nil;
+static UIButton *sV4Btn = nil;
+static UIButton *sSigBtn = nil;
 static BOOL sCountersVisible = YES;
 
 static UIButton *SLMakeBtn(NSString *title, CGFloat w, CGFloat h, UIColor *bg, UIColor *fg, CGFloat fontSize) {
@@ -73,9 +80,10 @@ static UIButton *SLMakeBtn(NSString *title, CGFloat w, CGFloat h, UIColor *bg, U
 + (void)speedBadgeTap;
 + (void)gearTap;
 + (void)resetCounters;
-+ (void)targetSpin;
 + (void)networkToggle;
 + (void)trisMonitor;
++ (void)toggleV4Panel;
++ (void)toggleSignalPanel;
 @end
 
 @implementation SLActions
@@ -724,208 +732,6 @@ static UIWindow *sDebtTableWindow = nil;
     [[self topVC] presentViewController:a animated:YES completion:nil];
 }
 
-+ (void)targetSpin {
-    [self showTargetSpinOverlay];
-}
-
-static UIWindow *sTargetWindow = nil;
-static NSString *sTargetSymbol = nil;
-static NSInteger sTargetMaxSpins = 0;
-static BOOL sTargetActive = NO;
-
-+ (void)showTargetSpinOverlay {
-    if (sTargetWindow) { sTargetWindow.hidden = NO; return; }
-
-    UIWindowScene *scene = nil;
-    for (UIScene *s in UIApplication.sharedApplication.connectedScenes)
-        if ([s isKindOfClass:[UIWindowScene class]]) { scene = (UIWindowScene *)s; break; }
-    if (!scene) return;
-
-    CGRect screen = scene.coordinateSpace.bounds;
-    CGFloat pw = MIN(screen.size.width * 0.75, 300);
-    CGFloat ph = 180;
-    CGFloat x = (screen.size.width - pw) / 2;
-    CGFloat y = (screen.size.height - ph) / 2;
-
-    UIWindow *win = [[UIWindow alloc] initWithWindowScene:scene];
-    win.frame = CGRectMake(x, y, pw, ph);
-    win.windowLevel = UIWindowLevelAlert + 500;
-    win.backgroundColor = [UIColor clearColor];
-
-    UIViewController *vc = [[UIViewController alloc] init];
-    vc.view.backgroundColor = [UIColor clearColor];
-    win.rootViewController = vc;
-
-    // Glassmorphism background (matching main panel style)
-    UIVisualEffectView *blurView = [[UIVisualEffectView alloc] initWithEffect:[UIBlurEffect effectWithStyle:UIBlurEffectStyleDark]];
-    blurView.frame = CGRectMake(0, 0, pw, ph);
-    blurView.layer.cornerRadius = 18;
-    blurView.clipsToBounds = YES;
-    blurView.alpha = 0.95;
-    blurView.userInteractionEnabled = YES;
-    UIPanGestureRecognizer *targetPan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragTarget:)];
-    [blurView addGestureRecognizer:targetPan];
-    [vc.view addSubview:blurView];
-    UIView *bg = blurView.contentView;
-
-    CGFloat pad = 14;
-
-    // Title: TARGET SPIN
-    UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(pad, 10, 140, 28)];
-    title.text = @"TARGET SPIN";
-    title.font = [UIFont boldSystemFontOfSize:16];
-    title.textColor = SLAccent();
-    [bg addSubview:title];
-
-    // ∞ input box
-    UIButton *inputBox = [UIButton buttonWithType:UIButtonTypeCustom];
-    inputBox.frame = CGRectMake(pw - pad - 100, 8, 100, 32);
-    inputBox.backgroundColor = [UIColor colorWithWhite:0.1 alpha:1];
-    inputBox.layer.cornerRadius = 8;
-    [inputBox setTitle:(sTargetMaxSpins > 0 ? [NSString stringWithFormat:@"%ld", (long)sTargetMaxSpins] : @"∞") forState:UIControlStateNormal];
-    [inputBox setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    inputBox.titleLabel.font = [UIFont boldSystemFontOfSize:16];
-    inputBox.showsTouchWhenHighlighted = YES;
-    [inputBox addTarget:self action:@selector(targetInputTap) forControlEvents:UIControlEventTouchUpInside];
-    inputBox.tag = 999;
-    [bg addSubview:inputBox];
-
-    // Symbol buttons row
-    CGFloat symY = 48;
-    CGFloat symSize = 40;
-    CGFloat symGap = 6;
-    NSArray *syms = @[@"🔨", @"🐷", @"💊", @"🛡", @"⭐", @"🧪"];
-    NSArray *keys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"potion"];
-    CGFloat totalSymW = syms.count * symSize + (syms.count - 1) * symGap;
-    CGFloat symStartX = (pw - totalSymW) / 2;
-
-    for (NSUInteger i = 0; i < syms.count; i++) {
-        UIButton *sb = [UIButton buttonWithType:UIButtonTypeCustom];
-        sb.frame = CGRectMake(symStartX + i * (symSize + symGap), symY, symSize, symSize);
-        sb.backgroundColor = [UIColor colorWithWhite:0.15 alpha:1];
-        sb.layer.cornerRadius = 12;
-        sb.layer.borderWidth = 2;
-        sb.layer.borderColor = [UIColor clearColor].CGColor;
-        [sb setTitle:syms[i] forState:UIControlStateNormal];
-        sb.titleLabel.font = [UIFont systemFontOfSize:22];
-        sb.tag = 100 + i;
-        sb.showsTouchWhenHighlighted = YES;
-        [sb addTarget:self action:@selector(targetSymbolTap:) forControlEvents:UIControlEventTouchUpInside];
-
-        // Highlight if already selected
-        if ([sTargetSymbol isEqualToString:keys[i]]) {
-            sb.layer.borderColor = SLAccent().CGColor;
-            sb.backgroundColor = [UIColor colorWithRed:0 green:0.15 blue:0.18 alpha:1];
-        }
-        [bg addSubview:sb];
-    }
-
-    // Bottom row: Power, BACK, SAVE
-    CGFloat btnY = symY + symSize + 14;
-
-    // Power button
-    UIButton *power = [UIButton buttonWithType:UIButtonTypeCustom];
-    power.frame = CGRectMake(pad, btnY, 36, 36);
-    power.layer.cornerRadius = 18;
-    power.layer.borderWidth = 2;
-    power.layer.borderColor = [UIColor redColor].CGColor;
-    power.backgroundColor = [UIColor clearColor];
-    [power setTitle:@"⏻" forState:UIControlStateNormal];
-    [power setTitleColor:(sTargetActive ? [UIColor greenColor] : [UIColor redColor]) forState:UIControlStateNormal];
-    power.titleLabel.font = [UIFont systemFontOfSize:16];
-    power.tag = 200;
-    power.showsTouchWhenHighlighted = YES;
-    [power addTarget:self action:@selector(targetPowerTap:) forControlEvents:UIControlEventTouchUpInside];
-    [bg addSubview:power];
-
-    // BACK button
-    UIButton *back = SLMakeBtn(@"BACK", 90, 36, [UIColor colorWithWhite:0.2 alpha:1], [UIColor whiteColor], 14);
-    back.frame = CGRectMake(pad + 44, btnY, 90, 36);
-    back.showsTouchWhenHighlighted = YES;
-    [back addTarget:self action:@selector(targetBack) forControlEvents:UIControlEventTouchUpInside];
-    [bg addSubview:back];
-
-    // SAVE button (accent color)
-    UIButton *save = SLMakeBtn(@"SAVE", 90, 36, SLAccent(), [UIColor blackColor], 14);
-    save.frame = CGRectMake(pw - pad - 90, btnY, 90, 36);
-    save.showsTouchWhenHighlighted = YES;
-    [save addTarget:self action:@selector(targetSave) forControlEvents:UIControlEventTouchUpInside];
-    [bg addSubview:save];
-
-    win.hidden = NO;
-    sTargetWindow = win;
-}
-
-+ (void)targetInputTap {
-    UIAlertController *a = [UIAlertController alertControllerWithTitle:@"Max Spins" message:@"Cut internet after this many spins" preferredStyle:UIAlertControllerStyleAlert];
-    [a addTextFieldWithConfigurationHandler:^(UITextField *tf) {
-        tf.keyboardType = UIKeyboardTypeNumberPad;
-        if (sTargetMaxSpins > 0) tf.text = [NSString stringWithFormat:@"%ld", (long)sTargetMaxSpins];
-    }];
-    [a addAction:[UIAlertAction actionWithTitle:@"Set" style:UIAlertActionStyleDefault handler:^(UIAlertAction *_) {
-        sTargetMaxSpins = a.textFields.firstObject.text.integerValue;
-        // Update button text
-        UIButton *box = [sTargetWindow.rootViewController.view viewWithTag:999];
-        [box setTitle:(sTargetMaxSpins > 0 ? [NSString stringWithFormat:@"%ld", (long)sTargetMaxSpins] : @"∞") forState:UIControlStateNormal];
-    }]];
-    [a addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
-    [[self topVC] presentViewController:a animated:YES completion:nil];
-}
-
-+ (void)targetSymbolTap:(UIButton *)btn {
-    NSArray *keys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"potion"];
-    NSUInteger idx = btn.tag - 100;
-    if (idx >= keys.count) return;
-
-    sTargetSymbol = keys[idx];
-
-    // Update borders — highlight selected, clear others
-    for (NSUInteger i = 0; i < keys.count; i++) {
-        UIButton *sb = [sTargetWindow.rootViewController.view viewWithTag:(100 + i)];
-        if (i == idx) {
-            sb.layer.borderColor = SLAccent().CGColor;
-            sb.backgroundColor = [UIColor colorWithRed:0 green:0.15 blue:0.18 alpha:1];
-        } else {
-            sb.layer.borderColor = [UIColor clearColor].CGColor;
-            sb.backgroundColor = [UIColor colorWithWhite:0.15 alpha:1];
-        }
-    }
-}
-
-+ (void)targetPowerTap:(UIButton *)btn {
-    sTargetActive = !sTargetActive;
-    [SLSpinTarget shared].enabled = sTargetActive;
-    [SLSpinTarget shared].currentSessionSpins = 0;  // reset counter on toggle
-    UIColor *c = sTargetActive ? [UIColor greenColor] : [UIColor redColor];
-    [btn setTitleColor:c forState:UIControlStateNormal];
-    btn.layer.borderColor = c.CGColor;
-}
-
-+ (void)targetBack {
-    sTargetWindow.hidden = YES;
-}
-
-+ (void)dragTarget:(UIPanGestureRecognizer *)pan {
-    if (pan.state == UIGestureRecognizerStateBegan || pan.state == UIGestureRecognizerStateChanged) {
-        CGPoint t = [pan translationInView:pan.view];
-        CGRect f = sTargetWindow.frame;
-        f.origin.x += t.x; f.origin.y += t.y;
-        sTargetWindow.frame = f;
-        [pan setTranslation:CGPointZero inView:pan.view];
-    }
-}
-
-+ (void)targetSave {
-    if (sTargetSymbol && sTargetMaxSpins > 0) {
-        [SLSpinTarget shared].targetSpinCount = sTargetMaxSpins;
-        [SLSpinTarget shared].enabled = sTargetActive;
-        [SLSpinTarget shared].currentSessionSpins = 0;
-        [SLTrisController shared].lockTarget = sTargetSymbol;
-        NSLog(@"[SpinLogger] Target saved: %@ within %ld spins (active=%d)", sTargetSymbol, (long)sTargetMaxSpins, sTargetActive);
-        sTargetWindow.hidden = YES;
-    }
-}
-
 + (void)networkToggle {
     sNetworkLocked = !sNetworkLocked;
     sNetBtn.backgroundColor = sNetworkLocked ? SLBtnBg() : SLBtnActive();
@@ -937,18 +743,28 @@ static BOOL sTargetActive = NO;
     [[SLTrisController shared] showTrisMonitor];
 }
 
-// Speed presets — tap to activate, long press to set
-+ (void)preset1Tap {
-    double v = [[NSUserDefaults standardUserDefaults] doubleForKey:@"Speeder_Preset1Speed"];
-    if (v > 0) { SLSpeedControllerSetMultiplier(v); [self syncUI]; }
++ (void)toggleV4Panel {
+    NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
+    BOOL wasOn = [ud objectForKey:kSLV4PanelVisibleKey] ? [ud boolForKey:kSLV4PanelVisibleKey] : YES;
+    BOOL on = !wasOn;
+    if (on) [[SLV4Panel shared] show]; else [[SLV4Panel shared] hide];
+    sV4Btn.backgroundColor = on ? SLBtnActive() : SLBtnBg();
+    [sV4Btn setTitleColor:on ? [UIColor whiteColor] : SLMuted() forState:UIControlStateNormal];
 }
+
++ (void)toggleSignalPanel {
+    NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
+    BOOL wasOn = [ud objectForKey:kSLSigPanelVisibleKey] ? [ud boolForKey:kSLSigPanelVisibleKey] : YES;
+    BOOL on = !wasOn;
+    if (on) [[SLSignalPanel shared] show]; else [[SLSignalPanel shared] hide];
+    sSigBtn.backgroundColor = on ? SLBtnActive() : SLBtnBg();
+    [sSigBtn setTitleColor:on ? [UIColor whiteColor] : SLMuted() forState:UIControlStateNormal];
+}
+
+// Speed preset — tap to activate, long press to set
 + (void)preset2Tap {
     double v = [[NSUserDefaults standardUserDefaults] doubleForKey:@"Speeder_Preset2Speed"];
     if (v > 0) { SLSpeedControllerSetMultiplier(v); [self syncUI]; }
-}
-+ (void)preset1LongPress:(UILongPressGestureRecognizer *)lp {
-    if (lp.state != UIGestureRecognizerStateBegan) return;
-    [self setPreset:1 btn:sPreset1Btn key:@"Speeder_Preset1Speed"];
 }
 + (void)preset2LongPress:(UILongPressGestureRecognizer *)lp {
     if (lp.state != UIGestureRecognizerStateBegan) return;
@@ -1140,40 +956,39 @@ static void SLShowPanel(void) {
     // === ROW 3: Action buttons ===
     CGFloat r3y = r2y + 44;
     CGFloat abtnW = 40, abtnH = 34, agap = 4;
+    NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
+    BOOL v4On  = [ud objectForKey:kSLV4PanelVisibleKey]  ? [ud boolForKey:kSLV4PanelVisibleKey]  : YES;
+    BOOL sigOn = [ud objectForKey:kSLSigPanelVisibleKey] ? [ud boolForKey:kSLSigPanelVisibleKey] : YES;
+
     NSArray *abtnDefs = @[
         @[@"↺", @"resetCounters", @YES],
         @[@"TRIS", @"trisMonitor", @YES],
-        @[@"∞", @"targetSpin", @YES],
+        @[@"V4",  @"toggleV4Panel",     @(v4On)],
         @[@"📶", @"networkToggle", @YES],
-        @[@"preset1", @"preset1Tap", @NO],
+        @[@"SIG", @"toggleSignalPanel", @(sigOn)],
         @[@"preset2", @"preset2Tap", @NO],
     ];
 
     CGFloat ax = pad;
     for (NSArray *def in abtnDefs) {
-        CGFloat w = ([def[0] isEqualToString:@"TRIS"] || [def[0] isEqualToString:@"preset1"] || [def[0] isEqualToString:@"preset2"]) ? 48 : abtnW;
+        BOOL wideLbl = [def[0] isEqualToString:@"TRIS"] || [def[0] isEqualToString:@"preset2"];
+        CGFloat w = wideLbl ? 48 : abtnW;
         BOOL active = [def[2] boolValue];
         UIButton *abtn = SLMakeBtn(def[0], w, abtnH, active ? SLBtnActive() : SLBtnBg(),
                                     active ? [UIColor whiteColor] : SLMuted(),
-                                    ([def[0] isEqualToString:@"TRIS"] || [def[0] isEqualToString:@"preset1"] || [def[0] isEqualToString:@"preset2"]) ? 11 : 14);
+                                    wideLbl ? 11 : 14);
         abtn.frame = CGRectMake(ax, r3y, w, abtnH);
         if ([def[1] length] > 0) {
             [abtn addTarget:[SLActions class] action:NSSelectorFromString(def[1]) forControlEvents:UIControlEventTouchUpInside];
         }
-        // Store refs for toggle buttons + presets
-        if ([def[0] isEqualToString:@"↺"]) sRefreshBtn = abtn;
+        // Store refs for toggle buttons
+        if ([def[0] isEqualToString:@"↺"])  sRefreshBtn = abtn;
         if ([def[0] isEqualToString:@"📶"]) sNetBtn = abtn;
-        if ([def[0] isEqualToString:@"preset1"]) {
-            sPreset1Btn = abtn;
-            double v = [[NSUserDefaults standardUserDefaults] doubleForKey:@"Speeder_Preset1Speed"];
-            [abtn setTitle:(v > 0 ? [NSString stringWithFormat:@"%.0fx", v] : @"+") forState:UIControlStateNormal];
-            UILongPressGestureRecognizer *lp = [[UILongPressGestureRecognizer alloc] initWithTarget:[SLActions class] action:@selector(preset1LongPress:)];
-            lp.minimumPressDuration = 0.5;
-            [abtn addGestureRecognizer:lp];
-        }
+        if ([def[0] isEqualToString:@"V4"])  sV4Btn  = abtn;
+        if ([def[0] isEqualToString:@"SIG"]) sSigBtn = abtn;
         if ([def[0] isEqualToString:@"preset2"]) {
             sPreset2Btn = abtn;
-            double v = [[NSUserDefaults standardUserDefaults] doubleForKey:@"Speeder_Preset2Speed"];
+            double v = [ud doubleForKey:@"Speeder_Preset2Speed"];
             [abtn setTitle:(v > 0 ? [NSString stringWithFormat:@"%.0fx", v] : @"+") forState:UIControlStateNormal];
             UILongPressGestureRecognizer *lp = [[UILongPressGestureRecognizer alloc] initWithTarget:[SLActions class] action:@selector(preset2LongPress:)];
             lp.minimumPressDuration = 0.5;
