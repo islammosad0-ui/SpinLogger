@@ -547,24 +547,9 @@ static void hook_activateWinSequence(void *self, void *slotResult, void *methodI
         pthread_mutex_unlock(&s_patchMu);
     }
 
-    char notes[96]; notes[0] = 0;
-    if (slotResult && fo_slotResult_symbols) {
-        uint8_t *base = (uint8_t *)slotResult;
-        void *sym3Ref = *(void **)(base + fo_slotResult_symbols);
-        int32_t win = fo_slotResult_win
-                        ? *(int32_t *)(base + fo_slotResult_win)
-                        : 0;
-        int32_t s1 = 0, s2 = 0, s3 = 0;
-        if ((uintptr_t)sym3Ref > 0x100000000ULL) {
-            s1 = *(int32_t *)((uint8_t *)sym3Ref + 16);
-            s2 = *(int32_t *)((uint8_t *)sym3Ref + 20);
-            s3 = *(int32_t *)((uint8_t *)sym3Ref + 24);
-        }
-        snprintf(notes, sizeof notes,
-                 "s1=%d|s2=%d|s3=%d|win=%d|ref=%p",
-                 s1, s2, s3, win, sym3Ref);
-    }
-    logLine("activateWinSequence", a1, a2, "", notes);
+    // Field reading disabled for hookslot safety validation.
+    // TODO: re-enable once hooks are confirmed stable.
+    logLine("activateWinSequence", a1, a2, "", "exit");
 }
 
 static int32_t hook_ContainsAccumulationResult(void *self, int32_t defaultIcon, void *methodInfo) {

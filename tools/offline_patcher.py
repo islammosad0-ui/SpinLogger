@@ -108,33 +108,52 @@ def parse_macho_segments(data):
             off = 8 + i * 20
             cpu, sub, sliceoff, slicesize, align = struct.unpack_from('>IIIII', data, off)
             if cpu == 0x0100000C:  # CPU_TYPE_ARM64
-                print(f"  Fat binary: arm64 slice at offset 0x{sliceoff:x}, size 0x{slicesize:x}")
+                print("  Fat binary: arm64 slice at offset 0x%x, size 0x%x" % (sliceoff, slicesize))
                 return parse_macho_segments_at(data, sliceoff)
         raise ValueError("No arm64 slice found in fat binary")
     elif magic == 0xFEEDFACF:  # MH_MAGIC_64
         return parse_macho_segments_at(data, 0)
     else:
-        raise ValueError(f"Not a Mach-O binary (magic=0x{magic:08x})")
+        raise ValueError("Not a Mach-O binary (magic=0x%08x)" % magic)
+
+class Section:
+    def __init__(self, name, segname, addr, size, offset):
+        self.name = name
+        self.segname = segname
+        self.addr = addr
+        self.size = size
+        self.offset = offset  # file offset (0 for BSS sections)
 
 def parse_macho_segments_at(data, base):
-    """Parse segments from a Mach-O at a given offset in the file."""
+    """Parse segments and sections from a Mach-O at a given offset."""
     magic, cputype, cpusub, filetype, ncmds, sizeofcmds, flags, reserved = \
         struct.unpack_from('<IIIIIIII', data, base)
-    assert magic == 0xFEEDFACF, f"Expected MH_MAGIC_64, got 0x{magic:08x}"
+    assert magic == 0xFEEDFACF, "Expected MH_MAGIC_64, got 0x%08x" % magic
 
     segments = []
+    all_sections = []
     pos = base + 32  # sizeof(mach_header_64)
     for _ in range(ncmds):
         cmd, cmdsize = struct.unpack_from('<II', data, pos)
         if cmd == 0x19:  # LC_SEGMENT_64
             segname = data[pos+8:pos+24].split(b'\x00')[0].decode('ascii')
             vmaddr, vmsize, fileoff, filesize = struct.unpack_from('<QQQQ', data, pos+24)
-            # Adjust fileoff for fat binary slices
+            nsects = struct.unpack_from('<I', data, pos+64)[0]
             actual_fileoff = fileoff + base if base > 0 else fileoff
-            segments.append(Segment(segname, vmaddr, vmsize, actual_fileoff, filesize))
+            seg = Segment(segname, vmaddr, vmsize, actual_fileoff, filesize)
+            segments.append(seg)
+            # Parse sections
+            sec_pos = pos + 72
+            for _ in range(nsects):
+                sname = data[sec_pos:sec_pos+16].split(b'\x00')[0].decode('ascii')
+                ssegname = data[sec_pos+16:sec_pos+32].split(b'\x00')[0].decode('ascii')
+                saddr, ssize = struct.unpack_from('<QQ', data, sec_pos+32)
+                soffset = struct.unpack_from('<I', data, sec_pos+48)[0]
+                all_sections.append(Section(sname, ssegname, saddr, ssize, soffset))
+                sec_pos += 80
         pos += cmdsize
 
-    return segments, base
+    return segments, base, all_sections
 
 # ─── Discovery file parser ────────────────────────────────────────────
 
@@ -214,23 +233,25 @@ def find_code_cave(data, text_seg, min_size):
 
     return best_offset, best_size
 
-def find_data_cave(data, data_seg, min_size):
-    """Find a block of zeros in __DATA for hookslot table."""
-    start = data_seg.fileoff
-    end = start + data_seg.filesize
+def find_data_cave(data, data_seg, min_size, sections):
+    """Find unused space in __DATA that doesn't overlap any section."""
+    seg_file_end = data_seg.fileoff + data_seg.filesize
 
-    # Scan backwards from end
-    run_start = end - 1
-    while run_start >= start and data[run_start] == 0:
-        run_start -= 1
-    run_start += 1  # first zero byte
+    # Find the end of the last file-backed section in this segment.
+    last_section_end = data_seg.fileoff
+    for sec in sections:
+        if sec.segname.startswith('__DATA') and sec.offset > 0:
+            sec_end = sec.offset + sec.size
+            if sec_end > last_section_end:
+                last_section_end = sec_end
+                print("    last file-backed section: %s ends at 0x%x" % (sec.name, sec_end))
 
-    avail = end - run_start
+    # Start after the last section, aligned to 8 bytes.
+    cave_start = (last_section_end + 7) & ~7
+    avail = seg_file_end - cave_start
+
     if avail >= min_size:
-        # Align to 8 bytes
-        aligned = (run_start + 7) & ~7
-        if aligned + min_size <= end:
-            return aligned, end - aligned
+        return cave_start, avail
     return -1, 0
 
 # ─── Patcher ──────────────────────────────────────────────────────────
@@ -264,8 +285,8 @@ def patch_binary(binary_path, discovery_path, output_path):
     for m in methods:
         print(f"    {m.name}: unslid VA=0x{m.unslid_va:x}")
 
-    print(f"[*] Parsing Mach-O segments")
-    segments, fat_base = parse_macho_segments(data)
+    print("[*] Parsing Mach-O segments")
+    segments, fat_base, sections = parse_macho_segments(data)
     for seg in segments:
         print(f"    {seg.name:16s} vmaddr=0x{seg.vmaddr:x} fileoff=0x{seg.fileoff:x} size=0x{seg.filesize:x}")
 
@@ -307,7 +328,7 @@ def patch_binary(binary_path, discovery_path, output_path):
         return False
     print(f"[+] Code cave at fileoff 0x{cave_off:x} ({cave_avail} bytes available)")
 
-    dcave_off, dcave_avail = find_data_cave(data, data_seg, data_need)
+    dcave_off, dcave_avail = find_data_cave(data, data_seg, data_need, sections)
     if dcave_off < 0:
         print(f"[!] Cannot find data cave in __DATA ({data_need} bytes needed)")
         return False
