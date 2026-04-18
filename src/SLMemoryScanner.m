@@ -2,6 +2,7 @@
 #import "SLIdxStrategy.h"
 #import "SLConstants.h"
 #import "SLMethodDump.h"
+#import "SLSpinHook.h"
 #include <dlfcn.h>
 #include <string.h>
 #include <mach/mach_time.h>
@@ -473,6 +474,11 @@ typedef NS_ENUM(NSInteger, ScanPhase) {
             { s_klass_DataProv,  "SlotDataProvider" },
         };
         SLMethodDump_Run(entries, sizeof(entries)/sizeof(entries[0]));
+
+        // Install inline hooks on SlotMachineManager entry points. This is
+        // additive to polling — if Dobby fails to patch a method, the
+        // scanner keeps working.
+        SLSpinHook_InstallAll(s_klass_Manager, s_klass_Result);
     } else {
         NSLog(@"[SpinLogger] Some classes not found, retrying...");
     }

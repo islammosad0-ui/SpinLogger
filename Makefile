@@ -6,12 +6,17 @@ MIN_IOS   = 14.0
 ARCH      = arm64
 OUTPUT    = SpinLogger.dylib
 
+DOBBY_DIR ?= dobby
+DOBBY_INC ?= $(DOBBY_DIR)/include
+DOBBY_LIB ?= $(DOBBY_DIR)/build/libdobby.a
+
 SOURCES = $(wildcard src/*.m)
 
 CFLAGS = -target $(ARCH)-apple-ios$(MIN_IOS) \
          -isysroot $(SDK_PATH) \
          -fPIC -shared \
          -fobjc-arc \
+         -I $(DOBBY_INC) \
          -framework Foundation \
          -framework UIKit \
          -framework CoreGraphics \
@@ -19,10 +24,12 @@ CFLAGS = -target $(ARCH)-apple-ios$(MIN_IOS) \
          -framework WebKit \
          -O2
 
+LDFLAGS = $(DOBBY_LIB) -lc++
+
 all: $(OUTPUT)
 
 $(OUTPUT): $(SOURCES)
-	clang $(CFLAGS) -o $@ $^
+	clang $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:
 	rm -f $(OUTPUT)

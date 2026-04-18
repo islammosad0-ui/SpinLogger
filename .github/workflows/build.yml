@@ -18,15 +18,52 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_15.4.app || sudo xcode-select -s /Applications/Xcode.app
 
+      - name: Cache Dobby build
+        id: cache-dobby
+        uses: actions/cache@v4
+        with:
+          path: dobby/build/libdobby.a
+          key: dobby-arm64-ios-v1
+
+      - name: Clone + build Dobby (arm64 iOS static lib)
+        if: steps.cache-dobby.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch master https://github.com/jmpews/Dobby.git dobby
+          cd dobby
+          mkdir -p build && cd build
+          cmake .. \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_OSX_SYSROOT=iphoneos \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DDOBBY_GENERATE_SHARED=OFF \
+            -DDOBBY_BUILD_EXAMPLE=OFF \
+            -DDOBBY_BUILD_TEST=OFF
+          cmake --build . --config Release -- -j$(sysctl -n hw.ncpu)
+          ls -la libdobby.a
+          file libdobby.a
+
+      - name: Locate Dobby headers + lib
+        run: |
+          ls -la dobby/build/libdobby.a
+          find dobby -name "dobby.h" | head -3
+
       - name: Build dylib
         run: |
           SDK=$(xcrun --sdk iphoneos --show-sdk-path)
           echo "Using SDK: $SDK"
+          DOBBY_INC="$(pwd)/dobby/include"
+          DOBBY_LIB="$(pwd)/dobby/build/libdobby.a"
+          # Dobby's public header lives at include/dobby.h on recent commits;
+          # fall back to root if that path differs.
+          if [ ! -d "$DOBBY_INC" ]; then DOBBY_INC="$(pwd)/dobby"; fi
           clang \
             -target arm64-apple-ios14.0 \
             -isysroot "$SDK" \
             -fPIC -shared \
             -fobjc-arc \
+            -I "$DOBBY_INC" \
             -framework Foundation \
             -framework UIKit \
             -framework CoreGraphics \
@@ -34,7 +71,9 @@ jobs:
             -framework WebKit \
             -O2 \
             -o SpinLogger.dylib \
-            src/*.m
+            src/*.m \
+            "$DOBBY_LIB" \
+            -lc++
           file SpinLogger.dylib
           ls -lh SpinLogger.dylib
 
