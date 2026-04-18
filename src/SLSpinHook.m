@@ -8,6 +8,8 @@
 #include <pthread.h>
 #include <mach/mach.h>
 #include <mach/vm_map.h>
+#include <sys/mman.h>
+#include <libkern/OSCacheControl.h>
 
 // ---------------------------------------------------------------------------
 //  IL2CPP method-iteration + field-reading APIs.
@@ -112,9 +114,9 @@ static void resolveSlotResultOffsets(void *klassResult) {
 }
 
 // ---------------------------------------------------------------------------
-//  Hook originals.
+//  Hook originals (4 hooks — TrySetNexSpinHitRecord is just `return false`,
+//  not worth hooking).
 // ---------------------------------------------------------------------------
-static void *orig_TrySetNexSpinHitRecord     = NULL;
 static void *orig_OnSpinResultReceived       = NULL;
 static void *orig_SetFreezeResolve           = NULL;
 static void *orig_activateWinSequence        = NULL;
@@ -122,17 +124,8 @@ static void *orig_ContainsAccumulationResult = NULL;
 
 // ---------------------------------------------------------------------------
 //  Hook bodies.
-//  IL2CPP ABI: every method receives a trailing `void *methodInfo` parameter.
+//  IL2CPP ABI: trailing `void *methodInfo` parameter.
 // ---------------------------------------------------------------------------
-
-static bool hook_TrySetNexSpinHitRecord(void *self, void *methodInfo) {
-    typedef bool (*fn_t)(void *, void *);
-    char a1[24]; snprintf(a1, sizeof a1, "%p", self);
-    logLine("TrySetNexSpinHitRecord", a1, "", "", "enter");
-    bool ret = ((fn_t)orig_TrySetNexSpinHitRecord)(self, methodInfo);
-    logLine("TrySetNexSpinHitRecord", a1, "", ret ? "true" : "false", "exit");
-    return ret;
-}
 
 static void hook_OnSpinResultReceived(void *self, void *response, void *methodInfo) {
     typedef void (*fn_t)(void *, void *, void *);
@@ -210,49 +203,124 @@ static void breadcrumb(const char *msg) {
 }
 
 // ---------------------------------------------------------------------------
-//  MethodInfo pointer swap.
+//  Focused arm64 inline hook.
 //
-//  IL2CPP MethodInfo layout (arm64):
-//      offset 0: methodPointer (void*)  — the native function address
+//  All 4 target functions have clean prologues (STP/SUB/ADD, no PC-relative
+//  instructions in the first 16 bytes). Verified by dumping actual bytes.
 //
-//  Overwrite this pointer with our hook. Catches delegate dispatches,
-//  coroutine resumptions, and virtual calls. AOT direct calls are not
-//  intercepted but many of these methods ARE invoked via delegates.
+//  Approach:
+//    1. Allocate RWX trampoline page.
+//    2. Copy first 16 bytes of target → trampoline.
+//    3. Append absolute jump (LDR X17, [PC,#8]; BR X17; .quad addr) to
+//       trampoline → target+16.
+//    4. Patch target's first 16 bytes with absolute jump → hook function.
+//    5. Return trampoline as the "orig" pointer.
+//
+//  Uses vm_protect to make __TEXT writable, then restores RX.
 // ---------------------------------------------------------------------------
-static int methodInfoSwap(void *methodInfo, void *replacement, void **outOrig) {
-    if (!methodInfo || !replacement) return -1;
+#define PATCH_SIZE 16  // 4 arm64 instructions
 
-    void **slot = (void **)methodInfo;
-    void *original = *slot;
-    if (outOrig) *outOrig = original;
+static void buildAbsJump(uint8_t *dst, uint64_t addr) {
+    // LDR X17, [PC, #8]  → 0x58000051
+    dst[0] = 0x51; dst[1] = 0x00; dst[2] = 0x00; dst[3] = 0x58;
+    // BR X17              → 0xD61F0220
+    dst[4] = 0x20; dst[5] = 0x02; dst[6] = 0x1F; dst[7] = 0xD6;
+    // .quad absolute target
+    memcpy(dst + 8, &addr, 8);
+}
 
-    // MethodInfo lives in writable IL2CPP metadata — direct write works.
-    *slot = replacement;
-    if (*slot == replacement) return 0;
+static int inlineHook(void *target, void *replacement, void **outOrig,
+                      const char *name) {
+    if (!target || !replacement) return -1;
 
-    // Fallback: vm_protect if metadata page is read-only.
-    const vm_address_t PAGE_MASK = 0x3FFF;
-    vm_address_t page = (vm_address_t)slot & ~PAGE_MASK;
-    vm_size_t span = ((vm_address_t)slot + sizeof(void*) - page + PAGE_MASK) & ~PAGE_MASK;
+    // Validate: reject if any of the first 4 instructions is RET (function
+    // too short) — safety net in case we're called on TrySetNexSpinHitRecord.
+    uint32_t *insns = (uint32_t *)target;
+    for (int i = 0; i < 4; i++) {
+        if (insns[i] == 0xD65F03C0) {  // RET
+            char bc[128];
+            snprintf(bc, sizeof bc, "REJECT %s: RET at word %d", name, i);
+            breadcrumb(bc);
+            return -5;
+        }
+    }
 
-    kern_return_t kr = vm_protect(mach_task_self(), page, span, FALSE,
+    // 1. Allocate trampoline (RWX page).
+    uint8_t *tramp = (uint8_t *)mmap(NULL, 4096,
+                                      PROT_READ | PROT_WRITE | PROT_EXEC,
+                                      MAP_ANON | MAP_PRIVATE, -1, 0);
+    if (tramp == MAP_FAILED) {
+        // Fallback: RW then mprotect.
+        tramp = (uint8_t *)mmap(NULL, 4096,
+                                 PROT_READ | PROT_WRITE,
+                                 MAP_ANON | MAP_PRIVATE, -1, 0);
+        if (tramp == MAP_FAILED) {
+            breadcrumb("mmap FAILED");
+            return -2;
+        }
+    }
+
+    // 2. Copy original 16 bytes → trampoline.
+    memcpy(tramp, target, PATCH_SIZE);
+
+    // 3. Append absolute jump back to target + 16.
+    buildAbsJump(tramp + PATCH_SIZE,
+                 (uint64_t)((uint8_t *)target + PATCH_SIZE));
+
+    // Make trampoline executable.
+    mprotect(tramp, 4096, PROT_READ | PROT_EXEC);
+    sys_icache_invalidate(tramp, PATCH_SIZE + 16);
+
+    // 4. Build the redirect stub for the target.
+    uint8_t stub[PATCH_SIZE];
+    buildAbsJump(stub, (uint64_t)replacement);
+
+    // 5. Make target writable, patch, restore RX.
+    const vm_address_t PAGE_MASK = 0x3FFF;  // 16KB iOS pages
+    vm_address_t pageStart = (vm_address_t)target & ~PAGE_MASK;
+    vm_size_t pageSpan = (((vm_address_t)target + PATCH_SIZE) - pageStart
+                          + PAGE_MASK) & ~PAGE_MASK;
+
+    kern_return_t kr = vm_protect(mach_task_self(), pageStart, pageSpan, FALSE,
                                   VM_PROT_READ | VM_PROT_WRITE);
     if (kr != KERN_SUCCESS) {
-        kr = vm_protect(mach_task_self(), page, span, FALSE,
+        kr = vm_protect(mach_task_self(), pageStart, pageSpan, FALSE,
                         VM_PROT_READ | VM_PROT_WRITE | VM_PROT_COPY);
     }
-    if (kr != KERN_SUCCESS) return -2;
+    {
+        char bc[128];
+        snprintf(bc, sizeof bc, "VMPROTECT %s kr=%d page=%p span=%zu",
+                 name, (int)kr, (void *)pageStart, (size_t)pageSpan);
+        breadcrumb(bc);
+    }
+    if (kr != KERN_SUCCESS) {
+        munmap(tramp, 4096);
+        return -3;
+    }
 
-    *slot = replacement;
-    return (*slot == replacement) ? 0 : -3;
+    memcpy(target, stub, PATCH_SIZE);
+
+    // Restore RX.
+    vm_protect(mach_task_self(), pageStart, pageSpan, FALSE,
+               VM_PROT_READ | VM_PROT_EXECUTE);
+
+    sys_icache_invalidate(target, PATCH_SIZE);
+
+    if (outOrig) *outOrig = tramp;
+
+    {
+        char bc[128];
+        snprintf(bc, sizeof bc, "PATCHED %s tramp=%p", name, tramp);
+        breadcrumb(bc);
+    }
+    return 0;
 }
 
 // ---------------------------------------------------------------------------
 //  Hook config.
 // ---------------------------------------------------------------------------
-static bool s_hookEnabled[5] = { true, true, true, true, true };
-static const char *s_hookNames[5] = {
-    "TrySetNexSpinHitRecord",
+static bool s_hookEnabled[4] = { true, true, true, true };
+static const char *s_hookNames[4] = {
     "OnSpinResultReceived",
     "SetFreezeResolve",
     "activateWinSequence",
@@ -265,7 +333,7 @@ static void loadHookConfig(void) {
     NSString *path = [docs stringByAppendingPathComponent:@"hook_config.txt"];
     FILE *f = fopen(path.fileSystemRepresentation, "r");
     if (!f) return;
-    for (int i = 0; i < 5; i++) s_hookEnabled[i] = false;
+    for (int i = 0; i < 4; i++) s_hookEnabled[i] = false;
 
     char line[128];
     while (fgets(line, sizeof line, f)) {
@@ -273,11 +341,11 @@ static void loadHookConfig(void) {
         while (len > 0 && (line[len-1] == '\n' || line[len-1] == '\r')) line[--len] = 0;
         if (len == 0) continue;
         if (strcmp(line, "ALL") == 0) {
-            for (int i = 0; i < 5; i++) s_hookEnabled[i] = true;
+            for (int i = 0; i < 4; i++) s_hookEnabled[i] = true;
             break;
         }
         if (strcmp(line, "NONE") == 0) break;
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 4; i++) {
             if (strcmp(line, s_hookNames[i]) == 0) s_hookEnabled[i] = true;
         }
     }
@@ -285,7 +353,8 @@ static void loadHookConfig(void) {
 }
 
 // ---------------------------------------------------------------------------
-//  Installer — MethodInfo pointer swap only (Dobby removed).
+//  Installer — targeted inline hooks on 4 functions with verified-safe
+//  prologues. TrySetNexSpinHitRecord skipped (just `return false`).
 // ---------------------------------------------------------------------------
 int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
     if (s_installed) return 0;
@@ -332,38 +401,34 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
                 breadcrumb("NOTFOUND " #NAME " (fp)");                            \
                 break;                                                            \
             }                                                                     \
-            /* Dump first 8 instructions (32 bytes) of prologue */                \
+            /* Dump prologue */                                                   \
             {                                                                     \
-                uint32_t *insn = (uint32_t *)fp;                                  \
+                uint32_t *w = (uint32_t *)fp;                                     \
                 char pd[256];                                                     \
                 snprintf(pd, sizeof pd,                                           \
                     "PROLOGUE " #NAME " @%p: "                                    \
-                    "%08x %08x %08x %08x %08x %08x %08x %08x",                   \
-                    fp,                                                           \
-                    insn[0], insn[1], insn[2], insn[3],                            \
-                    insn[4], insn[5], insn[6], insn[7]);                           \
+                    "%08x %08x %08x %08x",                                        \
+                    fp, w[0], w[1], w[2], w[3]);                                  \
                 breadcrumb(pd);                                                   \
             }                                                                     \
+            breadcrumb("HOOK " #NAME);                                            \
+            int r = inlineHook(fp, (void *)&hook_##NAME, &orig_##NAME, #NAME);    \
             char bc[128];                                                         \
-            snprintf(bc, sizeof bc, "SWAP " #NAME " mi=%p fp=%p", m, fp);         \
-            breadcrumb(bc);                                                       \
-            int r = methodInfoSwap(m, (void *)&hook_##NAME, &orig_##NAME);        \
-            snprintf(bc, sizeof bc, "SWAP " #NAME " rc=%d orig=%p",               \
+            snprintf(bc, sizeof bc, "HOOK " #NAME " rc=%d orig=%p",               \
                      r, orig_##NAME);                                             \
             breadcrumb(bc);                                                       \
             if (r == 0) {                                                         \
                 installed++;                                                      \
                 breadcrumb("OK " #NAME);                                          \
             } else {                                                              \
-                breadcrumb("FAIL " #NAME);                                        \
+                breadcrumb("FAIL " #NAME " rc=" #IDX);                            \
             }                                                                     \
         } while (0)
 
-    TRY_HOOK(TrySetNexSpinHitRecord,     0, 0);
-    TRY_HOOK(OnSpinResultReceived,       1, 1);
-    TRY_HOOK(SetFreezeResolve,           0, 2);
-    TRY_HOOK(activateWinSequence,        1, 3);
-    TRY_HOOK(ContainsAccumulationResult, 1, 4);
+    TRY_HOOK(OnSpinResultReceived,       1, 0);
+    TRY_HOOK(SetFreezeResolve,           0, 1);
+    TRY_HOOK(activateWinSequence,        1, 2);
+    TRY_HOOK(ContainsAccumulationResult, 1, 3);
 
     #undef TRY_HOOK
 
@@ -373,7 +438,7 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
     logLine("INSTALL_END", "", "", ri, "session-start");
 
     char done[64];
-    snprintf(done, sizeof done, "DONE: %d/5 installed", installed);
+    snprintf(done, sizeof done, "DONE: %d/4 installed", installed);
     breadcrumb(done);
     return installed;
 }
