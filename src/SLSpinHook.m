@@ -855,14 +855,36 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
     breadcrumb("STEP 4: loadHookConfig");
     loadHookConfig();
 
-    // -- Check code-signing flags FIRST --
+    // -- Check code-signing flags --
     breadcrumb("STEP 5: checking CS flags");
     diagCheckCSFlags();
 
     // ---------------------------------------------------------------
-    //  DIAGNOSTIC / DISCOVERY MODE: dump function addresses + binary
-    //  info for the offline patcher. No __TEXT modification.
-    //  Activates when hook_config.txt contains "DIAG" or is absent.
+    //  AUTO-DETECT: try hookslot mode first (patched binary).
+    //  If hookslot magic is found → use hookslots (no config needed).
+    //  If not found → fall back to discovery or config-based mode.
+    // ---------------------------------------------------------------
+    breadcrumb("STEP 6: scanning for hookslot magic...");
+    {
+        int hsCount = installViaHookslots();
+        if (hsCount > 0) {
+            breadcrumb("=== HOOKSLOT MODE (auto-detected) ===");
+            char bc[64];
+            snprintf(bc, sizeof bc, "HOOKSLOT: %d/4 hooks activated", hsCount);
+            breadcrumb(bc);
+            s_installed = true;
+            snprintf(bc, sizeof bc, "%d", hsCount);
+            logLine("INSTALL_END", "", "", bc, "hookslot-auto");
+            snprintf(bc, sizeof bc, "DONE: %d/4 installed (HOOKSLOT)", hsCount);
+            breadcrumb(bc);
+            return hsCount;
+        }
+        breadcrumb("STEP 6: no hookslot magic — not a patched binary");
+    }
+
+    // ---------------------------------------------------------------
+    //  DISCOVERY MODE: dump function addresses + binary info for the
+    //  offline patcher. No __TEXT modification.
     // ---------------------------------------------------------------
     if (s_diagMode) {
         breadcrumb("=== DISCOVERY MODE ===");
@@ -874,18 +896,13 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
     }
 
     // ---------------------------------------------------------------
-    //  HOOKSLOT MODE: binary was patched offline. We just need to
-    //  write hook function addresses into __DATA hookslots.
-    //  No __TEXT modification needed — CS_KILL safe.
-    //  Activates when hook_config.txt contains "HOOKSLOT".
+    //  HOOKSLOT MODE (explicit config — but magic wasn't found).
     // ---------------------------------------------------------------
     if (s_hookslotMode) {
-        breadcrumb("=== HOOKSLOT MODE ===");
-        int count = installViaHookslots();
-        char bc[64];
-        snprintf(bc, sizeof bc, "HOOKSLOT: %d/4 hooks activated", count);
-        breadcrumb(bc);
-        s_installed = (count > 0);
+        breadcrumb("=== HOOKSLOT MODE (config) — but magic not found ===");
+        logLine("INSTALL_END", "", "", "0", "hookslot-no-magic");
+        breadcrumb("DONE: 0/4 installed (binary not patched)");
+        return 0;
         snprintf(bc, sizeof bc, "%d", count);
         logLine("INSTALL_END", "", "", bc, "hookslot");
         return count;
