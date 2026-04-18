@@ -32,6 +32,7 @@ jobs:
           cd dobby
           mkdir -p build && cd build
           cmake .. \
+            -G "Unix Makefiles" \
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_SYSROOT=iphoneos \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
@@ -41,6 +42,12 @@ jobs:
             -DDOBBY_BUILD_EXAMPLE=OFF \
             -DDOBBY_BUILD_TEST=OFF
           cmake --build . --config Release -- -j$(sysctl -n hw.ncpu)
+          find . -name "libdobby.a"
+          # Normalize output location so the build step can rely on it.
+          if [ ! -f libdobby.a ]; then
+            DLIB=$(find . -name "libdobby.a" | head -1)
+            [ -n "$DLIB" ] && cp "$DLIB" libdobby.a
+          fi
           ls -la libdobby.a
           file libdobby.a
 
