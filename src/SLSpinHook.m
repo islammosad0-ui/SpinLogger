@@ -169,13 +169,25 @@ static void buildAbsJump(uint8_t *dst, uint64_t addr) {
     memcpy(dst + 8, &addr, 8);
 }
 
+// Write bytes to a code page using vm_write — never changes page permissions,
+// so the page stays executable and other threads don't crash.
+static kern_return_t vmWrite(vm_address_t target, const void *data, size_t n) {
+    return vm_write(mach_task_self(), target,
+                    (vm_offset_t)data, (mach_msg_type_number_t)n);
+}
+
 static void patchBytes(void *target, const void *bytes, size_t n,
                        vm_address_t pageStart, vm_size_t pageSpan) {
-    vm_protect(mach_task_self(), pageStart, pageSpan, FALSE,
-               VM_PROT_READ | VM_PROT_WRITE);
-    memcpy(target, bytes, n);
-    vm_protect(mach_task_self(), pageStart, pageSpan, FALSE,
-               VM_PROT_READ | VM_PROT_EXECUTE);
+    // Try vm_write first (no permission change, page stays RX).
+    kern_return_t kr = vmWrite((vm_address_t)target, bytes, n);
+    if (kr != KERN_SUCCESS) {
+        // Fallback: vm_protect RWX (keep execute bit!) + memcpy.
+        vm_protect(mach_task_self(), pageStart, pageSpan, FALSE,
+                   VM_PROT_READ | VM_PROT_WRITE | VM_PROT_EXECUTE);
+        memcpy(target, bytes, n);
+        vm_protect(mach_task_self(), pageStart, pageSpan, FALSE,
+                   VM_PROT_READ | VM_PROT_EXECUTE);
+    }
     sys_icache_invalidate(target, n);
 }
 
@@ -226,27 +238,39 @@ static int installHook(void *target, void *replacement, const char *name) {
     h->pageSpan  = (((vm_address_t)target + PATCH_SIZE) - h->pageStart
                      + PAGE_MASK) & ~PAGE_MASK;
 
-    // Initial vm_protect + patch.
-    kern_return_t kr = vm_protect(mach_task_self(),
-                                  h->pageStart, h->pageSpan, FALSE,
-                                  VM_PROT_READ | VM_PROT_WRITE);
-    if (kr != KERN_SUCCESS) {
-        kr = vm_protect(mach_task_self(),
-                        h->pageStart, h->pageSpan, FALSE,
-                        VM_PROT_READ | VM_PROT_WRITE | VM_PROT_COPY);
-    }
+    // Strategy 1: vm_write — writes without changing permissions.
+    // Page stays RX, other threads keep executing safely.
+    kern_return_t kr = vmWrite((vm_address_t)target, h->stub, PATCH_SIZE);
     {
         char bc[128];
-        snprintf(bc, sizeof bc, "VMPROTECT %s kr=%d page=%p",
-                 name, (int)kr, (void *)h->pageStart);
+        snprintf(bc, sizeof bc, "VMWRITE %s kr=%d", name, (int)kr);
         breadcrumb(bc);
     }
-    if (kr != KERN_SUCCESS) return -3;
 
-    memcpy(target, h->stub, PATCH_SIZE);
+    if (kr != KERN_SUCCESS) {
+        // Strategy 2: vm_protect RWX (keep execute!) + memcpy.
+        kr = vm_protect(mach_task_self(),
+                        h->pageStart, h->pageSpan, FALSE,
+                        VM_PROT_READ | VM_PROT_WRITE | VM_PROT_EXECUTE);
+        if (kr != KERN_SUCCESS) {
+            // Strategy 3: COW + RWX.
+            kr = vm_protect(mach_task_self(),
+                            h->pageStart, h->pageSpan, FALSE,
+                            VM_PROT_READ | VM_PROT_WRITE | VM_PROT_EXECUTE
+                            | VM_PROT_COPY);
+        }
+        {
+            char bc2[128];
+            snprintf(bc2, sizeof bc2, "VMPROTECT_RWX %s kr=%d", name, (int)kr);
+            breadcrumb(bc2);
+        }
+        if (kr != KERN_SUCCESS) return -3;
 
-    vm_protect(mach_task_self(), h->pageStart, h->pageSpan, FALSE,
-               VM_PROT_READ | VM_PROT_EXECUTE);
+        memcpy(target, h->stub, PATCH_SIZE);
+
+        vm_protect(mach_task_self(), h->pageStart, h->pageSpan, FALSE,
+                   VM_PROT_READ | VM_PROT_EXECUTE);
+    }
     sys_icache_invalidate(target, PATCH_SIZE);
 
     h->active = true;
@@ -363,9 +387,7 @@ static int32_t hook_ContainsAccumulationResult(void *self, int32_t defaultIcon, 
 // ---------------------------------------------------------------------------
 //  Hook config.
 // ---------------------------------------------------------------------------
-// DIAGNOSTIC: only activateWinSequence enabled (index 2) to isolate crash.
-// Other hooks may fire during loading and crash before gameplay.
-static bool s_hookEnabled[4] = { false, false, true, false };
+static bool s_hookEnabled[4] = { true, true, true, true };
 static const char *s_hookNames[4] = {
     "OnSpinResultReceived",
     "SetFreezeResolve",
