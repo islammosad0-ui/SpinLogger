@@ -8,6 +8,8 @@
 #import "SLMemoryScanner.h"
 #import "SLIdxStrategy.h"
 #import "SLSignalPanel.h"
+#import "SLV4Model.h"
+#import "SLV4Panel.h"
 
 extern void SLJailbreakBypassInstall(void);
 extern void SLNetworkInterceptorInstall(void);
@@ -35,6 +37,14 @@ static void SpinLoggerInit(void) {
             // [[SLDebtMonitor shared] install];  // hidden — not in active use
             [[SLMemoryScanner shared] startScanning];
             [[SLSignalPanel shared] install];
+
+            // V4 hazard HUD — load bundled model and install panel.
+            if ([[SLV4Model shared] loadFromAppBundle]) {
+                [[SLV4Panel shared] install];
+            } else {
+                NSLog(@"[SpinLogger] V4 model not found — V4 panel disabled");
+            }
+
             SLMenuOverlayInstall();
 
             NSLog(@"[SpinLogger] UI components initialized");

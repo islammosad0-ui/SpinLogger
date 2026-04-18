@@ -3,6 +3,8 @@
 #import "SLConstants.h"
 #import "SLGapPredictor.h"
 #import "SLMemoryScanner.h"
+#import "SLV4Features.h"
+#import "SLV4Panel.h"
 
 // ---------------------------------------------------------------------------
 //  Ring buffer for Layer 2 window scoring
@@ -181,6 +183,10 @@ typedef struct {
         self.pendingResult.l1Score = self.layer1Score;
         self.pendingResult.l2Score = self.layer2Score;
         self.pendingResult.scorerCfg = self.scorerName;
+
+        // Feed V4 feature tracker before the result is released
+        [[SLV4Features shared] feedSpin:self.pendingResult];
+        [[NSNotificationCenter defaultCenter] postNotificationName:SLV4PanelRefreshNotification object:nil];
 
         SLSpinStoreAppend(self.pendingResult);
         self.pendingResult = nil;

@@ -31,6 +31,18 @@ DYLIB_NAME="SpinLogger.dylib"
 echo "[*] Copying dylib..."
 cp "$DYLIB" "$APP/$DYLIB_NAME"
 
+# Copy V4 model bundle alongside the dylib (loaded at runtime via
+# [[NSBundle mainBundle] executablePath]'s parent directory).
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+V4_MODEL="$SCRIPT_DIR/assets/v4_model.json"
+if [ -f "$V4_MODEL" ]; then
+    echo "[*] Copying V4 model bundle..."
+    cp "$V4_MODEL" "$APP/v4_model.json"
+else
+    echo "[!] assets/v4_model.json not found — V4 panel will be disabled in-app."
+    echo "    Run: python analysis/export_v4_for_dylib.py"
+fi
+
 # Remove One.dylib if present (SpinLogger replaces it)
 if [ -f "$APP/One.dylib" ]; then
     echo "[*] Removing One.dylib (replaced by SpinLogger)..."
