@@ -363,7 +363,9 @@ static int32_t hook_ContainsAccumulationResult(void *self, int32_t defaultIcon, 
 // ---------------------------------------------------------------------------
 //  Hook config.
 // ---------------------------------------------------------------------------
-static bool s_hookEnabled[4] = { true, true, true, true };
+// DIAGNOSTIC: only activateWinSequence enabled (index 2) to isolate crash.
+// Other hooks may fire during loading and crash before gameplay.
+static bool s_hookEnabled[4] = { false, false, true, false };
 static const char *s_hookNames[4] = {
     "OnSpinResultReceived",
     "SetFreezeResolve",
