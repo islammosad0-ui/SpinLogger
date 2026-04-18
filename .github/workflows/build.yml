@@ -18,15 +18,60 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_15.4.app || sudo xcode-select -s /Applications/Xcode.app
 
+      - name: Cache Dobby build
+        id: cache-dobby
+        uses: actions/cache@v4
+        with:
+          path: |
+            dobby/build/libdobby.a
+            dobby/include
+          key: dobby-arm64-ios-v2
+
+      - name: Clone + build Dobby (arm64 iOS static lib)
+        if: steps.cache-dobby.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 https://github.com/jmpews/Dobby.git dobby
+          cd dobby
+          mkdir -p build && cd build
+          cmake .. \
+            -G "Unix Makefiles" \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
+            -DCMAKE_OSX_SYSROOT=iphoneos \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS="-target arm64-apple-ios14.0" \
+            -DCMAKE_CXX_FLAGS="-target arm64-apple-ios14.0" \
+            -DDOBBY_GENERATE_SHARED=OFF \
+            -DDOBBY_BUILD_EXAMPLE=OFF \
+            -DDOBBY_BUILD_TEST=OFF
+          cmake --build . --config Release -- -j$(sysctl -n hw.ncpu)
+          # Normalize — Dobby sometimes puts the .a in a subdirectory.
+          if [ ! -f libdobby.a ]; then
+            DLIB=$(find . -name "libdobby.a" | head -1)
+            [ -n "$DLIB" ] && cp "$DLIB" libdobby.a
+          fi
+          ls -la libdobby.a
+          file libdobby.a
+
       - name: Build dylib
         run: |
           SDK=$(xcrun --sdk iphoneos --show-sdk-path)
           echo "Using SDK: $SDK"
+          DOBBY_INC="$(pwd)/dobby/include"
+          DOBBY_LIB="$(pwd)/dobby/build/libdobby.a"
+          if [ ! -d "$DOBBY_INC" ]; then DOBBY_INC="$(pwd)/dobby"; fi
+          echo "Dobby include: $DOBBY_INC"
+          echo "Dobby lib:     $DOBBY_LIB"
+          ls -la "$DOBBY_LIB"
+          find "$DOBBY_INC" -name "dobby.h" | head -3
           clang \
             -target arm64-apple-ios14.0 \
             -isysroot "$SDK" \
             -fPIC -shared \
             -fobjc-arc \
+            -I "$DOBBY_INC" \
             -framework Foundation \
             -framework UIKit \
             -framework CoreGraphics \
@@ -34,7 +79,9 @@ jobs:
             -framework WebKit \
             -O2 \
             -o SpinLogger.dylib \
-            src/*.m
+            src/*.m \
+            "$DOBBY_LIB" \
+            -lc++
           file SpinLogger.dylib
           ls -lh SpinLogger.dylib
 

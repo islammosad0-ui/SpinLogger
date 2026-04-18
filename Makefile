@@ -8,10 +8,14 @@ OUTPUT    = SpinLogger.dylib
 
 SOURCES = $(wildcard src/*.m)
 
+DOBBY_INC ?= dobby/include
+DOBBY_LIB ?= dobby/build/libdobby.a
+
 CFLAGS = -target $(ARCH)-apple-ios$(MIN_IOS) \
          -isysroot $(SDK_PATH) \
          -fPIC -shared \
          -fobjc-arc \
+         -I $(DOBBY_INC) \
          -framework Foundation \
          -framework UIKit \
          -framework CoreGraphics \
@@ -22,7 +26,7 @@ CFLAGS = -target $(ARCH)-apple-ios$(MIN_IOS) \
 all: $(OUTPUT)
 
 $(OUTPUT): $(SOURCES)
-	clang $(CFLAGS) -o $@ $^
+	clang $(CFLAGS) -o $@ $^ $(DOBBY_LIB) -lc++
 
 clean:
 	rm -f $(OUTPUT)

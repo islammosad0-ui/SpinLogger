@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 //  SLSpinHook
 //
-//  Installs inline hooks (via Dobby) on five SlotMachineManager methods that
+//  Installs inline hooks via Dobby on five SlotMachineManager methods that
 //  carry exploitable information:
 //
 //      1. TrySetNexSpinHitRecord()              → next-spin hit oracle

@@ -1,5 +1,4 @@
 #import "SLSpinHook.h"
-#import "SLInlineHook.h"
 #include <dlfcn.h>
 #include <string.h>
 #include <stdint.h>
@@ -7,6 +6,11 @@
 #include <stdbool.h>
 #include <sys/time.h>
 #include <pthread.h>
+
+// ---------------------------------------------------------------------------
+//  Dobby inline-hook API (static lib linked at build time).
+// ---------------------------------------------------------------------------
+extern int DobbyHook(void *address, void *replace_call, void **origin_call);
 
 // ---------------------------------------------------------------------------
 //  IL2CPP method-iteration + field-reading APIs.
@@ -27,10 +31,9 @@ static BOOL s_installed = NO;
 
 // ---------------------------------------------------------------------------
 //  Lightweight C-stdio event log.
-//  NSLog + NSString + NSFileHandle on a hot Obj-C callback path was likely
-//  starving the Unity main thread enough to trip the launch watchdog; even if
-//  not, buffered NSFileHandle writes got lost on SIGKILL. This path uses a
-//  single FILE*, line-buffered, fflushed every write.
+//  NSLog + NSString on the hot callback path starves the Unity main thread
+//  enough to trip the iOS launch watchdog. This path uses a single FILE*,
+//  line-buffered, fflushed every write.
 // ---------------------------------------------------------------------------
 static FILE *s_evtFp = NULL;
 static pthread_mutex_t s_evtMu = PTHREAD_MUTEX_INITIALIZER;
@@ -53,7 +56,6 @@ static void openEventLog(void) {
     fflush(s_evtFp);
 }
 
-// Minimal CSV writer. No NSString, no NSLog. Takes preformatted strings.
 static void logLine(const char *hook,
                     const char *a1,
                     const char *a2,
@@ -127,18 +129,16 @@ static void *orig_activateWinSequence        = NULL;
 static void *orig_ContainsAccumulationResult = NULL;
 
 // ---------------------------------------------------------------------------
-//  Hook bodies — all follow the same shape:
-//    1. Call orig first (never delay the game's own path).
-//    2. Format args with snprintf into stack buffers.
-//    3. logLine() writes one line and fflushes.
+//  Hook bodies.
+//  All follow the same shape:
+//    1. Log ENTER (so we can tell if a crash is in trampoline vs hook body).
+//    2. Call orig (never delay the game's own path).
+//    3. Log EXIT with return value / extracted fields.
+//
+//  IL2CPP ABI: every method receives a trailing `void *methodInfo` parameter
+//  that MUST be forwarded to the original.
 // ---------------------------------------------------------------------------
 
-// Each hook logs ENTER before calling orig, and EXIT after. Without the ENTER
-// row we can't tell whether a crash lives in the hook body or inside the
-// trampoline-executed copy of the original prologue. Prior v74/v75 builds put
-// the log after orig — so when install succeeded but nothing ever fired, we
-// couldn't distinguish "no spin happened" from "trampoline SIGILL on first
-// call". ENTER-first breaks that tie.
 static bool hook_TrySetNexSpinHitRecord(void *self, void *methodInfo) {
     typedef bool (*fn_t)(void *, void *);
     char a1[24]; snprintf(a1, sizeof a1, "%p", self);
@@ -174,9 +174,6 @@ static void hook_activateWinSequence(void *self, void *slotResult, void *methodI
     logLine("activateWinSequence", a1, a2, "", "enter");
     ((fn_t)orig_activateWinSequence)(self, slotResult, methodInfo);
 
-    // Field layout on SlotResult (dumped): symbols=16, win=24.
-    // win−symbols=8 → slotSymbols is a reference. SlotSymbol3 boxed object =
-    // 16-byte managed header, then 3 int32 fields at 16/20/24.
     char notes[96]; notes[0] = 0;
     if (slotResult && fo_slotResult_symbols) {
         uint8_t *base = (uint8_t *)slotResult;
@@ -236,9 +233,8 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
                 NSLog(@"[SLHook] %s: MethodInfo not found", #NAME);               \
                 break;                                                            \
             }                                                                     \
-            int r = SLInlineHook_Install(fp, (void *)&hook_##NAME,                \
-                                         &orig_##NAME);                           \
-            NSLog(@"[SLHook] %s: install=%d target=%p trampoline=%p",             \
+            int r = DobbyHook(fp, (void *)&hook_##NAME, &orig_##NAME);            \
+            NSLog(@"[SLHook] %s: dobby=%d target=%p trampoline=%p",               \
                   #NAME, r, fp, orig_##NAME);                                     \
             if (r == 0) installed++;                                              \
         } while (0)
@@ -252,7 +248,7 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
     #undef TRY_HOOK
 
     s_installed = (installed > 0);
-    NSLog(@"[SLHook] installed %d/5 hooks", installed);
+    NSLog(@"[SLHook] installed %d/5 hooks (Dobby)", installed);
     char ri[8];
     snprintf(ri, sizeof ri, "%d", installed);
     logLine("INSTALL_END", "", "", ri, "session-start");
