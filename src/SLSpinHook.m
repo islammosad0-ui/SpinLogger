@@ -903,9 +903,6 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
         logLine("INSTALL_END", "", "", "0", "hookslot-no-magic");
         breadcrumb("DONE: 0/4 installed (binary not patched)");
         return 0;
-        snprintf(bc, sizeof bc, "%d", count);
-        logLine("INSTALL_END", "", "", bc, "hookslot");
-        return count;
     }
 
     // ---------------------------------------------------------------
