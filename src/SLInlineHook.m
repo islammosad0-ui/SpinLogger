@@ -39,9 +39,14 @@ static int isPCRelative(uint32_t insn) {
     if (((insn >> 25) & 0x3F) == 0x1B) return 1;
     // B.cond: bits [31:24] = 01010100
     if (((insn >> 24) & 0xFF) == 0x54) return 1;
-    // LDR (literal): bits [31:24] = 0x18 / 0x58 / 0x98
-    uint32_t t = (insn >> 24) & 0xBF;
-    if (t == 0x18) return 1;
+    // Literal-pool loads: LDR/LDRSW/PRFM literal (V=0) and LDR literal (V=1).
+    // Encoding: bits [29:24] = 011x00 where x is the SIMD "V" bit.
+    //    LDR  W/X literal   bits [29:24] = 011000 = 0x18
+    //    LDR  S/D/Q literal bits [29:24] = 011100 = 0x1C
+    //    LDRSW  X  literal  bits [29:24] = 011000 = 0x18 (opc distinguishes)
+    //    PRFM prfop literal bits [29:24] = 011000 = 0x18
+    uint32_t t = (insn >> 24) & 0x3F;
+    if (t == 0x18 || t == 0x1C) return 1;
     return 0;
 }
 
@@ -110,6 +115,8 @@ int SLInlineHook_Install(void *target, void *replacement, void **outTrampoline) 
 
     // 1. Vet the first 4 instructions — any PC-relative op kills the trampoline.
     uint32_t *insns = (uint32_t *)target;
+    NSLog(@"[SLInlineHook] target=%p words=[%08x %08x %08x %08x]",
+          target, insns[0], insns[1], insns[2], insns[3]);
     for (int i = 0; i < 4; i++) {
         if (isPCRelative(insns[i])) {
             NSLog(@"[SLInlineHook] PC-relative insn at word %d of %p: 0x%08x",
