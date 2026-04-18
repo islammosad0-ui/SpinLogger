@@ -1,6 +1,7 @@
 #import "SLMemoryScanner.h"
 #import "SLIdxStrategy.h"
 #import "SLConstants.h"
+#import "SLMethodDump.h"
 #include <dlfcn.h>
 #include <string.h>
 #include <mach/mach_time.h>
@@ -456,6 +457,22 @@ typedef NS_ENUM(NSInteger, ScanPhase) {
         NSLog(@"[SpinLogger] v3 classes:  SymMgr=%p SlotMgr=%p ErrRes=%p SpinSpd=%p AddSlots=%p SecSlot=%p FreeSpin=%p SymToWS=%p",
               s_klass_SymMgr, s_klass_SlotMgr, s_klass_ErrResults, s_klass_SpinAnimSpd,
               s_klass_AddSlotsSvc, s_klass_SecondSlotCtrl, s_klass_FreeSpinsReels, s_klass_SlotSymToWS);
+
+        // One-shot: dump every method on the classes most likely to own the
+        // spin-resolve entry point. Output goes to Documents/il2cpp_methods.txt
+        // so we can identify the target function to hook (replacing polling).
+        SLMDClassEntry entries[] = {
+            { s_klass_Manager,   "SlotMachineManager" },
+            { s_klass_Result,    "SlotResult" },
+            { s_klass_WinComp,   "SlotMachineWinBehaviourComposite" },
+            { s_klass_ScenBhv,   "ScenarioSlotMachineWinBehaviour" },
+            { s_klass_SymMgr,    "SlotMachine.SymbolManager" },
+            { s_klass_SlotMgr,   "SlotMachine.SlotManager" },
+            { s_klass_BoardMgr,  "SlotMachine.BoardManager" },
+            { s_klass_Board3D,   "Board3DManager" },
+            { s_klass_DataProv,  "SlotDataProvider" },
+        };
+        SLMethodDump_Run(entries, sizeof(entries)/sizeof(entries[0]));
     } else {
         NSLog(@"[SpinLogger] Some classes not found, retrying...");
     }
@@ -1004,95 +1021,25 @@ static inline int32_t arrayLength32(void *array) {
         //  PER-SPIN READS (every spin)
         // ══════════════════════════════════════════════════════════
 
-        // ── SlotResult hex dump + win ─────────────────────────
-        // win@24 might be a pointer (8 bytes), not int32 — dump raw bytes
-        int32_t spinWin = 0;
+        // ── SlotResult.win — deref pointer to Win object ─────
+        // win@24 is a POINTER to a boxed Win object:
+        //   offset 16: int32 win_type (1=coins, 2=attack, 3=shield, 4=steal)
+        //   offset 24: int64 amount   (coin payout, shield count, etc.)
+        int32_t winType = 0;
+        int64_t winAmount = 0;
         if (fo_currentSlotResult) {
             void *sr = readPtr(instance, fo_currentSlotResult);
-            if (sr && looksLikeHeapPointer(sr) && safeReadable(sr, 40)) {
-                // Hex dump first 40 bytes of SlotResult: header(16) + slotSymbols(8) + win(8+)
-                NSMutableString *srHex = [NSMutableString stringWithString:@"SR hex: "];
-                uint8_t *p = (uint8_t *)sr;
-                for (int h = 0; h < 40; h++) {
-                    [srHex appendFormat:@"%02x", p[h]];
-                    if ((h & 7) == 7) [srHex appendString:@" "];
+            if (sr && looksLikeHeapPointer(sr) && safeReadable(sr, 32)) {
+                void *winObj = *(void **)((uint8_t *)sr + 24);
+                if (winObj && looksLikeHeapPointer(winObj) && safeReadable(winObj, 32)) {
+                    winType   = *(int32_t *)((uint8_t *)winObj + 16);
+                    winAmount = *(int64_t *)((uint8_t *)winObj + 24);
                 }
-                // Also read win as both int32 and int64 and pointer
-                int32_t w32 = *(int32_t *)(p + 24);
-                int64_t w64 = *(int64_t *)(p + 24);
-                void *wPtr = *(void **)(p + 24);
-                diagLog(@"%@ w32=%d w64=%lld wPtr=%p", srHex, w32, w64, wPtr);
-
-                // If win looks like a pointer, try to dereference it
-                if (wPtr && looksLikeHeapPointer(wPtr) && safeReadable(wPtr, 32)) {
-                    NSMutableString *wHex = [NSMutableString stringWithString:@"  win obj hex: "];
-                    uint8_t *wp = (uint8_t *)wPtr;
-                    for (int h = 0; h < 32; h++) {
-                        [wHex appendFormat:@"%02x", wp[h]];
-                        if ((h & 7) == 7) [wHex appendString:@" "];
-                    }
-                    diagLog(@"%@", wHex);
-                }
-                spinWin = w32;  // keep for log line compat
             }
         }
 
-        // ── DynamicSlotResults — hex dump to identify type ────
-        if (fo_dynamicResults) {
-            void *dynResults = readPtr(instance, fo_dynamicResults);
-            if (dynResults && looksLikeHeapPointer(dynResults) && safeReadable(dynResults, 64)) {
-                NSMutableString *dHex = [NSMutableString stringWithString:@"DynSlotRes hex: "];
-                uint8_t *p = (uint8_t *)dynResults;
-                for (int h = 0; h < 64; h++) {
-                    [dHex appendFormat:@"%02x", p[h]];
-                    if ((h & 7) == 7) [dHex appendString:@" "];
-                }
-                diagLog(@"%@", dHex);
-
-                // Try treating it as a single SlotResult: slotSymbols@16, win@24
-                void *drSym3 = readPtr(dynResults, 16);
-                if (drSym3 && looksLikeHeapPointer(drSym3)
-                    && safeReadable(drSym3, fo_symbol3 + 4)) {
-                    int32_t ds1 = *(int32_t *)((uint8_t *)drSym3 + fo_symbol1);
-                    int32_t ds2 = *(int32_t *)((uint8_t *)drSym3 + fo_symbol2);
-                    int32_t ds3 = *(int32_t *)((uint8_t *)drSym3 + fo_symbol3);
-                    diagLog(@"  DynAsSlotResult: sym=(%d,%d,%d)", ds1, ds2, ds3);
-                }
-
-                // Try reading as Queue<T>: _array@16, _head@24, _tail@28, _size@32
-                void *qArr = readPtr(dynResults, 16);
-                int32_t qHead = readInt32(dynResults, 24);
-                int32_t qTail = readInt32(dynResults, 28);
-                int32_t qSize = readInt32(dynResults, 32);
-                diagLog(@"  AsQueue?: _array=%p head=%d tail=%d size=%d",
-                        qArr, qHead, qTail, qSize);
-
-                // If queue _array looks valid, read elements
-                if (qArr && looksLikeHeapPointer(qArr) && qSize > 0 && qSize < 100
-                    && safeReadable(qArr, kArrayHeaderSize + 8)) {
-                    int32_t qaLen = arrayLength32(qArr);
-                    diagLog(@"  Queue._array len=%d, reading %d elements:", qaLen, qSize);
-                    int readN = (qSize > 10) ? 10 : qSize;
-                    for (int qi = 0; qi < readN; qi++) {
-                        int actualIdx = (qHead + qi) % qaLen;
-                        void *qSR = *(void **)((uint8_t *)qArr + kArrayHeaderSize + actualIdx * 8);
-                        if (qSR && looksLikeHeapPointer(qSR) && fo_slotSymbols
-                            && safeReadable(qSR, fo_slotSymbols + 8)) {
-                            void *qSym3 = readPtr(qSR, fo_slotSymbols);
-                            if (qSym3 && looksLikeHeapPointer(qSym3)
-                                && safeReadable(qSym3, fo_symbol3 + 4)) {
-                                int32_t qs1 = *(int32_t *)((uint8_t *)qSym3 + fo_symbol1);
-                                int32_t qs2 = *(int32_t *)((uint8_t *)qSym3 + fo_symbol2);
-                                int32_t qs3 = *(int32_t *)((uint8_t *)qSym3 + fo_symbol3);
-                                diagLog(@"  Queue[%d]: sym=(%d,%d,%d)", qi, qs1, qs2, qs3);
-                            }
-                        }
-                    }
-                }
-            } else {
-                diagLog(@"DynSlotResults: %s", dynResults ? "unreadable" : "NULL");
-            }
-        }
+        // DynamicSlotResults is static (never changes) — no pre-pushed spins.
+        // Confirmed dead end via hex dump analysis.
 
         // ── Weight tables (per-spin — detect drift) ─────────────
         // Only log compact summary, not full array
@@ -1182,8 +1129,8 @@ static inline int32_t arrayLength32(void *array) {
             [[SLIdxStrategy shared] settlePendingWithSnapshot:snap];
         });
 
-        diagLog(@"Spin settled: idx=(%d,%d,%d) barSym=(%d,%d,%d) resSym=(%d,%d,%d) win=%d",
-              idx1, idx2, idx3, memSym1, memSym2, memSym3, resSym1, resSym2, resSym3, spinWin);
+        diagLog(@"Spin settled: idx=(%d,%d,%d) barSym=(%d,%d,%d) resSym=(%d,%d,%d) wtype=%d wamt=%lld",
+              idx1, idx2, idx3, memSym1, memSym2, memSym3, resSym1, resSym2, resSym3, winType, winAmount);
         if (s_diagFile) [s_diagFile synchronizeFile];
     }
 }
