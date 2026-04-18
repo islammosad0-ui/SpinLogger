@@ -3,10 +3,13 @@
 #include <dlfcn.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <sys/time.h>
+#include <pthread.h>
 
 // ---------------------------------------------------------------------------
-//  IL2CPP method-iteration + field-reading APIs (re-resolved here to keep
-//  this module independent of SLMemoryScanner).
+//  IL2CPP method-iteration + field-reading APIs.
 // ---------------------------------------------------------------------------
 typedef void*       (*fn_class_get_methods)(void *klass, void **iter);
 typedef const char* (*fn_method_get_name)(void *method);
@@ -23,41 +26,53 @@ static fn_field_get_offset           _field_get_offset;
 static BOOL s_installed = NO;
 
 // ---------------------------------------------------------------------------
-//  Event log file — one CSV line per hook invocation.
+//  Lightweight C-stdio event log.
+//  NSLog + NSString + NSFileHandle on a hot Obj-C callback path was likely
+//  starving the Unity main thread enough to trip the launch watchdog; even if
+//  not, buffered NSFileHandle writes got lost on SIGKILL. This path uses a
+//  single FILE*, line-buffered, fflushed every write.
 // ---------------------------------------------------------------------------
-static NSFileHandle *s_evtFile = nil;
+static FILE *s_evtFp = NULL;
+static pthread_mutex_t s_evtMu = PTHREAD_MUTEX_INITIALIZER;
 
 static void openEventLog(void) {
-    if (s_evtFile) return;
+    if (s_evtFp) return;
     NSString *docs = NSSearchPathForDirectoriesInDomains(
         NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
     NSString *path = [docs stringByAppendingPathComponent:@"hook_events.csv"];
-    BOOL isNew = ![[NSFileManager defaultManager] fileExistsAtPath:path];
+    bool isNew = ![[NSFileManager defaultManager] fileExistsAtPath:path];
+    s_evtFp = fopen(path.fileSystemRepresentation, "a");
+    if (!s_evtFp) return;
+    setvbuf(s_evtFp, NULL, _IOLBF, 0);
     if (isNew) {
-        [@"ts,hook,arg1,arg2,ret,notes\n" writeToFile:path
-                                           atomically:YES
-                                             encoding:NSUTF8StringEncoding
-                                                error:nil];
+        fputs("ts,hook,arg1,arg2,ret,notes\n", s_evtFp);
     }
-    s_evtFile = [NSFileHandle fileHandleForWritingAtPath:path];
-    [s_evtFile seekToEndOfFile];
-    NSString *hdr = [NSString stringWithFormat:@"# session %@\n", [NSDate date]];
-    [s_evtFile writeData:[hdr dataUsingEncoding:NSUTF8StringEncoding]];
+    struct timeval tv; gettimeofday(&tv, NULL);
+    fprintf(s_evtFp, "# session %ld.%06d\n",
+            (long)tv.tv_sec, (int)tv.tv_usec);
+    fflush(s_evtFp);
 }
 
-static void logEvent(NSString *hook, NSString *a1, NSString *a2, NSString *ret, NSString *notes) {
-    openEventLog();
-    double ts = [NSDate date].timeIntervalSince1970;
-    NSString *line = [NSString stringWithFormat:@"%.3f,%@,%@,%@,%@,%@\n",
-                      ts, hook, a1 ?: @"", a2 ?: @"", ret ?: @"", notes ?: @""];
-    NSLog(@"[SLHook] %@", line);
-    if (s_evtFile) [s_evtFile writeData:[line dataUsingEncoding:NSUTF8StringEncoding]];
+// Minimal CSV writer. No NSString, no NSLog. Takes preformatted strings.
+static void logLine(const char *hook,
+                    const char *a1,
+                    const char *a2,
+                    const char *ret,
+                    const char *notes) {
+    if (!s_evtFp) return;
+    struct timeval tv; gettimeofday(&tv, NULL);
+    pthread_mutex_lock(&s_evtMu);
+    fprintf(s_evtFp, "%ld.%06d,%s,%s,%s,%s,%s\n",
+            (long)tv.tv_sec, (int)tv.tv_usec,
+            hook, a1 ? a1 : "", a2 ? a2 : "",
+            ret ? ret : "", notes ? notes : "");
+    fflush(s_evtFp);
+    pthread_mutex_unlock(&s_evtMu);
 }
 
 // ---------------------------------------------------------------------------
 //  Method resolution helpers.
 // ---------------------------------------------------------------------------
-
 static void *findMethod(void *klass, const char *name, int wantArgc) {
     if (!klass || !_class_get_methods) return NULL;
     void *iter = NULL, *m = NULL;
@@ -103,8 +118,7 @@ static void resolveSlotResultOffsets(void *klassResult) {
 }
 
 // ---------------------------------------------------------------------------
-//  Hook originals. IL2CPP arm64 instance methods have trailing `const
-//  MethodInfo*` param — we preserve it so the original's generics path works.
+//  Hook originals.
 // ---------------------------------------------------------------------------
 static void *orig_TrySetNexSpinHitRecord     = NULL;
 static void *orig_OnSpinResultReceived       = NULL;
@@ -112,48 +126,50 @@ static void *orig_SetFreezeResolve           = NULL;
 static void *orig_activateWinSequence        = NULL;
 static void *orig_ContainsAccumulationResult = NULL;
 
-// All hook bodies: keep minimal work inline. Logging allocates NSString/NSLog
-// which is heavy — if these fire at high rate on startup we may need to gate.
+// ---------------------------------------------------------------------------
+//  Hook bodies — all follow the same shape:
+//    1. Call orig first (never delay the game's own path).
+//    2. Format args with snprintf into stack buffers.
+//    3. logLine() writes one line and fflushes.
+// ---------------------------------------------------------------------------
 
 static bool hook_TrySetNexSpinHitRecord(void *self, void *methodInfo) {
     typedef bool (*fn_t)(void *, void *);
     bool ret = ((fn_t)orig_TrySetNexSpinHitRecord)(self, methodInfo);
-    logEvent(@"TrySetNexSpinHitRecord",
-             [NSString stringWithFormat:@"%p", self],
-             @"",
-             ret ? @"true" : @"false",
-             @"pre-SendSpinRequest");
+    char a1[24];
+    snprintf(a1, sizeof a1, "%p", self);
+    logLine("TrySetNexSpinHitRecord", a1, "", ret ? "true" : "false", "");
     return ret;
 }
 
 static void hook_OnSpinResultReceived(void *self, void *response, void *methodInfo) {
     typedef void (*fn_t)(void *, void *, void *);
-    // Log pointer only — dumping 256 bytes of a managed object before we know
-    // its layout is a fast way to SIGSEGV. Once the hook is stable, add a
-    // bounded safe-read helper.
-    logEvent(@"OnSpinResultReceived",
-             [NSString stringWithFormat:@"%p", self],
-             [NSString stringWithFormat:@"%p", response],
-             @"", @"");
     ((fn_t)orig_OnSpinResultReceived)(self, response, methodInfo);
+    char a1[24], a2[24];
+    snprintf(a1, sizeof a1, "%p", self);
+    snprintf(a2, sizeof a2, "%p", response);
+    logLine("OnSpinResultReceived", a1, a2, "", "");
 }
 
 static void hook_SetFreezeResolve(void *self, void *methodInfo) {
     typedef void (*fn_t)(void *, void *);
-    logEvent(@"SetFreezeResolve",
-             [NSString stringWithFormat:@"%p", self],
-             @"", @"", @"pre");
     ((fn_t)orig_SetFreezeResolve)(self, methodInfo);
+    char a1[24];
+    snprintf(a1, sizeof a1, "%p", self);
+    logLine("SetFreezeResolve", a1, "", "", "");
 }
 
 static void hook_activateWinSequence(void *self, void *slotResult, void *methodInfo) {
     typedef void (*fn_t)(void *, void *, void *);
+    ((fn_t)orig_activateWinSequence)(self, slotResult, methodInfo);
 
-    // Field layout on SlotResult (dumped): symbols=16, win=24. win−symbols=8
-    // proves slotSymbols is a reference (not an inlined 12-byte struct).
-    // Chase the pointer; SlotSymbol3 boxed object = 16-byte managed header
-    // then 3 int32 fields at offsets 16, 20, 24.
-    NSString *notes = @"";
+    // Field layout on SlotResult (dumped): symbols=16, win=24.
+    // win−symbols=8 → slotSymbols is a reference. SlotSymbol3 boxed object =
+    // 16-byte managed header, then 3 int32 fields at 16/20/24.
+    char a1[24], a2[24], notes[96];
+    snprintf(a1, sizeof a1, "%p", self);
+    snprintf(a2, sizeof a2, "%p", slotResult);
+    notes[0] = 0;
     if (slotResult && fo_slotResult_symbols) {
         uint8_t *base = (uint8_t *)slotResult;
         void *sym3Ref = *(void **)(base + fo_slotResult_symbols);
@@ -161,30 +177,26 @@ static void hook_activateWinSequence(void *self, void *slotResult, void *methodI
                         ? *(int32_t *)(base + fo_slotResult_win)
                         : 0;
         int32_t s1 = 0, s2 = 0, s3 = 0;
-        // Sanity: real managed pointers on iOS live above 0x100000000.
         if ((uintptr_t)sym3Ref > 0x100000000ULL) {
             s1 = *(int32_t *)((uint8_t *)sym3Ref + 16);
             s2 = *(int32_t *)((uint8_t *)sym3Ref + 20);
             s3 = *(int32_t *)((uint8_t *)sym3Ref + 24);
         }
-        notes = [NSString stringWithFormat:@"s1=%d|s2=%d|s3=%d|win=%d|ref=%p",
-                  s1, s2, s3, win, sym3Ref];
+        snprintf(notes, sizeof notes,
+                 "s1=%d|s2=%d|s3=%d|win=%d|ref=%p",
+                 s1, s2, s3, win, sym3Ref);
     }
-    logEvent(@"activateWinSequence",
-             [NSString stringWithFormat:@"%p", self],
-             [NSString stringWithFormat:@"%p", slotResult],
-             @"", notes);
-    ((fn_t)orig_activateWinSequence)(self, slotResult, methodInfo);
+    logLine("activateWinSequence", a1, a2, "", notes);
 }
 
 static int32_t hook_ContainsAccumulationResult(void *self, int32_t defaultIcon, void *methodInfo) {
     typedef int32_t (*fn_t)(void *, int32_t, void *);
     int32_t ret = ((fn_t)orig_ContainsAccumulationResult)(self, defaultIcon, methodInfo);
-    logEvent(@"ContainsAccumulationResult",
-             [NSString stringWithFormat:@"%p", self],
-             [NSString stringWithFormat:@"%d", defaultIcon],
-             [NSString stringWithFormat:@"%d", ret],
-             @"");
+    char a1[24], a2[16], r[16];
+    snprintf(a1, sizeof a1, "%p", self);
+    snprintf(a2, sizeof a2, "%d", defaultIcon);
+    snprintf(r,  sizeof r,  "%d", ret);
+    logLine("ContainsAccumulationResult", a1, a2, r, "");
     return ret;
 }
 
@@ -202,10 +214,8 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
         return 0;
     }
     resolveSlotResultOffsets(klassResult);
-
-    // openEventLog early so hooks firing during install can write.
     openEventLog();
-    logEvent(@"INSTALL_BEGIN", @"", @"", @"", @"");
+    logLine("INSTALL_BEGIN", "", "", "", "");
 
     int installed = 0;
 
@@ -234,8 +244,8 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
 
     s_installed = (installed > 0);
     NSLog(@"[SLHook] installed %d/5 hooks", installed);
-    logEvent(@"INSTALL_END", @"", @"",
-             [NSString stringWithFormat:@"%d", installed],
-             @"session-start");
+    char ri[8];
+    snprintf(ri, sizeof ri, "%d", installed);
+    logLine("INSTALL_END", "", "", ri, "session-start");
     return installed;
 }
