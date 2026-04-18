@@ -65,9 +65,12 @@ static uint8_t *allocTrampoline(void) {
 // Make `n` bytes at `target` temporarily writable, invoke `writer`, restore RX,
 // flush icache. Returns 0 on success.
 static int patchTarget(void *target, const void *src, size_t n) {
-    vm_address_t pageStart = (vm_address_t)target & ~(vm_address_t)0xFFF;
-    vm_size_t    pageSpan  = (((vm_address_t)target + n) - pageStart + 0xFFF)
-                             & ~(vm_size_t)0xFFF;
+    // iOS arm64 uses 16 KB system pages. A 4 KB mask may still "work" because
+    // vm_protect rounds internally, but it's wrong on paper — use 16 KB.
+    const vm_address_t PAGE_MASK = 0x3FFF;
+    vm_address_t pageStart = (vm_address_t)target & ~PAGE_MASK;
+    vm_size_t    pageSpan  = (((vm_address_t)target + n) - pageStart + PAGE_MASK)
+                             & ~PAGE_MASK;
 
     kern_return_t kr = vm_protect(mach_task_self(),
                                   pageStart, pageSpan, FALSE,

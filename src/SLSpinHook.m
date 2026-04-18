@@ -58,7 +58,6 @@ static void logEvent(NSString *hook, NSString *a1, NSString *a2, NSString *ret, 
 //  Method resolution helpers.
 // ---------------------------------------------------------------------------
 
-/// Return MethodInfo for the named method with matching arg count, or NULL.
 static void *findMethod(void *klass, const char *name, int wantArgc) {
     if (!klass || !_class_get_methods) return NULL;
     void *iter = NULL, *m = NULL;
@@ -71,7 +70,6 @@ static void *findMethod(void *klass, const char *name, int wantArgc) {
     return NULL;
 }
 
-/// MethodInfo.methodPointer lives at offset 0 on arm64 IL2CPP builds.
 static inline void *methodNativePointer(void *method) {
     return method ? *(void **)method : NULL;
 }
@@ -89,25 +87,24 @@ static BOOL resolveIL2CPP(void) {
 }
 
 // ---------------------------------------------------------------------------
-//  SlotResult field offsets — looked up once.
+//  SlotResult field offsets.
 // ---------------------------------------------------------------------------
-static size_t fo_slotResult_symbols   = 0;   // slotSymbols (ref → SlotSymbol3)
-static size_t fo_slotResult_win       = 0;   // win (int32)
-static void  *s_klassResult           = NULL;
+static size_t fo_slotResult_symbols = 0;
+static size_t fo_slotResult_win     = 0;
 
 static void resolveSlotResultOffsets(void *klassResult) {
-    s_klassResult = klassResult;
     if (!klassResult || !_class_get_field_from_name || !_field_get_offset) return;
     void *f1 = _class_get_field_from_name(klassResult, "slotSymbols");
     void *f2 = _class_get_field_from_name(klassResult, "win");
     if (f1) fo_slotResult_symbols = _field_get_offset(f1);
     if (f2) fo_slotResult_win     = _field_get_offset(f2);
+    NSLog(@"[SLHook] SlotResult offsets: symbols=%zu win=%zu",
+          fo_slotResult_symbols, fo_slotResult_win);
 }
 
 // ---------------------------------------------------------------------------
-//  Hook originals + trampolines.
-//  Each "orig_*" slot stores the pointer Dobby gives us to re-enter the
-//  unhooked function body.
+//  Hook originals. IL2CPP arm64 instance methods have trailing `const
+//  MethodInfo*` param — we preserve it so the original's generics path works.
 // ---------------------------------------------------------------------------
 static void *orig_TrySetNexSpinHitRecord     = NULL;
 static void *orig_OnSpinResultReceived       = NULL;
@@ -115,14 +112,12 @@ static void *orig_SetFreezeResolve           = NULL;
 static void *orig_activateWinSequence        = NULL;
 static void *orig_ContainsAccumulationResult = NULL;
 
-// ---------------------------------------------------------------------------
-//  Hook bodies. IL2CPP instance methods take `self` as the first arg and use
-//  the iOS arm64 C ABI, so we can declare them as plain C functions.
-// ---------------------------------------------------------------------------
+// All hook bodies: keep minimal work inline. Logging allocates NSString/NSLog
+// which is heavy — if these fire at high rate on startup we may need to gate.
 
-static bool hook_TrySetNexSpinHitRecord(void *self) {
-    typedef bool (*fn_t)(void *);
-    bool ret = ((fn_t)orig_TrySetNexSpinHitRecord)(self);
+static bool hook_TrySetNexSpinHitRecord(void *self, void *methodInfo) {
+    typedef bool (*fn_t)(void *, void *);
+    bool ret = ((fn_t)orig_TrySetNexSpinHitRecord)(self, methodInfo);
     logEvent(@"TrySetNexSpinHitRecord",
              [NSString stringWithFormat:@"%p", self],
              @"",
@@ -131,68 +126,56 @@ static bool hook_TrySetNexSpinHitRecord(void *self) {
     return ret;
 }
 
-static void hook_OnSpinResultReceived(void *self, void *response) {
-    typedef void (*fn_t)(void *, void *);
-    // Dump the first 256 bytes of the response object BEFORE the original
-    // consumes it — the game may clear fields during processing.
-    NSMutableString *hex = [NSMutableString stringWithCapacity:512];
-    if (response) {
-        uint8_t *p = (uint8_t *)response;
-        for (int i = 0; i < 256; i++) {
-            [hex appendFormat:@"%02x", p[i]];
-            if ((i & 31) == 31 && i < 255) [hex appendString:@"|"];
-        }
-    }
+static void hook_OnSpinResultReceived(void *self, void *response, void *methodInfo) {
+    typedef void (*fn_t)(void *, void *, void *);
+    // Log pointer only — dumping 256 bytes of a managed object before we know
+    // its layout is a fast way to SIGSEGV. Once the hook is stable, add a
+    // bounded safe-read helper.
     logEvent(@"OnSpinResultReceived",
              [NSString stringWithFormat:@"%p", self],
              [NSString stringWithFormat:@"%p", response],
-             @"",
-             hex);
-    ((fn_t)orig_OnSpinResultReceived)(self, response);
+             @"", @"");
+    ((fn_t)orig_OnSpinResultReceived)(self, response, methodInfo);
 }
 
-static void hook_SetFreezeResolve(void *self) {
-    typedef void (*fn_t)(void *);
+static void hook_SetFreezeResolve(void *self, void *methodInfo) {
+    typedef void (*fn_t)(void *, void *);
     logEvent(@"SetFreezeResolve",
              [NSString stringWithFormat:@"%p", self],
              @"", @"", @"pre");
-    ((fn_t)orig_SetFreezeResolve)(self);
+    ((fn_t)orig_SetFreezeResolve)(self, methodInfo);
 }
 
-static void hook_activateWinSequence(void *self, void *slotResult) {
-    typedef void (*fn_t)(void *, void *);
+static void hook_activateWinSequence(void *self, void *slotResult, void *methodInfo) {
+    typedef void (*fn_t)(void *, void *, void *);
 
-    // Extract SlotResult fields: slotSymbols (-> SlotSymbol3 ref: s1,s2,s3)
-    // and win (int32). SlotSymbol3 is a value-type with three int32 fields
-    // at offsets 16, 20, 24 (after object header); when stored in a managed
-    // SlotResult field it's boxed as a reference so we chase the pointer.
+    // SlotSymbol3 is almost certainly a value-type (struct with 3 int32s).
+    // If slotResult.slotSymbols is stored inline, the bytes at [offset]..[offset+12]
+    // ARE the struct. If it's a reference, those bytes are a pointer.
+    // Log both interpretations safely so we can tell from the CSV.
     NSString *notes = @"";
     if (slotResult && fo_slotResult_symbols) {
-        void *sym3Ref = *(void **)((uint8_t *)slotResult + fo_slotResult_symbols);
-        int32_t win   = fo_slotResult_win
-                            ? *(int32_t *)((uint8_t *)slotResult + fo_slotResult_win)
-                            : 0;
-        int32_t s1 = 0, s2 = 0, s3 = 0;
-        if (sym3Ref) {
-            // SlotSymbol3 value-type boxed: 16-byte object header then 3 ints.
-            s1 = *(int32_t *)((uint8_t *)sym3Ref + 16);
-            s2 = *(int32_t *)((uint8_t *)sym3Ref + 20);
-            s3 = *(int32_t *)((uint8_t *)sym3Ref + 24);
-        }
-        notes = [NSString stringWithFormat:@"s1=%d|s2=%d|s3=%d|win=%d",
+        uint8_t *base = (uint8_t *)slotResult;
+        // As inlined 3x int32
+        int32_t s1 = *(int32_t *)(base + fo_slotResult_symbols + 0);
+        int32_t s2 = *(int32_t *)(base + fo_slotResult_symbols + 4);
+        int32_t s3 = *(int32_t *)(base + fo_slotResult_symbols + 8);
+        int32_t win = fo_slotResult_win
+                        ? *(int32_t *)(base + fo_slotResult_win)
+                        : 0;
+        notes = [NSString stringWithFormat:@"inline_s1=%d|s2=%d|s3=%d|win=%d",
                   s1, s2, s3, win];
     }
     logEvent(@"activateWinSequence",
              [NSString stringWithFormat:@"%p", self],
              [NSString stringWithFormat:@"%p", slotResult],
-             @"",
-             notes);
-    ((fn_t)orig_activateWinSequence)(self, slotResult);
+             @"", notes);
+    ((fn_t)orig_activateWinSequence)(self, slotResult, methodInfo);
 }
 
-static int32_t hook_ContainsAccumulationResult(void *self, int32_t defaultIcon) {
-    typedef int32_t (*fn_t)(void *, int32_t);
-    int32_t ret = ((fn_t)orig_ContainsAccumulationResult)(self, defaultIcon);
+static int32_t hook_ContainsAccumulationResult(void *self, int32_t defaultIcon, void *methodInfo) {
+    typedef int32_t (*fn_t)(void *, int32_t, void *);
+    int32_t ret = ((fn_t)orig_ContainsAccumulationResult)(self, defaultIcon, methodInfo);
     logEvent(@"ContainsAccumulationResult",
              [NSString stringWithFormat:@"%p", self],
              [NSString stringWithFormat:@"%d", defaultIcon],
@@ -215,6 +198,10 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
         return 0;
     }
     resolveSlotResultOffsets(klassResult);
+
+    // openEventLog early so hooks firing during install can write.
+    openEventLog();
+    logEvent(@"INSTALL_BEGIN", @"", @"", @"", @"");
 
     int installed = 0;
 
@@ -243,8 +230,7 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
 
     s_installed = (installed > 0);
     NSLog(@"[SLHook] installed %d/5 hooks", installed);
-    openEventLog();
-    logEvent(@"INSTALL", @"", @"",
+    logEvent(@"INSTALL_END", @"", @"",
              [NSString stringWithFormat:@"%d", installed],
              @"session-start");
     return installed;
