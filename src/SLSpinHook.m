@@ -1,12 +1,8 @@
 #import "SLSpinHook.h"
+#import "SLInlineHook.h"
 #include <dlfcn.h>
 #include <string.h>
 #include <stdint.h>
-
-// ---------------------------------------------------------------------------
-//  Dobby inline-hook API (static lib linked at build time).
-// ---------------------------------------------------------------------------
-extern int DobbyHook(void *address, void *replace_call, void **origin_call);
 
 // ---------------------------------------------------------------------------
 //  IL2CPP method-iteration + field-reading APIs (re-resolved here to keep
@@ -230,8 +226,9 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
                 NSLog(@"[SLHook] %s: MethodInfo not found", #NAME);               \
                 break;                                                            \
             }                                                                     \
-            int r = DobbyHook(fp, (void *)&hook_##NAME, &orig_##NAME);            \
-            NSLog(@"[SLHook] %s: DobbyHook=%d target=%p trampoline=%p",           \
+            int r = SLInlineHook_Install(fp, (void *)&hook_##NAME,                \
+                                         &orig_##NAME);                           \
+            NSLog(@"[SLHook] %s: install=%d target=%p trampoline=%p",             \
                   #NAME, r, fp, orig_##NAME);                                     \
             if (r == 0) installed++;                                              \
         } while (0)
