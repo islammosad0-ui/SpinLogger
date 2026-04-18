@@ -332,6 +332,18 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
                 breadcrumb("NOTFOUND " #NAME " (fp)");                            \
                 break;                                                            \
             }                                                                     \
+            /* Dump first 8 instructions (32 bytes) of prologue */                \
+            {                                                                     \
+                uint32_t *insn = (uint32_t *)fp;                                  \
+                char pd[256];                                                     \
+                snprintf(pd, sizeof pd,                                           \
+                    "PROLOGUE " #NAME " @%p: "                                    \
+                    "%08x %08x %08x %08x %08x %08x %08x %08x",                   \
+                    fp,                                                           \
+                    insn[0], insn[1], insn[2], insn[3],                            \
+                    insn[4], insn[5], insn[6], insn[7]);                           \
+                breadcrumb(pd);                                                   \
+            }                                                                     \
             char bc[128];                                                         \
             snprintf(bc, sizeof bc, "SWAP " #NAME " mi=%p fp=%p", m, fp);         \
             breadcrumb(bc);                                                       \
