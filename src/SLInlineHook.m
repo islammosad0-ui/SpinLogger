@@ -50,6 +50,24 @@ static int isPCRelative(uint32_t insn) {
     return 0;
 }
 
+// A "function-ending" instruction. If one of these appears inside our 16-byte
+// patch window, the function is shorter than 16 bytes and overwriting past it
+// would corrupt the adjacent function's prologue.
+//   RET / RETAA / RETAB:  top 16 bits = 0xD65F
+//   BR  Xn:               0xD61F0000 | (Rn << 5)
+//   BLR Xn:               0xD63F0000 | (Rn << 5)
+//   BRK #imm16 (trap):    top 8 bits  = 0xD4 (software breakpoint, function-ender)
+static int isFunctionEnding(uint32_t insn) {
+    uint32_t top16 = (insn >> 16) & 0xFFFF;
+    if (top16 == 0xD65F) return 1;              // RET/RETAA/RETAB
+    if (top16 == 0xD61F) return 1;              // BR Xn
+    if (top16 == 0xD63F) return 1;              // BLR Xn (callers don't usually
+                                                // end a function with BLR, but
+                                                // it's rare enough we can skip)
+    if (((insn >> 21) & 0x7FF) == 0x6A1) return 1;  // BRK #imm16
+    return 0;
+}
+
 // Allocate a page of executable memory for one trampoline. Uses mmap RWX.
 // If RWX is denied (some hardened configs), falls back to RW + mprotect(RX).
 static uint8_t *allocTrampoline(void) {
@@ -113,7 +131,9 @@ static int patchTarget(void *target, const void *src, size_t n) {
 int SLInlineHook_Install(void *target, void *replacement, void **outTrampoline) {
     if (!target || !replacement) return -1;
 
-    // 1. Vet the first 4 instructions — any PC-relative op kills the trampoline.
+    // 1. Vet the first 4 instructions — reject PC-relative (can't move to
+    //    trampoline) and function-enders (means the function is < 16 bytes and
+    //    we'd overwrite the next function's prologue).
     uint32_t *insns = (uint32_t *)target;
     NSLog(@"[SLInlineHook] target=%p words=[%08x %08x %08x %08x]",
           target, insns[0], insns[1], insns[2], insns[3]);
@@ -122,6 +142,12 @@ int SLInlineHook_Install(void *target, void *replacement, void **outTrampoline) 
             NSLog(@"[SLInlineHook] PC-relative insn at word %d of %p: 0x%08x",
                   i, target, insns[i]);
             return -2;
+        }
+        if (isFunctionEnding(insns[i])) {
+            NSLog(@"[SLInlineHook] function too short at %p: RET/BR at word %d "
+                  @"(0x%08x) — refusing to patch (would corrupt next function)",
+                  target, i, insns[i]);
+            return -5;
         }
     }
 
