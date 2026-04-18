@@ -209,41 +209,143 @@ static int32_t hook_ContainsAccumulationResult(void *self, int32_t defaultIcon, 
 // ---------------------------------------------------------------------------
 //  Installer.
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+//  Crash breadcrumb: writes current step to Documents/hook_breadcrumb.txt
+//  with fflush so it survives a crash. After a crash, open this file to see
+//  exactly which hook killed the app.
+// ---------------------------------------------------------------------------
+static FILE *s_bcFp = NULL;
+
+static void breadcrumb(const char *msg) {
+    if (!s_bcFp) {
+        NSString *docs = NSSearchPathForDirectoriesInDomains(
+            NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
+        NSString *path = [docs stringByAppendingPathComponent:@"hook_breadcrumb.txt"];
+        s_bcFp = fopen(path.fileSystemRepresentation, "w");
+        if (!s_bcFp) return;
+    }
+    fprintf(s_bcFp, "%s\n", msg);
+    fflush(s_bcFp);
+}
+
+// ---------------------------------------------------------------------------
+//  Hook enable config: reads Documents/hook_config.txt to decide which hooks
+//  to install. If the file doesn't exist, ALL hooks are enabled by default.
+//
+//  Format — one hook name per line to ENABLE, e.g.:
+//      activateWinSequence
+//      ContainsAccumulationResult
+//
+//  Or write "NONE" to disable all hooks (test that Dobby linking alone is ok).
+//  Or write "ALL" (or just don't create the file) to enable everything.
+// ---------------------------------------------------------------------------
+static bool s_hookEnabled[5] = { true, true, true, true, true };
+static const char *s_hookNames[5] = {
+    "TrySetNexSpinHitRecord",
+    "OnSpinResultReceived",
+    "SetFreezeResolve",
+    "activateWinSequence",
+    "ContainsAccumulationResult",
+};
+
+static void loadHookConfig(void) {
+    NSString *docs = NSSearchPathForDirectoriesInDomains(
+        NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
+    NSString *path = [docs stringByAppendingPathComponent:@"hook_config.txt"];
+    FILE *f = fopen(path.fileSystemRepresentation, "r");
+    if (!f) {
+        NSLog(@"[SLHook] No hook_config.txt — all 5 hooks enabled");
+        return;
+    }
+    // If file exists, default all to OFF, then enable listed ones.
+    for (int i = 0; i < 5; i++) s_hookEnabled[i] = false;
+
+    char line[128];
+    while (fgets(line, sizeof line, f)) {
+        // Strip newline.
+        size_t len = strlen(line);
+        while (len > 0 && (line[len-1] == '\n' || line[len-1] == '\r')) line[--len] = 0;
+        if (len == 0) continue;
+        if (strcmp(line, "ALL") == 0) {
+            for (int i = 0; i < 5; i++) s_hookEnabled[i] = true;
+            break;
+        }
+        if (strcmp(line, "NONE") == 0) break;
+        for (int i = 0; i < 5; i++) {
+            if (strcmp(line, s_hookNames[i]) == 0) s_hookEnabled[i] = true;
+        }
+    }
+    fclose(f);
+    for (int i = 0; i < 5; i++) {
+        NSLog(@"[SLHook] hook_config: %s = %s",
+              s_hookNames[i], s_hookEnabled[i] ? "ON" : "OFF");
+    }
+}
+
 int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
     if (s_installed) return 0;
+
+    breadcrumb("STEP 0: entry");
+
     if (!klassMgr) {
         NSLog(@"[SLHook] klassMgr is NULL — aborting install");
+        breadcrumb("ABORT: klassMgr NULL");
         return 0;
     }
+
+    breadcrumb("STEP 1: resolveIL2CPP");
     if (!resolveIL2CPP()) {
         NSLog(@"[SLHook] IL2CPP method APIs unresolvable — aborting");
+        breadcrumb("ABORT: IL2CPP unresolvable");
         return 0;
     }
+
+    breadcrumb("STEP 2: resolveSlotResultOffsets");
     resolveSlotResultOffsets(klassResult);
+
+    breadcrumb("STEP 3: openEventLog");
     openEventLog();
     logLine("INSTALL_BEGIN", "", "", "", "");
 
-    int installed = 0;
+    breadcrumb("STEP 4: loadHookConfig");
+    loadHookConfig();
 
-    #define TRY_HOOK(NAME, ARGC)                                                  \
+    int installed = 0;
+    int hookIdx = 0;
+
+    #define TRY_HOOK(NAME, ARGC, IDX)                                             \
         do {                                                                      \
+            if (!s_hookEnabled[(IDX)]) {                                          \
+                breadcrumb("SKIP " #NAME " (disabled)");                          \
+                NSLog(@"[SLHook] %s: SKIPPED (disabled in hook_config.txt)",      \
+                      #NAME);                                                     \
+                break;                                                            \
+            }                                                                     \
+            breadcrumb("FIND " #NAME);                                            \
             void *m = findMethod(klassMgr, #NAME, (ARGC));                        \
             void *fp = methodNativePointer(m);                                    \
             if (!fp) {                                                            \
                 NSLog(@"[SLHook] %s: MethodInfo not found", #NAME);               \
+                breadcrumb("NOTFOUND " #NAME);                                    \
                 break;                                                            \
             }                                                                     \
+            breadcrumb("DOBBY " #NAME " target=" #NAME);                          \
             int r = DobbyHook(fp, (void *)&hook_##NAME, &orig_##NAME);            \
             NSLog(@"[SLHook] %s: dobby=%d target=%p trampoline=%p",               \
                   #NAME, r, fp, orig_##NAME);                                     \
-            if (r == 0) installed++;                                              \
+            if (r == 0) {                                                         \
+                installed++;                                                      \
+                breadcrumb("OK " #NAME);                                          \
+            } else {                                                              \
+                breadcrumb("FAIL " #NAME);                                        \
+            }                                                                     \
         } while (0)
 
-    TRY_HOOK(TrySetNexSpinHitRecord,     0);
-    TRY_HOOK(OnSpinResultReceived,       1);
-    TRY_HOOK(SetFreezeResolve,           0);
-    TRY_HOOK(activateWinSequence,        1);
-    TRY_HOOK(ContainsAccumulationResult, 1);
+    TRY_HOOK(TrySetNexSpinHitRecord,     0, 0);
+    TRY_HOOK(OnSpinResultReceived,       1, 1);
+    TRY_HOOK(SetFreezeResolve,           0, 2);
+    TRY_HOOK(activateWinSequence,        1, 3);
+    TRY_HOOK(ContainsAccumulationResult, 1, 4);
 
     #undef TRY_HOOK
 
@@ -252,5 +354,9 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
     char ri[8];
     snprintf(ri, sizeof ri, "%d", installed);
     logLine("INSTALL_END", "", "", ri, "session-start");
+
+    char done[64];
+    snprintf(done, sizeof done, "DONE: %d/5 installed", installed);
+    breadcrumb(done);
     return installed;
 }
