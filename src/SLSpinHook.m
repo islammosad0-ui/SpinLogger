@@ -149,22 +149,26 @@ static void hook_SetFreezeResolve(void *self, void *methodInfo) {
 static void hook_activateWinSequence(void *self, void *slotResult, void *methodInfo) {
     typedef void (*fn_t)(void *, void *, void *);
 
-    // SlotSymbol3 is almost certainly a value-type (struct with 3 int32s).
-    // If slotResult.slotSymbols is stored inline, the bytes at [offset]..[offset+12]
-    // ARE the struct. If it's a reference, those bytes are a pointer.
-    // Log both interpretations safely so we can tell from the CSV.
+    // Field layout on SlotResult (dumped): symbols=16, win=24. win−symbols=8
+    // proves slotSymbols is a reference (not an inlined 12-byte struct).
+    // Chase the pointer; SlotSymbol3 boxed object = 16-byte managed header
+    // then 3 int32 fields at offsets 16, 20, 24.
     NSString *notes = @"";
     if (slotResult && fo_slotResult_symbols) {
         uint8_t *base = (uint8_t *)slotResult;
-        // As inlined 3x int32
-        int32_t s1 = *(int32_t *)(base + fo_slotResult_symbols + 0);
-        int32_t s2 = *(int32_t *)(base + fo_slotResult_symbols + 4);
-        int32_t s3 = *(int32_t *)(base + fo_slotResult_symbols + 8);
+        void *sym3Ref = *(void **)(base + fo_slotResult_symbols);
         int32_t win = fo_slotResult_win
                         ? *(int32_t *)(base + fo_slotResult_win)
                         : 0;
-        notes = [NSString stringWithFormat:@"inline_s1=%d|s2=%d|s3=%d|win=%d",
-                  s1, s2, s3, win];
+        int32_t s1 = 0, s2 = 0, s3 = 0;
+        // Sanity: real managed pointers on iOS live above 0x100000000.
+        if ((uintptr_t)sym3Ref > 0x100000000ULL) {
+            s1 = *(int32_t *)((uint8_t *)sym3Ref + 16);
+            s2 = *(int32_t *)((uint8_t *)sym3Ref + 20);
+            s3 = *(int32_t *)((uint8_t *)sym3Ref + 24);
+        }
+        notes = [NSString stringWithFormat:@"s1=%d|s2=%d|s3=%d|win=%d|ref=%p",
+                  s1, s2, s3, win, sym3Ref];
     }
     logEvent(@"activateWinSequence",
              [NSString stringWithFormat:@"%p", self],

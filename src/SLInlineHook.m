@@ -72,11 +72,21 @@ static int patchTarget(void *target, const void *src, size_t n) {
     vm_size_t    pageSpan  = (((vm_address_t)target + n) - pageStart + PAGE_MASK)
                              & ~PAGE_MASK;
 
+    // VM_PROT_COPY is the one-time escape from shared __TEXT. Once a page is
+    // COW'd into our private region, re-requesting COPY on it returns
+    // KERN_PROTECTION_FAILURE (kr=3). That happens whenever two hook targets
+    // share a 16 KB page (common — method bodies sit close together). Try
+    // plain RW first; only ask for COPY if the page is still shared.
     kern_return_t kr = vm_protect(mach_task_self(),
                                   pageStart, pageSpan, FALSE,
-                                  VM_PROT_READ | VM_PROT_WRITE | VM_PROT_COPY);
+                                  VM_PROT_READ | VM_PROT_WRITE);
     if (kr != KERN_SUCCESS) {
-        NSLog(@"[SLInlineHook] vm_protect(RW+COPY) failed: kr=%d page=%p span=%zu",
+        kr = vm_protect(mach_task_self(),
+                        pageStart, pageSpan, FALSE,
+                        VM_PROT_READ | VM_PROT_WRITE | VM_PROT_COPY);
+    }
+    if (kr != KERN_SUCCESS) {
+        NSLog(@"[SLInlineHook] vm_protect(RW) failed: kr=%d page=%p span=%zu",
               kr, (void *)pageStart, (size_t)pageSpan);
         return -1;
     }
