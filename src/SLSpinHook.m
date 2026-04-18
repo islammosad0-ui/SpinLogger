@@ -133,43 +133,51 @@ static void *orig_ContainsAccumulationResult = NULL;
 //    3. logLine() writes one line and fflushes.
 // ---------------------------------------------------------------------------
 
+// Each hook logs ENTER before calling orig, and EXIT after. Without the ENTER
+// row we can't tell whether a crash lives in the hook body or inside the
+// trampoline-executed copy of the original prologue. Prior v74/v75 builds put
+// the log after orig — so when install succeeded but nothing ever fired, we
+// couldn't distinguish "no spin happened" from "trampoline SIGILL on first
+// call". ENTER-first breaks that tie.
 static bool hook_TrySetNexSpinHitRecord(void *self, void *methodInfo) {
     typedef bool (*fn_t)(void *, void *);
+    char a1[24]; snprintf(a1, sizeof a1, "%p", self);
+    logLine("TrySetNexSpinHitRecord", a1, "", "", "enter");
     bool ret = ((fn_t)orig_TrySetNexSpinHitRecord)(self, methodInfo);
-    char a1[24];
-    snprintf(a1, sizeof a1, "%p", self);
-    logLine("TrySetNexSpinHitRecord", a1, "", ret ? "true" : "false", "");
+    logLine("TrySetNexSpinHitRecord", a1, "", ret ? "true" : "false", "exit");
     return ret;
 }
 
 static void hook_OnSpinResultReceived(void *self, void *response, void *methodInfo) {
     typedef void (*fn_t)(void *, void *, void *);
-    ((fn_t)orig_OnSpinResultReceived)(self, response, methodInfo);
     char a1[24], a2[24];
     snprintf(a1, sizeof a1, "%p", self);
     snprintf(a2, sizeof a2, "%p", response);
-    logLine("OnSpinResultReceived", a1, a2, "", "");
+    logLine("OnSpinResultReceived", a1, a2, "", "enter");
+    ((fn_t)orig_OnSpinResultReceived)(self, response, methodInfo);
+    logLine("OnSpinResultReceived", a1, a2, "", "exit");
 }
 
 static void hook_SetFreezeResolve(void *self, void *methodInfo) {
     typedef void (*fn_t)(void *, void *);
+    char a1[24]; snprintf(a1, sizeof a1, "%p", self);
+    logLine("SetFreezeResolve", a1, "", "", "enter");
     ((fn_t)orig_SetFreezeResolve)(self, methodInfo);
-    char a1[24];
-    snprintf(a1, sizeof a1, "%p", self);
-    logLine("SetFreezeResolve", a1, "", "", "");
+    logLine("SetFreezeResolve", a1, "", "", "exit");
 }
 
 static void hook_activateWinSequence(void *self, void *slotResult, void *methodInfo) {
     typedef void (*fn_t)(void *, void *, void *);
+    char a1[24], a2[24];
+    snprintf(a1, sizeof a1, "%p", self);
+    snprintf(a2, sizeof a2, "%p", slotResult);
+    logLine("activateWinSequence", a1, a2, "", "enter");
     ((fn_t)orig_activateWinSequence)(self, slotResult, methodInfo);
 
     // Field layout on SlotResult (dumped): symbols=16, win=24.
     // win−symbols=8 → slotSymbols is a reference. SlotSymbol3 boxed object =
     // 16-byte managed header, then 3 int32 fields at 16/20/24.
-    char a1[24], a2[24], notes[96];
-    snprintf(a1, sizeof a1, "%p", self);
-    snprintf(a2, sizeof a2, "%p", slotResult);
-    notes[0] = 0;
+    char notes[96]; notes[0] = 0;
     if (slotResult && fo_slotResult_symbols) {
         uint8_t *base = (uint8_t *)slotResult;
         void *sym3Ref = *(void **)(base + fo_slotResult_symbols);
@@ -191,12 +199,13 @@ static void hook_activateWinSequence(void *self, void *slotResult, void *methodI
 
 static int32_t hook_ContainsAccumulationResult(void *self, int32_t defaultIcon, void *methodInfo) {
     typedef int32_t (*fn_t)(void *, int32_t, void *);
-    int32_t ret = ((fn_t)orig_ContainsAccumulationResult)(self, defaultIcon, methodInfo);
-    char a1[24], a2[16], r[16];
+    char a1[24], a2[16];
     snprintf(a1, sizeof a1, "%p", self);
     snprintf(a2, sizeof a2, "%d", defaultIcon);
-    snprintf(r,  sizeof r,  "%d", ret);
-    logLine("ContainsAccumulationResult", a1, a2, r, "");
+    logLine("ContainsAccumulationResult", a1, a2, "", "enter");
+    int32_t ret = ((fn_t)orig_ContainsAccumulationResult)(self, defaultIcon, methodInfo);
+    char r[16]; snprintf(r, sizeof r, "%d", ret);
+    logLine("ContainsAccumulationResult", a1, a2, r, "exit");
     return ret;
 }
 
