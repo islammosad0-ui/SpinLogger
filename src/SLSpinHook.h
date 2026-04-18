@@ -3,8 +3,7 @@
 // ---------------------------------------------------------------------------
 //  SLSpinHook
 //
-//  Installs inline hooks via Dobby on five SlotMachineManager methods that
-//  carry exploitable information:
+//  Hooks five SlotMachineManager methods via IL2CPP MethodInfo pointer swap:
 //
 //      1. TrySetNexSpinHitRecord()              → next-spin hit oracle
 //      2. OnSpinResultReceived(NetworkResponse) → raw server response dump
