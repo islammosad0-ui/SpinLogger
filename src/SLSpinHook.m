@@ -9,6 +9,19 @@
 #include <mach/mach.h>
 #include <mach/vm_map.h>
 #include <libkern/OSCacheControl.h>
+#include <sys/sysctl.h>
+
+// csops syscall for checking code-signing status.
+#define CS_OPS_STATUS       0
+#define CS_VALID            0x00000001
+#define CS_HARD             0x00000100
+#define CS_KILL             0x00000200
+#define CS_ENFORCEMENT      0x00001000
+#define CS_REQUIRE_LV       0x00002000
+#define CS_RUNTIME          0x00010000
+#define CS_DEBUGGED          0x10000000
+
+extern int csops(pid_t pid, unsigned int ops, void *useraddr, size_t usersize);
 
 // ---------------------------------------------------------------------------
 //  IL2CPP method-iteration + field-reading APIs.
@@ -130,20 +143,213 @@ static void breadcrumb(const char *msg) {
 }
 
 // ---------------------------------------------------------------------------
+//  DIAGNOSTIC: test each primitive operation in isolation.
+//
+//  This runs INSTEAD of actual hooking. It probes exactly which low-level
+//  operation kills the process, logging a breadcrumb before and after each
+//  step. The last breadcrumb written tells us which step crashed.
+//
+//  Tests (on ONE target only — activateWinSequence):
+//   D1: read original bytes (should never crash)
+//   D2: query vm_region for current page protection
+//   D3: vm_protect → RWX (just change perms, don't write)
+//   D4: memcpy 1 byte (identical byte — write same value back)
+//   D5: vm_protect → RX (restore perms)
+//   D6: sys_icache_invalidate
+//   D7: vm_protect → RWX + memcpy actual patch byte + vm_protect → RX
+//   D8: read back to verify write stuck
+//   D9: restore original byte
+//   D10: vm_write (kernel copy, no permission change)
+//   D11: vm_write actual patch byte
+//   D12: restore via vm_write
+//
+//  If we get past all of these, the modification itself doesn't crash.
+//  The crash would be when the modified code is *executed* (code-sign check).
+// ---------------------------------------------------------------------------
+
+static void diagQueryProtection(vm_address_t addr) {
+    vm_address_t region_addr = addr;
+    vm_size_t region_size = 0;
+    vm_region_basic_info_data_64_t info;
+    mach_msg_type_number_t count = VM_REGION_BASIC_INFO_COUNT_64;
+    mach_port_t obj_name;
+
+    kern_return_t kr = vm_region_64(mach_task_self(),
+                                    &region_addr, &region_size,
+                                    VM_REGION_BASIC_INFO_64,
+                                    (vm_region_info_t)&info, &count,
+                                    &obj_name);
+    char bc[256];
+    if (kr == KERN_SUCCESS) {
+        snprintf(bc, sizeof bc,
+                 "D2: vm_region kr=0 prot=%d max_prot=%d shared=%d addr=0x%llx size=0x%llx",
+                 info.protection, info.max_protection, info.shared,
+                 (unsigned long long)region_addr, (unsigned long long)region_size);
+    } else {
+        snprintf(bc, sizeof bc, "D2: vm_region kr=%d", (int)kr);
+    }
+    breadcrumb(bc);
+}
+
+static void diagCheckCSFlags(void) {
+    uint32_t flags = 0;
+    int rc = csops(getpid(), CS_OPS_STATUS, &flags, sizeof(flags));
+    char bc[256];
+    snprintf(bc, sizeof bc,
+             "DIAG CS_FLAGS: rc=%d flags=0x%08x "
+             "VALID=%d HARD=%d KILL=%d ENFORCE=%d REQUIRE_LV=%d RUNTIME=%d DEBUGGED=%d",
+             rc, flags,
+             !!(flags & CS_VALID),
+             !!(flags & CS_HARD),
+             !!(flags & CS_KILL),
+             !!(flags & CS_ENFORCEMENT),
+             !!(flags & CS_REQUIRE_LV),
+             !!(flags & CS_RUNTIME),
+             !!(flags & CS_DEBUGGED));
+    breadcrumb(bc);
+}
+
+static void runDiagnostics(void *target, const char *name) {
+    char bc[256];
+    const vm_address_t PAGE_MASK = 0x3FFF;
+    vm_address_t pageStart = (vm_address_t)target & ~PAGE_MASK;
+    vm_size_t pageSpan = ((((vm_address_t)target + 16) - pageStart) + PAGE_MASK) & ~PAGE_MASK;
+
+    // -- D1: read original bytes --
+    uint8_t orig[16];
+    memcpy(orig, target, 16);
+    snprintf(bc, sizeof bc,
+             "D1: read 16 bytes at %p = %02x %02x %02x %02x %02x %02x %02x %02x "
+             "%02x %02x %02x %02x %02x %02x %02x %02x",
+             target,
+             orig[0], orig[1], orig[2],  orig[3],  orig[4],  orig[5],  orig[6],  orig[7],
+             orig[8], orig[9], orig[10], orig[11], orig[12], orig[13], orig[14], orig[15]);
+    breadcrumb(bc);
+
+    // -- D2: query vm_region --
+    breadcrumb("D2: querying vm_region...");
+    diagQueryProtection((vm_address_t)target);
+
+    // -- D3: vm_protect → RWX (no write yet) --
+    breadcrumb("D3: vm_protect RWX (no write)...");
+    kern_return_t kr = vm_protect(mach_task_self(), pageStart, pageSpan, FALSE,
+                                  VM_PROT_READ | VM_PROT_WRITE | VM_PROT_EXECUTE);
+    snprintf(bc, sizeof bc, "D3: vm_protect RWX kr=%d page=0x%llx span=0x%llx",
+             (int)kr, (unsigned long long)pageStart, (unsigned long long)pageSpan);
+    breadcrumb(bc);
+
+    // -- D3b: query protection again after RWX --
+    breadcrumb("D3b: re-query vm_region after RWX...");
+    diagQueryProtection((vm_address_t)target);
+
+    // -- D4: memcpy same byte (no-op write) --
+    if (kr == KERN_SUCCESS) {
+        breadcrumb("D4: memcpy same byte (no-op)...");
+        uint8_t same = orig[0];
+        memcpy(target, &same, 1);
+        breadcrumb("D4: memcpy done (survived)");
+    } else {
+        breadcrumb("D4: SKIPPED (vm_protect failed)");
+    }
+
+    // -- D5: vm_protect → RX (restore) --
+    breadcrumb("D5: vm_protect RX (restore)...");
+    kr = vm_protect(mach_task_self(), pageStart, pageSpan, FALSE,
+                    VM_PROT_READ | VM_PROT_EXECUTE);
+    snprintf(bc, sizeof bc, "D5: vm_protect RX kr=%d", (int)kr);
+    breadcrumb(bc);
+
+    // -- D6: sys_icache_invalidate --
+    breadcrumb("D6: sys_icache_invalidate...");
+    sys_icache_invalidate(target, 16);
+    breadcrumb("D6: icache invalidated (survived)");
+
+    // -- D7: RWX + write actual different byte + RX --
+    breadcrumb("D7: vm_protect RWX + write diff byte...");
+    kr = vm_protect(mach_task_self(), pageStart, pageSpan, FALSE,
+                    VM_PROT_READ | VM_PROT_WRITE | VM_PROT_EXECUTE);
+    snprintf(bc, sizeof bc, "D7a: vm_protect RWX kr=%d", (int)kr);
+    breadcrumb(bc);
+    if (kr == KERN_SUCCESS) {
+        // NOP = 0xD503201F. Write a NOP over first instruction.
+        uint32_t nop = 0xD503201F;
+        breadcrumb("D7b: memcpy NOP over first insn...");
+        memcpy(target, &nop, 4);
+        breadcrumb("D7b: memcpy done (survived)");
+
+        breadcrumb("D7c: vm_protect RX...");
+        vm_protect(mach_task_self(), pageStart, pageSpan, FALSE,
+                   VM_PROT_READ | VM_PROT_EXECUTE);
+        breadcrumb("D7c: perms restored (survived)");
+
+        breadcrumb("D7d: icache invalidate...");
+        sys_icache_invalidate(target, 4);
+        breadcrumb("D7d: icache done (survived)");
+    } else {
+        breadcrumb("D7: SKIPPED (RWX failed)");
+    }
+
+    // -- D8: read back --
+    breadcrumb("D8: reading back modified bytes...");
+    uint8_t check[4];
+    memcpy(check, target, 4);
+    snprintf(bc, sizeof bc, "D8: readback = %02x %02x %02x %02x (expect 1f 20 03 d5 for NOP)",
+             check[0], check[1], check[2], check[3]);
+    breadcrumb(bc);
+
+    // -- D9: restore original bytes via RWX + memcpy --
+    breadcrumb("D9: restoring original bytes...");
+    kr = vm_protect(mach_task_self(), pageStart, pageSpan, FALSE,
+                    VM_PROT_READ | VM_PROT_WRITE | VM_PROT_EXECUTE);
+    if (kr == KERN_SUCCESS) {
+        memcpy(target, orig, 16);
+        vm_protect(mach_task_self(), pageStart, pageSpan, FALSE,
+                   VM_PROT_READ | VM_PROT_EXECUTE);
+        sys_icache_invalidate(target, 16);
+        breadcrumb("D9: original restored (survived)");
+    } else {
+        snprintf(bc, sizeof bc, "D9: vm_protect kr=%d CANNOT RESTORE", (int)kr);
+        breadcrumb(bc);
+    }
+
+    // -- D10: vm_write same bytes (kernel copy, no perm change) --
+    breadcrumb("D10: vm_write same bytes...");
+    kr = vm_write(mach_task_self(), (vm_address_t)target,
+                  (vm_offset_t)orig, 16);
+    snprintf(bc, sizeof bc, "D10: vm_write same kr=%d", (int)kr);
+    breadcrumb(bc);
+
+    // -- D11: vm_write NOP (different byte, no perm change) --
+    breadcrumb("D11: vm_write NOP...");
+    uint8_t nopBytes[16];
+    memcpy(nopBytes, orig, 16);
+    uint32_t nop2 = 0xD503201F;
+    memcpy(nopBytes, &nop2, 4);
+    kr = vm_write(mach_task_self(), (vm_address_t)target,
+                  (vm_offset_t)nopBytes, 16);
+    snprintf(bc, sizeof bc, "D11: vm_write NOP kr=%d", (int)kr);
+    breadcrumb(bc);
+    if (kr == KERN_SUCCESS) {
+        breadcrumb("D11b: icache invalidate...");
+        sys_icache_invalidate(target, 16);
+        breadcrumb("D11b: done (survived)");
+    }
+
+    // -- D12: restore via vm_write --
+    breadcrumb("D12: vm_write restore original...");
+    kr = vm_write(mach_task_self(), (vm_address_t)target,
+                  (vm_offset_t)orig, 16);
+    snprintf(bc, sizeof bc, "D12: vm_write restore kr=%d", (int)kr);
+    breadcrumb(bc);
+    if (kr == KERN_SUCCESS) {
+        sys_icache_invalidate(target, 16);
+    }
+
+    breadcrumb("DIAG COMPLETE — all steps survived");
+}
+
+// ---------------------------------------------------------------------------
 //  Hot-patch inline hook — NO trampoline needed.
-//
-//  Problem: iOS blocks executing from mmap'd anonymous pages (JIT
-//  restriction), so trampoline-based hooks crash when calling orig.
-//
-//  Solution: when the hook fires, temporarily restore the original 16 bytes,
-//  call the original function directly, then re-patch. Unity's main thread
-//  is single-threaded so this is safe.
-//
-//  Each hook entry stores:
-//    - target: the function address being hooked
-//    - saved[16]: the original 16 bytes
-//    - stub[16]: the redirect stub (LDR X17/BR X17/addr)
-//    - pageStart, pageSpan: cached vm_protect parameters
 // ---------------------------------------------------------------------------
 #define PATCH_SIZE 16
 #define MAX_HOOKS  8
@@ -169,8 +375,7 @@ static void buildAbsJump(uint8_t *dst, uint64_t addr) {
     memcpy(dst + 8, &addr, 8);
 }
 
-// Write bytes to a code page using vm_write — never changes page permissions,
-// so the page stays executable and other threads don't crash.
+// Write bytes to a code page using vm_write.
 static kern_return_t vmWrite(vm_address_t target, const void *data, size_t n) {
     return vm_write(mach_task_self(), target,
                     (vm_offset_t)data, (mach_msg_type_number_t)n);
@@ -178,10 +383,8 @@ static kern_return_t vmWrite(vm_address_t target, const void *data, size_t n) {
 
 static void patchBytes(void *target, const void *bytes, size_t n,
                        vm_address_t pageStart, vm_size_t pageSpan) {
-    // Try vm_write first (no permission change, page stays RX).
     kern_return_t kr = vmWrite((vm_address_t)target, bytes, n);
     if (kr != KERN_SUCCESS) {
-        // Fallback: vm_protect RWX (keep execute bit!) + memcpy.
         vm_protect(mach_task_self(), pageStart, pageSpan, FALSE,
                    VM_PROT_READ | VM_PROT_WRITE | VM_PROT_EXECUTE);
         memcpy(target, bytes, n);
@@ -189,15 +392,6 @@ static void patchBytes(void *target, const void *bytes, size_t n,
                    VM_PROT_READ | VM_PROT_EXECUTE);
     }
     sys_icache_invalidate(target, n);
-}
-
-// Temporarily restore original bytes, call through, re-patch.
-// Returns the hook entry index so the hook body knows which entry to use.
-static int findHookIdx(void *target) {
-    for (int i = 0; i < s_hookCount; i++) {
-        if (s_hooks[i].target == target) return i;
-    }
-    return -1;
 }
 
 static void unpatch(int idx) {
@@ -213,7 +407,6 @@ static void repatch(int idx) {
 static int installHook(void *target, void *replacement, const char *name) {
     if (!target || !replacement || s_hookCount >= MAX_HOOKS) return -1;
 
-    // Reject tiny functions (RET in first 4 instructions).
     uint32_t *insns = (uint32_t *)target;
     for (int i = 0; i < 4; i++) {
         if (insns[i] == 0xD65F03C0) {
@@ -225,21 +418,14 @@ static int installHook(void *target, void *replacement, const char *name) {
     int idx = s_hookCount;
     HookEntry *h = &s_hooks[idx];
     h->target = target;
-
-    // Save original bytes.
     memcpy(h->saved, target, PATCH_SIZE);
-
-    // Build redirect stub.
     buildAbsJump(h->stub, (uint64_t)replacement);
 
-    // Cache page params (16KB iOS pages).
     const vm_address_t PAGE_MASK = 0x3FFF;
     h->pageStart = (vm_address_t)target & ~PAGE_MASK;
     h->pageSpan  = (((vm_address_t)target + PATCH_SIZE) - h->pageStart
                      + PAGE_MASK) & ~PAGE_MASK;
 
-    // Strategy 1: vm_write — writes without changing permissions.
-    // Page stays RX, other threads keep executing safely.
     kern_return_t kr = vmWrite((vm_address_t)target, h->stub, PATCH_SIZE);
     {
         char bc[128];
@@ -248,12 +434,10 @@ static int installHook(void *target, void *replacement, const char *name) {
     }
 
     if (kr != KERN_SUCCESS) {
-        // Strategy 2: vm_protect RWX (keep execute!) + memcpy.
         kr = vm_protect(mach_task_self(),
                         h->pageStart, h->pageSpan, FALSE,
                         VM_PROT_READ | VM_PROT_WRITE | VM_PROT_EXECUTE);
         if (kr != KERN_SUCCESS) {
-            // Strategy 3: COW + RWX.
             kr = vm_protect(mach_task_self(),
                             h->pageStart, h->pageSpan, FALSE,
                             VM_PROT_READ | VM_PROT_WRITE | VM_PROT_EXECUTE
@@ -283,8 +467,7 @@ static int installHook(void *target, void *replacement, const char *name) {
 }
 
 // ---------------------------------------------------------------------------
-//  Hook targets — stored as function pointers so hooks can call originals
-//  via unpatch/repatch.
+//  Hook targets.
 // ---------------------------------------------------------------------------
 static void *fp_OnSpinResultReceived       = NULL;
 static void *fp_SetFreezeResolve           = NULL;
@@ -298,8 +481,6 @@ static int idx_ContainsAccumulationResult = -1;
 
 // ---------------------------------------------------------------------------
 //  Hook bodies.
-//  Each hook: log ENTER → unpatch → call original → repatch → log EXIT.
-//  IL2CPP ABI: trailing void *methodInfo parameter.
 // ---------------------------------------------------------------------------
 
 static void hook_OnSpinResultReceived(void *self, void *response, void *methodInfo) {
@@ -345,7 +526,6 @@ static void hook_activateWinSequence(void *self, void *slotResult, void *methodI
     repatch(idx_activateWinSequence);
     pthread_mutex_unlock(&s_patchMu);
 
-    // Read SlotResult fields after original returns.
     char notes[96]; notes[0] = 0;
     if (slotResult && fo_slotResult_symbols) {
         uint8_t *base = (uint8_t *)slotResult;
@@ -395,6 +575,9 @@ static const char *s_hookNames[4] = {
     "ContainsAccumulationResult",
 };
 
+// Mode: "DIAG" = diagnostic only (no patching), "ALL"/"NONE"/name = normal.
+static bool s_diagMode = false;
+
 static void loadHookConfig(void) {
     NSString *docs = NSSearchPathForDirectoriesInDomains(
         NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
@@ -408,6 +591,12 @@ static void loadHookConfig(void) {
         size_t len = strlen(line);
         while (len > 0 && (line[len-1] == '\n' || line[len-1] == '\r')) line[--len] = 0;
         if (len == 0) continue;
+        if (strcmp(line, "DIAG") == 0) {
+            s_diagMode = true;
+            // Enable activateWinSequence as the single diagnostic target.
+            s_hookEnabled[2] = true;
+            break;
+        }
         if (strcmp(line, "ALL") == 0) {
             for (int i = 0; i < 4; i++) s_hookEnabled[i] = true;
             break;
@@ -449,6 +638,55 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
     breadcrumb("STEP 4: loadHookConfig");
     loadHookConfig();
 
+    // -- Check code-signing flags FIRST --
+    breadcrumb("STEP 5: checking CS flags");
+    diagCheckCSFlags();
+
+    // ---------------------------------------------------------------
+    //  DIAGNOSTIC MODE: probe __TEXT operations without actually
+    //  installing hooks. Write "DIAG" in hook_config.txt to activate.
+    // ---------------------------------------------------------------
+    if (s_diagMode) {
+        breadcrumb("=== DIAGNOSTIC MODE ===");
+
+        // Find activateWinSequence as our test target.
+        void *m = findMethod(klassMgr, "activateWinSequence", 1);
+        if (!m) {
+            breadcrumb("DIAG ABORT: activateWinSequence not found");
+            return 0;
+        }
+        void *fp = methodNativePointer(m);
+        if (!fp) {
+            breadcrumb("DIAG ABORT: activateWinSequence fp NULL");
+            return 0;
+        }
+
+        char bc[128];
+        snprintf(bc, sizeof bc, "DIAG target: %s at %p", "activateWinSequence", fp);
+        breadcrumb(bc);
+
+        runDiagnostics(fp, "activateWinSequence");
+
+        // Also test with a SECOND target on a different page.
+        void *m2 = findMethod(klassMgr, "OnSpinResultReceived", 1);
+        if (m2) {
+            void *fp2 = methodNativePointer(m2);
+            if (fp2) {
+                snprintf(bc, sizeof bc, "DIAG target2: %s at %p", "OnSpinResultReceived", fp2);
+                breadcrumb(bc);
+                runDiagnostics(fp2, "OnSpinResultReceived");
+            }
+        }
+
+        breadcrumb("=== DIAGNOSTIC DONE — NO HOOKS INSTALLED ===");
+        logLine("INSTALL_END", "", "", "0", "diag-only");
+        breadcrumb("DONE: 0/4 installed (DIAG)");
+        return 0;
+    }
+
+    // ---------------------------------------------------------------
+    //  NORMAL MODE: install hooks as before.
+    // ---------------------------------------------------------------
     int installed = 0;
 
     #define TRY_HOOK(NAME, ARGC, IDX_VAR, FP_VAR)                                \
@@ -477,7 +715,6 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
             }                                                                     \
         } while (0)
 
-    // Config indices for the enabled array.
     const int idx_OnSpinResultReceived_cfg       = 0;
     const int idx_SetFreezeResolve_cfg           = 1;
     const int idx_activateWinSequence_cfg        = 2;
