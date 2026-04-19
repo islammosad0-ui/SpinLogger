@@ -227,7 +227,9 @@ static int32_t hook_ContainsAccumulationResult(void *self, int32_t defaultIcon, 
 //  ourselves from the known LC path before resolving MSHookFunction. This
 //  way both deployment modes work.
 // ---------------------------------------------------------------------------
-typedef void (*fn_MSHookFunction)(void *target, void *replacement, void **orig);
+typedef void  (*fn_MSHookFunction)(void *target, void *replacement, void **orig);
+typedef void *(*fn_EKHookFunction)(void *target, void *replacement, bool skipChecks);
+typedef void  (*fn_MSHookMemory)(void *target, const uint8_t *code, uint64_t size);
 
 static void forceLoadCydiaSubstrate(void) {
     // Try the most likely paths ElleKit lives at, in order of plausibility.
@@ -297,6 +299,21 @@ static void logLoadedHookImages(void) {
     }
 }
 
+// Two-pass installer. iOS 26 CS_HARD causes ElleKit's rawHook to fail the
+// restore-to-RX vm_protect on the FIRST modification of any __TEXT page,
+// which makes MSHookFunction return orig=NULL even though the patch bytes
+// committed. The failed restore leaves the page in RW state, so any
+// subsequent hook on that same page succeeds because ElleKit skips both
+// vm_protect calls (info.protection already shows RW).
+//
+// Pass 1: snapshot 16 bytes of each target's prologue, then call
+//         MSHookFunction as usual. Orig is recorded; pages get warmed.
+// Pass 2: for targets where pass 1 returned orig=NULL, restore the saved
+//         bytes via MSHookMemory (which handles any residual protection
+//         quirks) and re-hook with EKHookFunction(..., skipChecks=true).
+//         skipChecks bypasses ElleKit's hooks[target] dedup (which would
+//         otherwise recurse into hook(replacement, replacement)) and also
+//         bypasses the always-disabled Trampoline path.
 static int installViaElleKit(void *klassMgr) {
     fn_MSHookFunction mshook = resolveMSHookFunction();
     if (!mshook) {
@@ -305,14 +322,33 @@ static int installViaElleKit(void *klassMgr) {
     }
     breadcrumb("ELLEKIT: MSHookFunction resolved");
 
-    struct { const char *name; int argc; int idx; void *replacement; } targets[] = {
-        {"OnSpinResultReceived",        1, 0, (void *)hook_OnSpinResultReceived},
-        {"SetFreezeResolve",            0, 1, (void *)hook_SetFreezeResolve},
-        {"activateWinSequence",         1, 2, (void *)hook_activateWinSequence},
-        {"ContainsAccumulationResult",  1, 3, (void *)hook_ContainsAccumulationResult},
+    fn_EKHookFunction ekhook =
+        (fn_EKHookFunction)dlsym(RTLD_DEFAULT, "EKHookFunction");
+    fn_MSHookMemory   mshookmem =
+        (fn_MSHookMemory)  dlsym(RTLD_DEFAULT, "MSHookMemory");
+    if (ekhook && mshookmem) {
+        breadcrumb("ELLEKIT: EKHookFunction + MSHookMemory resolved (two-pass available)");
+    } else {
+        breadcrumb("ELLEKIT: EKHook/MSHookMemory not resolvable (single-pass only)");
+    }
+
+    struct TargetInfo {
+        const char *name;
+        int         argc;
+        int         idx;
+        void       *replacement;
+        void       *fp;
+        uint8_t     saved[16];
+        bool        attempted;
+    };
+    struct TargetInfo targets[] = {
+        {"OnSpinResultReceived",        1, 0, (void *)hook_OnSpinResultReceived,        NULL, {0}, false},
+        {"SetFreezeResolve",            0, 1, (void *)hook_SetFreezeResolve,            NULL, {0}, false},
+        {"activateWinSequence",         1, 2, (void *)hook_activateWinSequence,         NULL, {0}, false},
+        {"ContainsAccumulationResult",  1, 3, (void *)hook_ContainsAccumulationResult,  NULL, {0}, false},
     };
 
-    int installed = 0;
+    // Resolve methods + snapshot prologue bytes BEFORE any patching.
     for (int i = 0; i < 4; i++) {
         void *m = findMethod(klassMgr, targets[i].name, targets[i].argc);
         if (!m) {
@@ -328,46 +364,95 @@ static int installViaElleKit(void *klassMgr) {
             breadcrumb(bc);
             continue;
         }
+        targets[i].fp = fp;
+        memcpy(targets[i].saved, fp, sizeof targets[i].saved);
+    }
+
+    // Pass 1: MSHookFunction on each resolved target.
+    for (int i = 0; i < 4; i++) {
+        if (!targets[i].fp) continue;
 
         char bc[256];
-        snprintf(bc, sizeof bc, "ELLEKIT: hooking %s at %p", targets[i].name, fp);
+        snprintf(bc, sizeof bc, "ELLEKIT[p1]: hooking %s at %p",
+                 targets[i].name, targets[i].fp);
         breadcrumb(bc);
 
-        // Diagnostic: dump first 32 bytes of prologue BEFORE mshook runs.
-        // If ElleKit refuses (orig=NULL) we still have the raw bytes on disk
-        // to see which instructions tripped its safety checks.
+        // Prologue dump — useful if hooks still fail after two-pass.
         {
-            const uint8_t *pb = (const uint8_t *)fp;
-            // Read as 8 uint32s so a bad byte access still gets aligned loads.
             uint32_t w[8];
-            memcpy(w, pb, sizeof w);
+            memcpy(w, targets[i].fp, sizeof w);
             char hex[8 * 9 + 1];
             int off = 0;
             for (int k = 0; k < 8; k++) {
                 off += snprintf(hex + off, sizeof(hex) - off, "%08x ", w[k]);
             }
-            snprintf(bc, sizeof bc, "ELLEKIT: %s prologue=%s",
+            snprintf(bc, sizeof bc, "ELLEKIT[p1]: %s prologue=%s",
                      targets[i].name, hex);
             breadcrumb(bc);
         }
 
         void *orig = NULL;
-        mshook(fp, targets[i].replacement, &orig);
+        mshook(targets[i].fp, targets[i].replacement, &orig);
+        targets[i].attempted = true;
         s_origFn[targets[i].idx] = orig;
 
         if (orig) {
-            installed++;
-            snprintf(bc, sizeof bc, "ELLEKIT: %s hooked, orig=%p", targets[i].name, orig);
+            snprintf(bc, sizeof bc, "ELLEKIT[p1]: %s hooked, orig=%p",
+                     targets[i].name, orig);
             breadcrumb(bc);
 
             char fpStr[24], origStr[24];
-            snprintf(fpStr, sizeof fpStr, "%p", fp);
+            snprintf(fpStr, sizeof fpStr, "%p", targets[i].fp);
             snprintf(origStr, sizeof origStr, "%p", orig);
-            logLine(targets[i].name, fpStr, origStr, "", "hooked-ellekit");
+            logLine(targets[i].name, fpStr, origStr, "", "hooked-ellekit-p1");
         } else {
-            snprintf(bc, sizeof bc, "ELLEKIT: %s hook FAILED (orig=NULL)", targets[i].name);
+            snprintf(bc, sizeof bc, "ELLEKIT[p1]: %s FAILED (orig=NULL) — will retry",
+                     targets[i].name);
             breadcrumb(bc);
         }
+    }
+
+    // Pass 2: for any target still without an orig, restore original bytes
+    // and re-hook via EKHookFunction(..., skipChecks=true).
+    if (ekhook && mshookmem) {
+        for (int i = 0; i < 4; i++) {
+            if (!targets[i].attempted) continue;
+            if (s_origFn[targets[i].idx]) continue;
+
+            char bc[256];
+            snprintf(bc, sizeof bc, "ELLEKIT[p2]: restoring %s bytes at %p",
+                     targets[i].name, targets[i].fp);
+            breadcrumb(bc);
+
+            // Restore the original prologue so EKHookFunction's getOriginal
+            // reads clean bytes into its new orig trampoline. MSHookMemory
+            // handles page protection if needed; after a pass-1 failure the
+            // page is already RW so it reduces to a plain memcpy+icache.
+            mshookmem(targets[i].fp, targets[i].saved, (uint64_t)sizeof targets[i].saved);
+
+            void *orig = ekhook(targets[i].fp, targets[i].replacement, true);
+            s_origFn[targets[i].idx] = orig;
+
+            if (orig) {
+                snprintf(bc, sizeof bc, "ELLEKIT[p2]: %s hooked, orig=%p",
+                         targets[i].name, orig);
+                breadcrumb(bc);
+
+                char fpStr[24], origStr[24];
+                snprintf(fpStr, sizeof fpStr, "%p", targets[i].fp);
+                snprintf(origStr, sizeof origStr, "%p", orig);
+                logLine(targets[i].name, fpStr, origStr, "", "hooked-ellekit-p2");
+            } else {
+                snprintf(bc, sizeof bc, "ELLEKIT[p2]: %s STILL FAILED (orig=NULL)",
+                         targets[i].name);
+                breadcrumb(bc);
+            }
+        }
+    }
+
+    int installed = 0;
+    for (int i = 0; i < 4; i++) {
+        if (s_origFn[targets[i].idx]) installed++;
     }
     return installed;
 }
