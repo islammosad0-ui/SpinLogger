@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <sys/time.h>
 #include <pthread.h>
+#include <dispatch/dispatch.h>
 #include <mach-o/dyld.h>
 #include <mach-o/loader.h>
 
@@ -645,7 +646,7 @@ static void loadHookConfig(void) {
 int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
     if (s_installed) return 0;
 
-    breadcrumb("STEP 0: entry (v83-nohook-diag)");
+    breadcrumb("STEP 0: entry (v84-deferred-20s)");
 
     if (!klassMgr) {
         breadcrumb("ABORT: klassMgr NULL");
@@ -680,45 +681,48 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
         return 0;
     }
 
-    // v83 diagnostic: skip all __TEXT patching. Dylib loads, IL2CPP resolves,
-    // log opens, but no MSHookFunction / vm_protect calls are issued. If the
-    // game still crashes at UnityFramework+0x2e72130, our hook installation is
-    // innocent and the fault lies elsewhere (LC+iOS26+Unity). If it runs
-    // cleanly, __TEXT patching is the culprit and we need MethodInfo swap.
-    breadcrumb("=== V83 NO-HOOK DIAGNOSTIC: skipping all installers ===");
-    logLine("INSTALL_END", "", "", "0", "v83-nohook-diag");
-    s_installed = YES;
-    return 0;
+    // v84: defer the actual hook install by 20s. Hypothesis — Unity's launch
+    // storm faults in many __TEXT pages while CS validation is still catching
+    // up; issuing vm_protect(RW+COPY) against a hook page during that window
+    // appears to propagate a CS-fault to an unrelated page at +0x2e72130.
+    // Waiting 20s after dylib load should let Unity's initial paging settle.
+    static bool s_installScheduled = false;
+    if (s_installScheduled) return 0;
+    s_installScheduled = true;
+    breadcrumb("STEP 6: scheduling deferred install (+20s)");
 
-    // Mode 1: ElleKit (if user installed it in LC).
-    breadcrumb("STEP 6: trying ElleKit MSHookFunction");
-    int n = installViaElleKit(klassMgr);
-    if (n > 0) {
-        breadcrumb("=== ELLEKIT MODE ===");
-        char bc[64];
-        snprintf(bc, sizeof bc, "ELLEKIT: %d/4 hooks active", n);
-        breadcrumb(bc);
-        s_installed = YES;
-        snprintf(bc, sizeof bc, "%d", n);
-        logLine("INSTALL_END", "", "", bc, "ellekit");
-        return n;
-    }
+    __block void *kMgr = klassMgr;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 20LL * NSEC_PER_SEC),
+                   dispatch_get_main_queue(), ^{
+        breadcrumb("STEP 6: deferred install firing");
+        int n = installViaElleKit(kMgr);
+        if (n > 0) {
+            breadcrumb("=== ELLEKIT MODE ===");
+            char bc[64];
+            snprintf(bc, sizeof bc, "ELLEKIT: %d/4 hooks active", n);
+            breadcrumb(bc);
+            s_installed = YES;
+            snprintf(bc, sizeof bc, "%d", n);
+            logLine("INSTALL_END", "", "", bc, "ellekit");
+            return;
+        }
 
-    // Mode 2: HOOKSLOT last resort (pre-patched binary).
-    breadcrumb("STEP 7: trying HOOKSLOT (pre-patched binary)");
-    n = installViaHookslots();
-    if (n > 0) {
-        breadcrumb("=== HOOKSLOT MODE ===");
-        char bc[64];
-        snprintf(bc, sizeof bc, "HOOKSLOT: %d/4 hooks active", n);
-        breadcrumb(bc);
-        s_installed = YES;
-        snprintf(bc, sizeof bc, "%d", n);
-        logLine("INSTALL_END", "", "", bc, "hookslot");
-        return n;
-    }
+        breadcrumb("STEP 7: trying HOOKSLOT (pre-patched binary)");
+        n = installViaHookslots();
+        if (n > 0) {
+            breadcrumb("=== HOOKSLOT MODE ===");
+            char bc[64];
+            snprintf(bc, sizeof bc, "HOOKSLOT: %d/4 hooks active", n);
+            breadcrumb(bc);
+            s_installed = YES;
+            snprintf(bc, sizeof bc, "%d", n);
+            logLine("INSTALL_END", "", "", bc, "hookslot");
+            return;
+        }
 
-    breadcrumb("NO HOOKS INSTALLED — import SpinLogger.dylib via LC Tweaks tab so ElleKit is resolvable");
-    logLine("INSTALL_END", "", "", "0", "none");
+        breadcrumb("NO HOOKS INSTALLED — import SpinLogger.dylib via LC Tweaks tab so ElleKit is resolvable");
+        logLine("INSTALL_END", "", "", "0", "none");
+    });
+
     return 0;
 }
