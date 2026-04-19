@@ -9,24 +9,25 @@
 #include <mach-o/dyld.h>
 #include <mach-o/loader.h>
 
-#ifdef SPINHOOK_HAS_DOBBY
-#include "dobby.h"
-#endif
-
 // ---------------------------------------------------------------------------
 //  SLSpinHook — hook installation for LiveContainer.
 //
-//  Modes (tried in this order):
-//    1. ELLEKIT — dlsym MSHookFunction (only works if user installed
-//       ElleKit in LC's LiveContainer.app/Frameworks/CydiaSubstrate.framework).
-//    2. DOBBY   — statically linked jmpews/Dobby, always available.
-//       Uses vm_remap to clone the target page, patches the clone, and
-//       remaps RX — bypasses CS_KILL on signed __TEXT pages, handles arm64e
-//       PAC, and has a battle-tested PC-relative instruction vetter.
-//    3. HOOKSLOT — if binary was pre-patched with offline_patcher.py
-//       (magic marker in __DATA). Keeps v69 workflow alive as a last resort.
-//    4. DIAG    — discovery-only; writes hook_discovery.txt. Set `DIAG` in
-//       Documents/hook_config.txt to force this mode.
+//  LC runs guest apps under iOS CS_HARD | CS_KILL enforcement, which SIGKILLs
+//  the process if any __TEXT page is dirtied. Runtime inline hookers that use
+//  vm_remap/vm_protect (Dobby, raw mprotect patchers) trip this and get us
+//  killed — even when the hook itself reports failure, because the page-state
+//  damage is already done.
+//
+//  The only survivable paths inside LC are:
+//    1. ELLEKIT (MSHookFunction) — ships inside LC's bundle as
+//       Frameworks/CydiaSubstrate.framework/CydiaSubstrate. Uses a BRK+Mach
+//       exception-port trick for far branches, so CS_KILL doesn't fire.
+//       LC's TweakLoader dlopens it with RTLD_GLOBAL before loading tweaks.
+//    2. HOOKSLOT — pre-patched binary: offline patcher writes B-trampolines
+//       into the target prologues before signing, so the running image never
+//       dirties a page. Kept as a last-resort fallback for the v69 workflow.
+//    3. DIAG — discovery-only; writes hook_discovery.txt for the offline
+//       patcher. Set `DIAG` in Documents/hook_config.txt to force this mode.
 //
 //  Everything routes through the same four hook bodies. Originals are
 //  stored in s_origFn[0..3] regardless of which mode populated them.
@@ -214,17 +215,66 @@ static int32_t hook_ContainsAccumulationResult(void *self, int32_t defaultIcon, 
 // ---------------------------------------------------------------------------
 //  MODE 1 — ELLEKIT (MSHookFunction via dlsym).
 //
-//  LiveContainer's TweakLoader loads ElleKit before the guest's injected
-//  dylib constructors run, so MSHookFunction is resolvable via RTLD_DEFAULT.
-//  ElleKit uses vm_remap to clone the target page, patches the clone, and
-//  re-maps it RX — this bypasses CS_KILL on signed __TEXT pages, handles
-//  arm64e PAC, and has a battle-tested PC-relative instruction vetter.
+//  LC's TweakLoader dlopens CydiaSubstrate.framework (which is ElleKit
+//  behind a canonical Substrate name) with RTLD_LAZY | RTLD_GLOBAL before
+//  loading any tweak dylibs. When tweaks are loaded via LC's Tweaks folder,
+//  MSHookFunction is already in RTLD_DEFAULT scope by the time our install
+//  runs.
+//
+//  Defensive: if we get loaded via direct LC_LOAD_DYLIB injection in the
+//  guest's main binary instead of through LC's Tweaks folder, TweakLoader's
+//  constructor may not have fired yet. We explicitly dlopen CydiaSubstrate
+//  ourselves from the known LC path before resolving MSHookFunction. This
+//  way both deployment modes work.
 // ---------------------------------------------------------------------------
 typedef void (*fn_MSHookFunction)(void *target, void *replacement, void **orig);
 
+static void forceLoadCydiaSubstrate(void) {
+    // Try the most likely paths ElleKit lives at, in order of plausibility.
+    // LC ships CydiaSubstrate.framework inside the LC app bundle; for guests
+    // running in-process the framework is mapped through rpath.
+    const char *candidates[] = {
+        "@rpath/CydiaSubstrate.framework/CydiaSubstrate",
+        "@executable_path/Frameworks/CydiaSubstrate.framework/CydiaSubstrate",
+        "@loader_path/../Frameworks/CydiaSubstrate.framework/CydiaSubstrate",
+        "/Library/Frameworks/CydiaSubstrate.framework/CydiaSubstrate",
+        NULL
+    };
+    for (int i = 0; candidates[i]; i++) {
+        void *h = dlopen(candidates[i], RTLD_LAZY | RTLD_GLOBAL);
+        if (h) {
+            char bc[256];
+            snprintf(bc, sizeof bc, "ELLEKIT: dlopen ok %s", candidates[i]);
+            breadcrumb(bc);
+            return;
+        }
+    }
+
+    // Last resort: walk already-loaded images and dlopen the CydiaSubstrate
+    // binary directly by its loaded path.
+    uint32_t n = _dyld_image_count();
+    for (uint32_t i = 0; i < n; i++) {
+        const char *name = _dyld_get_image_name(i);
+        if (name && strstr(name, "CydiaSubstrate")) {
+            void *h = dlopen(name, RTLD_LAZY | RTLD_GLOBAL);
+            if (h) {
+                char bc[384];
+                snprintf(bc, sizeof bc, "ELLEKIT: dlopen ok (scan) %s", name);
+                breadcrumb(bc);
+            }
+            return;
+        }
+    }
+    breadcrumb("ELLEKIT: CydiaSubstrate not dlopen-able via any candidate path");
+}
+
 static fn_MSHookFunction resolveMSHookFunction(void) {
-    // Try canonical Substrate/ElleKit name first, then ElleKit-native.
     fn_MSHookFunction fn = (fn_MSHookFunction)dlsym(RTLD_DEFAULT, "MSHookFunction");
+    if (fn) return fn;
+
+    // Not resolved — force-load ElleKit ourselves and retry.
+    forceLoadCydiaSubstrate();
+    fn = (fn_MSHookFunction)dlsym(RTLD_DEFAULT, "MSHookFunction");
     if (!fn) fn = (fn_MSHookFunction)dlsym(RTLD_DEFAULT, "EKHookFunction");
     return fn;
 }
@@ -305,68 +355,7 @@ static int installViaElleKit(void *klassMgr) {
 }
 
 // ---------------------------------------------------------------------------
-//  MODE 2 — DOBBY (statically linked).
-//
-//  DobbyHook takes (target, replacement, out_origCallee). Returns 0 on
-//  success. We link Dobby as a static .a at build time (see build.yml),
-//  so no runtime dlsym / dependency on LC's tweak framework.
-// ---------------------------------------------------------------------------
-#ifdef SPINHOOK_HAS_DOBBY
-static int installViaDobby(void *klassMgr) {
-    breadcrumb("DOBBY: using statically-linked jmpews/Dobby");
-
-    struct { const char *name; int argc; int idx; void *replacement; } targets[] = {
-        {"OnSpinResultReceived",        1, 0, (void *)hook_OnSpinResultReceived},
-        {"SetFreezeResolve",            0, 1, (void *)hook_SetFreezeResolve},
-        {"activateWinSequence",         1, 2, (void *)hook_activateWinSequence},
-        {"ContainsAccumulationResult",  1, 3, (void *)hook_ContainsAccumulationResult},
-    };
-
-    int installed = 0;
-    for (int i = 0; i < 4; i++) {
-        void *m = findMethod(klassMgr, targets[i].name, targets[i].argc);
-        if (!m) {
-            char bc[128];
-            snprintf(bc, sizeof bc, "DOBBY: method not found: %s", targets[i].name);
-            breadcrumb(bc);
-            continue;
-        }
-        void *fp = methodNativePointer(m);
-        if (!fp) {
-            char bc[128];
-            snprintf(bc, sizeof bc, "DOBBY: no native ptr: %s", targets[i].name);
-            breadcrumb(bc);
-            continue;
-        }
-
-        char bc[256];
-        snprintf(bc, sizeof bc, "DOBBY: hooking %s at %p", targets[i].name, fp);
-        breadcrumb(bc);
-
-        void *orig = NULL;
-        int rc = DobbyHook(fp, targets[i].replacement, &orig);
-        if (rc == 0 && orig) {
-            s_origFn[targets[i].idx] = orig;
-            installed++;
-            snprintf(bc, sizeof bc, "DOBBY: %s hooked, orig=%p", targets[i].name, orig);
-            breadcrumb(bc);
-
-            char fpStr[24], origStr[24];
-            snprintf(fpStr, sizeof fpStr, "%p", fp);
-            snprintf(origStr, sizeof origStr, "%p", orig);
-            logLine(targets[i].name, fpStr, origStr, "", "hooked-dobby");
-        } else {
-            snprintf(bc, sizeof bc, "DOBBY: %s hook FAILED (rc=%d orig=%p)",
-                     targets[i].name, rc, orig);
-            breadcrumb(bc);
-        }
-    }
-    return installed;
-}
-#endif // SPINHOOK_HAS_DOBBY
-
-// ---------------------------------------------------------------------------
-//  MODE 3 — HOOKSLOT (pre-patched binary via offline_patcher.py).
+//  MODE 2 — HOOKSLOT (pre-patched binary via offline_patcher.py).
 //
 //  Fallback kept so that v69's flow (prologue-patched IPA + hookslot table
 //  in __DATA) still works even if ElleKit isn't present.
@@ -535,7 +524,7 @@ static void loadHookConfig(void) {
         NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
     NSString *path = [docs stringByAppendingPathComponent:@"hook_config.txt"];
     FILE *f = fopen(path.fileSystemRepresentation, "r");
-    if (!f) return; // default: auto (ElleKit -> HOOKSLOT)
+    if (!f) return; // default: auto (ElleKit -> HOOKSLOT fallback)
 
     char line[128];
     while (fgets(line, sizeof line, f)) {
@@ -602,26 +591,8 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
         return n;
     }
 
-    // Mode 2: Dobby (statically linked — always available if compiled in).
-#ifdef SPINHOOK_HAS_DOBBY
-    breadcrumb("STEP 7: ElleKit unavailable — trying Dobby (static)");
-    n = installViaDobby(klassMgr);
-    if (n > 0) {
-        breadcrumb("=== DOBBY MODE ===");
-        char bc[64];
-        snprintf(bc, sizeof bc, "DOBBY: %d/4 hooks active", n);
-        breadcrumb(bc);
-        s_installed = YES;
-        snprintf(bc, sizeof bc, "%d", n);
-        logLine("INSTALL_END", "", "", bc, "dobby");
-        return n;
-    }
-#else
-    breadcrumb("STEP 7: SPINHOOK_HAS_DOBBY not defined at compile time");
-#endif
-
-    // Mode 3: HOOKSLOT last resort (pre-patched binary).
-    breadcrumb("STEP 8: trying HOOKSLOT (pre-patched binary)");
+    // Mode 2: HOOKSLOT last resort (pre-patched binary).
+    breadcrumb("STEP 7: trying HOOKSLOT (pre-patched binary)");
     n = installViaHookslots();
     if (n > 0) {
         breadcrumb("=== HOOKSLOT MODE ===");
@@ -634,7 +605,7 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
         return n;
     }
 
-    breadcrumb("NO HOOKS INSTALLED — check build.yml linked Dobby correctly");
+    breadcrumb("NO HOOKS INSTALLED — import SpinLogger.dylib via LC Tweaks tab so ElleKit is resolvable");
     logLine("INSTALL_END", "", "", "0", "none");
     return 0;
 }
