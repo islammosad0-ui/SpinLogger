@@ -1,6 +1,11 @@
 #import "SLV4Model.h"
 #import <math.h>
 #import <stdlib.h>
+#import <dlfcn.h>
+
+// Anchor symbol whose address lives inside this dylib's __DATA segment; used
+// with dladdr() to locate the dylib file on disk at runtime.
+static const char SpinLoggerV4Model_anchor = 0;
 
 // ---------------------------------------------------------------------------
 //  Tree node representation
@@ -187,15 +192,47 @@ static inline double SLV4_Sigmoid(double x) {
 }
 
 - (BOOL)loadFromAppBundle {
-    NSString *exec = [[NSBundle mainBundle] executablePath];
-    NSString *bundleDir = [exec stringByDeletingLastPathComponent];
-    NSString *path = [bundleDir stringByAppendingPathComponent:@"v4_model.json"];
-    NSError *err = nil;
-    BOOL ok = [self loadFromPath:path error:&err];
-    if (!ok) {
+    // We may be delivered two ways: injected into the guest app's Mach-O
+    // (model lives next to the app executable), or dropped into LC's Tweaks
+    // folder (model lives next to SpinLogger.dylib). Try every reasonable
+    // location before giving up.
+    NSMutableArray<NSString *> *candidates = [NSMutableArray array];
+
+    // 1) Next to this dylib — covers the LC Tweaks-folder deploy.
+    Dl_info info = {0};
+    if (dladdr((const void *)&SpinLoggerV4Model_anchor, &info) && info.dli_fname) {
+        NSString *dylibPath = @(info.dli_fname);
+        NSString *dylibDir  = [dylibPath stringByDeletingLastPathComponent];
+        [candidates addObject:[dylibDir stringByAppendingPathComponent:@"v4_model.json"]];
+    }
+
+    // 2) Next to the app executable — covers direct LC_LOAD_DYLIB injection.
+    NSString *execPath = [[NSBundle mainBundle] executablePath];
+    if (execPath) {
+        NSString *execDir = [execPath stringByDeletingLastPathComponent];
+        [candidates addObject:[execDir stringByAppendingPathComponent:@"v4_model.json"]];
+    }
+
+    // 3) Documents/ — user-droppable via the Files app.
+    NSString *docs = NSSearchPathForDirectoriesInDomains(
+        NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
+    if (docs) {
+        [candidates addObject:[docs stringByAppendingPathComponent:@"v4_model.json"]];
+    }
+
+    NSFileManager *fm = [NSFileManager defaultManager];
+    for (NSString *path in candidates) {
+        if (![fm fileExistsAtPath:path]) continue;
+        NSError *err = nil;
+        if ([self loadFromPath:path error:&err]) {
+            NSLog(@"[SLV4Model] loaded from %@", path);
+            return YES;
+        }
         NSLog(@"[SLV4Model] load failed (path=%@): %@", path, err);
     }
-    return ok;
+
+    NSLog(@"[SLV4Model] v4_model.json not found in any candidate: %@", candidates);
+    return NO;
 }
 
 - (BOOL)loadFromPath:(NSString *)path error:(NSError **)error {
