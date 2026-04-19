@@ -748,7 +748,7 @@ static void loadHookConfig(void) {
 int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
     if (s_installed) return 0;
 
-    breadcrumb("STEP 0: entry (v85-methodinfo-swap)");
+    breadcrumb("STEP 0: entry (v86-polling-only)");
 
     if (!klassMgr) {
         breadcrumb("ABORT: klassMgr NULL");
@@ -783,29 +783,23 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
         return 0;
     }
 
-    // v85: primary path = IL2CPP MethodInfo.methodPointer swap. Pure __DATA
-    // write, no vm_protect on __TEXT, no trampoline pages. The only runtime
-    // hook technique that survives LC + iOS 26 CS_HARD. See the MODE 0
-    // comment block above installViaMethodSwap for failure modes.
-    breadcrumb("STEP 6: trying IL2CPP MethodInfo swap");
-    int n = installViaMethodSwap(klassMgr);
-    if (n > 0) {
-        breadcrumb("=== METHODINFO SWAP MODE ===");
-        char bc[64];
-        snprintf(bc, sizeof bc, "SWAP: %d/4 hooks active", n);
-        breadcrumb(bc);
-        s_installed = YES;
-        snprintf(bc, sizeof bc, "%d", n);
-        logLine("INSTALL_END", "", "", bc, "methodinfo-swap");
-        return n;
-    }
-
-    // No fallback to ElleKit — runtime __TEXT patching is dead under iOS 26.
-    // HOOKSLOT would require a pre-patched binary and LC resign, which has
-    // been unreliable. If MethodInfo swap didn't find all 4 methods, we ship
-    // with whatever was caught and rely on SLMemoryScanner polling for the
-    // rest.
-    breadcrumb("NO HOOKS INSTALLED — MethodInfo swap returned 0; relying on scanner polling");
-    logLine("INSTALL_END", "", "", "0", "none");
+    // v86 decision: skip all hook install paths.
+    //   - Runtime __TEXT patching (ElleKit/Dobby) is permanently dead on
+    //     iOS 26 (fishhook PR #87: VM_PROT_COPY corrupts adjacent-page CS
+    //     validation; confirmed by v82/v84 crashes).
+    //   - MethodInfo.methodPointer swap installed cleanly in v85 but IL2CPP
+    //     compiled these calls as direct `bl <absolute_addr>`, bypassing
+    //     MethodInfo — the swap was a no-op.
+    //   - SLMemoryScanner's polling already captures the final spin state
+    //     (result symbols, strip indices, win/triple, weight tables) that
+    //     made it into every CSV column. Coverage audit: no gap.
+    //
+    // The hook bodies, installViaMethodSwap/installViaElleKit/
+    // installViaHookslots, and the associated dlsym plumbing remain in the
+    // file so the mode can be re-enabled for future experiments without
+    // reintroducing the code from scratch. They're dead code under v86.
+    breadcrumb("=== V86 POLLING-ONLY (hook install skipped) ===");
+    logLine("INSTALL_END", "", "", "0", "polling-only");
+    s_installed = YES;
     return 0;
 }
