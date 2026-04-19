@@ -645,7 +645,7 @@ static void loadHookConfig(void) {
 int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
     if (s_installed) return 0;
 
-    breadcrumb("STEP 0: entry");
+    breadcrumb("STEP 0: entry (v83-nohook-diag)");
 
     if (!klassMgr) {
         breadcrumb("ABORT: klassMgr NULL");
@@ -679,6 +679,16 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
         breadcrumb("DONE: 0/4 installed (DISCOVERY)");
         return 0;
     }
+
+    // v83 diagnostic: skip all __TEXT patching. Dylib loads, IL2CPP resolves,
+    // log opens, but no MSHookFunction / vm_protect calls are issued. If the
+    // game still crashes at UnityFramework+0x2e72130, our hook installation is
+    // innocent and the fault lies elsewhere (LC+iOS26+Unity). If it runs
+    // cleanly, __TEXT patching is the culprit and we need MethodInfo swap.
+    breadcrumb("=== V83 NO-HOOK DIAGNOSTIC: skipping all installers ===");
+    logLine("INSTALL_END", "", "", "0", "v83-nohook-diag");
+    s_installed = YES;
+    return 0;
 
     // Mode 1: ElleKit (if user installed it in LC).
     breadcrumb("STEP 6: trying ElleKit MSHookFunction");
