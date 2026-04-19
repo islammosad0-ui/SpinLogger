@@ -18,8 +18,48 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_15.4.app || sudo xcode-select -s /Applications/Xcode.app
 
+      - name: Cache Dobby build
+        id: cache-dobby
+        uses: actions/cache@v4
+        with:
+          path: dobby-install
+          key: dobby-arm64-ios14-v1-${{ hashFiles('.github/workflows/build.yml') }}
+
+      - name: Build Dobby (iOS arm64, static)
+        if: steps.cache-dobby.outputs.cache-hit != 'true'
+        run: |
+          set -eux
+          git clone --depth 1 --branch master https://github.com/jmpews/Dobby.git dobby-src
+          mkdir -p dobby-build dobby-install
+          cmake -S dobby-src -B dobby-build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
+            -DCMAKE_INSTALL_PREFIX=$PWD/dobby-install \
+            -DDOBBY_DEBUG=OFF \
+            -DDOBBY_GENERATE_SHARED=OFF \
+            -DDOBBY_BUILD_EXAMPLE=OFF \
+            -DDOBBY_BUILD_TEST=OFF \
+            -DPlugin.SymbolResolver=ON \
+            -DNearBranch=ON
+          cmake --build dobby-build --config Release -j$(sysctl -n hw.ncpu)
+          # Locate the produced static library (name varies across Dobby versions).
+          LIB=$(find dobby-build -name 'libdobby.a' -print -quit)
+          if [ -z "$LIB" ]; then
+            LIB=$(find dobby-build -name 'libDobby.a' -print -quit)
+          fi
+          if [ -z "$LIB" ]; then
+            echo "libdobby.a not produced"; find dobby-build -name '*.a'; exit 1
+          fi
+          mkdir -p dobby-install/lib dobby-install/include
+          cp "$LIB" dobby-install/lib/libdobby.a
+          cp dobby-src/include/dobby.h dobby-install/include/dobby.h
+          ls -lh dobby-install/lib dobby-install/include
+
       - name: Build dylib
         run: |
+          set -eux
           SDK=$(xcrun --sdk iphoneos --show-sdk-path)
           echo "Using SDK: $SDK"
           clang \
@@ -32,11 +72,17 @@ jobs:
             -framework CoreGraphics \
             -framework QuartzCore \
             -framework WebKit \
+            -Idobby-install/include \
+            -DSPINHOOK_HAS_DOBBY=1 \
             -O2 \
             -o SpinLogger.dylib \
-            src/*.m
+            src/*.m \
+            dobby-install/lib/libdobby.a \
+            -lc++
           file SpinLogger.dylib
           ls -lh SpinLogger.dylib
+          # Sanity: confirm DobbyHook is present in the dylib.
+          nm SpinLogger.dylib | grep -E 'DobbyHook|_DobbyHook' | head -5 || true
 
       - name: Upload dylib artifact
         uses: actions/upload-artifact@v4
