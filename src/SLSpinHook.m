@@ -7,6 +7,8 @@
 #include <sys/time.h>
 #include <pthread.h>
 #include <dispatch/dispatch.h>
+#include <mach/mach.h>
+#include <mach/vm_map.h>
 #include <mach-o/dyld.h>
 #include <mach-o/loader.h>
 
@@ -298,6 +300,106 @@ static void logLoadedHookImages(void) {
             breadcrumb(bc);
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+//  MODE 0 — IL2CPP MethodInfo.methodPointer swap.
+//
+//  The only runtime-hook technique that survives LC + iOS 26 CS_HARD. IL2CPP
+//  MethodInfo structs live in __DATA_CONST (readable, writeable after a plain
+//  vm_protect(R|W) — NOT VM_PROT_COPY). Swapping the first-field pointer
+//  redirects every call that dispatches through MethodInfo (delegates, events,
+//  virtual/interface dispatch, reflection). Direct IL2CPP-generated C calls
+//  (bl <absolute_addr>) bypass MethodInfo and are NOT intercepted — that's the
+//  failure mode if v85 shows "swap installed" but no hook-body logs fire.
+//
+//  No __TEXT modification, no trampoline pages, no VM_PROT_COPY — none of the
+//  pmap-inconsistency bugs that killed v82/v84.
+// ---------------------------------------------------------------------------
+static int swapMethodPointer(void *methodInfo, void *replacement, const char *name) {
+    if (!methodInfo) return 0;
+
+    uintptr_t pageSize = (uintptr_t)getpagesize();  // 16384 on arm64
+    uintptr_t base = (uintptr_t)methodInfo & ~(pageSize - 1);
+
+    // Plain R|W, no VM_PROT_COPY — VM_PROT_COPY is what killed v82/v84.
+    kern_return_t kr = vm_protect(mach_task_self(),
+                                  (vm_address_t)base,
+                                  (vm_size_t)pageSize,
+                                  FALSE,
+                                  VM_PROT_READ | VM_PROT_WRITE);
+    if (kr != KERN_SUCCESS) {
+        char bc[160];
+        snprintf(bc, sizeof bc,
+                 "SWAP[%s]: vm_protect(RW) FAILED at %p kr=%d",
+                 name, (void *)base, kr);
+        breadcrumb(bc);
+        return 0;
+    }
+
+    // First field of MethodInfo is methodPointer.
+    void *prev = *(void **)methodInfo;
+    *(void **)methodInfo = replacement;
+
+    // Do NOT restore protection — restoring is what triggers the pmap bug.
+    // Leaving __DATA_CONST as RW for this one page is harmless.
+
+    char bc[192];
+    snprintf(bc, sizeof bc,
+             "SWAP[%s]: methodInfo=%p prev=%p -> %p",
+             name, methodInfo, prev, replacement);
+    breadcrumb(bc);
+    return 1;
+}
+
+static int installViaMethodSwap(void *klassMgr) {
+    if (!klassMgr || !_class_get_methods) {
+        breadcrumb("SWAP: klassMgr NULL or IL2CPP not resolved");
+        return 0;
+    }
+
+    struct {
+        const char *name;
+        int argc;
+        int idx;
+        void *replacement;
+    } targets[] = {
+        {"OnSpinResultReceived",       1, 0, (void *)hook_OnSpinResultReceived},
+        {"SetFreezeResolve",           0, 1, (void *)hook_SetFreezeResolve},
+        {"activateWinSequence",        1, 2, (void *)hook_activateWinSequence},
+        {"ContainsAccumulationResult", 1, 3, (void *)hook_ContainsAccumulationResult},
+    };
+
+    int count = 0;
+    for (int i = 0; i < 4; i++) {
+        void *m = findMethod(klassMgr, targets[i].name, targets[i].argc);
+        if (!m) {
+            char bc[160];
+            snprintf(bc, sizeof bc, "SWAP[%s]: method NOT FOUND on klass %p",
+                     targets[i].name, klassMgr);
+            breadcrumb(bc);
+            continue;
+        }
+        void *orig = methodNativePointer(m);
+        s_origFn[targets[i].idx] = orig;
+
+        char bc[192];
+        snprintf(bc, sizeof bc, "SWAP[%s]: found methodInfo=%p orig=%p",
+                 targets[i].name, m, orig);
+        breadcrumb(bc);
+
+        if (!swapMethodPointer(m, targets[i].replacement, targets[i].name)) {
+            continue;
+        }
+
+        // Log in the events CSV as well so we can verify from the trace.
+        char a1[24], a2[24];
+        snprintf(a1, sizeof a1, "%p", m);
+        snprintf(a2, sizeof a2, "%p", orig);
+        logLine(targets[i].name, a1, a2, "", "methodinfo-swap");
+        count++;
+    }
+    return count;
 }
 
 // Two-pass installer. iOS 26 CS_HARD causes ElleKit's rawHook to fail the
@@ -646,7 +748,7 @@ static void loadHookConfig(void) {
 int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
     if (s_installed) return 0;
 
-    breadcrumb("STEP 0: entry (v84-deferred-20s)");
+    breadcrumb("STEP 0: entry (v85-methodinfo-swap)");
 
     if (!klassMgr) {
         breadcrumb("ABORT: klassMgr NULL");
@@ -681,48 +783,29 @@ int SLSpinHook_InstallAll(void *klassMgr, void *klassResult) {
         return 0;
     }
 
-    // v84: defer the actual hook install by 20s. Hypothesis — Unity's launch
-    // storm faults in many __TEXT pages while CS validation is still catching
-    // up; issuing vm_protect(RW+COPY) against a hook page during that window
-    // appears to propagate a CS-fault to an unrelated page at +0x2e72130.
-    // Waiting 20s after dylib load should let Unity's initial paging settle.
-    static bool s_installScheduled = false;
-    if (s_installScheduled) return 0;
-    s_installScheduled = true;
-    breadcrumb("STEP 6: scheduling deferred install (+20s)");
+    // v85: primary path = IL2CPP MethodInfo.methodPointer swap. Pure __DATA
+    // write, no vm_protect on __TEXT, no trampoline pages. The only runtime
+    // hook technique that survives LC + iOS 26 CS_HARD. See the MODE 0
+    // comment block above installViaMethodSwap for failure modes.
+    breadcrumb("STEP 6: trying IL2CPP MethodInfo swap");
+    int n = installViaMethodSwap(klassMgr);
+    if (n > 0) {
+        breadcrumb("=== METHODINFO SWAP MODE ===");
+        char bc[64];
+        snprintf(bc, sizeof bc, "SWAP: %d/4 hooks active", n);
+        breadcrumb(bc);
+        s_installed = YES;
+        snprintf(bc, sizeof bc, "%d", n);
+        logLine("INSTALL_END", "", "", bc, "methodinfo-swap");
+        return n;
+    }
 
-    __block void *kMgr = klassMgr;
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 20LL * NSEC_PER_SEC),
-                   dispatch_get_main_queue(), ^{
-        breadcrumb("STEP 6: deferred install firing");
-        int n = installViaElleKit(kMgr);
-        if (n > 0) {
-            breadcrumb("=== ELLEKIT MODE ===");
-            char bc[64];
-            snprintf(bc, sizeof bc, "ELLEKIT: %d/4 hooks active", n);
-            breadcrumb(bc);
-            s_installed = YES;
-            snprintf(bc, sizeof bc, "%d", n);
-            logLine("INSTALL_END", "", "", bc, "ellekit");
-            return;
-        }
-
-        breadcrumb("STEP 7: trying HOOKSLOT (pre-patched binary)");
-        n = installViaHookslots();
-        if (n > 0) {
-            breadcrumb("=== HOOKSLOT MODE ===");
-            char bc[64];
-            snprintf(bc, sizeof bc, "HOOKSLOT: %d/4 hooks active", n);
-            breadcrumb(bc);
-            s_installed = YES;
-            snprintf(bc, sizeof bc, "%d", n);
-            logLine("INSTALL_END", "", "", bc, "hookslot");
-            return;
-        }
-
-        breadcrumb("NO HOOKS INSTALLED — import SpinLogger.dylib via LC Tweaks tab so ElleKit is resolvable");
-        logLine("INSTALL_END", "", "", "0", "none");
-    });
-
+    // No fallback to ElleKit — runtime __TEXT patching is dead under iOS 26.
+    // HOOKSLOT would require a pre-patched binary and LC resign, which has
+    // been unreliable. If MethodInfo swap didn't find all 4 methods, we ship
+    // with whatever was caught and rely on SLMemoryScanner polling for the
+    // rest.
+    breadcrumb("NO HOOKS INSTALLED — MethodInfo swap returned 0; relying on scanner polling");
+    logLine("INSTALL_END", "", "", "0", "none");
     return 0;
 }
