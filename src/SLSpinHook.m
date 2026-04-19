@@ -344,8 +344,7 @@ static int installViaDobby(void *klassMgr) {
         breadcrumb(bc);
 
         void *orig = NULL;
-        int rc = DobbyHook(fp, (dobby_dummy_func_t)targets[i].replacement,
-                           (dobby_dummy_func_t *)&orig);
+        int rc = DobbyHook(fp, targets[i].replacement, &orig);
         if (rc == 0 && orig) {
             s_origFn[targets[i].idx] = orig;
             installed++;
