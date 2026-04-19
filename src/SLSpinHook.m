@@ -333,6 +333,24 @@ static int installViaElleKit(void *klassMgr) {
         snprintf(bc, sizeof bc, "ELLEKIT: hooking %s at %p", targets[i].name, fp);
         breadcrumb(bc);
 
+        // Diagnostic: dump first 32 bytes of prologue BEFORE mshook runs.
+        // If ElleKit refuses (orig=NULL) we still have the raw bytes on disk
+        // to see which instructions tripped its safety checks.
+        {
+            const uint8_t *pb = (const uint8_t *)fp;
+            // Read as 8 uint32s so a bad byte access still gets aligned loads.
+            uint32_t w[8];
+            memcpy(w, pb, sizeof w);
+            char hex[8 * 9 + 1];
+            int off = 0;
+            for (int k = 0; k < 8; k++) {
+                off += snprintf(hex + off, sizeof(hex) - off, "%08x ", w[k]);
+            }
+            snprintf(bc, sizeof bc, "ELLEKIT: %s prologue=%s",
+                     targets[i].name, hex);
+            breadcrumb(bc);
+        }
+
         void *orig = NULL;
         mshook(fp, targets[i].replacement, &orig);
         s_origFn[targets[i].idx] = orig;
