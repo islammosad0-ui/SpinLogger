@@ -2,9 +2,22 @@ __pycache__/
 *.pyc
 *.pyo
 .pytest_cache/
+.venv/
+mlruns/
 
 # Large IL2CPP trace files (too big for GitHub, keep local)
 data/Ahmed/il2cpp_trace_*.jsonl
 
 # Local Claude Code config
 .claude/
+
+# IL2CPP dump tooling — large binaries, keep local
+tools/il2cpp_dump/out/
+tools/il2cpp_dump/Il2CppDumper/
+tools/il2cpp_dump/Il2CppDumper.zip
+tools/il2cpp_dump/Payload/
+tools/il2cpp_dump/ilspycmd_pkg/
+tools/il2cpp_dump/ilspycmd.nupkg
+tools/il2cpp_dump/decomp/
+*.ipa
+.ci_artifacts/
