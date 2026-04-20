@@ -11,8 +11,9 @@ data/Ahmed/il2cpp_trace_*.jsonl
 # Local Claude Code config
 .claude/
 
-# IL2CPP dump tooling — large binaries, keep local
-tools/il2cpp_dump/out/
+# IL2CPP dump tooling — keep only decompiled dump.cs, ignore the rest
+tools/il2cpp_dump/out/*
+!tools/il2cpp_dump/out/dump.cs
 tools/il2cpp_dump/Il2CppDumper/
 tools/il2cpp_dump/Il2CppDumper.zip
 tools/il2cpp_dump/Payload/
