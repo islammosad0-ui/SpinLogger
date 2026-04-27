@@ -171,7 +171,7 @@ static inline double SLV4_Sigmoid(double x) {
 // ---------------------------------------------------------------------------
 //  Model implementation
 //
-//  Storage: _heads[h] is a fixed array of up to 3 horizons (K3,K5,K10).
+//  Storage: _headHorizons[h] is a fixed array of up to 3 horizons (K3,K5,K10).
 //  _headNames[h] is the head label (e.g. @"ACC", @"ANY_VT"). _headCount is
 //  how many heads were loaded. _horizonCounts[h] is how many horizons exist
 //  for head h.
@@ -179,7 +179,7 @@ static inline double SLV4_Sigmoid(double x) {
 #define SLV4_MAX_HEADS 4
 
 @interface SLV4Model () {
-    SLV4Horizon _heads[SLV4_MAX_HEADS][3];      // [headIdx][horizonIdx]
+    SLV4Horizon _headHorizons[SLV4_MAX_HEADS][3];      // [headIdx][horizonIdx]
     int _horizonCounts[SLV4_MAX_HEADS];          // # of horizons populated per head
     int _headCount;
     NSString *_headNames[SLV4_MAX_HEADS];        // head label per index
@@ -309,7 +309,7 @@ static void SLV4_LoadHorizonInto(SLV4Horizon *h, NSDictionary *m, int K) {
         for (NSString *name in horizonNames) {
             NSDictionary *m = models[name];
             if (!m) continue;
-            SLV4Horizon *h = &_heads[_headCount][_horizonCounts[_headCount]++];
+            SLV4Horizon *h = &_headHorizons[_headCount][_horizonCounts[_headCount]++];
             SLV4_LoadHorizonInto(h, m, [[name substringFromIndex:1] intValue]);
         }
         if (_horizonCounts[_headCount] > 0) {
@@ -326,7 +326,7 @@ static void SLV4_LoadHorizonInto(SLV4Horizon *h, NSDictionary *m, int K) {
             for (NSString *kname in horizonNames) {
                 NSDictionary *m = headDict[kname];
                 if (!m) continue;
-                SLV4Horizon *h = &_heads[_headCount][_horizonCounts[_headCount]++];
+                SLV4Horizon *h = &_headHorizons[_headCount][_horizonCounts[_headCount]++];
                 SLV4_LoadHorizonInto(h, m, [[kname substringFromIndex:1] intValue]);
             }
             if (_horizonCounts[_headCount] > 0) {
@@ -340,7 +340,7 @@ static void SLV4_LoadHorizonInto(SLV4Horizon *h, NSDictionary *m, int K) {
 
     int totalTrees = 0;
     for (int h = 0; h < _headCount; h++) {
-        for (int i = 0; i < _horizonCounts[h]; i++) totalTrees += _heads[h][i].treeCount;
+        for (int i = 0; i < _horizonCounts[h]; i++) totalTrees += _headHorizons[h][i].treeCount;
     }
     NSLog(@"[SLV4Model] loaded %d head(s) %@, %d features, %d trees total",
           _headCount, [loadedHeads componentsJoinedByString:@","],
@@ -381,8 +381,8 @@ static void SLV4_LoadHorizonInto(SLV4Horizon *h, NSDictionary *m, int K) {
     if (idx < 0) idx = 0;  // fall back to first loaded head (typically ACC)
 
     for (int i = 0; i < _horizonCounts[idx]; i++) {
-        double p = [self predictHorizon:&_heads[idx][i] feat:feat];
-        switch (_heads[idx][i].K) {
+        double p = [self predictHorizon:&_headHorizons[idx][i] feat:feat];
+        switch (_headHorizons[idx][i].K) {
             case 3:  if (outP3)  *outP3  = p; break;
             case 5:  if (outP5)  *outP5  = p; break;
             case 10: if (outP10) *outP10 = p; break;
@@ -397,7 +397,7 @@ static void SLV4_LoadHorizonInto(SLV4Horizon *h, NSDictionary *m, int K) {
 - (void)dealloc {
     for (int h = 0; h < _headCount; h++) {
         for (int i = 0; i < _horizonCounts[h]; i++) {
-            SLV4Horizon *hor = &_heads[h][i];
+            SLV4Horizon *hor = &_headHorizons[h][i];
             for (int t = 0; t < hor->treeCount; t++) {
                 free(hor->trees[t].splits);
                 free(hor->trees[t].leafValues);
