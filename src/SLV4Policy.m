@@ -132,6 +132,40 @@ static double SLV4_DynAggrThreshold(int t) {
     return self;
 }
 
+// Once-per-session log + Documents/v4_active.txt write so the user can verify
+// which (account, head, schedule) the policy resolved to without needing the
+// panel header to fit. Re-emit on first call after launch only.
+static void SLV4_DebugDumpActiveConfigOnce(NSString *head, double thr_now, int t) {
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        NSString *acct = SLAccountLabel();
+        NSDictionary *cfg = gPerAccountConfigs[acct];
+        BOOL matched = (cfg != nil);
+        NSLog(@"[SLV4Policy] ACTIVE  account=%@  head=%@  matched_per_account=%@  t=%d  thr_now=%.3f",
+              acct, head, matched ? @"YES" : @"NO (using pooled)", t, thr_now);
+
+        // Write a tiny human-readable file the user can open via the Files app.
+        NSString *docs = NSSearchPathForDirectoriesInDomains(
+            NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
+        if (!docs) return;
+        NSMutableString *body = [NSMutableString string];
+        [body appendFormat:@"account_label   = %@\n", acct];
+        [body appendFormat:@"head            = %@\n", head];
+        [body appendFormat:@"matched_bundle  = %@\n", matched ? @"YES" : @"NO (fell back to pooled)"];
+        if (matched) {
+            [body appendFormat:@"K               = %@\n", cfg[@"K"] ?: @"?"];
+            NSArray *bands = cfg[@"schedule"];
+            for (NSDictionary *b in bands) {
+                [body appendFormat:@"  t in [%@..%@]  thr = %@\n",
+                    b[@"t_min"], b[@"t_max"], b[@"thr"]];
+            }
+        }
+        NSString *path = [docs stringByAppendingPathComponent:@"v4_active.txt"];
+        [body writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
+        NSLog(@"[SLV4Policy] wrote %@", path);
+    });
+}
+
 - (SLV4PolicyState)evaluate {
     SLV4Model *m = [SLV4Model shared];
     SLV4Features *f = [SLV4Features shared];
@@ -142,6 +176,7 @@ static double SLV4_DynAggrThreshold(int t) {
     if (m.isLoaded) {
         [m predictHead:head feat:[f currentFeatureVector] p3:&p3 p5:&p5 p10:&p10];
     }
+    SLV4_DebugDumpActiveConfigOnce(head, SLV4_DynAggrThreshold(snap.t), snap.t);
 
     int t = snap.t;
     BOOL windowOk = (t >= kWinLo && t <= kWinHi);

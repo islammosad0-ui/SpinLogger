@@ -228,12 +228,13 @@ static NSString *SLV4_PredLabel(double p3, double p5, double p10, int t) {
 }
 
 // Short label for the active config — shown in the header so the user always
-// knows which policy the FIRE/WAIT verdict reflects.
+// knows which policy the FIRE/WAIT verdict reflects. Kept tight so the cfg
+// label fits "{policy}·{head}" (e.g. "K5·ANY") without truncating.
 static NSString *SLV4_ShortName(SLV4PolicyKind k) {
     switch (k) {
-        case SLV4PolicyK5Dyn:   return @"K5dyn";
-        case SLV4PolicyTriple:  return @"3\u22295\u222910";
-        case SLV4PolicyK10Dyn:  return @"K10dyn";
+        case SLV4PolicyK5Dyn:   return @"K5";
+        case SLV4PolicyTriple:  return @"TRI";
+        case SLV4PolicyK10Dyn:  return @"K10";
     }
     return @"?";
 }
