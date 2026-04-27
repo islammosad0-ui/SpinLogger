@@ -22,6 +22,17 @@ TARGETS = {
     "ACC": {"col": "is_acc", "gap75": 100, "gap90": 142},
     "SPN": {"col": "is_spn", "gap75": 88, "gap90": 128},
 }
+COOLDOWN_EVENTS = {"T_shield", "T_attack", "T_steal"}
+
+
+def _classify_gap_bucket(value: float, short_thr: int, long_thr: int) -> str:
+    if pd.isna(value):
+        return "UNK"
+    if value <= short_thr:
+        return "S"
+    if value >= long_thr:
+        return "L"
+    return "M"
 
 
 def load_data() -> pd.DataFrame:
@@ -69,7 +80,7 @@ def load_data() -> pd.DataFrame:
     df["event_label"] = np.where(
         df["is_acc"], "T_ACC",
         np.where(df["is_spn"], "T_SPN",
-                 np.where(df["is_triple"], "T_OTHER", df.get("spin_result", "unknown")))
+                 np.where(df["is_triple"], "T_" + df["triple_symbol"].astype(str), df.get("spin_result", "unknown")))
     )
     return df
 
@@ -91,6 +102,7 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
     out["bet_switched"] = g["bet_level"].diff().fillna(0) != 0
     out["time_delta_s"] = g["timestamp"].diff().dt.total_seconds().fillna(0)
     out["prev_event"] = g["event_label"].shift(1).fillna("START")
+    out["is_vt"] = out["is_acc"] | out["is_spn"]
 
     for key, meta in TARGETS.items():
         gap = np.zeros(len(out), dtype=int)
@@ -105,6 +117,115 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
         out[f"gap_{key.lower()}"] = gap
         for mod in [20, 50, 100]:
             out[f"gap_{key.lower()}_mod{mod}"] = gap % mod
+
+    vt_mask = out["is_acc"] | out["is_spn"]
+    vt_gap_samples: list[int] = []
+    for _, idxs in out.groupby("account", sort=False).groups.items():
+        positions = np.array(list(idxs), dtype=int)
+        vt_positions = positions[vt_mask.iloc[positions].to_numpy()]
+        if len(vt_positions) >= 2:
+            vt_gap_samples.extend((np.diff(vt_positions) - 1).tolist())
+
+    short_thr = int(np.percentile(vt_gap_samples, 33)) if vt_gap_samples else 28
+    long_thr = int(np.percentile(vt_gap_samples, 67)) if vt_gap_samples else 60
+
+    gap_vt = np.zeros(len(out), dtype=int)
+    prev_vt_gap1 = np.full(len(out), np.nan, dtype=float)
+    prev_vt_gap2 = np.full(len(out), np.nan, dtype=float)
+    prev_vt_type = np.full(len(out), "START", dtype=object)
+    prev_vt_transition = np.full(len(out), "START", dtype=object)
+    prev_vt_gap1_class = np.full(len(out), "UNK", dtype=object)
+    prev_vt_gap2_class = np.full(len(out), "UNK", dtype=object)
+    prev_vt_gap_pattern = np.full(len(out), "UNK", dtype=object)
+    prev_vt_same_type = np.zeros(len(out), dtype=int)
+
+    for _, idxs in out.groupby("account", sort=False).groups.items():
+        drought = 0
+        last_vt_type = "START"
+        last_transition = "START"
+        last_same_type = False
+        gap1 = np.nan
+        gap2 = np.nan
+
+        for pos in idxs:
+            gap_vt[pos] = drought
+            prev_vt_gap1[pos] = gap1
+            prev_vt_gap2[pos] = gap2
+            prev_vt_type[pos] = last_vt_type
+            prev_vt_transition[pos] = last_transition
+            prev_vt_same_type[pos] = int(last_same_type)
+
+            gap1_class = _classify_gap_bucket(gap1, short_thr, long_thr)
+            gap2_class = _classify_gap_bucket(gap2, short_thr, long_thr)
+            prev_vt_gap1_class[pos] = gap1_class
+            prev_vt_gap2_class[pos] = gap2_class
+            prev_vt_gap_pattern[pos] = (
+                f"{gap2_class}->{gap1_class}"
+                if gap1_class != "UNK" and gap2_class != "UNK"
+                else "UNK"
+            )
+
+            if vt_mask.iat[pos]:
+                current_type = "ACC" if out.at[pos, "is_acc"] else "SPN"
+                if last_vt_type != "START":
+                    gap2 = gap1
+                    gap1 = float(drought)
+                    last_transition = f"{last_vt_type}->{current_type}"
+                    last_same_type = last_vt_type == current_type
+                last_vt_type = current_type
+                drought = 0
+            else:
+                drought += 1
+
+    out["gap_vt"] = gap_vt
+    for mod in [20, 50, 100]:
+        out[f"gap_vt_mod{mod}"] = gap_vt % mod
+    out["prev_vt_type"] = prev_vt_type
+    out["prev_vt_transition"] = prev_vt_transition
+    out["prev_vt_gap1_class"] = prev_vt_gap1_class
+    out["prev_vt_gap2_class"] = prev_vt_gap2_class
+    out["prev_vt_gap_pattern"] = prev_vt_gap_pattern
+    out["prev_vt_gap1"] = prev_vt_gap1
+    out["prev_vt_gap2"] = prev_vt_gap2
+    out["prev_vt_gap_delta"] = out["prev_vt_gap1"] - out["prev_vt_gap2"]
+    out["prev_vt_same_type"] = prev_vt_same_type
+    out["prev_vt_cross_type"] = (out["prev_vt_transition"].isin(["ACC->SPN", "SPN->ACC"])).astype(int)
+
+    last_cooldown_event = np.full(len(out), "NONE", dtype=object)
+    cooldown_age = np.full(len(out), np.nan, dtype=float)
+    cooldown_bucket = np.full(len(out), "NONE", dtype=object)
+    cooldown_event_any = np.zeros(len(out), dtype=int)
+    for _, idxs in out.groupby("account", sort=False).groups.items():
+        active_event = "NONE"
+        age = np.nan
+        for pos in idxs:
+            event = out.at[pos, "event_label"]
+            if event in COOLDOWN_EVENTS:
+                active_event = event
+                age = 0.0
+            elif not pd.isna(age):
+                age += 1.0
+            last_cooldown_event[pos] = active_event
+            cooldown_age[pos] = age
+            cooldown_event_any[pos] = int(active_event != "NONE")
+            if active_event == "NONE" or pd.isna(age):
+                cooldown_bucket[pos] = "NONE"
+            elif age == 0:
+                cooldown_bucket[pos] = "event"
+            elif age <= 2:
+                cooldown_bucket[pos] = "1_2"
+            elif age <= 5:
+                cooldown_bucket[pos] = "3_5"
+            elif age <= 8:
+                cooldown_bucket[pos] = "6_8"
+            elif age <= 12:
+                cooldown_bucket[pos] = "9_12"
+            else:
+                cooldown_bucket[pos] = "13p"
+    out["last_cooldown_event"] = last_cooldown_event
+    out["cooldown_age"] = cooldown_age
+    out["cooldown_event_any"] = cooldown_event_any
+    out["cooldown_bucket"] = cooldown_bucket
 
     for lag in [1, 2]:
         for col in ["r1_idx", "r2_idx", "r3_idx", "bet_level", "bet_multiplier", "accum_pct", "accum_delta"]:
@@ -124,15 +245,35 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
         out["idx_sum_lag1"] = np.nan
         out["idx_spread_lag1"] = np.nan
 
-    rolling_cols = [c for c in ["acc_count", "spn_count", "atk_count", "stl_count", "shd_count", "is_triple"] if c in out.columns]
-    for w in [5, 10]:
+    rolling_cols = [c for c in ["acc_count", "spn_count", "atk_count", "stl_count", "shd_count", "is_triple", "is_acc", "is_spn", "is_vt"] if c in out.columns]
+    for w in [5, 10, 25, 50, 100]:
         shifted = g[rolling_cols].shift(1)
         rolled = shifted.groupby(out["account"]).rolling(w, min_periods=1).sum().reset_index(level=0, drop=True)
         for c in rolling_cols:
             out[f"{c}_sum{w}"] = rolled[c]
 
     prev_dummies = pd.get_dummies(out["prev_event"], prefix="prev_event")
-    out = pd.concat([out, prev_dummies], axis=1)
+    vt_type_dummies = pd.get_dummies(prev_vt_type, prefix="prev_vt_type")
+    vt_transition_dummies = pd.get_dummies(prev_vt_transition, prefix="prev_vt_transition")
+    vt_gap1_class_dummies = pd.get_dummies(prev_vt_gap1_class, prefix="prev_vt_gap1_class")
+    vt_gap2_class_dummies = pd.get_dummies(prev_vt_gap2_class, prefix="prev_vt_gap2_class")
+    vt_gap_pattern_dummies = pd.get_dummies(prev_vt_gap_pattern, prefix="prev_vt_gap_pattern")
+    cooldown_event_dummies = pd.get_dummies(last_cooldown_event, prefix="last_cooldown_event")
+    cooldown_bucket_dummies = pd.get_dummies(cooldown_bucket, prefix="cooldown_bucket")
+    out = pd.concat(
+        [
+            out,
+            prev_dummies,
+            vt_type_dummies,
+            vt_transition_dummies,
+            vt_gap1_class_dummies,
+            vt_gap2_class_dummies,
+            vt_gap_pattern_dummies,
+            cooldown_event_dummies,
+            cooldown_bucket_dummies,
+        ],
+        axis=1,
+    )
     return out
 
 
@@ -174,15 +315,35 @@ def model_features(df: pd.DataFrame, key: str):
         f"gap_{key.lower()}_mod20",
         f"gap_{key.lower()}_mod50",
         f"gap_{key.lower()}_mod100",
+        "gap_vt",
+        "gap_vt_mod20",
+        "gap_vt_mod50",
+        "gap_vt_mod100",
         "bet_level", "bet_multiplier", "bet_switched", "time_delta_s",
         "accum_pct", "accum_delta",
         "idx_sum_lag1", "idx_spread_lag1", "prev_pair_any",
         "acc_count_sum5", "spn_count_sum5", "is_triple_sum10",
+        "is_acc_sum25", "is_spn_sum25", "is_vt_sum25",
+        "is_acc_sum50", "is_spn_sum50", "is_vt_sum50",
+        "is_acc_sum100", "is_spn_sum100", "is_vt_sum100",
+        "prev_vt_gap1", "prev_vt_gap2", "prev_vt_gap_delta",
+        "prev_vt_same_type", "prev_vt_cross_type",
+        "cooldown_age", "cooldown_event_any",
         "sa_spins", "sa_acc", "sa_spn", "sa_atk", "sa_stl", "sa_shd",
         "ss_spins", "ss_acc", "ss_spn", "ss_atk", "ss_stl", "ss_shd",
     ]
     prev_cols = [c for c in df.columns if c.startswith("prev_event_")]
-    keep = [c for c in base_cols + prev_cols if c in df.columns]
+    vt_cols = [
+        c for c in df.columns
+        if c.startswith("prev_vt_type_")
+        or c.startswith("prev_vt_transition_")
+        or c.startswith("prev_vt_gap1_class_")
+        or c.startswith("prev_vt_gap2_class_")
+        or c.startswith("prev_vt_gap_pattern_")
+        or c.startswith("last_cooldown_event_")
+        or c.startswith("cooldown_bucket_")
+    ]
+    keep = [c for c in base_cols + prev_cols + vt_cols if c in df.columns]
     X = df[keep].copy()
     for col in X.columns:
         X[col] = pd.to_numeric(X[col], errors="coerce")
