@@ -217,6 +217,8 @@ static SLV4EventKind SLV4_EventFromSpin(SLSpinResult *s) {
 }
 @end
 
+static NSString *const kSLV4FeatPersistKey = @"SLV4Features.state";
+
 static int IDX(NSDictionary *idx, NSString *k) {
     NSNumber *v = idx[k];
     return v ? v.intValue : -1;
@@ -307,6 +309,54 @@ static int IDX(NSDictionary *idx, NSString *k) {
     _ixPvtUNK       = IDX(idx, @"pvt_UNK");
 }
 
+- (void)_saveStateLocked {
+    NSMutableDictionary *d = [NSMutableDictionary dictionary];
+    d[@"pvt"]      = _prevVtType ?: @"UNK";
+    d[@"cycle"]    = @(_cycleIndex);
+
+    NSDictionary *(^sd)(SLV4GapStream *) = ^NSDictionary *(SLV4GapStream *s) {
+        return @{@"gaps": [s.gaps copy], @"last": @(s.lastSeq)};
+    };
+    d[@"acc"] = sd(_accStream);
+    d[@"spn"] = sd(_spnStream);
+    d[@"vt"]  = sd(_vtStream);
+
+    [[NSUserDefaults standardUserDefaults] setObject:d forKey:kSLV4FeatPersistKey];
+}
+
+- (void)_restorePersistedStateLocked {
+    NSDictionary *d = [[NSUserDefaults standardUserDefaults] dictionaryForKey:kSLV4FeatPersistKey];
+    if (!d) return;
+
+    NSString *pvt = d[@"pvt"];
+    if ([pvt isKindOfClass:[NSString class]]) _prevVtType = pvt;
+
+    NSNumber *cycle = d[@"cycle"];
+    if ([cycle isKindOfClass:[NSNumber class]]) _cycleIndex = cycle.intValue;
+
+    void (^restore)(SLV4GapStream *, NSDictionary *) = ^(SLV4GapStream *s, NSDictionary *sd) {
+        if (![sd isKindOfClass:[NSDictionary class]]) return;
+        NSArray *gaps = sd[@"gaps"];
+        if ([gaps isKindOfClass:[NSArray class]]) {
+            [s.gaps removeAllObjects];
+            for (id g in gaps) {
+                if ([g isKindOfClass:[NSNumber class]]) [s.gaps addObject:g];
+            }
+        }
+        NSNumber *last = sd[@"last"];
+        if ([last isKindOfClass:[NSNumber class]]) s.lastSeq = last.longValue;
+    };
+    restore(_accStream, d[@"acc"]);
+    restore(_spnStream, d[@"spn"]);
+    restore(_vtStream,  d[@"vt"]);
+
+    NSLog(@"[SLV4Features] restored pvt=%@ cycle=%d acc=%lu spn=%lu vt=%lu",
+          _prevVtType, _cycleIndex,
+          (unsigned long)_accStream.gaps.count,
+          (unsigned long)_spnStream.gaps.count,
+          (unsigned long)_vtStream.gaps.count);
+}
+
 - (void)reset {
     dispatch_async(_q, ^{
         [self _resetCycleLocked];
@@ -315,6 +365,7 @@ static int IDX(NSDictionary *idx, NSString *k) {
         self->_spnStream = [[SLV4GapStream alloc] init];
         self->_vtStream = [[SLV4GapStream alloc] init];
         self->_cycleIndex = 0;
+        [self _restorePersistedStateLocked];
         [self _freezeCarryLocked];
         [self _emitFeaturesLocked];
     });
@@ -533,6 +584,7 @@ static inline void W(double *v, int i, double x) {
             [self _resetCycleLocked];
             self->_cycleIndex++;
             [self _freezeCarryLocked];
+            [self _saveStateLocked];
         } else {
             // Normal spin — advance cycle position
             self->_t++;

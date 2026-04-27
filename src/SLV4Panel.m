@@ -58,6 +58,9 @@ static UIColor *colorMuted(void)    { return [UIColor colorWithWhite:0.32 alpha:
 @property (nonatomic, assign) NSInteger cyclesFiredIn;
 @property (nonatomic, assign) BOOL firedThisCycle;
 @property (nonatomic, assign) int lastT;
+
+// Haptic transition tracking
+@property (nonatomic, assign) BOOL wasOn;
 @end
 
 @implementation SLV4Panel
@@ -274,6 +277,14 @@ static NSString *SLV4_ShortName(SLV4PolicyKind k) {
     }
 
     self.container.backgroundColor = on ? colorFireBg() : colorWaitBg();
+
+    // Haptic on FIRE↔WAIT transition
+    if (loaded && on != self.wasOn) {
+        UIImpactFeedbackStyle style = on ? UIImpactFeedbackStyleHeavy : UIImpactFeedbackStyleLight;
+        UIImpactFeedbackGenerator *haptic = [[UIImpactFeedbackGenerator alloc] initWithStyle:style];
+        [haptic impactOccurred];
+        self.wasOn = on;
+    }
 
     // ---- Rows ----
     SLV4PolicyKind kinds[3] = {SLV4PolicyK5Dyn, SLV4PolicyTriple, SLV4PolicyK10Dyn};
