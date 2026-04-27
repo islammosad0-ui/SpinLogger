@@ -53,3 +53,10 @@ jobs:
         with:
           name: v4_model.json
           path: assets/v4_model.json
+
+      - name: Upload dyn_aggr schedule bundle (if present)
+        if: ${{ hashFiles('assets/dyn_aggr_schedules.json') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: dyn_aggr_schedules.json
+          path: assets/dyn_aggr_schedules.json

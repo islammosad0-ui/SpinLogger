@@ -53,7 +53,9 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
     p.add_argument("--out", type=str, default=str(ASSET_DIR / "v4_model.json"))
     p.add_argument("--horizons", type=int, nargs="+", default=[3, 5, 10])
-    p.add_argument("--head", type=str, default="acc", choices=["acc", "spn", "any"])
+    p.add_argument("--heads", type=str, nargs="+", default=["acc", "any"],
+                   choices=["acc", "spn", "any"],
+                   help="Heads to export. Bundle nests models[head][K]. v2 schema.")
     p.add_argument("--cal-frac", type=float, default=0.20,
                    help="Fraction of training data used for isotonic calibration")
     p.add_argument("--test-rows", type=int, default=200,
@@ -193,46 +195,52 @@ def main():
     tuple_cat_idx = dict(TUPLE_CAT_IDX)
 
     bundle = {
-        "version": 1,
+        "version": 2,
         "feature_cols": cols,
         "pvt_classes": [c.replace("pvt_", "") for c in pvt_cols],
         "tuple_cat_idx": tuple_cat_idx,
         "models": {},
     }
 
-    head_prefix = {"acc": "y_acc_next", "spn": "y_spn_next", "any": "y_any_next"}[args.head]
+    head_prefix_map = {"acc": "y_acc_next", "spn": "y_spn_next", "any": "y_any_next"}
+    head_label_map  = {"acc": "ACC", "spn": "SPN", "any": "ANY_VT"}
 
-    for K in args.horizons:
-        target_col = f"{head_prefix}{K}"
-        print(f"Training {target_col} ...")
-        model, iso, x, y = train_one(frame, target_col, cols, args.cal_frac, args.seed)
-        tree_bundle = dump_tree(model)
-        has_iso = iso is not None
-        bundle["models"][f"K{K}"] = {
-            "trees": tree_bundle["trees"],
-            "num_class": tree_bundle["num_class"],
-            "objective": tree_bundle["objective"],
-            "iso_x": iso.X_thresholds_.tolist() if has_iso else [],
-            "iso_y": iso.y_thresholds_.tolist() if has_iso else [],
-            "has_iso": has_iso,
-        }
+    for head in args.heads:
+        head_prefix = head_prefix_map[head]
+        head_label  = head_label_map[head]
+        bundle["models"][head_label] = {}
 
-        # Self-test: pick random rows, compare tree walker vs LightGBM.
-        rng = np.random.default_rng(args.seed + K)
-        idx = rng.choice(len(x), size=min(args.test_rows, len(x)), replace=False)
-        sample = x.iloc[idx].to_numpy(dtype=float)
-        lgb_p_raw = model.predict_proba(x.iloc[idx])[:, 1]
-        lgb_p = iso.predict(lgb_p_raw) if has_iso else lgb_p_raw
+        for K in args.horizons:
+            target_col = f"{head_prefix}{K}"
+            print(f"Training {head_label} K={K} ({target_col}) ...")
+            model, iso, x, y = train_one(frame, target_col, cols, args.cal_frac, args.seed)
+            tree_bundle = dump_tree(model)
+            has_iso = iso is not None
+            bundle["models"][head_label][f"K{K}"] = {
+                "trees": tree_bundle["trees"],
+                "num_class": tree_bundle["num_class"],
+                "objective": tree_bundle["objective"],
+                "iso_x": iso.X_thresholds_.tolist() if has_iso else [],
+                "iso_y": iso.y_thresholds_.tolist() if has_iso else [],
+                "has_iso": has_iso,
+            }
 
-        walker_p = np.array([
-            predict_from_bundle(bundle["models"][f"K{K}"], sample[i])
-            for i in range(len(sample))
-        ])
-        max_err = float(np.max(np.abs(lgb_p - walker_p)))
-        mean_err = float(np.mean(np.abs(lgb_p - walker_p)))
-        print(f"  K={K}: walker vs lgb  max_err={max_err:.3e}  mean_err={mean_err:.3e}")
-        if max_err > 1e-4:
-            print(f"  !! self-test WARN: walker drift > 1e-4 for K={K}")
+            # Self-test: pick random rows, compare tree walker vs LightGBM.
+            rng = np.random.default_rng(args.seed + K)
+            idx = rng.choice(len(x), size=min(args.test_rows, len(x)), replace=False)
+            sample = x.iloc[idx].to_numpy(dtype=float)
+            lgb_p_raw = model.predict_proba(x.iloc[idx])[:, 1]
+            lgb_p = iso.predict(lgb_p_raw) if has_iso else lgb_p_raw
+
+            walker_p = np.array([
+                predict_from_bundle(bundle["models"][head_label][f"K{K}"], sample[i])
+                for i in range(len(sample))
+            ])
+            max_err = float(np.max(np.abs(lgb_p - walker_p)))
+            mean_err = float(np.mean(np.abs(lgb_p - walker_p)))
+            print(f"  {head_label} K={K}: walker vs lgb  max_err={max_err:.3e}  mean_err={mean_err:.3e}")
+            if max_err > 1e-4:
+                print(f"  !! self-test WARN: walker drift > 1e-4 for {head_label} K={K}")
 
     # Flatten for JSON writing (trim 'internal_count', 'internal_weight', etc. to save bytes)
     print("Writing bundle...")
@@ -262,9 +270,17 @@ def _trim_tree_fields(bundle: dict) -> None:
             clean(node["left_child"])
             clean(node["right_child"])
 
-    for m in bundle["models"].values():
-        for tree in m["trees"]:
-            clean(tree)
+    # v2 schema: models[head][K]; v1 was models[K]. Walk both.
+    for head_or_horizon in bundle["models"].values():
+        if "trees" in head_or_horizon:
+            # legacy v1 path
+            horizons = [head_or_horizon]
+        else:
+            # v2: nested by head
+            horizons = list(head_or_horizon.values())
+        for m in horizons:
+            for tree in m["trees"]:
+                clean(tree)
 
 
 if __name__ == "__main__":

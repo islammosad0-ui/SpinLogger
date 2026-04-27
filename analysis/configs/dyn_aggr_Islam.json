@@ -1,0 +1,34 @@
+{
+  "account": "Islam",
+  "policy": "K5_DYN",
+  "t_window": [
+    15,
+    100
+  ],
+  "schedule": [
+    {
+      "t_min": 15,
+      "t_max": 29,
+      "thr": 0.04
+    },
+    {
+      "t_min": 30,
+      "t_max": 49,
+      "thr": 0.15
+    },
+    {
+      "t_min": 50,
+      "t_max": 69,
+      "thr": 0.15
+    },
+    {
+      "t_min": 70,
+      "t_max": 100,
+      "thr": 0.15
+    }
+  ],
+  "fallback_used_pooled": false,
+  "tuned_against": "analysis\\output_tail_risk_v4_hazard_plus\\v4-20260426_211318_Islam\\spin_predictions_all_combos.csv",
+  "holdout_session": "Islam|spin_history_Islam_2026-04-20.csv",
+  "objective": "min Bets/VT s.t. VT% >= 45.0 and played_frac >= 0.2"
+}

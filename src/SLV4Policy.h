@@ -5,7 +5,9 @@
 //
 //  Evaluates the three V4 policy configs on the latest p_acc_next3/5/10
 //  predictions. All three use the dyn_aggr threshold schedule + a [15, 100]
-//  cycle-position window — mirroring analysis/tail_risk_v4_horizon_stack.py.
+//  cycle-position window. The schedule is per-account and loaded from
+//  dyn_aggr_schedules.json (alongside v4_model.json); pooled fallback if
+//  the file is missing or the active account isn't in the bundle.
 //
 //    (1) K5_DYN  — p5 >= dyn_aggr_thr(t)                (champion)
 //    (2) TRIPLE  — p3 >= 0.04 AND p5 >= 0.05 AND p10 >= 0.10
@@ -45,6 +47,10 @@ typedef struct {
 
 /// Last computed state (read without triggering evaluation).
 - (SLV4PolicyState)currentState;
+
+/// Predictor head used for the current account ("ACC" or "ANY_VT").
+/// Reads from dyn_aggr_schedules.json; defaults to "ACC" if not configured.
+- (NSString *)activeHeadName;
 
 /// Which policy is "active" — the one whose fire-state the user follows.
 /// Default: SLV4PolicyK5Dyn.

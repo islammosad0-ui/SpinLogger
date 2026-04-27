@@ -246,7 +246,13 @@ static NSString *SLV4_ShortName(SLV4PolicyKind k) {
     BOOL on = loaded && s.on[pol.activePolicy];
 
     // ---- Header ----
-    self.labelCfg.text = SLV4_ShortName(pol.activePolicy);
+    // Append head label (e.g. "K5dyn·ANY") so user sees which head is driving.
+    NSString *cfgShort = SLV4_ShortName(pol.activePolicy);
+    NSString *head = [pol activeHeadName];
+    NSString *headTag = [head isEqualToString:@"ANY_VT"] ? @"ANY"
+                       : [head isEqualToString:@"SPN"]    ? @"SPN"
+                                                          : @"ACC";
+    self.labelCfg.text = [NSString stringWithFormat:@"%@\u00b7%@", cfgShort, headTag];
     if (!loaded) {
         self.labelPos.text = @"no model";
         self.labelPos.textColor = colorRed();

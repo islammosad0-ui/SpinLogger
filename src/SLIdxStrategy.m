@@ -3,8 +3,6 @@
 #import "SLConstants.h"
 #import "SLGapPredictor.h"
 #import "SLMemoryScanner.h"
-#import "SLV4Features.h"
-#import "SLV4Panel.h"
 
 // ---------------------------------------------------------------------------
 //  Ring buffer for Layer 2 window scoring
@@ -184,10 +182,10 @@ typedef struct {
         self.pendingResult.l2Score = self.layer2Score;
         self.pendingResult.scorerCfg = self.scorerName;
 
-        // Feed V4 feature tracker before the result is released
-        [[SLV4Features shared] feedSpin:self.pendingResult];
-        [[NSNotificationCenter defaultCenter] postNotificationName:SLV4PanelRefreshNotification object:nil];
-
+        // V4 feed moved to SLSpinParser parse-time (server JSON path) so the
+        // cycle counter doesn't lag behind under Speeder. CSV append still
+        // runs here so r1_idx/r2_idx/r3_idx columns are populated from the
+        // memory scanner settle event.
         SLSpinStoreAppend(self.pendingResult);
         self.pendingResult = nil;
     } else {

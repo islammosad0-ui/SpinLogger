@@ -2,6 +2,8 @@
 #import "SLSpinStore.h"
 #import "SLIdxStrategy.h"
 #import "SLConstants.h"
+#import "SLV4Features.h"
+#import "SLV4Panel.h"
 
 @implementation SLSpinResult
 @end
@@ -221,6 +223,15 @@ void SLParseSpinAPIResponseWithBet(NSData *responseData, NSInteger betMultiplier
     }
     result.eventBarMissions = [barMissions copy];
     result.eventBarAmounts  = [barAmounts copy];
+
+    // Feed V4 features at parse-time, NOT at settle-time. The IL2CPP scanner
+    // settle path can drop spins under Speeder (Time.timeScale > 1) so v4's
+    // cycle counter falls behind the game's actual count. The server JSON
+    // arrives once per real spin, and v4's feature set (FEATURE_COLS_BASE in
+    // tail_risk_v4_hazard_plus.py) uses only reel SYMBOLS + counters — none
+    // of the IL2CPP idx fields — so this is data-equivalent and lag-free.
+    [[SLV4Features shared] feedSpin:result];
+    [[NSNotificationCenter defaultCenter] postNotificationName:SLV4PanelRefreshNotification object:nil];
 
     // Defer CSV write — the strategy engine holds the result until the
     // memory scanner settles and provides strip idx values.

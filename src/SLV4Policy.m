@@ -1,21 +1,115 @@
 #import "SLV4Policy.h"
 #import "SLV4Model.h"
 #import "SLV4Features.h"
+#import "SLAccountID.h"
+#import <dlfcn.h>
 
-// Mirror of `_dyn_aggr_threshold(t)` from tail_risk_v4_horizon_stack.py:31-39.
-// Schedule is piecewise-constant on cycle-position t.
-static double SLV4_DynAggrThreshold(int t) {
+// ---------------------------------------------------------------------------
+//  dyn_aggr threshold schedule
+//
+//  Per-account schedules tuned via analysis/tail_risk_v4_hazard_plus.py +
+//  configs/dyn_aggr_schedules.json (see step-2 of v4 tuning workflow).
+//  If no schedule file is found OR the current account isn't in the bundle,
+//  fall back to the pooled schedule (same numbers as the original hardcode).
+// ---------------------------------------------------------------------------
+static const int kWinLo = 15;
+static const int kWinHi = 100;
+
+static double SLV4_PooledThreshold(int t) {
     if (t > 100) return 0.10;
     if (t >= 70) return 0.03;
     if (t >= 50) return 0.04;
     if (t >= 30) return 0.05;
     if (t >= 15) return 0.08;
-    return 0.05;
+    return 0.99;  // outside [15,100] window — no fire (caller also gates on window)
 }
 
-// Cycle-position gate — policies are OFF outside this window.
-static const int kWinLo = 15;
-static const int kWinHi = 100;
+// Anchor symbol so dladdr() can find the dylib path (mirrors SLV4Model).
+__attribute__((visibility("default"))) extern void SpinLoggerV4Policy_anchor(void);
+void SpinLoggerV4Policy_anchor(void) {}
+
+// Per-account config: head ∈ {"ACC","ANY_VT"}, K ∈ {3,5,10}, plus 4-band
+// schedule. v1 schema (pre-step3+5) stored just an array of bands per account
+// — we accept both.
+static NSDictionary<NSString *, NSDictionary *> *gPerAccountConfigs;
+
+static void SLV4_LoadSchedulesIfNeeded(void) {
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        NSMutableArray *candidates = [NSMutableArray array];
+        Dl_info info = {0};
+        if (dladdr((const void *)&SpinLoggerV4Policy_anchor, &info) && info.dli_fname) {
+            NSString *dir = [@(info.dli_fname) stringByDeletingLastPathComponent];
+            [candidates addObject:[dir stringByAppendingPathComponent:@"dyn_aggr_schedules.json"]];
+        }
+        NSString *exec = [[NSBundle mainBundle] executablePath];
+        if (exec) {
+            NSString *dir = [exec stringByDeletingLastPathComponent];
+            [candidates addObject:[dir stringByAppendingPathComponent:@"dyn_aggr_schedules.json"]];
+        }
+        NSString *docs = NSSearchPathForDirectoriesInDomains(
+            NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
+        if (docs) {
+            [candidates addObject:[docs stringByAppendingPathComponent:@"dyn_aggr_schedules.json"]];
+        }
+
+        NSFileManager *fm = [NSFileManager defaultManager];
+        for (NSString *path in candidates) {
+            if (![fm fileExistsAtPath:path]) continue;
+            NSData *data = [NSData dataWithContentsOfFile:path];
+            if (!data) continue;
+            NSError *err = nil;
+            NSDictionary *bundle = [NSJSONSerialization JSONObjectWithData:data options:0 error:&err];
+            if (![bundle isKindOfClass:[NSDictionary class]]) {
+                NSLog(@"[SLV4Policy] schedules JSON parse failed at %@: %@", path, err);
+                continue;
+            }
+            NSDictionary *accounts = bundle[@"accounts"];
+            if (![accounts isKindOfClass:[NSDictionary class]]) continue;
+
+            // Normalize: for each account, ensure value is a dict with
+            // {head, K, schedule}. v1 form (raw bands array) → wrap as ACC/K=5.
+            NSMutableDictionary *normalized = [NSMutableDictionary dictionary];
+            for (NSString *acct in accounts) {
+                id v = accounts[acct];
+                if ([v isKindOfClass:[NSArray class]]) {
+                    normalized[acct] = @{@"head": @"ACC", @"K": @5, @"schedule": v};
+                } else if ([v isKindOfClass:[NSDictionary class]]) {
+                    NSDictionary *d = v;
+                    normalized[acct] = @{
+                        @"head": d[@"head"] ?: @"ACC",
+                        @"K":    d[@"K"]    ?: @5,
+                        @"schedule": d[@"schedule"] ?: @[],
+                    };
+                }
+            }
+            gPerAccountConfigs = [normalized copy];
+            NSLog(@"[SLV4Policy] loaded per-account configs from %@ (%lu accounts)",
+                  path, (unsigned long)gPerAccountConfigs.count);
+            return;
+        }
+        NSLog(@"[SLV4Policy] dyn_aggr_schedules.json not found — using pooled ACC schedule");
+    });
+}
+
+static NSString *SLV4_ActiveHead(void) {
+    SLV4_LoadSchedulesIfNeeded();
+    NSDictionary *cfg = gPerAccountConfigs[SLAccountLabel()];
+    return cfg[@"head"] ?: @"ACC";
+}
+
+static double SLV4_DynAggrThreshold(int t) {
+    SLV4_LoadSchedulesIfNeeded();
+    NSDictionary *cfg = gPerAccountConfigs[SLAccountLabel()];
+    NSArray<NSDictionary *> *bands = cfg[@"schedule"];
+    if (!bands.count) return SLV4_PooledThreshold(t);
+    for (NSDictionary *b in bands) {
+        int lo = [b[@"t_min"] intValue];
+        int hi = [b[@"t_max"] intValue];
+        if (t >= lo && t <= hi) return [b[@"thr"] doubleValue];
+    }
+    return 0.99;
+}
 
 @interface SLV4Policy () {
     SLV4PolicyState _state;
@@ -43,9 +137,10 @@ static const int kWinHi = 100;
     SLV4Features *f = [SLV4Features shared];
     SLV4Snapshot snap = [f snapshot];
 
+    NSString *head = SLV4_ActiveHead();
     double p3 = 0, p5 = 0, p10 = 0;
     if (m.isLoaded) {
-        [m predict:[f currentFeatureVector] out:&p3 p5:&p5 p10:&p10];
+        [m predictHead:head feat:[f currentFeatureVector] p3:&p3 p5:&p5 p10:&p10];
     }
 
     int t = snap.t;
@@ -84,6 +179,8 @@ static const int kWinHi = 100;
 }
 
 - (SLV4PolicyState)currentState { return _state; }
+
+- (NSString *)activeHeadName { return SLV4_ActiveHead(); }
 
 + (NSString *)nameForKind:(SLV4PolicyKind)kind {
     switch (kind) {

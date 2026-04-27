@@ -9,6 +9,7 @@ when the IPA is loaded into a container.
 Usage:
   python inject_ipa.py <input.ipa> <SpinLogger.dylib> [--out OUTPUT.ipa]
                         [--v4-model assets/v4_model.json]
+                        [--dyn-aggr assets/dyn_aggr_schedules.json]
 """
 from __future__ import annotations
 
@@ -204,6 +205,7 @@ def main():
     ap.add_argument('dylib', help='SpinLogger.dylib path')
     ap.add_argument('--out', help='output IPA path (default: <ipa>_SpinLogger.ipa)')
     ap.add_argument('--v4-model', help='optional path to v4_model.json bundle')
+    ap.add_argument('--dyn-aggr', help='optional path to dyn_aggr_schedules.json (per-account K5_DYN thresholds)')
     ap.add_argument('--dylib-name', default='SpinLogger.dylib',
                     help='name the dylib ends up as inside the .app')
     args = ap.parse_args()
@@ -245,6 +247,15 @@ def main():
             else:
                 shutil.copy2(src, app_dir / 'v4_model.json')
                 print(f"[+] Copied v4_model.json")
+
+        # Copy dyn_aggr schedule bundle if provided.
+        if args.dyn_aggr:
+            src = Path(args.dyn_aggr).resolve()
+            if not src.exists():
+                print(f"[!] dyn_aggr_schedules not found: {src} — skipping")
+            else:
+                shutil.copy2(src, app_dir / 'dyn_aggr_schedules.json')
+                print(f"[+] Copied dyn_aggr_schedules.json")
 
         # Remove One.dylib file if present (SpinLogger replaces it).
         one_file = app_dir / 'One.dylib'

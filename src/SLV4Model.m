@@ -170,12 +170,22 @@ static inline double SLV4_Sigmoid(double x) {
 
 // ---------------------------------------------------------------------------
 //  Model implementation
+//
+//  Storage: _heads[h] is a fixed array of up to 3 horizons (K3,K5,K10).
+//  _headNames[h] is the head label (e.g. @"ACC", @"ANY_VT"). _headCount is
+//  how many heads were loaded. _horizonCounts[h] is how many horizons exist
+//  for head h.
 // ---------------------------------------------------------------------------
+#define SLV4_MAX_HEADS 4
+
 @interface SLV4Model () {
-    SLV4Horizon _horizons[3];   // K3, K5, K10
-    int _horizonCount;
+    SLV4Horizon _heads[SLV4_MAX_HEADS][3];      // [headIdx][horizonIdx]
+    int _horizonCounts[SLV4_MAX_HEADS];          // # of horizons populated per head
+    int _headCount;
+    NSString *_headNames[SLV4_MAX_HEADS];        // head label per index
 }
 @property (nonatomic, assign) BOOL isLoaded;
+@property (nonatomic, copy) NSArray<NSString *> *heads;
 @property (nonatomic, copy) NSArray<NSString *> *featureCols;
 @property (nonatomic, assign) int featureCount;
 @property (nonatomic, copy) NSArray<NSString *> *pvtClasses;
@@ -235,6 +245,38 @@ static inline double SLV4_Sigmoid(double x) {
     return NO;
 }
 
+// Populates one SLV4Horizon from a horizon dict (trees + iso knots).
+static void SLV4_LoadHorizonInto(SLV4Horizon *h, NSDictionary *m, int K) {
+    h->K = K;
+    NSArray *treeDicts = m[@"trees"];
+    h->treeCount = (int)treeDicts.count;
+    h->trees = (SLV4Tree *)calloc(h->treeCount, sizeof(SLV4Tree));
+    for (int i = 0; i < h->treeCount; i++) {
+        SLV4TreeBuilder *b = [[SLV4TreeBuilder alloc] init];
+        [b flatten:treeDicts[i]];
+        h->trees[i].splits = b->splits;
+        h->trees[i].splitCount = b->splitCount;
+        h->trees[i].leafValues = b->leafValues;
+        h->trees[i].leafCount = b->leafCount;
+        b->splits = NULL;
+        b->leafValues = NULL;
+    }
+    BOOL hasIso = [m[@"has_iso"] boolValue];
+    if (hasIso) {
+        NSArray *xs = m[@"iso_x"];
+        NSArray *ys = m[@"iso_y"];
+        h->isoCount = (int)xs.count;
+        h->isoX = (double *)malloc(h->isoCount * sizeof(double));
+        h->isoY = (double *)malloc(h->isoCount * sizeof(double));
+        for (int j = 0; j < h->isoCount; j++) {
+            h->isoX[j] = [xs[j] doubleValue];
+            h->isoY[j] = [ys[j] doubleValue];
+        }
+    } else {
+        h->isoX = NULL; h->isoY = NULL; h->isoCount = 0;
+    }
+}
+
 - (BOOL)loadFromPath:(NSString *)path error:(NSError **)error {
     NSData *data = [NSData dataWithContentsOfFile:path options:NSDataReadingMappedIfSafe error:error];
     if (!data) return NO;
@@ -250,54 +292,69 @@ static inline double SLV4_Sigmoid(double x) {
 
     NSDictionary *models = bundle[@"models"];
     NSArray *horizonNames = @[@"K3", @"K5", @"K10"];
-    _horizonCount = 0;
-    for (NSString *name in horizonNames) {
-        NSDictionary *m = models[name];
-        if (!m) continue;
+    _headCount = 0;
 
-        SLV4Horizon *h = &_horizons[_horizonCount++];
-        h->K = [[name substringFromIndex:1] intValue];
+    // Detect schema version: v2 nests models[head][K]; v1 has models[K]
+    // directly. The presence of "trees" inside the first child distinguishes
+    // them — v1 horizon dicts have "trees" at the top level.
+    NSString *firstKey = models.allKeys.firstObject;
+    BOOL isV1 = ([models[firstKey] isKindOfClass:[NSDictionary class]]
+                 && models[firstKey][@"trees"] != nil);
 
-        NSArray *treeDicts = m[@"trees"];
-        h->treeCount = (int)treeDicts.count;
-        h->trees = (SLV4Tree *)calloc(h->treeCount, sizeof(SLV4Tree));
+    NSMutableArray<NSString *> *loadedHeads = [NSMutableArray array];
 
-        for (int i = 0; i < h->treeCount; i++) {
-            SLV4TreeBuilder *b = [[SLV4TreeBuilder alloc] init];
-            [b flatten:treeDicts[i]];
-            h->trees[i].splits = b->splits;
-            h->trees[i].splitCount = b->splitCount;
-            h->trees[i].leafValues = b->leafValues;
-            h->trees[i].leafCount = b->leafCount;
-            // detach ownership so dealloc doesn't free them
-            b->splits = NULL;
-            b->leafValues = NULL;
+    if (isV1) {
+        // Legacy: treat flat models{K3,K5,K10} as the ACC head.
+        _headNames[_headCount] = @"ACC";
+        for (NSString *name in horizonNames) {
+            NSDictionary *m = models[name];
+            if (!m) continue;
+            SLV4Horizon *h = &_heads[_headCount][_horizonCounts[_headCount]++];
+            SLV4_LoadHorizonInto(h, m, [[name substringFromIndex:1] intValue]);
         }
-
-        BOOL hasIso = [m[@"has_iso"] boolValue];
-        if (hasIso) {
-            NSArray *xs = m[@"iso_x"];
-            NSArray *ys = m[@"iso_y"];
-            h->isoCount = (int)xs.count;
-            h->isoX = (double *)malloc(h->isoCount * sizeof(double));
-            h->isoY = (double *)malloc(h->isoCount * sizeof(double));
-            for (int j = 0; j < h->isoCount; j++) {
-                h->isoX[j] = [xs[j] doubleValue];
-                h->isoY[j] = [ys[j] doubleValue];
+        if (_horizonCounts[_headCount] > 0) {
+            [loadedHeads addObject:@"ACC"];
+            _headCount++;
+        }
+    } else {
+        // v2: models[head][K] — each head is a dict of horizon dicts.
+        for (NSString *headName in models.allKeys) {
+            if (_headCount >= SLV4_MAX_HEADS) break;
+            NSDictionary *headDict = models[headName];
+            if (![headDict isKindOfClass:[NSDictionary class]]) continue;
+            _headNames[_headCount] = [headName copy];
+            for (NSString *kname in horizonNames) {
+                NSDictionary *m = headDict[kname];
+                if (!m) continue;
+                SLV4Horizon *h = &_heads[_headCount][_horizonCounts[_headCount]++];
+                SLV4_LoadHorizonInto(h, m, [[kname substringFromIndex:1] intValue]);
             }
-        } else {
-            h->isoX = NULL;
-            h->isoY = NULL;
-            h->isoCount = 0;
+            if (_horizonCounts[_headCount] > 0) {
+                [loadedHeads addObject:_headNames[_headCount]];
+                _headCount++;
+            }
         }
     }
 
-    NSLog(@"[SLV4Model] loaded %d horizons, %d features, %lu trees total",
-          _horizonCount, self.featureCount,
-          (unsigned long)(_horizons[0].treeCount + _horizons[1].treeCount + _horizons[2].treeCount));
+    self.heads = [loadedHeads copy];
 
-    self.isLoaded = YES;
-    return YES;
+    int totalTrees = 0;
+    for (int h = 0; h < _headCount; h++) {
+        for (int i = 0; i < _horizonCounts[h]; i++) totalTrees += _heads[h][i].treeCount;
+    }
+    NSLog(@"[SLV4Model] loaded %d head(s) %@, %d features, %d trees total",
+          _headCount, [loadedHeads componentsJoinedByString:@","],
+          self.featureCount, totalTrees);
+
+    self.isLoaded = (_headCount > 0);
+    return self.isLoaded;
+}
+
+- (int)indexForHead:(NSString *)head {
+    for (int h = 0; h < _headCount; h++) {
+        if ([_headNames[h] isEqualToString:head]) return h;
+    }
+    return -1;
 }
 
 - (double)predictHorizon:(const SLV4Horizon *)h feat:(const double *)feat {
@@ -312,16 +369,20 @@ static inline double SLV4_Sigmoid(double x) {
     return p;
 }
 
-- (void)predict:(const double *)feat out:(double *)outP3 p5:(double *)outP5 p10:(double *)outP10 {
-    if (!self.isLoaded) {
-        if (outP3) *outP3 = 0;
-        if (outP5) *outP5 = 0;
-        if (outP10) *outP10 = 0;
-        return;
-    }
-    for (int i = 0; i < _horizonCount; i++) {
-        double p = [self predictHorizon:&_horizons[i] feat:feat];
-        switch (_horizons[i].K) {
+- (void)predictHead:(NSString *)head
+                feat:(const double *)feat
+                 p3:(double *)outP3
+                 p5:(double *)outP5
+                p10:(double *)outP10 {
+    if (outP3) *outP3 = 0; if (outP5) *outP5 = 0; if (outP10) *outP10 = 0;
+    if (!self.isLoaded) return;
+
+    int idx = [self indexForHead:head];
+    if (idx < 0) idx = 0;  // fall back to first loaded head (typically ACC)
+
+    for (int i = 0; i < _horizonCounts[idx]; i++) {
+        double p = [self predictHorizon:&_heads[idx][i] feat:feat];
+        switch (_heads[idx][i].K) {
             case 3:  if (outP3)  *outP3  = p; break;
             case 5:  if (outP5)  *outP5  = p; break;
             case 10: if (outP10) *outP10 = p; break;
@@ -329,16 +390,22 @@ static inline double SLV4_Sigmoid(double x) {
     }
 }
 
+- (void)predict:(const double *)feat out:(double *)outP3 p5:(double *)outP5 p10:(double *)outP10 {
+    [self predictHead:@"ACC" feat:feat p3:outP3 p5:outP5 p10:outP10];
+}
+
 - (void)dealloc {
-    for (int i = 0; i < _horizonCount; i++) {
-        SLV4Horizon *h = &_horizons[i];
-        for (int t = 0; t < h->treeCount; t++) {
-            free(h->trees[t].splits);
-            free(h->trees[t].leafValues);
+    for (int h = 0; h < _headCount; h++) {
+        for (int i = 0; i < _horizonCounts[h]; i++) {
+            SLV4Horizon *hor = &_heads[h][i];
+            for (int t = 0; t < hor->treeCount; t++) {
+                free(hor->trees[t].splits);
+                free(hor->trees[t].leafValues);
+            }
+            free(hor->trees);
+            free(hor->isoX);
+            free(hor->isoY);
         }
-        free(h->trees);
-        free(h->isoX);
-        free(h->isoY);
     }
 }
 
