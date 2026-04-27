@@ -1,115 +1,90 @@
 {
   "policy": "K_DYN",
-  "schema_version": 2,
-  "t_window": [
-    15,
-    100
-  ],
+  "schema_version": 3,
+  "t_window": [15, 100],
+  "modes": {
+    "bundled": "cheap: fire only in fresh-pity window at thr=0.08 (~60% catch, ~10 B/VT)",
+    "tuned":   "aggressive: per-account schedule from LOSO tuning (~80% catch, 12-36 B/VT)"
+  },
   "pooled_fallback": {
     "head": "ACC",
     "K": 5,
     "schedule": [
-      {
-        "t_min": 15,
-        "t_max": 29,
-        "thr": 0.08
-      },
-      {
-        "t_min": 30,
-        "t_max": 49,
-        "thr": 0.05
-      },
-      {
-        "t_min": 50,
-        "t_max": 69,
-        "thr": 0.04
-      },
-      {
-        "t_min": 70,
-        "t_max": 100,
-        "thr": 0.03
-      }
+      {"t_min": 15, "t_max": 29, "thr": 0.08},
+      {"t_min": 30, "t_max": 49, "thr": 0.05},
+      {"t_min": 50, "t_max": 69, "thr": 0.04},
+      {"t_min": 70, "t_max": 100, "thr": 0.03}
     ]
   },
-  "selection": "Coarse 5-grid step3+5 sweep, accept-if-holdout-ok. Fine LOSO-CV overfit small folds.",
   "accounts": {
     "Ahmed": {
       "head": "ANY_VT",
       "K": 5,
-      "schedule": [
-        {
-          "t_min": 15,
-          "t_max": 29,
-          "thr": 0.08
-        },
-        {
-          "t_min": 30,
-          "t_max": 49,
-          "thr": 0.99
-        },
-        {
-          "t_min": 50,
-          "t_max": 69,
-          "thr": 0.99
-        },
-        {
-          "t_min": 70,
-          "t_max": 100,
-          "thr": 0.99
-        }
-      ]
+      "default_mode": "bundled",
+      "schedules": {
+        "bundled": [
+          {"t_min": 15, "t_max": 29, "thr": 0.08},
+          {"t_min": 30, "t_max": 49, "thr": 0.99},
+          {"t_min": 50, "t_max": 69, "thr": 0.99},
+          {"t_min": 70, "t_max": 100, "thr": 0.99}
+        ],
+        "tuned": [
+          {"t_min": 15, "t_max": 29, "thr": 0.03},
+          {"t_min": 30, "t_max": 49, "thr": 0.99},
+          {"t_min": 50, "t_max": 69, "thr": 0.99},
+          {"t_min": 70, "t_max": 100, "thr": 0.99}
+        ]
+      },
+      "kpi_holdout": {
+        "bundled": {"vt_pct": 63.57, "bets_per_vt": 9.81},
+        "tuned":   {"vt_pct": 79.29, "bets_per_vt": 12.76}
+      }
     },
     "Islam": {
       "head": "ANY_VT",
       "K": 5,
-      "schedule": [
-        {
-          "t_min": 15,
-          "t_max": 29,
-          "thr": 0.08
-        },
-        {
-          "t_min": 30,
-          "t_max": 49,
-          "thr": 0.99
-        },
-        {
-          "t_min": 50,
-          "t_max": 69,
-          "thr": 0.99
-        },
-        {
-          "t_min": 70,
-          "t_max": 100,
-          "thr": 0.99
-        }
-      ]
+      "default_mode": "bundled",
+      "schedules": {
+        "bundled": [
+          {"t_min": 15, "t_max": 29, "thr": 0.08},
+          {"t_min": 30, "t_max": 49, "thr": 0.99},
+          {"t_min": 50, "t_max": 69, "thr": 0.99},
+          {"t_min": 70, "t_max": 100, "thr": 0.99}
+        ],
+        "tuned": [
+          {"t_min": 15, "t_max": 29, "thr": 0.04},
+          {"t_min": 30, "t_max": 49, "thr": 0.15},
+          {"t_min": 50, "t_max": 69, "thr": 0.15},
+          {"t_min": 70, "t_max": 100, "thr": 0.15}
+        ]
+      },
+      "kpi_holdout": {
+        "bundled": {"vt_pct": 65.48, "bets_per_vt": 10.38},
+        "tuned":   {"vt_pct": 82.14, "bets_per_vt": 14.09}
+      }
     },
     "Nick": {
       "head": "ANY_VT",
       "K": 5,
-      "schedule": [
-        {
-          "t_min": 15,
-          "t_max": 29,
-          "thr": 0.08
-        },
-        {
-          "t_min": 30,
-          "t_max": 49,
-          "thr": 0.99
-        },
-        {
-          "t_min": 50,
-          "t_max": 69,
-          "thr": 0.99
-        },
-        {
-          "t_min": 70,
-          "t_max": 100,
-          "thr": 0.99
-        }
-      ]
+      "default_mode": "bundled",
+      "schedules": {
+        "bundled": [
+          {"t_min": 15, "t_max": 29, "thr": 0.08},
+          {"t_min": 30, "t_max": 49, "thr": 0.99},
+          {"t_min": 50, "t_max": 69, "thr": 0.99},
+          {"t_min": 70, "t_max": 100, "thr": 0.99}
+        ],
+        "tuned": [
+          {"t_min": 15, "t_max": 29, "thr": 0.08},
+          {"t_min": 30, "t_max": 49, "thr": 0.05},
+          {"t_min": 50, "t_max": 69, "thr": 0.04},
+          {"t_min": 70, "t_max": 100, "thr": 0.03}
+        ]
+      },
+      "kpi_holdout": {
+        "bundled": {"vt_pct": 59.86, "bets_per_vt": 8.65},
+        "tuned":   {"vt_pct": 80.95, "bets_per_vt": 36.20}
+      }
     }
   }
 }

@@ -52,6 +52,14 @@ typedef struct {
 /// Reads from dyn_aggr_schedules.json; defaults to "ACC" if not configured.
 - (NSString *)activeHeadName;
 
+/// Active schedule mode for the current account: "bundled" or "tuned".
+/// Reads NSUserDefaults override first, then default_mode from JSON.
+- (NSString *)activeModeName;
+
+/// Toggle between "bundled" and "tuned" for the current account. The choice is
+/// persisted in NSUserDefaults under "SLV4Policy.mode.<accountLabel>".
+- (void)toggleActiveMode;
+
 /// Which policy is "active" — the one whose fire-state the user follows.
 /// Default: SLV4PolicyK5Dyn.
 @property (nonatomic, assign) SLV4PolicyKind activePolicy;

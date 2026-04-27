@@ -29,9 +29,19 @@ __attribute__((visibility("default"))) extern void SpinLoggerV4Policy_anchor(voi
 void SpinLoggerV4Policy_anchor(void) {}
 
 // Per-account config: head ∈ {"ACC","ANY_VT"}, K ∈ {3,5,10}, plus 4-band
-// schedule. v1 schema (pre-step3+5) stored just an array of bands per account
-// — we accept both.
+// schedule. Schemas:
+//   v1 — array of bands per account                   (legacy)
+//   v2 — {head, K, schedule}                          (single schedule)
+//   v3 — {head, K, default_mode, schedules:{bundled,tuned}}  (current)
+// We accept all three. For v1/v2 the "tuned" mode mirrors the only schedule.
 static NSDictionary<NSString *, NSDictionary *> *gPerAccountConfigs;
+
+// User's per-account mode override (NSUserDefaults). Key:
+//   SLV4Policy.mode.<accountLabel> → "bundled" or "tuned"
+// If unset, fall back to default_mode from the JSON.
+static NSString *SLV4_ModeKey(NSString *acct) {
+    return [NSString stringWithFormat:@"SLV4Policy.mode.%@", acct ?: @"_"];
+}
 
 static void SLV4_LoadSchedulesIfNeeded(void) {
     static dispatch_once_t once;
@@ -67,21 +77,42 @@ static void SLV4_LoadSchedulesIfNeeded(void) {
             NSDictionary *accounts = bundle[@"accounts"];
             if (![accounts isKindOfClass:[NSDictionary class]]) continue;
 
-            // Normalize: for each account, ensure value is a dict with
-            // {head, K, schedule}. v1 form (raw bands array) → wrap as ACC/K=5.
+            // Normalize: each account becomes a dict with
+            //   {head, K, default_mode, schedules:{bundled,tuned}}
+            // v1 (array of bands)         → both modes share the same schedule
+            // v2 ({head, K, schedule})    → both modes share the same schedule
+            // v3 ({head, K, default_mode, schedules:{bundled,tuned}}) → as-is
             NSMutableDictionary *normalized = [NSMutableDictionary dictionary];
             for (NSString *acct in accounts) {
                 id v = accounts[acct];
+                NSArray *bundled = nil, *tuned = nil;
+                NSString *head = @"ACC", *defaultMode = @"bundled";
+                NSNumber *K = @5;
+
                 if ([v isKindOfClass:[NSArray class]]) {
-                    normalized[acct] = @{@"head": @"ACC", @"K": @5, @"schedule": v};
+                    bundled = tuned = (NSArray *)v;
                 } else if ([v isKindOfClass:[NSDictionary class]]) {
                     NSDictionary *d = v;
-                    normalized[acct] = @{
-                        @"head": d[@"head"] ?: @"ACC",
-                        @"K":    d[@"K"]    ?: @5,
-                        @"schedule": d[@"schedule"] ?: @[],
-                    };
+                    head = d[@"head"] ?: @"ACC";
+                    K = d[@"K"] ?: @5;
+                    defaultMode = d[@"default_mode"] ?: @"bundled";
+                    NSDictionary *scheds = d[@"schedules"];
+                    if ([scheds isKindOfClass:[NSDictionary class]]) {
+                        bundled = scheds[@"bundled"];
+                        tuned   = scheds[@"tuned"];
+                    } else if ([d[@"schedule"] isKindOfClass:[NSArray class]]) {
+                        bundled = tuned = d[@"schedule"];
+                    }
                 }
+                if (![bundled isKindOfClass:[NSArray class]]) bundled = @[];
+                if (![tuned   isKindOfClass:[NSArray class]]) tuned   = bundled;
+
+                normalized[acct] = @{
+                    @"head":         head,
+                    @"K":            K,
+                    @"default_mode": defaultMode,
+                    @"schedules":    @{@"bundled": bundled, @"tuned": tuned},
+                };
             }
             gPerAccountConfigs = [normalized copy];
             NSLog(@"[SLV4Policy] loaded per-account configs from %@ (%lu accounts)",
@@ -98,10 +129,27 @@ static NSString *SLV4_ActiveHead(void) {
     return cfg[@"head"] ?: @"ACC";
 }
 
+// Mode for the current account: NSUserDefaults override, else cfg.default_mode,
+// else "bundled". Always returns "bundled" or "tuned".
+static NSString *SLV4_ActiveMode(void) {
+    SLV4_LoadSchedulesIfNeeded();
+    NSString *acct = SLAccountLabel();
+    NSString *override = [[NSUserDefaults standardUserDefaults] stringForKey:SLV4_ModeKey(acct)];
+    if ([override isEqualToString:@"bundled"] || [override isEqualToString:@"tuned"]) {
+        return override;
+    }
+    NSDictionary *cfg = gPerAccountConfigs[acct];
+    NSString *def = cfg[@"default_mode"];
+    if ([def isEqualToString:@"tuned"]) return @"tuned";
+    return @"bundled";
+}
+
 static double SLV4_DynAggrThreshold(int t) {
     SLV4_LoadSchedulesIfNeeded();
     NSDictionary *cfg = gPerAccountConfigs[SLAccountLabel()];
-    NSArray<NSDictionary *> *bands = cfg[@"schedule"];
+    NSDictionary *scheds = cfg[@"schedules"];
+    NSArray<NSDictionary *> *bands = scheds[SLV4_ActiveMode()];
+    if (!bands.count) bands = scheds[@"bundled"];
     if (!bands.count) return SLV4_PooledThreshold(t);
     for (NSDictionary *b in bands) {
         int lo = [b[@"t_min"] intValue];
@@ -133,28 +181,31 @@ static double SLV4_DynAggrThreshold(int t) {
 }
 
 // Once-per-session log + Documents/v4_active.txt write so the user can verify
-// which (account, head, schedule) the policy resolved to without needing the
-// panel header to fit. Re-emit on first call after launch only.
+// which (account, head, mode, schedule) the policy resolved to without needing
+// the panel header to fit. Re-emit on first call after launch only.
 static void SLV4_DebugDumpActiveConfigOnce(NSString *head, double thr_now, int t) {
     static dispatch_once_t once;
     dispatch_once(&once, ^{
         NSString *acct = SLAccountLabel();
+        NSString *mode = SLV4_ActiveMode();
         NSDictionary *cfg = gPerAccountConfigs[acct];
         BOOL matched = (cfg != nil);
-        NSLog(@"[SLV4Policy] ACTIVE  account=%@  head=%@  matched_per_account=%@  t=%d  thr_now=%.3f",
-              acct, head, matched ? @"YES" : @"NO (using pooled)", t, thr_now);
+        NSLog(@"[SLV4Policy] ACTIVE acct=%@ head=%@ mode=%@ matched=%@ t=%d thr=%.3f",
+              acct, head, mode, matched ? @"YES" : @"NO", t, thr_now);
 
-        // Write a tiny human-readable file the user can open via the Files app.
         NSString *docs = NSSearchPathForDirectoriesInDomains(
             NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
         if (!docs) return;
         NSMutableString *body = [NSMutableString string];
         [body appendFormat:@"account_label   = %@\n", acct];
         [body appendFormat:@"head            = %@\n", head];
+        [body appendFormat:@"mode            = %@\n", mode];
         [body appendFormat:@"matched_bundle  = %@\n", matched ? @"YES" : @"NO (fell back to pooled)"];
         if (matched) {
             [body appendFormat:@"K               = %@\n", cfg[@"K"] ?: @"?"];
-            NSArray *bands = cfg[@"schedule"];
+            [body appendFormat:@"default_mode    = %@\n", cfg[@"default_mode"] ?: @"?"];
+            NSDictionary *scheds = cfg[@"schedules"];
+            NSArray *bands = scheds[mode];
             for (NSDictionary *b in bands) {
                 [body appendFormat:@"  t in [%@..%@]  thr = %@\n",
                     b[@"t_min"], b[@"t_max"], b[@"thr"]];
@@ -216,6 +267,15 @@ static void SLV4_DebugDumpActiveConfigOnce(NSString *head, double thr_now, int t
 - (SLV4PolicyState)currentState { return _state; }
 
 - (NSString *)activeHeadName { return SLV4_ActiveHead(); }
+
+- (NSString *)activeModeName { return SLV4_ActiveMode(); }
+
+- (void)toggleActiveMode {
+    NSString *acct = SLAccountLabel();
+    NSString *next = [SLV4_ActiveMode() isEqualToString:@"tuned"] ? @"bundled" : @"tuned";
+    [[NSUserDefaults standardUserDefaults] setObject:next forKey:SLV4_ModeKey(acct)];
+    NSLog(@"[SLV4Policy] mode for %@ → %@", acct, next);
+}
 
 + (NSString *)nameForKind:(SLV4PolicyKind)kind {
     switch (kind) {

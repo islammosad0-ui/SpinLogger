@@ -123,11 +123,15 @@ static UIColor *colorMuted(void)    { return [UIColor colorWithWhite:0.32 alpha:
 
     //   6      54          48        44         46
     // [cfg]  POS 34     ≤5       [FIRE]
-    self.labelCfg = [self lbl:CGRectMake(6, 0, 54, kHeaderH) size:11 bold:YES color:colorAmber()];
+    self.labelCfg = [self lbl:CGRectMake(6, 0, 64, kHeaderH) size:11 bold:YES color:colorAmber()];
     self.labelCfg.text = @"—";
+    self.labelCfg.userInteractionEnabled = YES;
+    UITapGestureRecognizer *cfgTap = [[UITapGestureRecognizer alloc]
+                                          initWithTarget:self action:@selector(toggleScheduleMode)];
+    [self.labelCfg addGestureRecognizer:cfgTap];
     [header addSubview:self.labelCfg];
 
-    self.labelPos = [self lbl:CGRectMake(60, 0, 54, kHeaderH) size:12 bold:YES color:[UIColor whiteColor]];
+    self.labelPos = [self lbl:CGRectMake(72, 0, 46, kHeaderH) size:12 bold:YES color:[UIColor whiteColor]];
     self.labelPos.text = @"POS —";
     [header addSubview:self.labelPos];
 
@@ -144,6 +148,7 @@ static UIColor *colorMuted(void)    { return [UIColor colorWithWhite:0.32 alpha:
 
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]
                                      initWithTarget:self action:@selector(toggleExpand)];
+    [tap requireGestureRecognizerToFail:cfgTap];
     [header addGestureRecognizer:tap];
     UILongPressGestureRecognizer *lp = [[UILongPressGestureRecognizer alloc]
                                            initWithTarget:self action:@selector(handleLongPress:)];
@@ -256,7 +261,9 @@ static NSString *SLV4_ShortName(SLV4PolicyKind k) {
     NSString *headTag = [head isEqualToString:@"ANY_VT"] ? @"ANY"
                        : [head isEqualToString:@"SPN"]    ? @"SPN"
                                                           : @"ACC";
-    self.labelCfg.text = [NSString stringWithFormat:@"%@\u00b7%@", cfgShort, headTag];
+    NSString *modeTag = [[pol activeModeName] isEqualToString:@"tuned"] ? @"T" : @"B";
+    self.labelCfg.text = [NSString stringWithFormat:@"%@\u00b7%@\u00b7%@", cfgShort, headTag, modeTag];
+    self.labelCfg.textColor = [modeTag isEqualToString:@"T"] ? colorGreen() : colorAmber();
     if (!loaded) {
         self.labelPos.text = @"no model";
         self.labelPos.textColor = colorRed();
@@ -323,6 +330,20 @@ static NSString *SLV4_ShortName(SLV4PolicyKind k) {
     double rate = self.cyclesFiredIn ? (double)self.catchesTotal / (double)self.cyclesFiredIn : 0;
     self.footerLabel.text = [NSString stringWithFormat:@"hits %ld / %ld cycles (%.0f%%)",
                              (long)self.catchesTotal, (long)self.cyclesFiredIn, rate * 100];
+}
+
+- (void)toggleScheduleMode {
+    [[SLV4Policy shared] toggleActiveMode];
+    // Reset session counters since policy semantics changed
+    self.firesTotal = 0;
+    self.catchesTotal = 0;
+    self.cyclesFiredIn = 0;
+    self.firedThisCycle = NO;
+    UIImpactFeedbackGenerator *h = [[UIImpactFeedbackGenerator alloc]
+                                        initWithStyle:UIImpactFeedbackStyleMedium];
+    [h impactOccurred];
+    [[SLV4Policy shared] evaluate];
+    [self refresh];
 }
 
 - (void)handleRowTap:(UITapGestureRecognizer *)g {
