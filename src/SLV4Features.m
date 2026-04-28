@@ -617,6 +617,12 @@ static inline void W(double *v, int i, double x) {
     dispatch_async(_q, ^{ self->_firesInCycle++; });
 }
 
+- (double)currentVtGapMean3 {
+    __block double v = NAN;
+    dispatch_sync(_q, ^{ v = self->_carryVtMean3; });
+    return v;
+}
+
 - (void)dealloc {
     if (_feat) free(_feat);
 }

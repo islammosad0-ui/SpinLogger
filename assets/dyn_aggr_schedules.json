@@ -1,18 +1,20 @@
 {
   "policy": "K_DYN",
-  "schema_version": 4,
-  "t_window": [15, 100],
+  "schema_version": 5,
+  "t_window": [10, 130],
+  "metric_note": "STRICT catch = a bet landed on the spin where spins_to_vt==1 (next spin is the VT). W10 catch = at least one fire within 10 spins of the VT (matches a multiplier-bet-that-rides-for-10-spins workflow). User uncapped (spins through entire fire streak).",
+  "anomaly_proxy": "When mean of last 3 VT-to-VT gaps > 60, the BALANCED mode raises its fire threshold from p5>=0.05 to p5>=0.10. Carry-feature LOSO classifier achieves AUC~0.65 on cycle_len>=80, and this proxy captures the strongest signal.",
   "modes": {
-    "cheap":      "flat-K5 thr=0.15  (~20% catch, ~28 B/VT)  — minimum bets",
-    "balanced":   "flat-K5 thr=0.10  (~46% catch, ~34 B/VT)  — middle ground",
-    "aggressive": "flat-K5 thr=0.05  (~71% catch, ~43 B/VT)  — high catch, no bet cap"
+    "cheap":      "p3 >= 0.07 in [10,130]                                      — strict ~40-48% catch / ~30 B/VT",
+    "balanced":   "p5 >= 0.05 normally; p5 >= 0.10 if last-3-mean gap > 60     — strict ~78-81% catch / ~40-43 B/VT",
+    "aggressive": "p10 >= 0.15 in [10,130]                                     — W10 ~70-76% catch / ~27-30 B/VT"
   },
-  "metric_note": "Catch% / B/VT computed under STRICT simulator metric: a cycle is caught iff a fire landed on the spin where spins_to_vt==1 (next spin is the VT). User uncapped (spins through entire fire streak).",
+  "rules_implemented_in": "src/SLV4Policy.m  (hardcoded; the schedule arrays below are informational only)",
   "pooled_fallback": {
     "head": "ANY_VT",
     "K": 5,
     "schedule": [
-      {"t_min": 15, "t_max": 100, "thr": 0.10}
+      {"t_min": 10, "t_max": 130, "thr": 0.05}
     ]
   },
   "accounts": {
@@ -21,14 +23,14 @@
       "K": 5,
       "default_mode": "balanced",
       "schedules": {
-        "cheap":      [{"t_min": 15, "t_max": 100, "thr": 0.15}],
-        "balanced":   [{"t_min": 15, "t_max": 100, "thr": 0.10}],
-        "aggressive": [{"t_min": 15, "t_max": 100, "thr": 0.05}]
+        "cheap":      [{"t_min": 10, "t_max": 130, "thr": 0.07, "head_horizon": 3}],
+        "balanced":   [{"t_min": 10, "t_max": 130, "thr": 0.05, "head_horizon": 5, "anomaly_thr": 0.10, "anomaly_when": "vt_mean3>60"}],
+        "aggressive": [{"t_min": 10, "t_max": 130, "thr": 0.15, "head_horizon": 10}]
       },
       "kpi_holdout": {
-        "cheap":      {"vt_pct": 23.13, "bets_per_vt": 25.46},
-        "balanced":   {"vt_pct": 51.79, "bets_per_vt": 34.27},
-        "aggressive": {"vt_pct": 72.15, "bets_per_vt": 41.06}
+        "cheap":      {"strict_catch_pct": 40.07, "strict_bvt": 30.49},
+        "balanced":   {"strict_catch_pct": 78.99, "strict_bvt": 40.04, "w10_catch_pct": 80.94, "w10_bvt": 39.07},
+        "aggressive": {"strict_catch_pct": 67.43, "strict_bvt": 36.03, "w10_catch_pct": 70.36, "w10_bvt": 26.75}
       }
     },
     "Islam": {
@@ -36,14 +38,14 @@
       "K": 5,
       "default_mode": "balanced",
       "schedules": {
-        "cheap":      [{"t_min": 15, "t_max": 100, "thr": 0.15}],
-        "balanced":   [{"t_min": 15, "t_max": 100, "thr": 0.10}],
-        "aggressive": [{"t_min": 15, "t_max": 100, "thr": 0.05}]
+        "cheap":      [{"t_min": 10, "t_max": 130, "thr": 0.07, "head_horizon": 3}],
+        "balanced":   [{"t_min": 10, "t_max": 130, "thr": 0.05, "head_horizon": 5, "anomaly_thr": 0.10, "anomaly_when": "vt_mean3>60"}],
+        "aggressive": [{"t_min": 10, "t_max": 130, "thr": 0.15, "head_horizon": 10}]
       },
       "kpi_holdout": {
-        "cheap":      {"vt_pct":  9.88, "bets_per_vt": 31.66},
-        "balanced":   {"vt_pct": 41.70, "bets_per_vt": 36.49},
-        "aggressive": {"vt_pct": 68.58, "bets_per_vt": 44.95}
+        "cheap":      {"strict_catch_pct": 41.11, "strict_bvt": 36.40},
+        "balanced":   {"strict_catch_pct": 73.12, "strict_bvt": 42.92, "w10_catch_pct": 75.10, "w10_bvt": 41.79},
+        "aggressive": {"strict_catch_pct": 66.60, "strict_bvt": 40.15, "w10_catch_pct": 69.96, "w10_bvt": 30.47}
       }
     },
     "Nick": {
@@ -51,14 +53,14 @@
       "K": 5,
       "default_mode": "balanced",
       "schedules": {
-        "cheap":      [{"t_min": 15, "t_max": 100, "thr": 0.15}],
-        "balanced":   [{"t_min": 15, "t_max": 100, "thr": 0.10}],
-        "aggressive": [{"t_min": 15, "t_max": 100, "thr": 0.05}]
+        "cheap":      [{"t_min": 10, "t_max": 130, "thr": 0.07, "head_horizon": 3}],
+        "balanced":   [{"t_min": 10, "t_max": 130, "thr": 0.05, "head_horizon": 5, "anomaly_thr": 0.10, "anomaly_when": "vt_mean3>60"}],
+        "aggressive": [{"t_min": 10, "t_max": 130, "thr": 0.15, "head_horizon": 10}]
       },
       "kpi_holdout": {
-        "cheap":      {"vt_pct": 25.84, "bets_per_vt": 28.06},
-        "balanced":   {"vt_pct": 44.38, "bets_per_vt": 32.54},
-        "aggressive": {"vt_pct": 73.25, "bets_per_vt": 44.56}
+        "cheap":      {"strict_catch_pct": 48.02, "strict_bvt": 29.28},
+        "balanced":   {"strict_catch_pct": 81.16, "strict_bvt": 41.40, "w10_catch_pct": 82.67, "w10_bvt": 40.64},
+        "aggressive": {"strict_catch_pct": 71.12, "strict_bvt": 38.74, "w10_catch_pct": 75.68, "w10_bvt": 28.53}
       }
     }
   }

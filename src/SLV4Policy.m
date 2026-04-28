@@ -12,8 +12,16 @@
 //  If no schedule file is found OR the current account isn't in the bundle,
 //  fall back to the pooled schedule (same numbers as the original hardcode).
 // ---------------------------------------------------------------------------
-static const int kWinLo = 15;
-static const int kWinHi = 100;
+// Extended t-window: catches cycles ending at t<15 or t>100 that the old
+// [15,100] window missed. ~10% of cycles end early, ~5% end late — both
+// previously uncatchable.
+static const int kWinLo = 10;
+static const int kWinHi = 130;
+
+// Anomaly proxy: when the average of the last 3 VT-to-VT gaps exceeds this,
+// we suspect the current cycle will also be long. Used by the BALANCED mode
+// to raise its fire threshold and avoid bleeding bets.
+static const double kAnomVtMean3 = 60.0;
 
 static double SLV4_PooledThreshold(int t) {
     if (t > 100) return 0.10;
@@ -249,33 +257,53 @@ static void SLV4_DebugDumpActiveConfigOnce(NSString *head, double thr_now, int t
     SLV4Snapshot snap = [f snapshot];
 
     NSString *head = SLV4_ActiveHead();
+    NSString *mode = SLV4_ActiveMode();
     double p3 = 0, p5 = 0, p10 = 0;
     if (m.isLoaded) {
         [m predictHead:head feat:[f currentFeatureVector] p3:&p3 p5:&p5 p10:&p10];
     }
-    SLV4_DebugDumpActiveConfigOnce(head, SLV4_DynAggrThreshold(snap.t), snap.t);
+    double vtMean3 = [f currentVtGapMean3];
+    BOOL anomalySuspected = (!isnan(vtMean3)) && (vtMean3 > kAnomVtMean3);
 
     int t = snap.t;
     BOOL windowOk = (t >= kWinLo && t <= kWinHi);
-
-    double thr_dyn = SLV4_DynAggrThreshold(t);
 
     SLV4PolicyState s = {0};
     s.p3 = p3; s.p5 = p5; s.p10 = p10;
     s.t = t;
     s.activeKind = (int)self.activePolicy;
 
-    // (1) K5 dyn_aggr
-    s.thr[SLV4PolicyK5Dyn] = thr_dyn;
-    s.on[SLV4PolicyK5Dyn] = windowOk && (p5 >= thr_dyn);
+    // ----- K5 dyn_aggr — mode-aware rules (no schedule lookup) -----
+    // Rules picked for best Pareto frontier under strict and W10 catch metrics:
+    //   cheap     : p3 >= 0.07 in [10,130]   (~40-48% strict catch / ~30 B/VT)
+    //   balanced  : p5 >= 0.05 normally, raises to 0.10 when last-3-cycle mean
+    //               gap > 60 (anomaly proxy)  (~78-81% strict / ~40-43 B/VT)
+    //   aggressive: p10 >= 0.15 in [10,130]   (~70-76% W10 catch / ~27-30 B/VT)
+    BOOL fireMode = NO;
+    double thrDisplay = 0.0;
+    if ([mode isEqualToString:@"cheap"]) {
+        fireMode = (p3 >= 0.07);
+        thrDisplay = 0.07;
+    } else if ([mode isEqualToString:@"aggressive"]) {
+        fireMode = (p10 >= 0.15);
+        thrDisplay = 0.15;
+    } else {  // balanced (default)
+        double thr = anomalySuspected ? 0.10 : 0.05;
+        fireMode = (p5 >= thr);
+        thrDisplay = thr;
+    }
+    SLV4_DebugDumpActiveConfigOnce(head, thrDisplay, t);
+
+    s.thr[SLV4PolicyK5Dyn] = thrDisplay;
+    s.on[SLV4PolicyK5Dyn] = windowOk && fireMode;
 
     // (2) Triple intersection: p3 >= .04 AND p5 >= .05 AND p10 >= .10
-    s.thr[SLV4PolicyTriple] = 0.0;  // not a single threshold — leave 0 for display
+    s.thr[SLV4PolicyTriple] = 0.0;
     s.on[SLV4PolicyTriple] = windowOk && (p3 >= 0.04) && (p5 >= 0.05) && (p10 >= 0.10);
 
-    // (3) K10 dyn_aggr
-    s.thr[SLV4PolicyK10Dyn] = thr_dyn;
-    s.on[SLV4PolicyK10Dyn] = windowOk && (p10 >= thr_dyn);
+    // (3) K10 dyn_aggr — keeps a bare K=10 head with a single threshold
+    s.thr[SLV4PolicyK10Dyn] = 0.15;
+    s.on[SLV4PolicyK10Dyn] = windowOk && (p10 >= 0.15);
 
     int agree = 0;
     for (int i = 0; i < SLV4PolicyCount; i++) if (s.on[i]) agree++;

@@ -57,4 +57,9 @@ typedef struct {
 /// correctly in the HUD).
 - (void)notePolicyFire;
 
+/// Mean of the last 3 VT-to-VT gaps (NaN if fewer than 3 observed).
+/// Used by the policy as a cheap anomaly proxy: long recent gaps often imply
+/// the current cycle will also be long.
+- (double)currentVtGapMean3;
+
 @end
