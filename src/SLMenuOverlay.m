@@ -256,28 +256,31 @@ static UIWindow *sDebtTableWindow = nil;
         [sTrisContent addSubview:sb];
     }
 
-    // SHOW COLUMNS row — toggle which columns appear in the Tris Monitor
+    // SHOW COLUMNS row — toggle which columns appear in the Tris Monitor (7 columns incl. VT)
     UILabel *scColLabel = [[UILabel alloc] initWithFrame:CGRectMake(pad, 100, 150, 22)];
     scColLabel.text = @"SHOW COLUMNS";
     scColLabel.font = [UIFont boldSystemFontOfSize:12];
     scColLabel.textColor = SLAccent();
     [sTrisContent addSubview:scColLabel];
 
-    NSUInteger colBits[6] = {kSLTrisColAttack, kSLTrisColSteal, kSLTrisColSpins,
-                              kSLTrisColShield, kSLTrisColAccum, kSLTrisColPotion};
+    NSArray *colSyms = @[@"🔨", @"🐷", @"💊", @"🛡", @"⭐", @"🧪", @"🎯"];
+    NSUInteger colBits[7] = {kSLTrisColAttack, kSLTrisColSteal, kSLTrisColSpins,
+                              kSLTrisColShield, kSLTrisColAccum, kSLTrisColPotion, kSLTrisColVT};
+    CGFloat colSymSize = 32;
+    CGFloat colSymGap  = 3;
     NSUInteger visCols = [SLTrisController shared].visibleColumns;
-    for (NSUInteger i = 0; i < syms.count; i++) {
+    for (NSUInteger i = 0; i < colSyms.count; i++) {
         UIButton *cb = [UIButton buttonWithType:UIButtonTypeCustom];
-        cb.frame = CGRectMake(symStartX + i * (symSize + symGap), 124, symSize, symSize);
+        cb.frame = CGRectMake(symStartX + i * (colSymSize + colSymGap), 124, colSymSize, colSymSize);
         cb.backgroundColor = [UIColor colorWithWhite:0.15 alpha:1];
-        cb.layer.cornerRadius = 10;
+        cb.layer.cornerRadius = 9;
         cb.layer.borderWidth = 2;
         BOOL visible = (visCols & colBits[i]) != 0;
         cb.layer.borderColor = visible ? SLAccent().CGColor : [UIColor clearColor].CGColor;
         cb.alpha = visible ? 1.0 : 0.35;
-        [cb setTitle:syms[i] forState:UIControlStateNormal];
-        cb.titleLabel.font = [UIFont systemFontOfSize:18];
-        cb.tag = 500 + i;  // 500-505 for column toggles
+        [cb setTitle:colSyms[i] forState:UIControlStateNormal];
+        cb.titleLabel.font = [UIFont systemFontOfSize:16];
+        cb.tag = 500 + i;  // 500-506 for column toggles
         cb.showsTouchWhenHighlighted = YES;
         [cb addTarget:self action:@selector(columnVisibilityTap:) forControlEvents:UIControlEventTouchUpInside];
         [sTrisContent addSubview:cb];
@@ -678,15 +681,16 @@ static UIWindow *sDebtTableWindow = nil;
 
 + (void)columnVisibilityTap:(UIButton *)btn {
     NSUInteger idx = btn.tag - 500;
-    if (idx >= 6) return;
-    NSUInteger colBits[6] = {kSLTrisColAttack, kSLTrisColSteal, kSLTrisColSpins,
-                              kSLTrisColShield, kSLTrisColAccum, kSLTrisColPotion};
+    if (idx >= 7) return;
+    NSUInteger colBits[7] = {kSLTrisColAttack, kSLTrisColSteal, kSLTrisColSpins,
+                              kSLTrisColShield, kSLTrisColAccum, kSLTrisColPotion, kSLTrisColVT};
     [[SLTrisController shared] toggleColumn:colBits[idx]];
 
     // Update all column toggle button visuals
     NSUInteger visCols = [SLTrisController shared].visibleColumns;
-    for (NSUInteger i = 0; i < 6; i++) {
+    for (NSUInteger i = 0; i < 7; i++) {
         UIButton *cb = (UIButton *)[sSettingsWindow.rootViewController.view viewWithTag:(500 + i)];
+        if (!cb) continue;
         BOOL visible = (visCols & colBits[i]) != 0;
         cb.layer.borderColor = visible ? SLAccent().CGColor : [UIColor clearColor].CGColor;
         cb.alpha = visible ? 1.0 : 0.35;

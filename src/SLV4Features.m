@@ -313,6 +313,7 @@ static int IDX(NSDictionary *idx, NSString *k) {
     NSMutableDictionary *d = [NSMutableDictionary dictionary];
     d[@"pvt"]      = _prevVtType ?: @"UNK";
     d[@"cycle"]    = @(_cycleIndex);
+    d[@"t"]        = @(_t);
 
     NSDictionary *(^sd)(SLV4GapStream *) = ^NSDictionary *(SLV4GapStream *s) {
         return @{@"gaps": [s.gaps copy], @"last": @(s.lastSeq)};
@@ -333,6 +334,9 @@ static int IDX(NSDictionary *idx, NSString *k) {
 
     NSNumber *cycle = d[@"cycle"];
     if ([cycle isKindOfClass:[NSNumber class]]) _cycleIndex = cycle.intValue;
+
+    NSNumber *tVal = d[@"t"];
+    if ([tVal isKindOfClass:[NSNumber class]]) _t = tVal.intValue;
 
     void (^restore)(SLV4GapStream *, NSDictionary *) = ^(SLV4GapStream *s, NSDictionary *sd) {
         if (![sd isKindOfClass:[NSDictionary class]]) return;
@@ -588,6 +592,7 @@ static inline void W(double *v, int i, double x) {
         } else {
             // Normal spin — advance cycle position
             self->_t++;
+            [self _saveStateLocked];  // persist POS so HUD survives game restart
         }
 
         [self _emitFeaturesLocked];

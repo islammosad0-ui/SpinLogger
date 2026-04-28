@@ -20,7 +20,9 @@
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *histShield;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *histAccum;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *histGold;
+@property (nonatomic, strong) NSMutableArray<NSNumber *> *histVt;      // combined ACC+SPN VT-to-VT gaps
 @property (nonatomic, assign) NSInteger totalSpins;
+@property (nonatomic, assign) NSInteger lastVtTotalSpins;              // -1 = no VT seen yet
 @property (nonatomic, assign) BOOL symbolCountMode;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *symHistAttack;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *symHistSteal;
@@ -47,10 +49,12 @@
         _histAttack = [NSMutableArray array]; _histSteal  = [NSMutableArray array];
         _histSpins  = [NSMutableArray array]; _histShield = [NSMutableArray array];
         _histAccum  = [NSMutableArray array]; _histGold   = [NSMutableArray array];
+        _histVt     = [NSMutableArray array];
         _symHistAttack = [NSMutableArray array]; _symHistSteal  = [NSMutableArray array];
         _symHistSpins  = [NSMutableArray array]; _symHistShield = [NSMutableArray array];
         _symHistAccum  = [NSMutableArray array]; _symHistGold   = [NSMutableArray array];
         _totalSpins = 0;
+        _lastVtTotalSpins = -1;
         _symbolCountMode = NO;
         NSUInteger saved = [[NSUserDefaults standardUserDefaults] integerForKey:@"Speeder_TrisVisibleCols"];
         _visibleColumns = (saved != 0) ? saved : kSLTrisColAll;
@@ -64,9 +68,11 @@
 - (void)saveState {
     NSDictionary *state = @{
         @"totalSpins":    @(_totalSpins),
+        @"lastVtSpins":   @(_lastVtTotalSpins),
         @"histAttack":    _histAttack,   @"histSteal":    _histSteal,
         @"histSpins":     _histSpins,    @"histShield":   _histShield,
         @"histAccum":     _histAccum,    @"histGold":     _histGold,
+        @"histVt":        _histVt,
         @"symHistAttack": _symHistAttack,@"symHistSteal": _symHistSteal,
         @"symHistSpins":  _symHistSpins, @"symHistShield":_symHistShield,
         @"symHistAccum":  _symHistAccum, @"symHistGold":  _symHistGold,
@@ -78,9 +84,11 @@
     NSDictionary *state = [[NSUserDefaults standardUserDefaults] dictionaryForKey:@"Speeder_TrisState"];
     if (!state) return;
     _totalSpins = [state[@"totalSpins"] integerValue];
-    NSArray *keys   = @[@"histAttack",@"histSteal",@"histSpins",@"histShield",@"histAccum",@"histGold",
+    NSNumber *savedVtSpins = state[@"lastVtSpins"];
+    _lastVtTotalSpins = savedVtSpins ? savedVtSpins.integerValue : -1;
+    NSArray *keys   = @[@"histAttack",@"histSteal",@"histSpins",@"histShield",@"histAccum",@"histGold",@"histVt",
                         @"symHistAttack",@"symHistSteal",@"symHistSpins",@"symHistShield",@"symHistAccum",@"symHistGold"];
-    NSArray *arrays = @[_histAttack,_histSteal,_histSpins,_histShield,_histAccum,_histGold,
+    NSArray *arrays = @[_histAttack,_histSteal,_histSpins,_histShield,_histAccum,_histGold,_histVt,
                         _symHistAttack,_symHistSteal,_symHistSpins,_symHistShield,_symHistAccum,_symHistGold];
     for (NSUInteger i = 0; i < keys.count; i++) {
         NSArray *saved = state[keys[i]];
@@ -103,7 +111,24 @@
                                                  name:@"SLShowTrisMonitor" object:nil];
 }
 
-- (void)onSpinReceived:(NSNotification *)note { self.totalSpins++; }
+- (void)onSpinReceived:(NSNotification *)note {
+    self.totalSpins++;
+    SLSpinResult *result = note.userInfo[SLSpinDataKey];
+    if (result) {
+        NSString *r1 = result.reel1 ?: @"";
+        BOOL isVt = ([r1 isEqualToString:result.reel2] && [r1 isEqualToString:result.reel3] &&
+                     ([r1 isEqualToString:kSLSymbolAccumulation] || [r1 isEqualToString:kSLSymbolSpins]));
+        if (isVt) {
+            if (self.lastVtTotalSpins >= 0) {
+                NSInteger gap = self.totalSpins - self.lastVtTotalSpins;
+                [self.histVt addObject:@(gap)];
+                [self saveState];
+                if (self.trisWindow && !self.trisWindow.hidden) [self refreshTrisHTML];
+            }
+            self.lastVtTotalSpins = self.totalSpins;
+        }
+    }
+}
 - (void)onShowTris:(NSNotification *)note     { [self showTrisMonitor]; }
 
 #pragma mark - Data helpers
@@ -238,10 +263,12 @@
         [self.histAttack removeAllObjects]; [self.histSteal  removeAllObjects];
         [self.histSpins  removeAllObjects]; [self.histShield removeAllObjects];
         [self.histAccum  removeAllObjects]; [self.histGold   removeAllObjects];
+        [self.histVt     removeAllObjects];
         [self.symHistAttack removeAllObjects]; [self.symHistSteal  removeAllObjects];
         [self.symHistSpins  removeAllObjects]; [self.symHistShield removeAllObjects];
         [self.symHistAccum  removeAllObjects]; [self.symHistGold   removeAllObjects];
         self.totalSpins = 0;
+        self.lastVtTotalSpins = -1;
         [self saveState];
         [[SLCounterOverlay shared] resetAllCounters];
         SLSpinStoreRotateCSV();
@@ -252,24 +279,25 @@
 #pragma mark - HTML — 6 independent scrollable columns
 
 - (void)refreshTrisHTML {
-    NSArray *arrays[6], *symArrays[6];
+    NSArray *arrays[7], *symArrays[7];
     arrays[0] = self.histAttack; arrays[1] = self.histSteal; arrays[2] = self.histSpins;
     arrays[3] = self.histShield; arrays[4] = self.histAccum; arrays[5] = self.histGold;
+    arrays[6] = self.histVt;
     symArrays[0] = self.symHistAttack; symArrays[1] = self.symHistSteal; symArrays[2] = self.symHistSpins;
     symArrays[3] = self.symHistShield; symArrays[4] = self.symHistAccum; symArrays[5] = self.symHistGold;
+    symArrays[6] = self.histVt;  // VT has no sym-count mode; use same array
 
-    NSString *emojis[6] = {@"🔨", @"🐷", @"💊", @"🛡", @"⭐", @"🧪"};
-    NSString *colors[6] = {@"#00e5ff", @"#ff69b4", @"#00bcd4", @"#ce93d8", @"#ffd700", @"#4caf50"};
-    // Column keys for lock target highlight
-    NSString *colKeys[6] = {@"attack", @"steal", @"spins", @"shield", @"accumulation", @"potion"};
+    NSString *emojis[7] = {@"🔨", @"🐷", @"💊", @"🛡", @"⭐", @"🧪", @"🎯"};
+    NSString *colors[7] = {@"#00e5ff", @"#ff69b4", @"#00bcd4", @"#ce93d8", @"#ffd700", @"#4caf50", @"#ff9800"};
+    NSString *colKeys[7] = {@"attack", @"steal", @"spins", @"shield", @"accumulation", @"potion", @"vt"};
 
-    NSUInteger colBits[6] = {kSLTrisColAttack, kSLTrisColSteal, kSLTrisColSpins,
-                              kSLTrisColShield, kSLTrisColAccum, kSLTrisColPotion};
+    NSUInteger colBits[7] = {kSLTrisColAttack, kSLTrisColSteal, kSLTrisColSpins,
+                              kSLTrisColShield, kSLTrisColAccum, kSLTrisColPotion, kSLTrisColVT};
 
     NSMutableString *colHTML = [NSMutableString string];
-    for (int c = 0; c < 6; c++) {
+    for (int c = 0; c < 7; c++) {
         if (!(self.visibleColumns & colBits[c])) continue; // skip hidden columns
-        NSArray *arr = self.symbolCountMode ? symArrays[c] : arrays[c];
+        NSArray *arr = (self.symbolCountMode && c < 6) ? symArrays[c] : arrays[c];
         NSMutableString *entries = [NSMutableString string];
         NSInteger gapIdx = 1;
         for (NSNumber *val in arr) {
@@ -317,6 +345,7 @@
         ".col:nth-child(4) .e{color:#ce93d8}"
         ".col:nth-child(5) .e{color:#ffd700}"
         ".col:nth-child(6) .e{color:#4caf50}"
+        ".col:nth-child(7) .e{color:#ff9800}"
         ".foot{display:flex;justify-content:space-between;padding:5px 8px;"
         "color:#aaa;font-size:10px;font-weight:600;flex-shrink:0;"
         "border-top:1px solid rgba(255,255,255,0.10)}"
