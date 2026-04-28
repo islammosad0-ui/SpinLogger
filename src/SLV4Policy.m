@@ -32,15 +32,32 @@ void SpinLoggerV4Policy_anchor(void) {}
 // schedule. Schemas:
 //   v1 — array of bands per account                   (legacy)
 //   v2 — {head, K, schedule}                          (single schedule)
-//   v3 — {head, K, default_mode, schedules:{bundled,tuned}}  (current)
-// We accept all three. For v1/v2 the "tuned" mode mirrors the only schedule.
+//   v3 — {head, K, default_mode, schedules:{bundled,tuned}}    (legacy 2-mode)
+//   v4 — {head, K, default_mode, schedules:{cheap,balanced,aggressive}}
+//        (current — three flat-thr modes)
+// We accept all four. For v1/v2 the value is mirrored across all three modes.
+// For v3 (bundled/tuned): bundled→balanced, tuned→aggressive, cheap=tuned.
 static NSDictionary<NSString *, NSDictionary *> *gPerAccountConfigs;
 
+static NSString *const kSLV4ModeCheap      = @"cheap";
+static NSString *const kSLV4ModeBalanced   = @"balanced";
+static NSString *const kSLV4ModeAggressive = @"aggressive";
+
 // User's per-account mode override (NSUserDefaults). Key:
-//   SLV4Policy.mode.<accountLabel> → "bundled" or "tuned"
+//   SLV4Policy.mode.<accountLabel> → "cheap" / "balanced" / "aggressive"
 // If unset, fall back to default_mode from the JSON.
 static NSString *SLV4_ModeKey(NSString *acct) {
     return [NSString stringWithFormat:@"SLV4Policy.mode.%@", acct ?: @"_"];
+}
+
+// Translate legacy mode tags to the v4 vocabulary.
+static NSString *SLV4_NormalizeMode(NSString *m) {
+    if ([m isEqualToString:@"tuned"])   return kSLV4ModeAggressive;
+    if ([m isEqualToString:@"bundled"]) return kSLV4ModeBalanced;
+    if ([m isEqualToString:kSLV4ModeCheap])      return kSLV4ModeCheap;
+    if ([m isEqualToString:kSLV4ModeBalanced])   return kSLV4ModeBalanced;
+    if ([m isEqualToString:kSLV4ModeAggressive]) return kSLV4ModeAggressive;
+    return nil;  // unknown
 }
 
 static void SLV4_LoadSchedulesIfNeeded(void) {
@@ -78,40 +95,51 @@ static void SLV4_LoadSchedulesIfNeeded(void) {
             if (![accounts isKindOfClass:[NSDictionary class]]) continue;
 
             // Normalize: each account becomes a dict with
-            //   {head, K, default_mode, schedules:{bundled,tuned}}
-            // v1 (array of bands)         → both modes share the same schedule
-            // v2 ({head, K, schedule})    → both modes share the same schedule
-            // v3 ({head, K, default_mode, schedules:{bundled,tuned}}) → as-is
+            //   {head, K, default_mode, schedules:{cheap,balanced,aggressive}}
+            // v1 array              → all 3 modes share the same schedule
+            // v2 single schedule    → all 3 modes share the same schedule
+            // v3 bundled/tuned      → bundled→balanced, tuned→aggressive,
+            //                         cheap = tuned (no separate cheap defined)
+            // v4 cheap/balanced/aggressive → as-is
             NSMutableDictionary *normalized = [NSMutableDictionary dictionary];
             for (NSString *acct in accounts) {
                 id v = accounts[acct];
-                NSArray *bundled = nil, *tuned = nil;
-                NSString *head = @"ACC", *defaultMode = @"bundled";
+                NSArray *cheap = nil, *balanced = nil, *aggressive = nil;
+                NSString *head = @"ANY_VT", *defaultMode = kSLV4ModeBalanced;
                 NSNumber *K = @5;
 
                 if ([v isKindOfClass:[NSArray class]]) {
-                    bundled = tuned = (NSArray *)v;
+                    cheap = balanced = aggressive = (NSArray *)v;
                 } else if ([v isKindOfClass:[NSDictionary class]]) {
                     NSDictionary *d = v;
-                    head = d[@"head"] ?: @"ACC";
+                    head = d[@"head"] ?: @"ANY_VT";
                     K = d[@"K"] ?: @5;
-                    defaultMode = d[@"default_mode"] ?: @"bundled";
+                    NSString *raw = d[@"default_mode"];
+                    NSString *norm = raw ? SLV4_NormalizeMode(raw) : nil;
+                    defaultMode = norm ?: kSLV4ModeBalanced;
                     NSDictionary *scheds = d[@"schedules"];
                     if ([scheds isKindOfClass:[NSDictionary class]]) {
-                        bundled = scheds[@"bundled"];
-                        tuned   = scheds[@"tuned"];
+                        cheap      = scheds[kSLV4ModeCheap];
+                        balanced   = scheds[kSLV4ModeBalanced]   ?: scheds[@"bundled"];
+                        aggressive = scheds[kSLV4ModeAggressive] ?: scheds[@"tuned"];
+                        if (!cheap) cheap = aggressive ?: balanced;
                     } else if ([d[@"schedule"] isKindOfClass:[NSArray class]]) {
-                        bundled = tuned = d[@"schedule"];
+                        cheap = balanced = aggressive = d[@"schedule"];
                     }
                 }
-                if (![bundled isKindOfClass:[NSArray class]]) bundled = @[];
-                if (![tuned   isKindOfClass:[NSArray class]]) tuned   = bundled;
+                if (![cheap      isKindOfClass:[NSArray class]]) cheap      = @[];
+                if (![balanced   isKindOfClass:[NSArray class]]) balanced   = cheap;
+                if (![aggressive isKindOfClass:[NSArray class]]) aggressive = balanced;
 
                 normalized[acct] = @{
                     @"head":         head,
                     @"K":            K,
                     @"default_mode": defaultMode,
-                    @"schedules":    @{@"bundled": bundled, @"tuned": tuned},
+                    @"schedules":    @{
+                        kSLV4ModeCheap:      cheap,
+                        kSLV4ModeBalanced:   balanced,
+                        kSLV4ModeAggressive: aggressive,
+                    },
                 };
             }
             gPerAccountConfigs = [normalized copy];
@@ -129,19 +157,17 @@ static NSString *SLV4_ActiveHead(void) {
     return cfg[@"head"] ?: @"ACC";
 }
 
-// Mode for the current account: NSUserDefaults override, else cfg.default_mode,
-// else "bundled". Always returns "bundled" or "tuned".
+// Mode for the current account: NSUserDefaults override (normalized),
+// else cfg.default_mode, else "balanced". Returns one of the v4 mode names.
 static NSString *SLV4_ActiveMode(void) {
     SLV4_LoadSchedulesIfNeeded();
     NSString *acct = SLAccountLabel();
     NSString *override = [[NSUserDefaults standardUserDefaults] stringForKey:SLV4_ModeKey(acct)];
-    if ([override isEqualToString:@"bundled"] || [override isEqualToString:@"tuned"]) {
-        return override;
-    }
+    NSString *norm = override ? SLV4_NormalizeMode(override) : nil;
+    if (norm) return norm;
     NSDictionary *cfg = gPerAccountConfigs[acct];
-    NSString *def = cfg[@"default_mode"];
-    if ([def isEqualToString:@"tuned"]) return @"tuned";
-    return @"bundled";
+    norm = SLV4_NormalizeMode(cfg[@"default_mode"]);
+    return norm ?: kSLV4ModeBalanced;
 }
 
 static double SLV4_DynAggrThreshold(int t) {
@@ -272,7 +298,11 @@ static void SLV4_DebugDumpActiveConfigOnce(NSString *head, double thr_now, int t
 
 - (void)toggleActiveMode {
     NSString *acct = SLAccountLabel();
-    NSString *next = [SLV4_ActiveMode() isEqualToString:@"tuned"] ? @"bundled" : @"tuned";
+    NSString *cur = SLV4_ActiveMode();
+    NSString *next = kSLV4ModeBalanced;
+    if      ([cur isEqualToString:kSLV4ModeCheap])      next = kSLV4ModeBalanced;
+    else if ([cur isEqualToString:kSLV4ModeBalanced])   next = kSLV4ModeAggressive;
+    else if ([cur isEqualToString:kSLV4ModeAggressive]) next = kSLV4ModeCheap;
     [[NSUserDefaults standardUserDefaults] setObject:next forKey:SLV4_ModeKey(acct)];
     NSLog(@"[SLV4Policy] mode for %@ → %@", acct, next);
 }

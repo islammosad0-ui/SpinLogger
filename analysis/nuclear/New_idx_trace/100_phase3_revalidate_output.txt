@@ -1,0 +1,72 @@
+  Ahmed_v2: 1107 spins, 87 VTs (69 ACC, 18 SPN)
+  Ahmed_0413: 1952 spins, 45 VTs (21 ACC, 24 SPN)
+  Ahmed_0414: 834 spins, 14 VTs (7 ACC, 7 SPN)
+  Islam: 2753 spins, 59 VTs (28 ACC, 31 SPN)
+  Nick: 417 spins, 8 VTs (6 ACC, 2 SPN)
+
+Dataset: 7038 spins, 212 VTs (3.01%, 1 per 33)
+  ACC: 130 (1.85%)
+  SPN: 82 (1.17%)
+
+====================================================================================================
+PART A: ALL VTs — Phase 3 strategies as literally written (using r1_idx/r3_idx as in CSV)
+====================================================================================================
+  R1: gap>=30 & low_mom & r1=3or7                               prec=  3.0%  lift=0.99x  catch= 17.9%  bph= 33.4  TP= 38/1271  p=0.5412    [Phase3 was: 13.3% prec, 4.2x, 23% catch, 7.5 bph]
+  R2: gap>=30 & r3>=5 & all_diff & sum>=15                      prec=  2.0%  lift=0.68x  catch=  2.8%  bph= 48.8  TP=  6/ 293  p=0.8771    [Phase3 was: 12.2% prec, 3.9x, 17% catch, 8.2 bph]
+  R3: gap>=40 & r3>=5 & sum>=15                                 prec=  2.9%  lift=0.95x  catch=  7.5%  bph= 34.9  TP= 16/ 558  p=0.6135    [Phase3 was: 10.4% prec, 3.3x, 23% catch, 9.6 bph]
+  R4: gap>=30 & (r3>=5 | all_diff | sum>=15 | r2=7)  ** the 54% catch rule  prec=  3.0%  lift=0.99x  catch= 27.8%  bph= 33.5  TP= 59/1974  p=0.5423    [Phase3 was: 7.5% prec, 2.4x, 54% catch, 13.3 bph]
+
+====================================================================================================
+PART B: ALL VTs — corrected for one-strip swap (r1<->r3 in feature names)
+====================================================================================================
+  R1-swap: gap>=30 & low_mom & r3=3or7 (was 'r1=goldSack')      prec=  3.9%  lift=1.30x  catch=  3.8%  bph= 25.5  TP=  8/ 204  p=0.2743    [Phase3 was: 13.3% prec, 4.2x, 23% catch, 7.5 bph]
+  R2-swap: gap>=30 & r1>=5 & all_diff & sum>=15                 prec=  2.5%  lift=0.84x  catch=  2.8%  bph= 39.3  TP=  6/ 236  p=0.7170    [Phase3 was: 12.2% prec, 3.9x, 17% catch, 8.2 bph]
+  R3-swap: gap>=40 & r1>=5 & sum>=15                            prec=  3.1%  lift=1.04x  catch=  6.1%  bph= 31.8  TP= 13/ 414  p=0.4785    [Phase3 was: 10.4% prec, 3.3x, 23% catch, 9.6 bph]
+  R4-swap: gap>=30 & (r1>=5 | all_diff | sum>=15 | r2=7)        prec=  3.0%  lift=0.99x  catch= 27.4%  bph= 33.6  TP= 58/1946  p=0.5509    [Phase3 was: 7.5% prec, 2.4x, 54% catch, 13.3 bph]
+
+====================================================================================================
+PART C: ACC-only (130 targets, base 1.85%)
+====================================================================================================
+  A1: gap_acc>=60 & prev_steal                                  prec=  1.7%  lift=0.93x  catch=  8.5%  bph= 58.3  TP= 11/ 641  p=0.6376    [Phase3 was: 22.2% prec, 14.5x, 12% catch, 4.5 bph]
+  A2: gap>=30 & prev_steal                                      prec=  2.6%  lift=1.38x  catch= 13.8%  bph= 39.1  TP= 18/ 704  p=0.1077    [Phase3 was: 14.3% prec, 9.3x, 18% catch, 7.0 bph]
+  A3: gap>=30 & low_mom & r1=3or7  (literal)                    prec=  2.0%  lift=1.11x  catch= 20.0%  bph= 48.9  TP= 26/1271  p=0.3268    [Phase3 was: 10.8% prec, 7.0x, 59% catch, 9.3 bph]
+  A3-swap: gap>=30 & low_mom & r3=3or7                          prec=  2.9%  lift=1.59x  catch=  4.6%  bph= 34.0  TP=  6/ 204  p=0.1781    [Phase3 was: (swap of A3)]
+
+====================================================================================================
+PART D: SPN-only (82 targets, base 1.17%)
+====================================================================================================
+  S1: gap>=40 & r3>=5 & all_diff  (literal)                     prec=  1.2%  lift=1.04x  catch=  3.7%  bph= 82.7  TP=  3/ 248  p=0.5528    [Phase3 was: 6.5% prec, 4.0x, 22% catch, 15.5 bph]
+  S1-swap: gap>=40 & r1>=5 & all_diff                           prec=  1.4%  lift=1.18x  catch=  6.1%  bph= 72.8  TP=  5/ 364  p=0.4184    [Phase3 was: (swap)]
+  S2: gap_spn>=50 & r3>=5 & sum>=15  (literal)                  prec=  2.1%  lift=1.84x  catch= 24.4%  bph= 46.7  TP= 20/ 934  p=0.0080 ***   [Phase3 was: 5.5% prec, 3.4x, 33% catch, 18.3 bph]
+  S2-swap: gap_spn>=50 & r1>=5 & sum>=15                        prec=  2.1%  lift=1.80x  catch= 18.3%  bph= 47.7  TP= 15/ 716  p=0.0231 **   [Phase3 was: (swap)]
+  S3: gap>=40 & r3>=5 & sum>=15  (literal)                      prec=  1.4%  lift=1.23x  catch=  9.8%  bph= 69.8  TP=  8/ 558  p=0.3270    [Phase3 was: 5.1% prec, 3.1x, 44% catch, 19.6 bph]
+
+====================================================================================================
+PART E: Phase 6 sa_-counter benchmark rules (same dataset for direct comparison)
+====================================================================================================
+  Phase6: sa_spn>=45                                            prec= 10.6%  lift=3.52x  catch=  4.2%  bph=  9.4  TP=  9/  85  p=0.0011 ***
+  Phase6: gap>=35 & sa_spn>=45 (best single)                    prec= 17.8%  lift=5.90x  catch=  3.8%  bph=  5.6  TP=  8/  45  p=0.0001 ***
+  Phase6: gap>=50 & sa_spn>=45 (best precision)                 prec= 35.7%  lift=11.86x  catch=  2.4%  bph=  2.8  TP=  5/  14  p=0.0000 ***
+  Phase6: sa_spn>=45 OR sa_acc>=55                              prec=  9.7%  lift=3.22x  catch=  4.7%  bph= 10.3  TP= 10/ 103  p=0.0011 ***
+
+====================================================================================================
+PART F: Head-to-head — Phase 3 ALL_OR (the 54% catch rule) vs Phase 6 best
+====================================================================================================
+
+  Phase 3 R4 literal:
+      gap>=30 & (r3>=5 | all_diff | sum>=15 | r2=7)             prec=  3.0%  lift=0.99x  catch= 27.8%  bph= 33.5  TP= 59/1974  p=0.5423 
+
+  Phase 3 R4 swapped:
+      gap>=30 & (r1>=5 | all_diff | sum>=15 | r2=7)             prec=  3.0%  lift=0.99x  catch= 27.4%  bph= 33.6  TP= 58/1946  p=0.5509 
+
+  Phase 6 best at comparable bph:
+      sa_spn>=45 OR sa_acc>=55  (10.3 bph in script 99)         prec=  9.7%  lift=3.22x  catch=  4.7%  bph= 10.3  TP= 10/ 103  p=0.0011 ***
+      gap>=35 & sa_spn>=45  (5.6 bph)                           prec= 17.8%  lift=5.90x  catch=  3.8%  bph=  5.6  TP=  8/  45  p=0.0001 ***
+
+  Pure baselines:
+      gap>=30 alone                                             prec=  3.2%  lift=1.05x  catch= 44.3%  bph= 31.6  TP= 94/2966  p=0.3227 
+      all_diff alone                                            prec=  3.2%  lift=1.06x  catch= 38.2%  bph= 31.2  TP= 81/2528  p=0.3016 
+      sum>=15 alone                                             prec=  2.8%  lift=0.93x  catch= 28.8%  bph= 35.7  TP= 61/2175  p=0.7315 
+      r2=7 alone                                                prec=  2.7%  lift=0.90x  catch= 10.4%  bph= 36.9  TP= 22/ 812  p=0.7214 
+
+Done.

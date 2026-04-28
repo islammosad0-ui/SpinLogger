@@ -1,89 +1,64 @@
 {
   "policy": "K_DYN",
-  "schema_version": 3,
+  "schema_version": 4,
   "t_window": [15, 100],
   "modes": {
-    "bundled": "cheap: fire only in fresh-pity window at thr=0.08 (~60% catch, ~10 B/VT)",
-    "tuned":   "aggressive: per-account schedule from LOSO tuning (~80% catch, 12-36 B/VT)"
+    "cheap":      "flat-K5 thr=0.15  (~20% catch, ~28 B/VT)  — minimum bets",
+    "balanced":   "flat-K5 thr=0.10  (~46% catch, ~34 B/VT)  — middle ground",
+    "aggressive": "flat-K5 thr=0.05  (~71% catch, ~43 B/VT)  — high catch, no bet cap"
   },
+  "metric_note": "Catch% / B/VT computed under STRICT simulator metric: a cycle is caught iff a fire landed on the spin where spins_to_vt==1 (next spin is the VT). User uncapped (spins through entire fire streak).",
   "pooled_fallback": {
-    "head": "ACC",
+    "head": "ANY_VT",
     "K": 5,
     "schedule": [
-      {"t_min": 15, "t_max": 29, "thr": 0.08},
-      {"t_min": 30, "t_max": 49, "thr": 0.05},
-      {"t_min": 50, "t_max": 69, "thr": 0.04},
-      {"t_min": 70, "t_max": 100, "thr": 0.03}
+      {"t_min": 15, "t_max": 100, "thr": 0.10}
     ]
   },
   "accounts": {
     "Ahmed": {
       "head": "ANY_VT",
       "K": 5,
-      "default_mode": "bundled",
+      "default_mode": "balanced",
       "schedules": {
-        "bundled": [
-          {"t_min": 15, "t_max": 29, "thr": 0.08},
-          {"t_min": 30, "t_max": 49, "thr": 0.99},
-          {"t_min": 50, "t_max": 69, "thr": 0.99},
-          {"t_min": 70, "t_max": 100, "thr": 0.99}
-        ],
-        "tuned": [
-          {"t_min": 15, "t_max": 29, "thr": 0.03},
-          {"t_min": 30, "t_max": 49, "thr": 0.99},
-          {"t_min": 50, "t_max": 69, "thr": 0.99},
-          {"t_min": 70, "t_max": 100, "thr": 0.99}
-        ]
+        "cheap":      [{"t_min": 15, "t_max": 100, "thr": 0.15}],
+        "balanced":   [{"t_min": 15, "t_max": 100, "thr": 0.10}],
+        "aggressive": [{"t_min": 15, "t_max": 100, "thr": 0.05}]
       },
       "kpi_holdout": {
-        "bundled": {"vt_pct": 63.57, "bets_per_vt": 9.81},
-        "tuned":   {"vt_pct": 79.29, "bets_per_vt": 12.76}
+        "cheap":      {"vt_pct": 23.13, "bets_per_vt": 25.46},
+        "balanced":   {"vt_pct": 51.79, "bets_per_vt": 34.27},
+        "aggressive": {"vt_pct": 72.15, "bets_per_vt": 41.06}
       }
     },
     "Islam": {
       "head": "ANY_VT",
       "K": 5,
-      "default_mode": "bundled",
+      "default_mode": "balanced",
       "schedules": {
-        "bundled": [
-          {"t_min": 15, "t_max": 29, "thr": 0.08},
-          {"t_min": 30, "t_max": 49, "thr": 0.99},
-          {"t_min": 50, "t_max": 69, "thr": 0.99},
-          {"t_min": 70, "t_max": 100, "thr": 0.99}
-        ],
-        "tuned": [
-          {"t_min": 15, "t_max": 29, "thr": 0.04},
-          {"t_min": 30, "t_max": 49, "thr": 0.15},
-          {"t_min": 50, "t_max": 69, "thr": 0.15},
-          {"t_min": 70, "t_max": 100, "thr": 0.15}
-        ]
+        "cheap":      [{"t_min": 15, "t_max": 100, "thr": 0.15}],
+        "balanced":   [{"t_min": 15, "t_max": 100, "thr": 0.10}],
+        "aggressive": [{"t_min": 15, "t_max": 100, "thr": 0.05}]
       },
       "kpi_holdout": {
-        "bundled": {"vt_pct": 65.48, "bets_per_vt": 10.38},
-        "tuned":   {"vt_pct": 82.14, "bets_per_vt": 14.09}
+        "cheap":      {"vt_pct":  9.88, "bets_per_vt": 31.66},
+        "balanced":   {"vt_pct": 41.70, "bets_per_vt": 36.49},
+        "aggressive": {"vt_pct": 68.58, "bets_per_vt": 44.95}
       }
     },
     "Nick": {
       "head": "ANY_VT",
       "K": 5,
-      "default_mode": "bundled",
+      "default_mode": "balanced",
       "schedules": {
-        "bundled": [
-          {"t_min": 15, "t_max": 29, "thr": 0.08},
-          {"t_min": 30, "t_max": 49, "thr": 0.99},
-          {"t_min": 50, "t_max": 69, "thr": 0.99},
-          {"t_min": 70, "t_max": 100, "thr": 0.99}
-        ],
-        "tuned": [
-          {"t_min": 15, "t_max": 29, "thr": 0.08},
-          {"t_min": 30, "t_max": 49, "thr": 0.05},
-          {"t_min": 50, "t_max": 69, "thr": 0.04},
-          {"t_min": 70, "t_max": 100, "thr": 0.03}
-        ]
+        "cheap":      [{"t_min": 15, "t_max": 100, "thr": 0.15}],
+        "balanced":   [{"t_min": 15, "t_max": 100, "thr": 0.10}],
+        "aggressive": [{"t_min": 15, "t_max": 100, "thr": 0.05}]
       },
       "kpi_holdout": {
-        "bundled": {"vt_pct": 59.86, "bets_per_vt": 8.65},
-        "tuned":   {"vt_pct": 80.95, "bets_per_vt": 36.20}
+        "cheap":      {"vt_pct": 25.84, "bets_per_vt": 28.06},
+        "balanced":   {"vt_pct": 44.38, "bets_per_vt": 32.54},
+        "aggressive": {"vt_pct": 73.25, "bets_per_vt": 44.56}
       }
     }
   }

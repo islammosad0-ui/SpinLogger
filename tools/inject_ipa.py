@@ -28,7 +28,10 @@ MH_MAGIC_64     = 0xFEEDFACF
 FAT_MAGIC       = 0xCAFEBABE
 FAT_MAGIC_BE    = 0xBEBAFECA  # big-endian form seen on disk
 LC_SEGMENT_64   = 0x19
-LC_LOAD_DYLIB   = 0x0C
+LC_LOAD_DYLIB        = 0x0C
+LC_LOAD_WEAK_DYLIB   = 0x18 | 0x80000000  # 0x80000018
+LC_REEXPORT_DYLIB    = 0x1F | 0x80000000  # 0x8000001F
+LC_LAZY_LOAD_DYLIB   = 0x20
 
 
 def u32(data: bytes, off: int) -> int:
@@ -87,42 +90,45 @@ def iter_load_dylib(data: bytes):
         pos += cmdsize
 
 
-def remove_load_dylib(data: bytearray, target_name: str) -> int:
-    """Remove every LC_LOAD_DYLIB whose path matches target_name. Returns
-    count removed."""
+DYLIB_LOAD_CMDS = (LC_LOAD_DYLIB, LC_LOAD_WEAK_DYLIB,
+                   LC_REEXPORT_DYLIB, LC_LAZY_LOAD_DYLIB)
+
+
+def remove_load_dylib(data: bytearray, target_pattern: str) -> list[str]:
+    """Remove every dylib-load command (regular, weak, reexport, lazy) whose
+    path contains target_pattern as a substring. Returns the list of removed
+    paths."""
     ncmds, sizeofcmds = read_header(bytes(data))
 
-    # Snapshot all commands.
     commands: list[bytes] = []
-    removed_count = 0
+    removed: list[str] = []
     pos = 32
     for _ in range(ncmds):
         cmd, cmdsize = u32(bytes(data), pos), u32(bytes(data), pos + 4)
         raw = bytes(data[pos:pos + cmdsize])
         drop = False
-        if cmd == LC_LOAD_DYLIB:
+        if cmd in DYLIB_LOAD_CMDS:
             name_off = u32(raw, 8)
             name_end = raw.find(b'\x00', name_off)
             name = raw[name_off:name_end].decode('utf-8', errors='replace')
-            if name == target_name:
+            if target_pattern in name:
                 drop = True
-                removed_count += 1
+                removed.append(name)
         if not drop:
             commands.append(raw)
         pos += cmdsize
 
-    if removed_count == 0:
-        return 0
+    if not removed:
+        return removed
 
     new_block = b''.join(commands)
-    # Zero the old command region, then write new block + trailing zeros.
     data[32:32 + sizeofcmds] = b'\x00' * sizeofcmds
     data[32:32 + len(new_block)] = new_block
 
-    new_ncmds = ncmds - removed_count
+    new_ncmds = ncmds - len(removed)
     new_sizeofcmds = len(new_block)
     struct.pack_into('<II', data, 16, new_ncmds, new_sizeofcmds)
-    return removed_count
+    return removed
 
 
 def inject_load_dylib(data: bytearray, dylib_path: str) -> None:
@@ -208,6 +214,11 @@ def main():
     ap.add_argument('--dyn-aggr', help='optional path to dyn_aggr_schedules.json (per-account K5_DYN thresholds)')
     ap.add_argument('--dylib-name', default='SpinLogger.dylib',
                     help='name the dylib ends up as inside the .app')
+    ap.add_argument('--remove-dylib', action='append', default=[],
+                    help='remove any LC_LOAD_(WEAK_)DYLIB whose path contains '
+                         'this substring AND delete the matching file from the '
+                         '.app bundle. May be passed multiple times. '
+                         'Example: --remove-dylib CMSCrystal')
     args = ap.parse_args()
 
     ipa_path   = Path(args.ipa).resolve()
@@ -271,12 +282,32 @@ def main():
         print(f"[*] Mach-O: ncmds={ncmds} sizeofcmds={sizeofcmds}")
 
         # Drop existing One.dylib load commands (both possible paths).
-        removed = 0
         for p in ('@executable_path/One.dylib', '@rpath/One.dylib'):
             r = remove_load_dylib(data, p)
             if r:
-                print(f"[+] Removed {r} LC_LOAD_DYLIB for {p}")
-                removed += r
+                print(f"[+] Removed {len(r)} load command(s) for {p}: {r}")
+
+        # Drop any user-specified dylibs (and delete the file from the app).
+        for pattern in args.remove_dylib:
+            r = remove_load_dylib(data, pattern)
+            if r:
+                print(f"[+] Removed {len(r)} load command(s) matching '{pattern}': {r}")
+            else:
+                print(f"[!] No load command matched '{pattern}'")
+            # Also delete the actual file(s) from the .app
+            for path in r:
+                # Translate @executable_path/X to app_dir/X; @rpath/X same.
+                rel = path.replace('@executable_path/', '').replace('@rpath/', '')
+                full = app_dir / rel
+                if full.exists() and full.is_file():
+                    full.unlink()
+                    print(f"[+] Deleted file {rel}")
+                # Also try Frameworks/<basename> if not already there
+                base = Path(rel).name
+                fw_path = app_dir / 'Frameworks' / base
+                if fw_path.exists() and fw_path.is_file():
+                    fw_path.unlink()
+                    print(f"[+] Deleted file Frameworks/{base}")
 
         # Skip if our dylib is already injected.
         already = any(

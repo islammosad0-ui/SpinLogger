@@ -1,0 +1,115 @@
+{
+  "policy": "K_DYN",
+  "schema_version": 2,
+  "t_window": [
+    15,
+    100
+  ],
+  "pooled_fallback": {
+    "head": "ACC",
+    "K": 5,
+    "schedule": [
+      {
+        "t_min": 15,
+        "t_max": 29,
+        "thr": 0.08
+      },
+      {
+        "t_min": 30,
+        "t_max": 49,
+        "thr": 0.05
+      },
+      {
+        "t_min": 50,
+        "t_max": 69,
+        "thr": 0.04
+      },
+      {
+        "t_min": 70,
+        "t_max": 100,
+        "thr": 0.03
+      }
+    ]
+  },
+  "selection": "Coarse 5-grid step3+5 sweep, accept-if-holdout-ok. Fine LOSO-CV overfit small folds.",
+  "accounts": {
+    "Ahmed": {
+      "head": "ANY_VT",
+      "K": 5,
+      "schedule": [
+        {
+          "t_min": 15,
+          "t_max": 29,
+          "thr": 0.08
+        },
+        {
+          "t_min": 30,
+          "t_max": 49,
+          "thr": 0.99
+        },
+        {
+          "t_min": 50,
+          "t_max": 69,
+          "thr": 0.99
+        },
+        {
+          "t_min": 70,
+          "t_max": 100,
+          "thr": 0.99
+        }
+      ]
+    },
+    "Islam": {
+      "head": "ANY_VT",
+      "K": 5,
+      "schedule": [
+        {
+          "t_min": 15,
+          "t_max": 29,
+          "thr": 0.08
+        },
+        {
+          "t_min": 30,
+          "t_max": 49,
+          "thr": 0.99
+        },
+        {
+          "t_min": 50,
+          "t_max": 69,
+          "thr": 0.99
+        },
+        {
+          "t_min": 70,
+          "t_max": 100,
+          "thr": 0.99
+        }
+      ]
+    },
+    "Nick": {
+      "head": "ANY_VT",
+      "K": 5,
+      "schedule": [
+        {
+          "t_min": 15,
+          "t_max": 29,
+          "thr": 0.08
+        },
+        {
+          "t_min": 30,
+          "t_max": 49,
+          "thr": 0.99
+        },
+        {
+          "t_min": 50,
+          "t_max": 69,
+          "thr": 0.99
+        },
+        {
+          "t_min": 70,
+          "t_max": 100,
+          "thr": 0.99
+        }
+      ]
+    }
+  }
+}

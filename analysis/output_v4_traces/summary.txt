@@ -1,0 +1,9 @@
+V4 K5_DYN — per-account, per-mode summary (CORRECT simulator metric)
+Catch = at least one bet landed on spins_to_vt==1 (next spin is VT)
+==========================================================================================
+  Ahmed  bundled   cycles=614  CAUGHT= 73 (11.89%)  early=300  no_fire=241  bets=3765  B/VT=51.58
+  Ahmed  tuned     cycles=614  CAUGHT=100 (16.29%)  early=365  no_fire=149  bets=5908  B/VT=59.08
+  Islam  bundled   cycles=506  CAUGHT= 64 (12.65%)  early=245  no_fire=197  bets=3131  B/VT=48.92
+  Islam  tuned     cycles=506  CAUGHT=104 (20.55%)  early=296  no_fire=106  bets=6097  B/VT=58.62
+  Nick   bundled   cycles=329  CAUGHT= 38 (11.55%)  early=136  no_fire=155  bets=1473  B/VT=38.76
+  Nick   tuned     cycles=329  CAUGHT= 98 (29.79%)  early=157  no_fire= 74  bets=4964  B/VT=50.65

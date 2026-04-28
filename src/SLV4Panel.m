@@ -261,9 +261,14 @@ static NSString *SLV4_ShortName(SLV4PolicyKind k) {
     NSString *headTag = [head isEqualToString:@"ANY_VT"] ? @"ANY"
                        : [head isEqualToString:@"SPN"]    ? @"SPN"
                                                           : @"ACC";
-    NSString *modeTag = [[pol activeModeName] isEqualToString:@"tuned"] ? @"T" : @"B";
+    NSString *mode = [pol activeModeName];
+    NSString *modeTag;
+    UIColor   *modeColor;
+    if      ([mode isEqualToString:@"cheap"])      { modeTag = @"C"; modeColor = colorRed(); }
+    else if ([mode isEqualToString:@"aggressive"]) { modeTag = @"A"; modeColor = colorGreen(); }
+    else                                           { modeTag = @"B"; modeColor = colorAmber(); }
     self.labelCfg.text = [NSString stringWithFormat:@"%@\u00b7%@\u00b7%@", cfgShort, headTag, modeTag];
-    self.labelCfg.textColor = [modeTag isEqualToString:@"T"] ? colorGreen() : colorAmber();
+    self.labelCfg.textColor = modeColor;
     if (!loaded) {
         self.labelPos.text = @"no model";
         self.labelPos.textColor = colorRed();
