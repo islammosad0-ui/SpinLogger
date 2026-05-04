@@ -24,6 +24,8 @@
 @property (nonatomic, assign) NSInteger totalSpins;
 @property (nonatomic, assign) NSInteger lastVtTotalSpins;              // -1 = no VT seen yet
 @property (nonatomic, assign) BOOL symbolCountMode;
+@property (nonatomic, assign) NSInteger tileCount;
+@property (nonatomic, assign) NSInteger tileTarget;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *symHistAttack;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *symHistSteal;
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *symHistSpins;
@@ -56,6 +58,9 @@
         _totalSpins = 0;
         _lastVtTotalSpins = -1;
         _symbolCountMode = NO;
+        _tileCount = 0;
+        NSInteger savedTarget = [[NSUserDefaults standardUserDefaults] integerForKey:@"Speeder_TrisTileTarget"];
+        _tileTarget = (savedTarget > 0) ? savedTarget : 100;
         NSUInteger saved = [[NSUserDefaults standardUserDefaults] integerForKey:@"Speeder_TrisVisibleCols"];
         _visibleColumns = (saved != 0) ? saved : kSLTrisColAll;
         [self restoreState];
@@ -69,6 +74,7 @@
     NSDictionary *state = @{
         @"totalSpins":    @(_totalSpins),
         @"lastVtSpins":   @(_lastVtTotalSpins),
+        @"tileCount":     @(_tileCount),
         @"histAttack":    _histAttack,   @"histSteal":    _histSteal,
         @"histSpins":     _histSpins,    @"histShield":   _histShield,
         @"histAccum":     _histAccum,    @"histGold":     _histGold,
@@ -86,6 +92,8 @@
     _totalSpins = [state[@"totalSpins"] integerValue];
     NSNumber *savedVtSpins = state[@"lastVtSpins"];
     _lastVtTotalSpins = savedVtSpins ? savedVtSpins.integerValue : -1;
+    NSNumber *savedTileCount = state[@"tileCount"];
+    if (savedTileCount) _tileCount = savedTileCount.integerValue;
     NSArray *keys   = @[@"histAttack",@"histSteal",@"histSpins",@"histShield",@"histAccum",@"histGold",@"histVt",
                         @"symHistAttack",@"symHistSteal",@"symHistSpins",@"symHistShield",@"symHistAccum",@"symHistGold"];
     NSArray *arrays = @[_histAttack,_histSteal,_histSpins,_histShield,_histAccum,_histGold,_histVt,
@@ -113,6 +121,9 @@
 
 - (void)onSpinReceived:(NSNotification *)note {
     self.totalSpins++;
+    self.tileCount++;
+    if (self.tileTarget > 0 && self.tileCount >= self.tileTarget) self.tileCount = 0;
+    if (self.trisWindow && !self.trisWindow.hidden) [self updateTileInJS];
     SLSpinResult *result = note.userInfo[SLSpinDataKey];
     if (result) {
         NSString *r1 = result.reel1 ?: @"";
@@ -260,20 +271,84 @@
         self.symbolCountMode = !self.symbolCountMode;
         [self refreshTrisHTML];
     } else if ([body isEqualToString:@"reset"]) {
-        [self.histAttack removeAllObjects]; [self.histSteal  removeAllObjects];
-        [self.histSpins  removeAllObjects]; [self.histShield removeAllObjects];
-        [self.histAccum  removeAllObjects]; [self.histGold   removeAllObjects];
-        [self.histVt     removeAllObjects];
-        [self.symHistAttack removeAllObjects]; [self.symHistSteal  removeAllObjects];
-        [self.symHistSpins  removeAllObjects]; [self.symHistShield removeAllObjects];
-        [self.symHistAccum  removeAllObjects]; [self.symHistGold   removeAllObjects];
-        self.totalSpins = 0;
-        self.lastVtTotalSpins = -1;
+        [self confirmAndReset];
+    } else if ([body isEqualToString:@"tileReset"]) {
+        self.tileCount = 0;
         [self saveState];
-        [[SLCounterOverlay shared] resetAllCounters];
-        SLSpinStoreRotateCSV();
-        [self refreshTrisHTML];
+        [self updateTileInJS];
+    } else if ([body isEqualToString:@"editTile"]) {
+        [self promptForTileTarget];
     }
+}
+
+- (void)confirmAndReset {
+    UIViewController *vc = self.trisWindow.rootViewController;
+    if (!vc) return;
+    UIAlertController *ac = [UIAlertController
+        alertControllerWithTitle:@"Reset Tris?"
+        message:@"This clears all gap history, counters, and rotates the CSV."
+        preferredStyle:UIAlertControllerStyleAlert];
+    __weak typeof(self) weakSelf = self;
+    [ac addAction:[UIAlertAction actionWithTitle:@"Reset" style:UIAlertActionStyleDestructive
+        handler:^(UIAlertAction *a){ [weakSelf doReset]; }]];
+    [ac addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [vc presentViewController:ac animated:YES completion:nil];
+}
+
+- (void)doReset {
+    [self.histAttack removeAllObjects]; [self.histSteal  removeAllObjects];
+    [self.histSpins  removeAllObjects]; [self.histShield removeAllObjects];
+    [self.histAccum  removeAllObjects]; [self.histGold   removeAllObjects];
+    [self.histVt     removeAllObjects];
+    [self.symHistAttack removeAllObjects]; [self.symHistSteal  removeAllObjects];
+    [self.symHistSpins  removeAllObjects]; [self.symHistShield removeAllObjects];
+    [self.symHistAccum  removeAllObjects]; [self.symHistGold   removeAllObjects];
+    self.totalSpins = 0;
+    self.lastVtTotalSpins = -1;
+    self.tileCount = 0;
+    [self saveState];
+    [[SLCounterOverlay shared] resetAllCounters];
+    SLSpinStoreRotateCSV();
+    [self refreshTrisHTML];
+}
+
+- (void)updateTileInJS {
+    if (!self.trisWebView) return;
+    NSString *js = [NSString stringWithFormat:
+        @"var t=document.getElementById('tile');"
+         "if(t)t.textContent='%ld/%ld';"
+         "var s=document.getElementById('spinTotal');"
+         "if(s)s.textContent='SPIN: %ld';",
+        (long)self.tileCount, (long)self.tileTarget, (long)self.totalSpins];
+    [self.trisWebView evaluateJavaScript:js completionHandler:nil];
+}
+
+- (void)promptForTileTarget {
+    UIViewController *vc = self.trisWindow.rootViewController;
+    if (!vc) return;
+    UIAlertController *ac = [UIAlertController
+        alertControllerWithTitle:@"Tile Target"
+        message:@"Reset counter when it reaches:"
+        preferredStyle:UIAlertControllerStyleAlert];
+    [ac addTextFieldWithConfigurationHandler:^(UITextField *tf){
+        tf.keyboardType = UIKeyboardTypeNumberPad;
+        tf.text = [@(self.tileTarget) stringValue];
+    }];
+    __weak typeof(self) weakSelf = self;
+    __weak UIAlertController *weakAC = ac;
+    [ac addAction:[UIAlertAction actionWithTitle:@"Set" style:UIAlertActionStyleDefault
+        handler:^(UIAlertAction *a){
+            NSInteger n = [weakAC.textFields.firstObject.text integerValue];
+            if (n > 0) {
+                weakSelf.tileTarget = n;
+                [[NSUserDefaults standardUserDefaults] setInteger:n forKey:@"Speeder_TrisTileTarget"];
+                weakSelf.tileCount = 0;
+                [weakSelf saveState];
+                [weakSelf updateTileInJS];
+            }
+        }]];
+    [ac addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [vc presentViewController:ac animated:YES completion:nil];
 }
 
 #pragma mark - HTML — 6 independent scrollable columns
@@ -346,10 +421,13 @@
         ".col:nth-child(5) .e{color:#ffd700}"
         ".col:nth-child(6) .e{color:#4caf50}"
         ".col:nth-child(7) .e{color:#ff9800}"
-        ".foot{display:flex;justify-content:space-between;padding:5px 8px;"
-        "color:#aaa;font-size:10px;font-weight:600;flex-shrink:0;"
+        ".foot{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;"
+        "color:#aaa;font-size:10px;font-weight:600;flex-shrink:0;gap:6px;"
         "border-top:1px solid rgba(255,255,255,0.10)}"
         ".foot span{cursor:pointer}"
+        ".tile{background:rgba(255,215,0,0.15);color:#ffd700;padding:3px 7px;"
+        "border-radius:6px;border:1px solid rgba(255,215,0,0.35);"
+        "-webkit-user-select:none}"
         "</style></head><body>"
         "<div class='panel'>"
         "<button class='close' onclick='msg(\"close\")'>✕</button>"
@@ -357,16 +435,23 @@
         "<div class='foot'>"
         "<span onclick='msg(\"reset\")'>RESET</span>"
         "<span onclick='msg(\"toggleMode\")'>%@</span>"
-        "<span>SPIN: %ld</span>"
+        "<span id='tile' class='tile' onclick='tileTap()'>%ld/%ld</span>"
+        "<span id='spinTotal'>SPIN: %ld</span>"
         "</div>"
         "</div>"
         "<script>"
         "function msg(s){window.webkit.messageHandlers.tris.postMessage(s)}"
+        "var _tt=null;"
+        "function tileTap(){"
+        "if(_tt){clearTimeout(_tt);_tt=null;msg('tileReset');return;}"
+        "_tt=setTimeout(function(){_tt=null;msg('editTile');},280);"
+        "}"
         "document.querySelectorAll('.cb').forEach(function(el){el.scrollTop=el.scrollHeight});"
         "</script>"
         "</body></html>",
         colHTML,
         self.symbolCountMode ? @"[SYM]" : @"[SPIN]",
+        (long)self.tileCount, (long)self.tileTarget,
         (long)self.totalSpins];
 
     [self.trisWebView loadHTMLString:html baseURL:nil];
@@ -386,7 +471,7 @@
 
 - (NSInteger)visibleColumnCount {
     NSInteger count = 0;
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 7; i++) {
         if (_visibleColumns & (1 << i)) count++;
     }
     return count;
