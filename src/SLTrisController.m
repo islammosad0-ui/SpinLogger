@@ -113,6 +113,12 @@
 
 - (void)onSpinReceived:(NSNotification *)note {
     self.totalSpins++;
+    if (self.trisWindow && !self.trisWindow.hidden) {
+        NSString *js = [NSString stringWithFormat:
+            @"var s=document.getElementById('spinTotal');if(s)s.textContent='SPIN: %ld';",
+            (long)self.totalSpins];
+        [self.trisWebView evaluateJavaScript:js completionHandler:nil];
+    }
     SLSpinResult *result = note.userInfo[SLSpinDataKey];
     if (result) {
         NSString *r1 = result.reel1 ?: @"";
@@ -379,7 +385,7 @@
         "<div class='foot'>"
         "<span onclick='msg(\"reset\")'>RESET</span>"
         "<span onclick='msg(\"toggleMode\")'>%@</span>"
-        "<span>SPIN: %ld</span>"
+        "<span id='spinTotal'>SPIN: %ld</span>"
         "</div>"
         "</div>"
         "<script>"
