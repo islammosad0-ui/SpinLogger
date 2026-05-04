@@ -31,8 +31,9 @@ static const SLSymbolDef kSymbols[] = {
     { "shield",       "🛡",  0.81, 0.58, 0.85 },  // purple — shield/defense
     { "accumulation", "⭐", 1.00, 0.84, 0.00 },  // gold — accumulation bar
     { "potion",       "🧪", 0.30, 0.69, 0.31 },  // green — potion rush / expedition bar
+    { "spinCount",    "🔢", 1.00, 0.60, 0.00 },  // orange — generic spin counter w/ target
 };
-static const int kSymbolCount = 6;
+static const int kSymbolCount = 7;
 
 @interface SLCounterTile : NSObject
 @property (nonatomic, strong) UIWindow *window;
@@ -54,6 +55,7 @@ static const int kSymbolCount = 6;
 @interface SLCounterOverlay ()
 @property (nonatomic, strong) NSMutableArray<SLCounterTile *> *tiles;
 @property (nonatomic, assign) NSInteger totalSpins;
+@property (nonatomic, assign) NSInteger spinTileTarget;
 @end
 
 @implementation SLCounterOverlay
@@ -93,9 +95,14 @@ static const int kSymbolCount = 6;
             t.visible = vis.boolValue;
             t.window.hidden = !t.visible;
         }
-        t.tripleLabel.text = [NSString stringWithFormat:@"%ld", (long)t.distance];
-        t.singleLabel.text = [NSString stringWithFormat:@"1X:%ld", (long)t.singleCount];
-        t.accLabel.text    = [NSString stringWithFormat:@"⭐:%ld", (long)t.singleCountSinceAcc];
+        if ([t.symbolKey isEqualToString:@"spinCount"]) {
+            t.tripleLabel.text = [NSString stringWithFormat:@"%ld/%ld",
+                                  (long)t.distance, (long)self.spinTileTarget];
+        } else {
+            t.tripleLabel.text = [NSString stringWithFormat:@"%ld", (long)t.distance];
+            t.singleLabel.text = [NSString stringWithFormat:@"1X:%ld", (long)t.singleCount];
+            t.accLabel.text    = [NSString stringWithFormat:@"⭐:%ld", (long)t.singleCountSinceAcc];
+        }
         // Restore saved position (clamp to screen bounds)
         NSNumber *sx = state[[t.symbolKey stringByAppendingString:@"_x"]];
         NSNumber *sy = state[[t.symbolKey stringByAppendingString:@"_y"]];
@@ -144,10 +151,11 @@ static const int kSymbolCount = 6;
         tile.distance = 0;
         tile.singleCount = 0;
         tile.singleCountSinceAcc = 0;
-        // Default: hide potion, shield, steal — user can toggle them on in settings
+        // Default: hide potion, shield, steal, spinCount — user can toggle them on in settings
         BOOL defaultHidden = (strcmp(def.key, "potion") == 0 ||
                               strcmp(def.key, "shield") == 0 ||
-                              strcmp(def.key, "steal") == 0);
+                              strcmp(def.key, "steal") == 0 ||
+                              strcmp(def.key, "spinCount") == 0);
         tile.visible = !defaultHidden;
 
         UIWindow *win = [[UIWindow alloc] initWithWindowScene:scene];
@@ -216,10 +224,27 @@ static const int kSymbolCount = 6;
         [vc.view addGestureRecognizer:pan];
         vc.view.tag = i;
 
+        // Spin counter tile: simpler layout (count/target only), double-tap resets.
+        if (strcmp(def.key, "spinCount") == 0) {
+            tile.singleLabel.hidden = YES;
+            tile.accLabel.hidden    = YES;
+            tile.tripleLabel.frame  = CGRectMake(2, 22, tileW - 4, 30);
+            tile.tripleLabel.font   = [UIFont boldSystemFontOfSize:13];
+
+            UITapGestureRecognizer *dbl = [[UITapGestureRecognizer alloc]
+                initWithTarget:self action:@selector(handleSpinTileDoubleTap:)];
+            dbl.numberOfTapsRequired = 2;
+            [vc.view addGestureRecognizer:dbl];
+        }
+
         win.hidden = !tile.visible;
         tile.window = win;
         [self.tiles addObject:tile];
     }
+
+    NSInteger savedTarget = [[NSUserDefaults standardUserDefaults]
+                             integerForKey:@"Speeder_SpinTileTarget"];
+    self.spinTileTarget = (savedTarget > 0) ? savedTarget : 100;
 
     // Restore persisted counter values from previous session
     [self restoreState];
@@ -233,6 +258,35 @@ static const int kSymbolCount = 6;
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(onToggleSymbol:)
                                                  name:@"SLToggleCounterSymbol" object:nil];
+}
+
+- (void)handleSpinTileDoubleTap:(UITapGestureRecognizer *)tap {
+    for (SLCounterTile *t in self.tiles) {
+        if ([t.symbolKey isEqualToString:@"spinCount"]) {
+            t.distance = 0;
+            t.tripleLabel.text = [NSString stringWithFormat:@"%ld/%ld",
+                                  (long)t.distance, (long)self.spinTileTarget];
+            [self saveState];
+            return;
+        }
+    }
+}
+
+- (NSInteger)spinTileTargetValue { return self.spinTileTarget; }
+
+- (void)setSpinTileTargetValue:(NSInteger)target {
+    if (target <= 0) return;
+    self.spinTileTarget = target;
+    [[NSUserDefaults standardUserDefaults] setInteger:target forKey:@"Speeder_SpinTileTarget"];
+    for (SLCounterTile *t in self.tiles) {
+        if ([t.symbolKey isEqualToString:@"spinCount"]) {
+            t.distance = 0;
+            t.tripleLabel.text = [NSString stringWithFormat:@"%ld/%ld",
+                                  (long)t.distance, (long)target];
+            break;
+        }
+    }
+    [self saveState];
 }
 
 - (void)handleTilePan:(UIPanGestureRecognizer *)pan {
@@ -290,9 +344,15 @@ static const int kSymbolCount = 6;
 
     self.totalSpins++;
 
-    // Increment ALL 3X distance counters every spin
+    // Increment ALL 3X distance counters every spin (spin counter tile uses
+    // the same `distance` field as a generic spin counter that resets on target)
     for (SLCounterTile *tile in self.tiles) {
         tile.distance++;
+        if ([tile.symbolKey isEqualToString:@"spinCount"]) {
+            if (self.spinTileTarget > 0 && tile.distance >= self.spinTileTarget) {
+                tile.distance = 0;
+            }
+        }
     }
 
     // Increment 1X count for reel symbols (potion excluded — driven by Potion Rush bar below)
@@ -367,6 +427,10 @@ static const int kSymbolCount = 6;
             tile.tripleLabel.text = [NSString stringWithFormat:@"%ld", (long)tile.distance];
             tile.singleLabel.text = @"";
             tile.accLabel.text = @"";
+        } else if ([tile.symbolKey isEqualToString:@"spinCount"]) {
+            // 🔢 Spin counter tile: count / target
+            tile.tripleLabel.text = [NSString stringWithFormat:@"%ld/%ld",
+                                     (long)tile.distance, (long)self.spinTileTarget];
         } else {
             // Reel tiles: distance since last triple, 1X since own triple, ⭐ since ACC triple
             tile.tripleLabel.text = [NSString stringWithFormat:@"%ld", (long)tile.distance];
@@ -383,7 +447,9 @@ static const int kSymbolCount = 6;
 // shield + potion are opt-in only — the master "show/hide all" toggle ignores
 // them. User must flip them via the per-symbol toggle in settings.
 static inline BOOL SLCounter_IsMasterExempt(NSString *key) {
-    return [key isEqualToString:@"shield"] || [key isEqualToString:@"potion"];
+    return [key isEqualToString:@"shield"] ||
+           [key isEqualToString:@"potion"] ||
+           [key isEqualToString:@"spinCount"];
 }
 
 - (void)onToggleAll:(NSNotification *)note {
@@ -450,9 +516,13 @@ static inline BOOL SLCounter_IsMasterExempt(NSString *key) {
         t.distance = 0;
         t.singleCount = 0;
         t.singleCountSinceAcc = 0;
-        t.tripleLabel.text = @"0";
-        t.singleLabel.text = @"1X:0";
-        t.accLabel.text = @"⭐:0";
+        if ([t.symbolKey isEqualToString:@"spinCount"]) {
+            t.tripleLabel.text = [NSString stringWithFormat:@"0/%ld", (long)self.spinTileTarget];
+        } else {
+            t.tripleLabel.text = @"0";
+            t.singleLabel.text = @"1X:0";
+            t.accLabel.text = @"⭐:0";
+        }
     }
     [self saveState];
 }

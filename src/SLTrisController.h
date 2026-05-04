@@ -14,6 +14,7 @@
 @property (nonatomic, copy) NSString *lockTarget;
 @property (nonatomic, assign) BOOL skipEnabled;
 @property (nonatomic, assign) NSUInteger visibleColumns; // bitmask of kSLTrisCol*
+@property (nonatomic, readonly) BOOL isMonitorVisible;
 + (instancetype)shared;
 - (void)install;
 - (void)showTrisMonitor;

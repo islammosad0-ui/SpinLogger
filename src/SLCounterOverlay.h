@@ -11,4 +11,6 @@
 - (void)showTeaserAlert;
 - (NSDictionary<NSString *, NSNumber *> *)currentCounts;
 - (BOOL)isSymbolVisible:(NSString *)symbol;
+- (NSInteger)spinTileTargetValue;
+- (void)setSpinTileTargetValue:(NSInteger)target;
 @end

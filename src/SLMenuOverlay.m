@@ -50,6 +50,7 @@ static UIButton *sNetBtn = nil;
 static UIButton *sPreset2Btn = nil;
 static UIButton *sV4Btn = nil;
 static UIButton *sSigBtn = nil;
+static UIButton *sTrisBtn = nil;
 static BOOL sCountersVisible = YES;
 
 static UIButton *SLMakeBtn(NSString *title, CGFloat w, CGFloat h, UIColor *bg, UIColor *fg, CGFloat fontSize) {
@@ -297,27 +298,41 @@ static UIWindow *sDebtTableWindow = nil;
     scLabel.textColor = SLAccent();
     [sCounterContent addSubview:scLabel];
 
-    for (NSUInteger i = 0; i < syms.count; i++) {
+    NSArray *counterSyms = @[@"🔨", @"🐷", @"💊", @"🛡", @"⭐", @"🧪", @"🔢"];
+    NSArray *counterKeys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"potion", @"spinCount"];
+    CGFloat counterSymSize = 32;
+    CGFloat counterSymGap  = 3;
+    for (NSUInteger i = 0; i < counterSyms.count; i++) {
         UIButton *sb = [UIButton buttonWithType:UIButtonTypeCustom];
-        sb.frame = CGRectMake(symStartX + i * (symSize + symGap), 36, symSize, symSize);
+        sb.frame = CGRectMake(symStartX + i * (counterSymSize + counterSymGap), 36, counterSymSize, counterSymSize);
         sb.backgroundColor = [UIColor colorWithWhite:0.15 alpha:1];
-        sb.layer.cornerRadius = 10;
+        sb.layer.cornerRadius = 9;
         sb.layer.borderWidth = 2;
-        BOOL symVis = [[SLCounterOverlay shared] isSymbolVisible:keys[i]];
+        BOOL symVis = [[SLCounterOverlay shared] isSymbolVisible:counterKeys[i]];
         sb.layer.borderColor = symVis ? SLAccent().CGColor : [UIColor clearColor].CGColor;
         sb.alpha = symVis ? 1.0 : 0.4;
-        [sb setTitle:syms[i] forState:UIControlStateNormal];
-        sb.titleLabel.font = [UIFont systemFontOfSize:18];
+        [sb setTitle:counterSyms[i] forState:UIControlStateNormal];
+        sb.titleLabel.font = [UIFont systemFontOfSize:16];
         sb.tag = 400 + i;
         sb.showsTouchWhenHighlighted = YES;
         [sb addTarget:self action:@selector(counterVisibilityTap:) forControlEvents:UIControlEventTouchUpInside];
         [sCounterContent addSubview:sb];
     }
 
+    // Spin counter target — 🔢 tile auto-resets when reaching this number, double-tap to reset manually
+    NSString *targetTitle = [NSString stringWithFormat:@"🔢 SPIN TILE TARGET: %ld",
+                             (long)[[SLCounterOverlay shared] spinTileTargetValue]];
+    UIButton *targetBtn = SLMakeBtn(targetTitle, pw - pad * 2, 30,
+        [UIColor colorWithWhite:0.15 alpha:1], SLAccent(), 11);
+    targetBtn.frame = CGRectMake(pad, 76, pw - pad * 2, 30);
+    targetBtn.tag = 411;
+    [targetBtn addTarget:self action:@selector(spinTileTargetTap) forControlEvents:UIControlEventTouchUpInside];
+    [sCounterContent addSubview:targetBtn];
+
     // Reset positions button
     UIButton *resetPosBtn = SLMakeBtn(@"RESET POSITIONS", pw - pad * 2, 30,
         [UIColor colorWithWhite:0.15 alpha:1], SLAccent(), 11);
-    resetPosBtn.frame = CGRectMake(pad, 82, pw - pad * 2, 30);
+    resetPosBtn.frame = CGRectMake(pad, 114, pw - pad * 2, 30);
     [resetPosBtn addTarget:self action:@selector(counterResetPositions) forControlEvents:UIControlEventTouchUpInside];
     [sCounterContent addSubview:resetPosBtn];
 
@@ -326,7 +341,7 @@ static UIWindow *sDebtTableWindow = nil;
     NSString *acctTitle = [NSString stringWithFormat:@"ACCOUNT: %@", curAcct];
     UIButton *acctBtn = SLMakeBtn(acctTitle, pw - pad * 2, 30,
         [UIColor colorWithWhite:0.15 alpha:1], SLAccent(), 11);
-    acctBtn.frame = CGRectMake(pad, 120, pw - pad * 2, 30);
+    acctBtn.frame = CGRectMake(pad, 152, pw - pad * 2, 30);
     acctBtn.tag = 410;
     [acctBtn addTarget:self action:@selector(accountNameTap) forControlEvents:UIControlEventTouchUpInside];
     [sCounterContent addSubview:acctBtn];
@@ -666,7 +681,7 @@ static UIWindow *sDebtTableWindow = nil;
 }
 
 + (void)counterVisibilityTap:(UIButton *)btn {
-    NSArray *keys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"potion"];
+    NSArray *keys = @[@"attack", @"steal", @"spins", @"shield", @"accumulation", @"potion", @"spinCount"];
     NSUInteger idx = btn.tag - 400;
     if (idx >= keys.count) return;
 
@@ -677,6 +692,28 @@ static UIWindow *sDebtTableWindow = nil;
 
     [[NSNotificationCenter defaultCenter] postNotificationName:@"SLToggleCounterSymbol" object:nil
                                                       userInfo:@{@"symbol": keys[idx]}];
+}
+
++ (void)spinTileTargetTap {
+    UIAlertController *a = [UIAlertController
+        alertControllerWithTitle:@"🔢 Spin Tile Target"
+                         message:@"Counter resets when it reaches this number.\nDouble-tap the tile to reset manually."
+                  preferredStyle:UIAlertControllerStyleAlert];
+    [a addTextFieldWithConfigurationHandler:^(UITextField *tf) {
+        tf.keyboardType = UIKeyboardTypeNumberPad;
+        tf.text = [@([[SLCounterOverlay shared] spinTileTargetValue]) stringValue];
+    }];
+    [a addAction:[UIAlertAction actionWithTitle:@"Set" style:UIAlertActionStyleDefault
+        handler:^(UIAlertAction *_) {
+            NSInteger n = [a.textFields.firstObject.text integerValue];
+            if (n <= 0) return;
+            [[SLCounterOverlay shared] setSpinTileTargetValue:n];
+            UIButton *btn = (UIButton *)[sCounterContent viewWithTag:411];
+            [btn setTitle:[NSString stringWithFormat:@"🔢 SPIN TILE TARGET: %ld", (long)n]
+                 forState:UIControlStateNormal];
+        }]];
+    [a addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [[self topVC] presentViewController:a animated:YES completion:nil];
 }
 
 + (void)columnVisibilityTap:(UIButton *)btn {
@@ -745,6 +782,9 @@ static UIWindow *sDebtTableWindow = nil;
 
 + (void)trisMonitor {
     [[SLTrisController shared] showTrisMonitor];
+    BOOL on = [[SLTrisController shared] isMonitorVisible];
+    sTrisBtn.backgroundColor = on ? SLBtnActive() : SLBtnBg();
+    [sTrisBtn setTitleColor:on ? [UIColor whiteColor] : SLMuted() forState:UIControlStateNormal];
 }
 
 + (void)toggleV4Panel {
@@ -961,12 +1001,13 @@ static void SLShowPanel(void) {
     CGFloat r3y = r2y + 44;
     CGFloat abtnW = 40, abtnH = 34, agap = 4;
     NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
-    BOOL v4On  = [ud objectForKey:kSLV4PanelVisibleKey]  ? [ud boolForKey:kSLV4PanelVisibleKey]  : YES;
-    BOOL sigOn = [ud objectForKey:kSLSigPanelVisibleKey] ? [ud boolForKey:kSLSigPanelVisibleKey] : YES;
+    BOOL v4On   = [ud objectForKey:kSLV4PanelVisibleKey]  ? [ud boolForKey:kSLV4PanelVisibleKey]  : YES;
+    BOOL sigOn  = [ud objectForKey:kSLSigPanelVisibleKey] ? [ud boolForKey:kSLSigPanelVisibleKey] : YES;
+    BOOL trisOn = [[SLTrisController shared] isMonitorVisible];
 
     NSArray *abtnDefs = @[
         @[@"↺", @"resetCounters", @YES],
-        @[@"TRIS", @"trisMonitor", @YES],
+        @[@"TRIS", @"trisMonitor", @(trisOn)],
         @[@"V4",  @"toggleV4Panel",     @(v4On)],
         @[@"📶", @"networkToggle", @YES],
         @[@"SIG", @"toggleSignalPanel", @(sigOn)],
@@ -990,6 +1031,7 @@ static void SLShowPanel(void) {
         if ([def[0] isEqualToString:@"📶"]) sNetBtn = abtn;
         if ([def[0] isEqualToString:@"V4"])  sV4Btn  = abtn;
         if ([def[0] isEqualToString:@"SIG"]) sSigBtn = abtn;
+        if ([def[0] isEqualToString:@"TRIS"]) sTrisBtn = abtn;
         if ([def[0] isEqualToString:@"preset2"]) {
             sPreset2Btn = abtn;
             double v = [ud doubleForKey:@"Speeder_Preset2Speed"];
