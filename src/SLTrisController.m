@@ -109,6 +109,25 @@
                                                  name:SLSpinReceivedNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onShowTris:)
                                                  name:@"SLShowTrisMonitor" object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onOrientationChanged:)
+                                                 name:UIApplicationDidChangeStatusBarOrientationNotification
+                                               object:nil];
+}
+
+- (void)onOrientationChanged:(NSNotification *)note {
+    if (!self.trisWindow || self.trisWindow.hidden) return;
+    CGRect screen = self.trisWindow.windowScene.coordinateSpace.bounds;
+    if (screen.size.width <= 0 || screen.size.height <= 0) return;
+    CGRect f = self.trisWindow.frame;
+    if (f.origin.x + f.size.width > screen.size.width)
+        f.origin.x = screen.size.width - f.size.width;
+    if (f.origin.y + f.size.height > screen.size.height)
+        f.origin.y = screen.size.height - f.size.height;
+    f.origin.x = MAX(f.origin.x, 0);
+    f.origin.y = MAX(f.origin.y, 0);
+    self.trisWindow.frame = f;
+    self.trisWebView.frame = CGRectMake(0, 0, f.size.width, f.size.height);
+    [self savePosition];
 }
 
 - (void)onSpinReceived:(NSNotification *)note {
