@@ -448,8 +448,7 @@ static const int kSymbolCount = 7;
 // them. User must flip them via the per-symbol toggle in settings.
 static inline BOOL SLCounter_IsMasterExempt(NSString *key) {
     return [key isEqualToString:@"shield"] ||
-           [key isEqualToString:@"potion"] ||
-           [key isEqualToString:@"spinCount"];
+           [key isEqualToString:@"potion"];
 }
 
 - (void)onToggleAll:(NSNotification *)note {
