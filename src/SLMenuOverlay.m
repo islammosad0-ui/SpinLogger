@@ -70,6 +70,11 @@ static UIButton *SLMakeBtn(NSString *title, CGFloat w, CGFloat h, UIColor *bg, U
     return btn;
 }
 
+static NSString *SLVtAlertTitle(NSInteger n) {
+    return (n > 0) ? [NSString stringWithFormat:@"🎯 VT ALERT: %ld SPINS", (long)n]
+                   : @"🎯 VT ALERT: OFF";
+}
+
 #pragma mark - Actions
 
 @interface SLActions : NSObject
@@ -286,6 +291,15 @@ static UIWindow *sDebtTableWindow = nil;
         [cb addTarget:self action:@selector(columnVisibilityTap:) forControlEvents:UIControlEventTouchUpInside];
         [sTrisContent addSubview:cb];
     }
+
+    // VT ALERT — haptic buzz once the current 🎯 gap reaches this many spins
+    NSInteger vtAlert = [SLTrisController shared].vtAlertThreshold;
+    UIButton *vtAlertBtn = SLMakeBtn(SLVtAlertTitle(vtAlert), pw - pad * 2, 30,
+        [UIColor colorWithWhite:0.15 alpha:1], SLAccent(), 11);
+    vtAlertBtn.frame = CGRectMake(pad, 166, pw - pad * 2, 30);
+    vtAlertBtn.tag = 412;
+    [vtAlertBtn addTarget:self action:@selector(vtAlertThresholdTap) forControlEvents:UIControlEventTouchUpInside];
+    [sTrisContent addSubview:vtAlertBtn];
 
     // === SPIN COUNTER content (hidden by default) ===
     sCounterContent = [[UIView alloc] initWithFrame:CGRectMake(0, 42, pw, ph - 42)];
@@ -711,6 +725,27 @@ static UIWindow *sDebtTableWindow = nil;
             UIButton *btn = (UIButton *)[sCounterContent viewWithTag:411];
             [btn setTitle:[NSString stringWithFormat:@"🔢 SPIN TILE TARGET: %ld", (long)n]
                  forState:UIControlStateNormal];
+        }]];
+    [a addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [[self topVC] presentViewController:a animated:YES completion:nil];
+}
+
++ (void)vtAlertThresholdTap {
+    UIAlertController *a = [UIAlertController
+        alertControllerWithTitle:@"🎯 VT Alert"
+                         message:@"Buzz twice when the gap since the last VT reaches this many spins.\n0 = off."
+                  preferredStyle:UIAlertControllerStyleAlert];
+    [a addTextFieldWithConfigurationHandler:^(UITextField *tf) {
+        tf.keyboardType = UIKeyboardTypeNumberPad;
+        tf.text = [@([SLTrisController shared].vtAlertThreshold) stringValue];
+    }];
+    [a addAction:[UIAlertAction actionWithTitle:@"Set" style:UIAlertActionStyleDefault
+        handler:^(UIAlertAction *_) {
+            NSInteger n = [a.textFields.firstObject.text integerValue];
+            if (n < 0) return;
+            [SLTrisController shared].vtAlertThreshold = n;
+            UIButton *btn = (UIButton *)[sTrisContent viewWithTag:412];
+            [btn setTitle:SLVtAlertTitle(n) forState:UIControlStateNormal];
         }]];
     [a addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
     [[self topVC] presentViewController:a animated:YES completion:nil];
