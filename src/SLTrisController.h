@@ -15,6 +15,10 @@
 @property (nonatomic, assign) BOOL skipEnabled;
 @property (nonatomic, assign) NSUInteger visibleColumns; // bitmask of kSLTrisCol*
 @property (nonatomic, readonly) BOOL isMonitorVisible;
+// Spins into the current VT gap that trigger the alert haptic. 0 = disabled.
+@property (nonatomic, assign) NSInteger vtAlertThreshold;
+// Spins since the last VT landed; -1 when no VT has been seen yet.
+@property (nonatomic, readonly) NSInteger currentVtGap;
 + (instancetype)shared;
 - (void)install;
 - (void)showTrisMonitor;

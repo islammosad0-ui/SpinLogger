@@ -11,6 +11,16 @@
 //  6 independent scrollable columns, one per symbol.
 // ---------------------------------------------------------------------------
 
+// Hot counters are persisted on EVERY spin under their own small keys. The big
+// history dictionary (Speeder_TrisState) is only rewritten on triple/VT events —
+// re-serializing 13 arrays per spin would stutter the game. Since these two keys
+// are written after the spin has been counted, they are authoritative on restore
+// and make the restore path independent of notification-observer ordering.
+static NSString *const kSLTrisHotTotalSpinsKey = @"Speeder_TrisTotalSpins";
+static NSString *const kSLTrisHotLastVtKey     = @"Speeder_TrisLastVtSpins";
+static NSString *const kSLTrisVtAlertKey       = @"Speeder_TrisVtAlertThreshold";
+static const NSInteger kSLTrisVtAlertDefault   = 80;
+
 @interface SLTrisController () <WKScriptMessageHandler>
 @property (nonatomic, strong) UIWindow   *trisWindow;
 @property (nonatomic, strong) WKWebView  *trisWebView;
@@ -56,6 +66,10 @@
         _totalSpins = 0;
         _lastVtTotalSpins = -1;
         _symbolCountMode = NO;
+        // objectForKey (not integerForKey) so an explicit 0 = "alert disabled" is
+        // distinguishable from "never set" = use the default.
+        NSNumber *savedAlert = [[NSUserDefaults standardUserDefaults] objectForKey:kSLTrisVtAlertKey];
+        _vtAlertThreshold = savedAlert ? savedAlert.integerValue : kSLTrisVtAlertDefault;
         NSUInteger saved = [[NSUserDefaults standardUserDefaults] integerForKey:@"Speeder_TrisVisibleCols"];
         _visibleColumns = (saved != 0) ? saved : kSLTrisColAll;
         [self restoreState];
@@ -78,14 +92,38 @@
         @"symHistAccum":  _symHistAccum, @"symHistGold":  _symHistGold,
     };
     [[NSUserDefaults standardUserDefaults] setObject:state forKey:@"Speeder_TrisState"];
+    [self saveHotCounters];
+}
+
+// Cheap: two integers, no array serialization. Safe to call on every spin.
+- (void)saveHotCounters {
+    NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
+    [ud setInteger:_totalSpins       forKey:kSLTrisHotTotalSpinsKey];
+    [ud setInteger:_lastVtTotalSpins forKey:kSLTrisHotLastVtKey];
+}
+
+// Full flush before the app can be suspended or killed. NSUserDefaults writes
+// asynchronously, so a force-quit can otherwise drop the most recent values.
+- (void)onAppWillPersist:(NSNotification *)note {
+    [self saveState];
+    [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
 - (void)restoreState {
-    NSDictionary *state = [[NSUserDefaults standardUserDefaults] dictionaryForKey:@"Speeder_TrisState"];
+    NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
+    NSDictionary *state = [ud dictionaryForKey:@"Speeder_TrisState"];
+    if (state) {
+        _totalSpins = [state[@"totalSpins"] integerValue];
+        NSNumber *savedVtSpins = state[@"lastVtSpins"];
+        _lastVtTotalSpins = savedVtSpins ? savedVtSpins.integerValue : -1;
+    }
+    // Hot counters win: they are written after every spin, whereas the dictionary
+    // above is only as fresh as the last triple/VT event.
+    NSNumber *hotTotal  = [ud objectForKey:kSLTrisHotTotalSpinsKey];
+    NSNumber *hotLastVt = [ud objectForKey:kSLTrisHotLastVtKey];
+    if (hotTotal)  _totalSpins       = hotTotal.integerValue;
+    if (hotLastVt) _lastVtTotalSpins = hotLastVt.integerValue;
     if (!state) return;
-    _totalSpins = [state[@"totalSpins"] integerValue];
-    NSNumber *savedVtSpins = state[@"lastVtSpins"];
-    _lastVtTotalSpins = savedVtSpins ? savedVtSpins.integerValue : -1;
     NSArray *keys   = @[@"histAttack",@"histSteal",@"histSpins",@"histShield",@"histAccum",@"histGold",@"histVt",
                         @"symHistAttack",@"symHistSteal",@"symHistSpins",@"symHistShield",@"symHistAccum",@"symHistGold"];
     NSArray *arrays = @[_histAttack,_histSteal,_histSpins,_histShield,_histAccum,_histGold,_histVt,
@@ -112,6 +150,12 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onOrientationChanged:)
                                                  name:UIApplicationDidChangeStatusBarOrientationNotification
                                                object:nil];
+    for (NSNotificationName n in @[UIApplicationWillResignActiveNotification,
+                                   UIApplicationDidEnterBackgroundNotification,
+                                   UIApplicationWillTerminateNotification]) {
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onAppWillPersist:)
+                                                     name:n object:nil];
+    }
 }
 
 - (void)onOrientationChanged:(NSNotification *)note {
@@ -132,27 +176,72 @@
 
 - (void)onSpinReceived:(NSNotification *)note {
     self.totalSpins++;
-    if (self.trisWindow && !self.trisWindow.hidden) {
-        NSString *js = [NSString stringWithFormat:
-            @"var s=document.getElementById('spinTotal');if(s)s.textContent='SPIN: %ld';",
-            (long)self.totalSpins];
-        [self.trisWebView evaluateJavaScript:js completionHandler:nil];
-    }
+
     SLSpinResult *result = note.userInfo[SLSpinDataKey];
+    BOOL isVt = NO;
     if (result) {
         NSString *r1 = result.reel1 ?: @"";
-        BOOL isVt = ([r1 isEqualToString:result.reel2] && [r1 isEqualToString:result.reel3] &&
-                     ([r1 isEqualToString:kSLSymbolAccumulation] || [r1 isEqualToString:kSLSymbolSpins]));
-        if (isVt) {
-            if (self.lastVtTotalSpins >= 0) {
-                NSInteger gap = self.totalSpins - self.lastVtTotalSpins;
-                [self.histVt addObject:@(gap)];
-                [self saveState];
-                if (self.trisWindow && !self.trisWindow.hidden) [self refreshTrisHTML];
-            }
-            self.lastVtTotalSpins = self.totalSpins;
-        }
+        isVt = ([r1 isEqualToString:result.reel2] && [r1 isEqualToString:result.reel3] &&
+                ([r1 isEqualToString:kSLSymbolAccumulation] || [r1 isEqualToString:kSLSymbolSpins]));
     }
+    if (isVt) {
+        if (self.lastVtTotalSpins >= 0) {
+            NSInteger gap = self.totalSpins - self.lastVtTotalSpins;
+            [self.histVt addObject:@(gap)];
+            [self saveState];
+            if (self.trisWindow && !self.trisWindow.hidden) [self refreshTrisHTML];
+        }
+        self.lastVtTotalSpins = self.totalSpins;
+    }
+
+    // Persist the running counters on every spin, not just on events — otherwise
+    // closing the game mid-gap silently discards every spin since the last triple
+    // and the next VT gap is recorded short by that amount.
+    [self saveHotCounters];
+
+    NSInteger gapNow = self.currentVtGap;
+
+    // Alert haptic: fires once as the gap crosses the threshold. Equality is
+    // self-limiting (the gap only ever advances by 1 per spin), and reopening the
+    // app already past the threshold correctly does not re-fire.
+    if (self.vtAlertThreshold > 0 && gapNow == self.vtAlertThreshold) {
+        [self fireVtAlertHaptic];
+    }
+
+    if (self.trisWindow && !self.trisWindow.hidden) {
+        BOOL hot = (self.vtAlertThreshold > 0 && gapNow >= self.vtAlertThreshold);
+        NSString *js = [NSString stringWithFormat:
+            @"var s=document.getElementById('spinTotal');if(s)s.textContent='SPIN: %ld';"
+             "var v=document.getElementById('vtNow');"
+             "if(v){v.textContent='%@';v.style.color='%@';}",
+            (long)self.totalSpins, [self currentVtGapText], hot ? @"#ff5252" : @"#ff9800"];
+        [self.trisWebView evaluateJavaScript:js completionHandler:nil];
+    }
+}
+
+- (NSInteger)currentVtGap {
+    if (_lastVtTotalSpins < 0) return -1;
+    return _totalSpins - _lastVtTotalSpins;
+}
+
+- (NSString *)currentVtGapText {
+    NSInteger gap = self.currentVtGap;
+    return (gap < 0) ? @"–" : [NSString stringWithFormat:@"%ld", (long)gap];
+}
+
+// Double thump — deliberately distinct from the single heavy impact the V4 panel
+// uses for FIRE/WAIT transitions, so the two can't be confused mid-session.
+- (void)fireVtAlertHaptic {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIImpactFeedbackGenerator *gen =
+            [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleHeavy];
+        [gen prepare];
+        [gen impactOccurred];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.14 * NSEC_PER_SEC)),
+                       dispatch_get_main_queue(), ^{
+            [gen impactOccurred];
+        });
+    });
 }
 - (void)onShowTris:(NSNotification *)note     { [self showTrisMonitor]; }
 
@@ -354,12 +443,23 @@
         }
         BOOL locked = [self.lockTarget isEqualToString:colKeys[c]];
         NSString *lockStyle = locked ? [NSString stringWithFormat:@"border:1.5px solid %@", colors[c]] : @"";
+
+        // The 🎯 column header carries the live in-progress gap — the finished
+        // gaps below it say nothing about how deep the current cycle already is.
+        NSString *headInner = emojis[c];
+        if (colBits[c] == kSLTrisColVT) {
+            BOOL hot = (self.vtAlertThreshold > 0 &&
+                        self.currentVtGap >= self.vtAlertThreshold);
+            headInner = [NSString stringWithFormat:
+                @"<div class='hrow'>%@<span id='vtNow' style='color:%@'>%@</span></div>",
+                emojis[c], hot ? @"#ff5252" : colors[c], [self currentVtGapText]];
+        }
         [colHTML appendFormat:
             @"<div class='col' style='%@'>"
             "<div class='ch' style='color:%@'>%@<div class='hb' style='background:%@'></div></div>"
             "<div class='cb' id='b%d'>%@</div>"
             "</div>",
-            lockStyle, colors[c], emojis[c], colors[c], c, entries];
+            lockStyle, colors[c], headInner, colors[c], c, entries];
     }
 
     NSString *html = [NSString stringWithFormat:@
@@ -382,6 +482,8 @@
         "display:flex;flex-direction:column;align-items:center;"
         "border-bottom:1px solid rgba(255,255,255,0.18)}"
         ".hb{height:2px;width:75%%;border-radius:1px;margin-top:1px}"
+        ".hrow{display:flex;align-items:center;justify-content:center;gap:2px;line-height:1}"
+        "#vtNow{font-size:10px;font-weight:700}"
         ".cb{flex:1;overflow-y:auto;overflow-x:hidden}"
         ".cb::-webkit-scrollbar{display:none}"
         ".e{text-align:center;padding:2px 1px;font-size:10px;font-weight:400;"
@@ -454,6 +556,12 @@
     _lockTarget = [lockTarget copy];
     [[NSUserDefaults standardUserDefaults] setObject:_lockTarget forKey:kSLDefaultsTrisLockTarget];
     // Refresh tris if visible so the locked column highlights update
+    if (self.trisWindow && !self.trisWindow.hidden) [self refreshTrisHTML];
+}
+
+- (void)setVtAlertThreshold:(NSInteger)vtAlertThreshold {
+    _vtAlertThreshold = MAX(vtAlertThreshold, 0);   // 0 = disabled
+    [[NSUserDefaults standardUserDefaults] setInteger:_vtAlertThreshold forKey:kSLTrisVtAlertKey];
     if (self.trisWindow && !self.trisWindow.hidden) [self refreshTrisHTML];
 }
 
